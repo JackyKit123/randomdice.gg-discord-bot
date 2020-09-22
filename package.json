@@ -5,7 +5,7 @@
   "main": "bot.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon  --ext 'ts,json' --exec 'ts-node --require=dotenv/config src/bot.ts'",
-    "start": "NODE_ENV=production ts-node --require=dotenv/config src/bot.ts",
+    "start": "ts-node --require=dotenv/config src/bot.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "JackyKit",
