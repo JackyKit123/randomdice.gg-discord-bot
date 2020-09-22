@@ -1,14 +1,17 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import * as cert from '../firebase-admin-credential.json';
 import help from './help';
 import postNow from './postNow';
 import register from './register';
 import updateListener from './updateListener';
 import sendLink from './sendLinks';
 const client = new Discord.Client();
-admin.initializeApp({
-    credential: admin.credential.cert(cert as admin.ServiceAccount),
+admin.initializeApp({ 
+    credential: admin.credential.cert({
+        projectId: 'random-dice-web',
+        privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+    }), 
     databaseURL: 'https://random-dice-web.firebaseio.com/',
     databaseAuthVariableOverride: {
         uid: 'discord-bot',
@@ -59,11 +62,11 @@ client.on('message', async (message) => {
                 reply("Hi! I am awake. But I can't execute your command.");
         }
     } catch (err) {
-        try{
-        await channel.send(`Oops, something went wrong: ${err.message}`);
-    } catch(criticalError) {
-        console.error(criticalError);
-    }
+        try {
+            await channel.send(`Oops, something went wrong: ${err.message}`);
+        } catch (criticalError) {
+            console.error(criticalError);
+        }
     }
 });
 
