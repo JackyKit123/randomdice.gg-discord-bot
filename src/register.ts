@@ -4,37 +4,31 @@ import * as admin from 'firebase-admin';
 async function checkRegistered(
     guild: Discord.Guild,
     database: admin.database.Database
-) {
-    try {
-        const registeredChannel = (
-            await database.ref(`/discord_bot/${guild.id}`).once('value')
-        ).val();
-        return new Discord.MessageEmbed()
-            .setTitle('Registered Channels')
-            .setDescription(
-                'Here is the list of registered channel for the type'
-            )
-            .setAuthor(
-                'Random Dice Community Website',
-                'https://randomdice.gg/title_dice.png',
-                'https://randomdice.gg/'
-            )
-            .setColor('#6ba4a5')
-            .addFields(
-                Object.entries(registeredChannel).map(([type, channelId]) => ({
-                    name: type,
-                    value: `<#${channelId}>`,
-                }))
-            );
-    } catch (err) {
-        throw err;
-    }
+): Promise<Discord.MessageEmbed> {
+    const registeredChannel = (
+        await database.ref(`/discord_bot/${guild.id}`).once('value')
+    ).val();
+    return new Discord.MessageEmbed()
+        .setTitle('Registered Channels')
+        .setDescription('Here is the list of registered channel for the type')
+        .setAuthor(
+            'Random Dice Community Website',
+            'https://randomdice.gg/title_dice.png',
+            'https://randomdice.gg/'
+        )
+        .setColor('#6ba4a5')
+        .addFields(
+            Object.entries(registeredChannel).map(([type, channelId]) => ({
+                name: type,
+                value: `<#${channelId}>`,
+            }))
+        );
 }
 
 export default async function register(
     message: Discord.Message,
     database: admin.database.Database
-) {
+): Promise<void> {
     const { member, guild, content, mentions, channel } = message;
     if (!member || !guild) {
         return;

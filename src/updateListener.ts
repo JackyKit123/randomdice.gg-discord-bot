@@ -5,7 +5,7 @@ import * as post from './postNow';
 export default function listener(
     client: Discord.Client,
     database: admin.database.Database
-) {
+): void {
     const lastExecuted = {
         guide: new Date(),
     };
@@ -13,11 +13,7 @@ export default function listener(
         const currentTime = new Date();
         if (currentTime.valueOf() - lastExecuted.guide.valueOf() > 15000) {
             lastExecuted.guide = new Date();
-            try {
-                await post.postGuide(client, database);
-            } catch (err) {
-                throw err;
-            }
+            await post.postGuide(client, database);
         }
     });
 }

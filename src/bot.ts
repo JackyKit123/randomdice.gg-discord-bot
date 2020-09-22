@@ -29,7 +29,7 @@ client.on('ready', () => {
     client.user?.setActivity('.gg help', {
         type: 'PLAYING',
     });
-    if ((process.env.NODE_ENV = 'development')) {
+    if (process.env.NODE_ENV === 'development') {
         (
             (client.channels.cache.get(
                 '757766843502034977'
@@ -63,7 +63,7 @@ client.on('message', async message => {
                 await sendLink(message);
                 break;
             default:
-                channel.send(
+                await channel.send(
                     "Hi! I am awake. But I can't execute your command."
                 );
         }
@@ -71,6 +71,7 @@ client.on('message', async message => {
         try {
             await channel.send(`Oops, something went wrong: ${err.message}`);
         } catch (criticalError) {
+            // eslint-disable-next-line no-console
             console.error(criticalError);
         }
     }
