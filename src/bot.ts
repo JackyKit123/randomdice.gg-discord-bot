@@ -5,13 +5,17 @@ import postNow from './postNow';
 import register from './register';
 import updateListener from './updateListener';
 import sendLink from './sendLinks';
+
 const client = new Discord.Client();
-admin.initializeApp({ 
+admin.initializeApp({
     credential: admin.credential.cert({
         projectId: 'random-dice-web',
-        privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(
+            /\\n/g,
+            '\n'
+        ),
         clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-    }), 
+    }),
     databaseURL: 'https://random-dice-web.firebaseio.com/',
     databaseAuthVariableOverride: {
         uid: 'discord-bot',
@@ -34,8 +38,8 @@ client.on('ready', () => {
     }
 });
 
-client.on('message', async (message) => {
-    const {content, reply, channel} = message;
+client.on('message', async message => {
+    const { content, channel } = message;
     const [suffix, command] = content.split(' ');
     if (suffix !== '.gg' || !command) {
         return;
@@ -59,7 +63,9 @@ client.on('message', async (message) => {
                 await sendLink(message);
                 break;
             default:
-                reply("Hi! I am awake. But I can't execute your command.");
+                channel.send(
+                    "Hi! I am awake. But I can't execute your command."
+                );
         }
     } catch (err) {
         try {

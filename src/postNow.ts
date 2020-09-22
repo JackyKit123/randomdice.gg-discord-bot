@@ -9,13 +9,13 @@ export default async function postNow(
     database: admin.database.Database
 ) {
     const type = message.content.split(' ')[2];
-    const {member, guild} = message;
+    const { member, guild, channel } = message;
     if (!member || !guild) {
         return;
     }
     try {
         if (!member.hasPermission('MANAGE_MESSAGES')) {
-            await message.reply(
+            await channel.send(
                 'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`'
             );
             return;
@@ -26,7 +26,7 @@ export default async function postNow(
                 await postGuide(client, database, guild);
                 return;
             default:
-                await message.reply(
+                await channel.send(
                     'target type not found, supported type: `guide`'
                 );
                 return;
@@ -50,10 +50,10 @@ export async function postGuide(
             .map(
                 ([guildId, config]) =>
                     client.channels.cache.get(
-                        (config as {guide: string}).guide
+                        (config as { guide: string }).guide
                     ) as Discord.TextChannel
             )
-            .filter((channelId) => channelId);
+            .filter(channelId => channelId);
         const data = (
             await database.ref('/decks_guide').once('value')
         ).val() as {
@@ -64,12 +64,12 @@ export async function postGuide(
             diceList: number[][];
         }[];
         const embeds = data
-            .map((guide) => {
+            .map(guide => {
                 const title = guide.name;
-                const type = guide.type;
-                const diceList = guide.diceList.map((list) =>
-                    list.map((die) => 
-                        (diceEmoji as {[key: number]: string})[die]
+                const { type } = guide;
+                const diceList = guide.diceList.map(list =>
+                    list.map(
+                        die => (diceEmoji as { [key: number]: string })[die]
                     )
                 );
                 const paragraph = textVersion(guide.guide, {
@@ -89,7 +89,7 @@ export async function postGuide(
                         value: list.join(' '),
                     })),
                     ...data.paragraph
-                        .filter((p) => p !== '')
+                        .filter(p => p !== '')
                         .map((p, i) => ({
                             name: i === 0 ? 'Guide' : '⠀',
                             value: p,
@@ -139,15 +139,13 @@ export async function postGuide(
                           );
             })
             .flat();
-        registeredChannels.forEach(async (channel) => {
+        registeredChannels.forEach(async channel => {
             try {
                 const fetched = await (
-                    await channel.messages.fetch({limit: 100})
-                ).filter(
-                    (message) => message.author.id === '723917706641801316'
-                );
+                    await channel.messages.fetch({ limit: 100 })
+                ).filter(message => message.author.id === '723917706641801316');
                 await channel.bulkDelete(fetched);
-                await embeds.forEach(async (embed) => {
+                await embeds.forEach(async embed => {
                     try {
                         await channel.send(embed);
                     } catch (err) {

@@ -15,7 +15,7 @@ export default function listener(
             lastExecuted.guide = new Date();
             try {
                 await post.postGuide(client, database);
-            } catch(err) {
+            } catch (err) {
                 throw err;
             }
         }

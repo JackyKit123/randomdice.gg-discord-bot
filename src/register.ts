@@ -11,7 +11,9 @@ async function checkRegistered(
         ).val();
         return new Discord.MessageEmbed()
             .setTitle('Registered Channels')
-            .setDescription('Here is the list of registered channel for the type')
+            .setDescription(
+                'Here is the list of registered channel for the type'
+            )
             .setAuthor(
                 'Random Dice Community Website',
                 'https://randomdice.gg/title_dice.png',
@@ -33,7 +35,7 @@ export default async function register(
     message: Discord.Message,
     database: admin.database.Database
 ) {
-    const {member, guild, content, mentions, reply, channel} = message;
+    const { member, guild, content, mentions, channel } = message;
     if (!member || !guild) {
         return;
     }
@@ -41,7 +43,7 @@ export default async function register(
     const targetedChannel = mentions.channels.first();
     try {
         if (!member.hasPermission('MANAGE_CHANNELS')) {
-            await reply(
+            await channel.send(
                 'you lack permission to execute this command, required permission: `MANAGE_CHANNELS`'
             );
             return;
