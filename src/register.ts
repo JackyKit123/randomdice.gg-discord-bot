@@ -6,7 +6,7 @@ async function checkRegistered(
     database: admin.database.Database
 ): Promise<Discord.MessageEmbed> {
     const registeredChannel = (
-        await database.ref(`/discord_bot/${guild.id}`).once('value')
+        await database.ref(`/discord_bot/registry/${guild.id}`).once('value')
     ).val();
     return new Discord.MessageEmbed()
         .setTitle('Registered Channels')
@@ -51,7 +51,9 @@ export async function register(
                 await channel.send('I cannot locate the channel to register.');
             } else {
                 const registry = (
-                    await database.ref(`/discord_bot/${guild.id}`).once('value')
+                    await database
+                        .ref(`/discord_bot/registry/${guild.id}`)
+                        .once('value')
                 ).val();
                 const channelRegistered = Object.entries(registry || {}).find(
                     ([registeredType, registeredChannelId]) =>
@@ -65,7 +67,7 @@ export async function register(
                     return;
                 }
                 await database
-                    .ref(`/discord_bot/${guild.id}/${type}`)
+                    .ref(`/discord_bot/registry/${guild.id}/${type}`)
                     .set(targetedChannel.id);
                 await channel.send(
                     `Registered Channel <#${targetedChannel.id}> to provide ${type}`
@@ -100,6 +102,6 @@ export async function unregister(
         return;
     }
     const type = content.split(' ')[2];
-    await database.ref(`/discord_bot/${guild.id}/${type}`).set(null);
+    await database.ref(`/discord_bot/registry/${guild.id}/${type}`).set(null);
     await channel.send(`Unregistered updates for ${type}`);
 }

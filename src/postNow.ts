@@ -31,7 +31,7 @@ export async function postGuide(
     guild?: Discord.Guild
 ): Promise<void> {
     const registeredGuilds = (
-        await database.ref('/discord_bot').once('value')
+        await database.ref('/discord_bot/registry').once('value')
     ).val();
     const registeredChannels = (Object.entries(registeredGuilds) as [
         string,
@@ -150,7 +150,7 @@ export async function postNews(
     guild?: Discord.Guild
 ): Promise<void> {
     const registeredGuilds = (
-        await database.ref('/discord_bot').once('value')
+        await database.ref('/discord_bot/registry').once('value')
     ).val();
     const registeredChannels = (Object.entries(registeredGuilds) as [
         string,
