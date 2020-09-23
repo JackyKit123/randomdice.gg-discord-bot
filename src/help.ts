@@ -25,7 +25,8 @@ export default async function help(message: Discord.Message): Promise<void> {
             {
                 name: 'Information',
                 value:
-                    '`.gg dice <Dice Name> [--class=?] [--level=?]` - show information about the dice, alias for arguments `-c` `-l`',
+                    '`.gg dice <Dice Name> [--class=?] [--level=?]` - show information about the dice, alias for arguments `-c` `-l`\n' +
+                    '`.gg deck <PvP|Co-op|Crew>` - show the deck list',
             },
             {
                 name: 'Other Commands',

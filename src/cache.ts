@@ -57,6 +57,14 @@ export interface Dice {
     arenaValue: ArenaValue;
 }
 
+export interface Deck {
+    guide: number[];
+    id: number;
+    type: 'PvP' | 'Co-op' | 'Crew' | '-';
+    rating: number;
+    decks: Dice['id'][][];
+}
+
 export interface EmojiList {
     [key: number]: string;
 }
@@ -73,20 +81,23 @@ declare const globalThis: {
     // eslint-disable-next-line camelcase
     decks_guide?: DeckGuide[];
     dice: Dice[];
+    decks: Deck[];
     'discord_bot/emoji'?: EmojiList;
     'discord_bot/registry'?: Registry;
 };
 
-type Data = News | DeckGuide[] | Dice[] | EmojiList | Registry;
+type Data = News | DeckGuide[] | Dice[] | Deck[] | EmojiList | Registry;
+type keys =
+    | 'decks_guide'
+    | 'dice'
+    | 'decks'
+    | 'news'
+    | 'discord_bot/emoji'
+    | 'discord_bot/registry';
 
 export default async function getData(
     database: admin.database.Database,
-    target:
-        | 'decks_guide'
-        | 'dice'
-        | 'news'
-        | 'discord_bot/emoji'
-        | 'discord_bot/registry'
+    target: keys
 ): Promise<Data> {
     const cachePath = (location: string): string =>
         path.resolve(__dirname, '..', 'cache', `${location}.json`);
