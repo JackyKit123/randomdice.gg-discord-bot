@@ -13,7 +13,6 @@
   "dependencies": {
     "@types/textversionjs": "^1.1.0",
     "@types/node": "^14.11.2",
-    "@types/textversionjs": "^1.1.0",
     "axios": "^0.20.0",
     "discord.js": "^12.3.1",
     "dotenv": "^8.2.0",
