@@ -5,6 +5,7 @@ import postNow from './postNow';
 import register from './register';
 import updateListener from './updateListener';
 import sendLink from './sendLinks';
+import ping from './ping';
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -39,7 +40,7 @@ client.on('ready', () => {
 });
 
 client.on('message', async message => {
-    const { content, channel, guild } = message;
+    const { content, channel, guild, author } = message;
     const [suffix, command] = content.split(' ');
     if (
         process.env.NODE_ENV === 'development' &&
@@ -47,11 +48,15 @@ client.on('message', async message => {
     ) {
         return;
     }
-    if (suffix !== '.gg' || !command) {
+    if (suffix !== '.gg' || !command || author.bot) {
         return;
     }
     try {
         switch (command.toLowerCase()) {
+            case 'ping': {
+                await ping(message);
+                break;
+            }
             case 'register': {
                 await register(message, database);
                 break;
@@ -70,7 +75,7 @@ client.on('message', async message => {
                 break;
             default:
                 await channel.send(
-                    "Hi! I am awake. But I can't execute your command."
+                    `Hi! I am awake. But I don't understand your command for \`${command}\``
                 );
         }
     } catch (err) {

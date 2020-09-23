@@ -25,6 +25,7 @@ export default async function help(message: Discord.Message): Promise<void> {
             {
                 name: 'Other Commands',
                 value:
+                    '`.gg ping` - ping the bot\n' +
                     '`.gg website [/path]` - send link to website, with optional path\n' +
                     '`.gg app` - send link to Google Play App',
             },
