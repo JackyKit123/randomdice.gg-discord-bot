@@ -51,6 +51,23 @@ export default async function register(
                         'I cannot locate the channel to register.'
                     );
                 } else {
+                    const registry = (
+                        await database
+                            .ref(`/discord_bot/${guild.id}`)
+                            .once('value')
+                    ).val();
+                    const channelRegistered = Object.values(
+                        registry || {}
+                    ).find(
+                        registeredChannelId =>
+                            registeredChannelId === targetedChannel.id
+                    );
+                    if (channelRegistered) {
+                        await channel.send(
+                            'You cannot register 2 categories into the same channel, please register another channel'
+                        );
+                        return;
+                    }
                     await database
                         .ref(`/discord_bot/${guild.id}/${type}`)
                         .set(targetedChannel.id);
