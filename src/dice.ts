@@ -89,6 +89,7 @@ export default async function dice(
         await channel.send(
             `${die.name} dice is in ${die.rarity} tier, its minimum class is ${minClass}.`
         );
+        return;
     }
     const atk =
         Math.floor(
