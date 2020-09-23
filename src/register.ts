@@ -56,11 +56,12 @@ export default async function register(
                             .ref(`/discord_bot/${guild.id}`)
                             .once('value')
                     ).val();
-                    const channelRegistered = Object.values(
+                    const channelRegistered = Object.entries(
                         registry || {}
                     ).find(
-                        registeredChannelId =>
-                            registeredChannelId === targetedChannel.id
+                        ([registeredType, registeredChannelId]) =>
+                            registeredChannelId === targetedChannel.id &&
+                            registeredType !== type
                     );
                     if (channelRegistered) {
                         await channel.send(
