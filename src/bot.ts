@@ -82,6 +82,7 @@ client.on('message', async message => {
             }
             case 'website':
             case 'app':
+            case 'support':
                 await sendLink(message);
                 break;
             default:

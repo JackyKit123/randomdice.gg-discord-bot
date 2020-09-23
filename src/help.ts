@@ -32,7 +32,8 @@ export default async function help(message: Discord.Message): Promise<void> {
                 value:
                     '`.gg ping` - ping the bot\n' +
                     '`.gg website [/path]` - send link to website, with optional path\n' +
-                    '`.gg app` - send link to Google Play App',
+                    '`.gg app` - send link to Google Play App\n' +
+                    '`.gg support` - send information about ways to support randomdice.gg',
             },
         ]);
 

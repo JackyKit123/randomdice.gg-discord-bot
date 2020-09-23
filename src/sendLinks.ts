@@ -19,6 +19,32 @@ export default async function sendLinks(
                 'https://play.google.com/store/apps/details?id=gg.randomdice.twa'
             );
             break;
+        case 'support':
+            await channel.send(
+                new Discord.MessageEmbed()
+                    .setTitle('Support Us')
+                    .setAuthor(
+                        'Random Dice Community Website',
+                        'https://randomdice.gg/title_dice.png',
+                        'https://randomdice.gg/'
+                    )
+                    .setColor('#6ba4a5')
+                    .setDescription(
+                        'You can support randomdice.gg by funding in patreon or contributing on github.'
+                    )
+                    .addFields([
+                        {
+                            name: 'Patreon',
+                            value:
+                                'https://www.patreon.com/RandomDiceCommunityWebsite',
+                        },
+                        {
+                            name: 'Github',
+                            value: 'https://github.randomdice.gg',
+                        },
+                    ])
+            );
+            break;
         default:
     }
 }
