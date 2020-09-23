@@ -30,7 +30,7 @@ export default async function help(message: Discord.Message): Promise<void> {
             {
                 name: 'Other Commands',
                 value:
-                    '`.gg ping` - ping the bot\n' +
+                    '`.gg ping` - ping the bot (only available in DM or as `ADMINISTRATOR`)\n' +
                     '`.gg website [/path]` - send link to website, with optional path\n' +
                     '`.gg app` - send link to Google Play App\n' +
                     '`.gg support` - send information about ways to support randomdice.gg',

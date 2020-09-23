@@ -1,9 +1,20 @@
 import * as Discord from 'discord.js';
 
 export default async function ping(message: Discord.Message): Promise<void> {
-    const latency = new Date().valueOf() - message.createdTimestamp;
+    const { createdTimestamp, channel, guild, member } = message;
 
-    message.channel.send(
+    const latency = new Date().valueOf() - createdTimestamp;
+
+    if (
+        guild &&
+        channel.id !== process.env.DEV_SERVER_ID &&
+        member?.hasPermission('ADMINISTRATOR')
+    ) {
+        await channel.send(
+            '`ping` command is only intended for testing purpose. Be only use it in DM channel or as `ADMINISTRATOR`.'
+        );
+    }
+    await message.channel.send(
         new Discord.MessageEmbed()
             .setTitle('Pong')
             .setDescription(`Time elapsed: ${latency}ms`)
