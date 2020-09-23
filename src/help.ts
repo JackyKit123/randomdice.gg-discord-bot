@@ -23,6 +23,11 @@ export default async function help(message: Discord.Message): Promise<void> {
                     '`.gg postnow <guide|news>` - force syncing data from the website into your registered channels',
             },
             {
+                name: 'Information',
+                value:
+                    '`.gg dice <Dice Name> [--class=?] [--level=?]` - show information about the dice, alias for arguments `-c` `-l`',
+            },
+            {
                 name: 'Other Commands',
                 value:
                     '`.gg ping` - ping the bot\n' +

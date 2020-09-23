@@ -6,6 +6,7 @@ import { register, unregister } from './register';
 import updateListener from './updateListener';
 import sendLink from './sendLinks';
 import ping from './ping';
+import dice from './dice';
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -69,6 +70,10 @@ client.on('message', async message => {
             }
             case 'postnow': {
                 await postNow(message, client, database);
+                break;
+            }
+            case 'dice': {
+                await dice(message, database);
                 break;
             }
             case 'help': {
