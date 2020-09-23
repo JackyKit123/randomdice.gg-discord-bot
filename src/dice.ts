@@ -1,50 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import * as textVersion from 'textversionjs';
-
-interface Alternatives {
-    desc: string;
-    list: Array<Dice['name']>;
-}
-
-interface ArenaValue {
-    type: 'Main Dps' | 'Assist Dps' | 'Slow' | 'Value';
-    assist: number;
-    dps: number;
-    slow: number;
-    value: number;
-}
-
-interface Dice {
-    id: number;
-    name: string;
-    type: 'Physical' | 'Magic' | 'Buff' | 'Merge' | 'Transform';
-    desc: string;
-    detail: string;
-    img: string;
-    target: 'Front' | 'Strongest' | 'Random' | 'Weakest' | '-';
-    rarity: 'Common' | 'Rare' | 'Unique' | 'Legendary';
-    atk: number;
-    spd: number;
-    eff1: number;
-    eff2: number;
-    nameEff1: string;
-    nameEff2: string;
-    unitEff1: string;
-    unitEff2: string;
-    cupAtk: number;
-    cupSpd: number;
-    cupEff1: number;
-    cupEff2: number;
-    pupAtk: number;
-    pupSpd: number;
-    pupEff1: number;
-    pupEff2: number;
-    alternatives?: Alternatives;
-    arenaValue: ArenaValue;
-}
-
-export type Dices = Dice[];
+import cache, { Dice } from './cache';
 
 export default async function dice(
     message: Discord.Message,
@@ -52,7 +9,7 @@ export default async function dice(
 ): Promise<void> {
     const { channel, content } = message;
     const [diceName, ...args] = content.replace(/^\.gg dice /, '').split(' ');
-    const diceList = (await database.ref('/dice').once('value')).val() as Dices;
+    const diceList = (await cache(database, 'dice')) as Dice[];
     const die = diceList.find(d =>
         d.name.toLowerCase().startsWith(diceName.toLowerCase())
     );

@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import * as textVersion from 'textversionjs';
-import * as diceEmoji from '../config/diceEmoji.json';
+import cache, { News, DeckGuide, Registry, EmojiList } from './cache';
 
 function escapeHtml(str: string): string {
     let output = str;
@@ -30,13 +30,11 @@ export async function postGuide(
     database: admin.database.Database,
     guild?: Discord.Guild
 ): Promise<void> {
-    const registeredGuilds = (
-        await database.ref('/discord_bot/registry').once('value')
-    ).val();
-    const registeredChannels = (Object.entries(registeredGuilds) as [
-        string,
-        { guide?: string }
-    ][])
+    const registeredGuilds = (await cache(
+        database,
+        'discord_bot/registry'
+    )) as Registry;
+    const registeredChannels = Object.entries(registeredGuilds)
         .filter(([guildId]) => (guild ? guild.id === guildId : true))
         .map(([, config]) => {
             if (!config.guide) {
@@ -47,30 +45,38 @@ export async function postGuide(
             ) as Discord.TextChannel;
         })
         .filter(channelId => channelId);
-    const data = (await database.ref('/decks_guide').once('value')).val() as {
-        id: number;
-        name: string;
-        type: string;
-        guide: string;
-        diceList: number[][];
-    }[];
-    const embeds = data
-        .map(guide => {
-            const title = guide.name;
-            const { type } = guide;
-            const diceList = guide.diceList.map(list =>
-                list.map(die => (diceEmoji as { [key: number]: string })[die])
-            );
-            const paragraph = textVersion(escapeHtml(guide.guide), {
-                linkProcess: (href, linkText) => linkText,
-            }).split('\n');
-            return {
-                title,
-                type,
-                diceList,
-                paragraph,
-            };
-        })
+    const data = (await cache(database, 'decks_guide')) as DeckGuide[];
+    const embeds = await (
+        await Promise.all(
+            data.map(async guide => {
+                const title = guide.name;
+                const { type } = guide;
+                const diceList = await Promise.all(
+                    guide.diceList.map(async list =>
+                        Promise.all(
+                            list.map(
+                                async die =>
+                                    ((await cache(
+                                        database,
+                                        'discord_bot/emoji'
+                                    )) as EmojiList)[die]
+                            )
+                        )
+                    )
+                );
+                const paragraph = textVersion(escapeHtml(guide.guide), {
+                    linkProcess: (href, linkText) => linkText,
+                }).split('\n');
+                return {
+                    title,
+                    type,
+                    diceList,
+                    paragraph,
+                };
+            })
+        )
+    )
+
         .map((parsedData): Discord.MessageEmbed | Discord.MessageEmbed[] => {
             const fields = [
                 ...parsedData.diceList.map((list, i) => ({
@@ -149,9 +155,10 @@ export async function postNews(
     database: admin.database.Database,
     guild?: Discord.Guild
 ): Promise<void> {
-    const registeredGuilds = (
-        await database.ref('/discord_bot/registry').once('value')
-    ).val();
+    const registeredGuilds = (await cache(
+        database,
+        'discord_bot/registry'
+    )) as Registry;
     const registeredChannels = (Object.entries(registeredGuilds) as [
         string,
         { news?: string }
@@ -166,9 +173,7 @@ export async function postNews(
             ) as Discord.TextChannel;
         })
         .filter(channelId => channelId);
-    const data = (await database.ref('/news').once('value')).val() as {
-        game: string;
-    };
+    const data = (await cache(database, 'news')) as News;
 
     const news = textVersion(escapeHtml(data.game), {
         linkProcess: (href, linkText) => linkText,
