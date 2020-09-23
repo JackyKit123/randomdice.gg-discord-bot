@@ -33,14 +33,19 @@ export async function postGuide(
     const registeredGuilds = (
         await database.ref('/discord_bot').once('value')
     ).val();
-    const registeredChannels = Object.entries(registeredGuilds)
+    const registeredChannels = (Object.entries(registeredGuilds) as [
+        string,
+        { guide?: string }
+    ][])
         .filter(([guildId]) => (guild ? guild.id === guildId : true))
-        .map(
-            ([, config]) =>
-                client.channels.cache.get(
-                    (config as { guide: string }).guide
-                ) as Discord.TextChannel
-        )
+        .map(([, config]) => {
+            if (!config.guide) {
+                throw new Error('missing registered guide channel.');
+            }
+            return client.channels.cache.get(
+                config.guide
+            ) as Discord.TextChannel;
+        })
         .filter(channelId => channelId);
     const data = (await database.ref('/decks_guide').once('value')).val() as {
         id: number;
@@ -147,14 +152,19 @@ export async function postNews(
     const registeredGuilds = (
         await database.ref('/discord_bot').once('value')
     ).val();
-    const registeredChannels = Object.entries(registeredGuilds)
+    const registeredChannels = (Object.entries(registeredGuilds) as [
+        string,
+        { news?: string }
+    ][])
         .filter(([guildId]) => (guild ? guild.id === guildId : true))
-        .map(
-            ([, config]) =>
-                client.channels.cache.get(
-                    (config as { news: string }).news
-                ) as Discord.TextChannel
-        )
+        .map(([, config]) => {
+            if (!config.news) {
+                throw new Error('missing registered news channel.');
+            }
+            return client.channels.cache.get(
+                config.news
+            ) as Discord.TextChannel;
+        })
         .filter(channelId => channelId);
     const data = (await database.ref('/news').once('value')).val() as {
         game: string;

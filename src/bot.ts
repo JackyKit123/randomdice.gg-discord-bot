@@ -2,7 +2,7 @@ import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import help from './help';
 import postNow from './postNow';
-import register from './register';
+import { register, unregister } from './register';
 import updateListener from './updateListener';
 import sendLink from './sendLinks';
 import ping from './ping';
@@ -61,6 +61,10 @@ client.on('message', async message => {
             }
             case 'register': {
                 await register(message, database);
+                break;
+            }
+            case 'unregister': {
+                await unregister(message, database);
                 break;
             }
             case 'postnow': {
