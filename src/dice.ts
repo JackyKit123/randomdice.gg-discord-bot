@@ -51,10 +51,10 @@ export default async function dice(
     database: admin.database.Database
 ): Promise<void> {
     const { channel, content } = message;
-    const [, , diceName, ...args] = content.split(' ');
+    const [diceName, ...args] = content.replace(/$\.gg dice /, '').split(' ');
     const diceList = (await database.ref('/dice').once('value')).val() as Dices;
-    const die = diceList.find(
-        d => d.name.toLowerCase() === diceName.toLowerCase()
+    const die = diceList.find(d =>
+        d.name.toLowerCase().startsWith(diceName.toLowerCase())
     );
     if (!die) {
         await channel.send(`Dice \`${diceName}\` is not a valid dice.`);
