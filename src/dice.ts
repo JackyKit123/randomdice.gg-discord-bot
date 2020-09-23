@@ -123,7 +123,14 @@ export default async function dice(
     await channel.send(
         new Discord.MessageEmbed()
             .setTitle(`${die.name} Dice`)
-            .setDescription(textVersion(die.detail))
+            .setDescription(
+                textVersion(
+                    die.detail
+                        .replace('*', '\\*')
+                        .replace('~', '\\~')
+                        .replace('_', '\\_')
+                )
+            )
             .setThumbnail(die.img)
             .setAuthor(
                 'Random Dice Community Website',
