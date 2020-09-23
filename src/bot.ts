@@ -32,15 +32,21 @@ client.on('ready', () => {
     if (process.env.NODE_ENV === 'development') {
         (
             (client.channels.cache.get(
-                '757766843502034977'
+                process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
             ) as Discord.TextChannel) || undefined
         )?.send(`Bot is alive at ${new Date().toTimeString()}`);
     }
 });
 
 client.on('message', async message => {
-    const { content, channel } = message;
+    const { content, channel, guild } = message;
     const [suffix, command] = content.split(' ');
+    if (
+        process.env.NODE_ENV === 'development' &&
+        guild?.id !== process.env.DEV_SERVER_ID
+    ) {
+        return;
+    }
     if (suffix !== '.gg' || !command) {
         return;
     }

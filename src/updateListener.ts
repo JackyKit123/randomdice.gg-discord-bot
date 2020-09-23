@@ -8,12 +8,20 @@ export default function listener(
 ): void {
     const lastExecuted = {
         guide: new Date(),
+        news: new Date(),
     };
     database.ref('/decks_guide').on('child_changed', async () => {
         const currentTime = new Date();
         if (currentTime.valueOf() - lastExecuted.guide.valueOf() > 15000) {
             lastExecuted.guide = new Date();
             await post.postGuide(client, database);
+        }
+    });
+    database.ref('/news').on('child_changed', async () => {
+        const currentTime = new Date();
+        if (currentTime.valueOf() - lastExecuted.news.valueOf() > 15000) {
+            lastExecuted.news = new Date();
+            await post.postNews(client, database);
         }
     });
 }

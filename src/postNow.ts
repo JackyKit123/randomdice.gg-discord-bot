@@ -3,6 +3,28 @@ import * as admin from 'firebase-admin';
 import * as textVersion from 'textversionjs';
 import * as diceEmoji from '../config/diceEmoji.json';
 
+function escapeHtml(str: string): string {
+    let output = str;
+    const characters = {
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '\\>',
+        '&quot;': '"',
+        '&#39;': "'",
+        '&#x2F;': '/',
+        '<i>': '*',
+        '</i>': '*',
+        '<b>': '**',
+        '</b>': '**',
+        '<strong>': '**',
+        '</strong>': '**',
+    };
+    Object.entries(characters).forEach(([code, character]) => {
+        output = output.replace(new RegExp(code, 'g'), character);
+    });
+    return output;
+}
+
 export async function postGuide(
     client: Discord.Client,
     database: admin.database.Database,
@@ -34,7 +56,7 @@ export async function postGuide(
             const diceList = guide.diceList.map(list =>
                 list.map(die => (diceEmoji as { [key: number]: string })[die])
             );
-            const paragraph = textVersion(guide.guide, {
+            const paragraph = textVersion(escapeHtml(guide.guide), {
                 linkProcess: (href, linkText) => linkText,
             }).split('\n');
             return {
@@ -103,7 +125,127 @@ export async function postGuide(
         .flat();
     registeredChannels.forEach(async channel => {
         const fetched = (await channel.messages.fetch({ limit: 100 })).filter(
-            message => message.author.id === '723917706641801316'
+            message => message.author.id === client.user?.id
+        );
+        await channel.bulkDelete(fetched);
+        embeds.forEach(async embed => {
+            try {
+                await channel.send(embed);
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error(err);
+            }
+        });
+    });
+}
+
+export async function postNews(
+    client: Discord.Client,
+    database: admin.database.Database,
+    guild?: Discord.Guild
+): Promise<void> {
+    const registeredGuilds = (
+        await database.ref('/discord_bot').once('value')
+    ).val();
+    const registeredChannels = Object.entries(registeredGuilds)
+        .filter(([guildId]) => (guild ? guild.id === guildId : true))
+        .map(
+            ([, config]) =>
+                client.channels.cache.get(
+                    (config as { news: string }).news
+                ) as Discord.TextChannel
+        )
+        .filter(channelId => channelId);
+    const data = (await database.ref('/news').once('value')).val() as {
+        game: string;
+    };
+
+    const news = textVersion(escapeHtml(data.game), {
+        linkProcess: (href, linkText) => linkText,
+    }).split('\n');
+
+    const fields = news
+        .filter(p => p !== '')
+        .map((p, i) => ({
+            name: i === 0 ? 'News' : '⠀',
+            value: p,
+        }));
+
+    const embeds = new Array(Math.ceil(news.length / 16))
+        .fill('')
+        .map((_, i) => {
+            switch (Math.ceil(news.length / 16)) {
+                case 1:
+                    return [
+                        new Discord.MessageEmbed()
+                            .setColor('#6ba4a5')
+                            .setTitle(`Random Dice news`)
+                            .setAuthor(
+                                'Random Dice Community Website',
+                                'https://randomdice.gg/title_dice.png',
+                                'https://randomdice.gg/'
+                            )
+                            .setURL('https://randomdice.gg/')
+                            .addFields(fields)
+                            .setFooter(
+                                'randomdice.gg News Update',
+                                'https://randomdice.gg/title_dice.png'
+                            ),
+                    ];
+                case 2: {
+                    return i === 0
+                        ? new Discord.MessageEmbed()
+                              .setColor('#6ba4a5')
+                              .setTitle(`Random Dice news`)
+                              .setAuthor(
+                                  'Random Dice Community Website',
+                                  'https://randomdice.gg/title_dice.png',
+                                  'https://randomdice.gg/'
+                              )
+                              .setColor('#6ba4a5')
+                              .setURL('https://randomdice.gg/')
+                              .addFields(fields.slice(0, 16))
+                        : new Discord.MessageEmbed()
+                              .setColor('#6ba4a5')
+                              .setColor('#6ba4a5')
+                              .addFields(fields.slice(16))
+                              .setFooter(
+                                  'randomdice.gg News Update',
+                                  'https://randomdice.gg/title_dice.png'
+                              );
+                }
+                default: {
+                    if (i === 0) {
+                        return new Discord.MessageEmbed()
+                            .setColor('#6ba4a5')
+                            .setTitle(`Random Dice news`)
+                            .setAuthor(
+                                'Random Dice Community Website',
+                                'https://randomdice.gg/title_dice.png',
+                                'https://randomdice.gg/'
+                            )
+                            .setURL('https://randomdice.gg/')
+                            .addFields(fields.slice(0, 16));
+                    }
+                    if (i === Math.ceil(news.length / 16)) {
+                        return new Discord.MessageEmbed()
+                            .setColor('#6ba4a5')
+                            .addFields(fields.slice(16 * i))
+                            .setFooter(
+                                'randomdice.gg News Update',
+                                'https://randomdice.gg/title_dice.png'
+                            );
+                    }
+                    return new Discord.MessageEmbed()
+                        .setColor('#6ba4a5')
+                        .addFields(fields.slice(16 * i, 16 * (i + 1)));
+                }
+            }
+        });
+
+    registeredChannels.forEach(async channel => {
+        const fetched = (await channel.messages.fetch({ limit: 10 })).filter(
+            message => message.author.id === client.user?.id
         );
         await channel.bulkDelete(fetched);
         embeds.forEach(async embed => {
@@ -139,9 +281,12 @@ export default async function postNow(
         case 'guide':
             await postGuide(client, database, guild);
             return;
+        case 'news':
+            await postNews(client, database, guild);
+            return;
         default:
             await channel.send(
-                'target type not found, supported type: `guide`'
+                'target type not found, supported type: `guide` `news`'
             );
     }
 }

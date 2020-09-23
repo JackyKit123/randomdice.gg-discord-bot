@@ -19,8 +19,8 @@ export default async function help(message: Discord.Message): Promise<void> {
                 name:
                     'Configuration Commands (require MANAGE_CHANNEL permission)',
                 value:
-                    '`.gg register <guide|list> <channel-mention>` - register channel to sync data from the website, `list` will return a list of registered channels.\n' +
-                    '`.gg postnow <guide>` - force syncing data from the website into your registered channels',
+                    '`.gg register <guide|news|list> <channel-mention>` - register channel to sync data from the website, `list` will return a list of registered channels.\n' +
+                    '`.gg postnow <guide|news>` - force syncing data from the website into your registered channels',
             },
             {
                 name: 'Other Commands',

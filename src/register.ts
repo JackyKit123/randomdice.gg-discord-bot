@@ -44,14 +44,15 @@ export default async function register(
         }
 
         switch (type) {
-            case 'guide': {
+            case 'guide':
+            case 'news': {
                 if (!targetedChannel) {
                     await channel.send(
                         'I cannot locate the channel to register.'
                     );
                 } else {
                     await database
-                        .ref(`/discord_bot/${guild.id}/guide`)
+                        .ref(`/discord_bot/${guild.id}/${type}`)
                         .set(targetedChannel.id);
                     await channel.send(
                         `Registered Channel <#${targetedChannel.id}> to provide ${type}`
@@ -64,7 +65,7 @@ export default async function register(
                 break;
             default:
                 await channel.send(
-                    'target type not found, supported type: `guide` `list`'
+                    'target type not found, supported type: `guide` `news` `list`'
                 );
         }
     } catch (err) {
