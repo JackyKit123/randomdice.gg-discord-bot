@@ -84,7 +84,7 @@ export default async function dice(
     const dieLevel =
         Number(
             args.find(arg => arg.match(/^(-l|--level)=[1-5]$/))?.split('=')[1]
-        ) || 0;
+        ) || 1;
     if (dieClass < minClass) {
         await channel.send(
             `${die.name} dice is in ${die.rarity} tier, its minimum class is ${minClass}.`
