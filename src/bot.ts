@@ -30,13 +30,15 @@ client.on('ready', () => {
     client.user?.setActivity('.gg help', {
         type: 'PLAYING',
     });
-    if (process.env.NODE_ENV === 'development') {
-        (
-            (client.channels.cache.get(
-                process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
-            ) as Discord.TextChannel) || undefined
-        )?.send(`Bot is alive at ${new Date().toTimeString()}`);
-    }
+    (
+        (client.channels.cache.get(
+            process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
+        ) as Discord.TextChannel) || undefined
+    )?.send(
+        `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
+            process.env.NODE_ENV
+        }`
+    );
 });
 
 client.on('message', async message => {
