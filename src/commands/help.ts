@@ -29,6 +29,7 @@ export default async function help(message: Discord.Message): Promise<void> {
                     '`.gg deck <PvP|Co-op|Crew>` - show the deck list',
                     '`.gg guide <Guide Name|list>` - show the detail guide for a certain guide. ".gg register list" will return a list of guides\' name.',
                     '`.gg boss <Boss Name>` - show information about the boss.',
+                    '`.gg randomtip` - show you a random tip',
                 ].join('\n'),
             },
             {

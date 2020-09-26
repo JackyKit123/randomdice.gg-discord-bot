@@ -107,7 +107,7 @@ type keys =
     | 'discord_bot/emoji'
     | 'discord_bot/registry'
     | 'wiki/boss'
-    | 'wiki/tip';
+    | 'wiki/tips';
 
 export default async function getData(
     database: admin.database.Database,

@@ -10,6 +10,7 @@ import dice from './commands/dice';
 import deck from './commands/deck';
 import guide from './commands/guide';
 import boss from './commands/boss';
+import randomTip from './commands/tip';
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -93,6 +94,10 @@ client.on('message', async message => {
             }
             case 'help': {
                 await help(message);
+                break;
+            }
+            case 'randomtip': {
+                await randomTip(message, database);
                 break;
             }
             case 'website':
