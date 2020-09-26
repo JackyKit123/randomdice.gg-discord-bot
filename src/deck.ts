@@ -56,8 +56,9 @@ export default async function decklist(
                 )
                 .setURL(`https://randomdice.gg/decks/${type}`)
                 .setDescription(
-                    `Showing page ${i +
-                        1} of ${pageNumbers}. Each deck is listed below with a rating.`
+                    `Showing page ${
+                        i + 1
+                    } of ${pageNumbers}. Each deck is listed below with a rating.`
                 )
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setFooter(
