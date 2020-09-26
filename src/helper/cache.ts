@@ -76,24 +76,29 @@ export interface Registry {
     };
 }
 
-declare const globalThis: {
-    news?: News;
-    // eslint-disable-next-line camelcase
-    decks_guide?: DeckGuide[];
-    dice: Dice[];
-    decks: Deck[];
-    'discord_bot/emoji'?: EmojiList;
-    'discord_bot/registry'?: Registry;
-};
+export interface Boss {
+    id: number;
+    name: string;
+    img: string;
+    desc: string;
+}
 
-type Data = News | DeckGuide[] | Dice[] | Deck[] | EmojiList | Registry;
+type Data =
+    | News
+    | DeckGuide[]
+    | Dice[]
+    | Deck[]
+    | EmojiList
+    | Registry
+    | Boss[];
 type keys =
     | 'decks_guide'
     | 'dice'
     | 'decks'
     | 'news'
     | 'discord_bot/emoji'
-    | 'discord_bot/registry';
+    | 'discord_bot/registry'
+    | 'wiki/boss';
 
 export default async function getData(
     database: admin.database.Database,

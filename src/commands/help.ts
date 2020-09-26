@@ -28,6 +28,7 @@ export default async function help(message: Discord.Message): Promise<void> {
                     '`.gg dice <Dice Name> [--class=?] [--level=?]` - show information about the dice, alias for arguments `-c` `-l`',
                     '`.gg deck <PvP|Co-op|Crew>` - show the deck list',
                     '`.gg guide <Guide Name|list>` - show the detail guide for a certain guide. ".gg register list" will return a list of guides\' name.',
+                    '`.gg boss <Boss Name>` - show information about the boss.',
                 ].join('\n'),
             },
             {

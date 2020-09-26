@@ -9,6 +9,7 @@ import ping from './commands/ping';
 import dice from './commands/dice';
 import deck from './commands/deck';
 import guide from './commands/guide';
+import boss from './commands/boss';
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -84,6 +85,10 @@ client.on('message', async message => {
             }
             case 'deck': {
                 await deck(message, database);
+                break;
+            }
+            case 'boss': {
+                await boss(message, database);
                 break;
             }
             case 'help': {
