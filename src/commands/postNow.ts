@@ -1,29 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import * as textVersion from 'textversionjs';
 import cache, { News, DeckGuide, Registry, EmojiList } from '../helper/cache';
-
-function escapeHtml(str: string): string {
-    let output = str;
-    const characters = {
-        '&amp;': '&',
-        '&lt;': '<',
-        '&gt;': '\\>',
-        '&quot;': '"',
-        '&#39;': "'",
-        '&#x2F;': '/',
-        '<i>': '*',
-        '</i>': '*',
-        '<b>': '**',
-        '</b>': '**',
-        '<strong>': '**',
-        '</strong>': '**',
-    };
-    Object.entries(characters).forEach(([code, character]) => {
-        output = output.replace(new RegExp(code, 'g'), character);
-    });
-    return output;
-}
+import parsedText from '../helper/parseText';
 
 export async function postGuide(
     client: Discord.Client,
@@ -64,9 +42,7 @@ export async function postGuide(
                         )
                     )
                 );
-                const paragraph = textVersion(escapeHtml(guide.guide), {
-                    linkProcess: (href, linkText) => linkText,
-                }).split('\n');
+                const paragraph = parsedText(guide.guide).split('\n');
                 return {
                     title,
                     type,
@@ -170,9 +146,7 @@ export async function postNews(
         .filter(channelId => channelId);
     const data = (await cache(database, 'news')) as News;
 
-    const news = textVersion(escapeHtml(data.game), {
-        linkProcess: (href, linkText) => linkText,
-    }).split('\n');
+    const news = parsedText(data.game).split('\n');
 
     const fields = news
         .filter(p => p !== '')

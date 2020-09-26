@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import * as textVersion from 'textversionjs';
 import cache, { Dice } from '../helper/cache';
+import parsedText from '../helper/parseText';
 
 export default async function dice(
     message: Discord.Message,
@@ -80,14 +80,7 @@ export default async function dice(
     await channel.send(
         new Discord.MessageEmbed()
             .setTitle(`${die.name} Dice`)
-            .setDescription(
-                textVersion(
-                    die.detail
-                        .replace('*', '\\*')
-                        .replace('~', '\\~')
-                        .replace('_', '\\_')
-                )
-            )
+            .setDescription(parsedText(die.detail))
             .setThumbnail(die.img)
             .setAuthor(
                 'Random Dice Community Website',
