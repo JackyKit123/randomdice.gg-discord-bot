@@ -17,7 +17,10 @@ export default async function dice(
     }
     const diceList = (await cache(database, 'dice')) as Dice[];
     const die = diceList.find(d =>
-        d.name.toLowerCase().startsWith(diceName.toLowerCase())
+        [diceName, ...args]
+            .join(' ')
+            .toLowerCase()
+            .startsWith(d.name.toLowerCase())
     );
     if (!die) {
         await channel.send(`Dice \`${diceName}\` is not a valid dice.`);
@@ -94,7 +97,7 @@ export default async function dice(
                 'https://randomdice.gg/'
             )
             .setColor('#6ba4a5')
-            .setURL(`https://randomdice.gg/wiki/dice_mechanics#${diceName}`)
+            .setURL(`https://randomdice.gg/wiki/dice_mechanics`)
             .addFields([
                 {
                     name: 'Attack Damage',
