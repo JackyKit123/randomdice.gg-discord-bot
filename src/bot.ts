@@ -8,6 +8,7 @@ import sendLink from './commands/sendLinks';
 import ping from './commands/ping';
 import dice from './commands/dice';
 import deck from './commands/deck';
+import guide from './commands/guide';
 
 const client = new Discord.Client();
 admin.initializeApp({
@@ -75,6 +76,10 @@ client.on('message', async message => {
             }
             case 'dice': {
                 await dice(message, database);
+                break;
+            }
+            case 'guide': {
+                await guide(message, database);
                 break;
             }
             case 'deck': {

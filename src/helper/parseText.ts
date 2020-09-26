@@ -4,7 +4,7 @@ export default function replace(originalText: string): string {
     let output = originalText;
 
     const escapeDiscordMarkdown = {
-        '*': '\\*',
+        '\\*': '\\*',
         '~': '\\~',
         _: '\\_',
         '`': '\\`',

@@ -27,8 +27,7 @@ export async function postGuide(
     const embeds = await (
         await Promise.all(
             data.map(async guide => {
-                const title = guide.name;
-                const { type } = guide;
+                const { type, name } = guide;
                 const diceList = await Promise.all(
                     guide.diceList.map(async list =>
                         Promise.all(
@@ -44,7 +43,7 @@ export async function postGuide(
                 );
                 const paragraph = parsedText(guide.guide).split('\n');
                 return {
-                    title,
+                    name,
                     type,
                     diceList,
                     paragraph,
@@ -55,8 +54,9 @@ export async function postGuide(
 
         .map((parsedData): Discord.MessageEmbed | Discord.MessageEmbed[] => {
             const fields = [
-                ...parsedData.diceList.map((list, i) => ({
-                    name: i === 0 ? 'Guide' : '⠀',
+                ...parsedData.diceList.map((list, i, decks) => ({
+                    // eslint-disable-next-line no-nested-ternary
+                    name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '⠀',
                     value: list.join(' '),
                 })),
                 ...parsedData.paragraph
@@ -69,7 +69,7 @@ export async function postGuide(
             return fields.length > 16
                 ? [
                       new Discord.MessageEmbed()
-                          .setTitle(`${parsedData.title} (${parsedData.type})`)
+                          .setTitle(`${parsedData.name} (${parsedData.type})`)
                           .setAuthor(
                               'Random Dice Community Website',
                               'https://randomdice.gg/title_dice.png',
@@ -78,7 +78,7 @@ export async function postGuide(
                           .setColor('#6ba4a5')
                           .setURL(
                               `https://randomdice.gg/decks/guide/${encodeURI(
-                                  parsedData.title
+                                  parsedData.name
                               )}`
                           )
                           .addFields(fields.slice(0, 16)),
@@ -91,7 +91,7 @@ export async function postGuide(
                           ),
                   ]
                 : new Discord.MessageEmbed()
-                      .setTitle(`${parsedData.title} (${parsedData.type})`)
+                      .setTitle(`${parsedData.name} (${parsedData.type})`)
                       .setAuthor(
                           'Random Dice Community Website',
                           'https://randomdice.gg/title_dice.png',
@@ -100,7 +100,7 @@ export async function postGuide(
                       .setColor('#6ba4a5')
                       .setURL(
                           `https://randomdice.gg/decks/guide/${encodeURI(
-                              parsedData.title
+                              parsedData.name
                           )}`
                       )
                       .addFields(fields)

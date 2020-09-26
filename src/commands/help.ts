@@ -18,7 +18,7 @@ export default async function help(message: Discord.Message): Promise<void> {
             {
                 name: 'Sync Data (require MANAGE_CHANNEL permission)',
                 value: [
-                    '`.gg register <guide|news|list> <channel-mention>` - register channel to sync data from the website, `list` will return a list of registered channels.',
+                    '`.gg register <guide|news|list> <channel-mention>` - register channel to sync data from the website, ".gg register list" will return a list of registered channels.',
                     '`.gg postnow <guide|news>` - force syncing data from the website into your registered channels',
                 ].join('\n'),
             },
@@ -27,7 +27,7 @@ export default async function help(message: Discord.Message): Promise<void> {
                 value: [
                     '`.gg dice <Dice Name> [--class=?] [--level=?]` - show information about the dice, alias for arguments `-c` `-l`',
                     '`.gg deck <PvP|Co-op|Crew>` - show the deck list',
-                    '`.gg guide <Guide Name>` - show the detail guide for a certain guide',
+                    '`.gg guide <Guide Name|list>` - show the detail guide for a certain guide. ".gg register list" will return a list of guides\' name.',
                 ].join('\n'),
             },
             {
