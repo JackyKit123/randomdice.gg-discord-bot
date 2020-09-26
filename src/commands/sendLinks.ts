@@ -4,12 +4,14 @@ export default async function sendLinks(
     message: Discord.Message
 ): Promise<void> {
     const { channel, content } = message;
-    const [, command, path] = content.split(' ');
+    const [, command, ...args] = content.split(' ');
 
     switch (command) {
         case 'website':
-            if (path?.startsWith('/')) {
-                await channel.send(`https://randomdice.gg${encodeURI(path)}`);
+            if (args[0]?.startsWith('/')) {
+                await channel.send(
+                    `https://randomdice.gg${encodeURI(args.join(' '))}`
+                );
             } else {
                 await channel.send('https://randomdice.gg/');
             }
