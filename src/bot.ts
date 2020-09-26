@@ -1,13 +1,13 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import help from './help';
-import postNow from './postNow';
-import { register, unregister } from './register';
-import updateListener from './updateListener';
-import sendLink from './sendLinks';
-import ping from './ping';
-import dice from './dice';
-import deck from './deck';
+import help from './commands/help';
+import postNow from './commands/postNow';
+import { register, unregister } from './commands/register';
+import updateListener from './helper/updateListener';
+import sendLink from './commands/sendLinks';
+import ping from './commands/ping';
+import dice from './commands/dice';
+import deck from './commands/deck';
 
 const client = new Discord.Client();
 admin.initializeApp({

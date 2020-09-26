@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import * as textVersion from 'textversionjs';
-import cache, { News, DeckGuide, Registry, EmojiList } from './cache';
+import cache, { News, DeckGuide, Registry, EmojiList } from '../helper/cache';
 
 function escapeHtml(str: string): string {
     let output = str;

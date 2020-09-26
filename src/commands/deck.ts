@@ -1,6 +1,6 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import cache, { Deck, EmojiList } from './cache';
+import cache, { Deck, EmojiList } from '../helper/cache';
 
 export default async function decklist(
     message: Discord.Message,

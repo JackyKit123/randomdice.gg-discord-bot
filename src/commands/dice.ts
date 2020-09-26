@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import * as textVersion from 'textversionjs';
-import cache, { Dice } from './cache';
+import cache, { Dice } from '../helper/cache';
 
 export default async function dice(
     message: Discord.Message,
