@@ -7,7 +7,7 @@ export default async function decklist(
     database: admin.database.Database
 ): Promise<void> {
     const { content, channel } = message;
-    const [, , type] = content.split(' ');
+    const [, , type, page] = content.split(' ');
     if (!type.match(/^(pvp|co-op|crew)$/)) {
         await channel.send('Please specify deck type in: `PvP` `Co-op` `Crew`');
         return;
@@ -31,6 +31,12 @@ export default async function decklist(
         }));
     const pageNumbers = Math.ceil(fields.length / 10);
     let currentPage = 0;
+    if (Number(page) >= 0) {
+        currentPage = Number(page) - 1;
+        if (currentPage > pageNumbers) {
+            currentPage = pageNumbers - 1;
+        }
+    }
     const embeds = Array(pageNumbers)
         .fill('')
         .map((_, i) =>
@@ -58,7 +64,7 @@ export default async function decklist(
                 .setDescription(
                     `Showing page ${
                         i + 1
-                    } of ${pageNumbers}. Each deck is listed below with a rating.`
+                    } of ${pageNumbers}. Each deck is listed below with a rating. Use the message reaction to flip page.`
                 )
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setFooter(
