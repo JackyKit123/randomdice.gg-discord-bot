@@ -134,20 +134,15 @@ export async function postGuide(
                       );
         })
         .flat();
-    registeredChannels.forEach(async channel => {
-        const fetched = (await channel.messages.fetch({ limit: 100 })).filter(
-            message => message.author.id === client.user?.id
-        );
-        await channel.bulkDelete(fetched);
-        embeds.forEach(async embed => {
-            try {
-                await channel.send(embed);
-            } catch (err) {
-                // eslint-disable-next-line no-console
-                console.error(err);
-            }
-        });
-    });
+    await Promise.all(
+        registeredChannels.map(async channel => {
+            const fetched = (
+                await channel.messages.fetch({ limit: 100 })
+            ).filter(message => message.author.id === client.user?.id);
+            await channel.bulkDelete(fetched);
+            return Promise.all(embeds.map(async embed => channel.send(embed)));
+        })
+    );
 }
 
 export async function postNews(
@@ -194,7 +189,7 @@ export async function postNews(
                     return [
                         new Discord.MessageEmbed()
                             .setColor('#6ba4a5')
-                            .setTitle(`Random Dice news`)
+                            .setTitle('Random Dice news')
                             .setAuthor(
                                 'Random Dice Community Website',
                                 'https://randomdice.gg/title_dice.png',
@@ -211,7 +206,7 @@ export async function postNews(
                     return i === 0
                         ? new Discord.MessageEmbed()
                               .setColor('#6ba4a5')
-                              .setTitle(`Random Dice news`)
+                              .setTitle('Random Dice news')
                               .setAuthor(
                                   'Random Dice Community Website',
                                   'https://randomdice.gg/title_dice.png',
@@ -233,7 +228,7 @@ export async function postNews(
                     if (i === 0) {
                         return new Discord.MessageEmbed()
                             .setColor('#6ba4a5')
-                            .setTitle(`Random Dice news`)
+                            .setTitle('Random Dice news')
                             .setAuthor(
                                 'Random Dice Community Website',
                                 'https://randomdice.gg/title_dice.png',
@@ -258,20 +253,15 @@ export async function postNews(
             }
         });
 
-    registeredChannels.forEach(async channel => {
-        const fetched = (await channel.messages.fetch({ limit: 10 })).filter(
-            message => message.author.id === client.user?.id
-        );
-        await channel.bulkDelete(fetched);
-        embeds.forEach(async embed => {
-            try {
-                await channel.send(embed);
-            } catch (err) {
-                // eslint-disable-next-line no-console
-                console.error(err);
-            }
-        });
-    });
+    await Promise.all(
+        registeredChannels.map(async channel => {
+            const fetched = (
+                await channel.messages.fetch({ limit: 10 })
+            ).filter(message => message.author.id === client.user?.id);
+            await channel.bulkDelete(fetched);
+            return Promise.all(embeds.map(async embed => channel.send(embed)));
+        })
+    );
 }
 
 export default async function postNow(
@@ -292,16 +282,19 @@ export default async function postNow(
         return;
     }
 
+    const statusMessage = await channel.send(`Now posting ${type}...`);
     switch (type) {
         case 'guide':
             await postGuide(client, database, guild);
+            await statusMessage.edit(`Finished Posting ${type}`);
             return;
         case 'news':
             await postNews(client, database, guild);
+            await statusMessage.edit(`Finished Posting ${type}`);
             return;
         default:
-            await channel.send(
-                'target type not found, supported type: `guide` `news`'
+            await statusMessage.edit(
+                'Target type not found, supported type: `guide` `news`'
             );
     }
 }

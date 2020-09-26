@@ -10,7 +10,7 @@ export default async function ping(message: Discord.Message): Promise<void> {
         !member?.hasPermission('ADMINISTRATOR')
     ) {
         await channel.send(
-            '`ping` command is only intended for testing purpose. Be only use it in DM channel or as `ADMINISTRATOR`.'
+            '`ping` command is only intended for testing purpose. Please only use it in DM channel or as `ADMINISTRATOR`.'
         );
         return;
     }

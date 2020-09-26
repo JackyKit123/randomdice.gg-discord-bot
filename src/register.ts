@@ -80,7 +80,7 @@ export async function register(
             break;
         default:
             await channel.send(
-                'Targeted type not found, supported type: `guide` `news` `list`'
+                'Targeted type not found, supported type: `guide` `news`, or list all registered channel `.gg register list`'
             );
     }
 }
