@@ -100,7 +100,7 @@ export default async function getData(
     target: keys
 ): Promise<Data> {
     const cachePath = (location: string): string =>
-        path.resolve(__dirname, '..', 'cache', `${location}.json`);
+        path.resolve(__dirname, '..', '..', 'cache', `${location}.json`);
     const localVersion = JSON.parse(
         fs.readFileSync(cachePath('last_updated'), {
             encoding: 'utf8',
