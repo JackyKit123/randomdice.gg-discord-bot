@@ -83,6 +83,12 @@ export interface Boss {
     desc: string;
 }
 
+export interface Tip {
+    id: number;
+    img: string;
+    desc: string;
+}
+
 type Data =
     | News
     | DeckGuide[]
@@ -90,7 +96,9 @@ type Data =
     | Deck[]
     | EmojiList
     | Registry
-    | Boss[];
+    | Boss[]
+    | Tip[];
+
 type keys =
     | 'decks_guide'
     | 'dice'
@@ -98,7 +106,8 @@ type keys =
     | 'news'
     | 'discord_bot/emoji'
     | 'discord_bot/registry'
-    | 'wiki/boss';
+    | 'wiki/boss'
+    | 'wiki/tip';
 
 export default async function getData(
     database: admin.database.Database,
@@ -113,7 +122,9 @@ export default async function getData(
         }) || '{}'
     );
     const remoteVersion = (
-        await database.ref(`/last_updated/${target}`).once('value')
+        await database
+            .ref(`/last_updated/${target.split('/')[0]}`)
+            .once('value')
     ).val();
     if (localVersion[target] === remoteVersion) {
         return JSON.parse(

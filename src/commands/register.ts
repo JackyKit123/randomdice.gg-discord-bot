@@ -66,9 +66,14 @@ export async function register(
                     );
                     return;
                 }
-                await database
-                    .ref(`/discord_bot/registry/${guild.id}/${type}`)
-                    .set(targetedChannel.id);
+                await Promise.all([
+                    database
+                        .ref(`/discord_bot/registry/${guild.id}/${type}`)
+                        .set(targetedChannel.id),
+                    database
+                        .ref('/last_updated/discord_bot')
+                        .set(new Date().toISOString()),
+                ]);
                 await channel.send(
                     `Registered Channel <#${targetedChannel.id}> to provide ${type}`
                 );
@@ -102,6 +107,9 @@ export async function unregister(
         return;
     }
     const type = content.split(' ')[2];
-    await database.ref(`/discord_bot/registry/${guild.id}/${type}`).set(null);
+    await Promise.all([
+        database.ref(`/discord_bot/registry/${guild.id}/${type}`).set(null),
+        database.ref('/last_updated/discord_bot').set(new Date().toISOString()),
+    ]);
     await channel.send(`Unregistered updates for ${type}`);
 }
