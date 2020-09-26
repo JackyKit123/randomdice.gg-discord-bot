@@ -102,18 +102,22 @@ export default async function dice(
                 {
                     name: 'Attack Damage',
                     value: atk || '-',
+                    inline: true,
                 },
                 {
                     name: 'Type',
                     value: die.type,
+                    inline: true,
                 },
                 {
                     name: 'Attack Speed',
                     value: spd ? `${spd}s` : '-',
+                    inline: true,
                 },
                 {
                     name: 'Target',
                     value: die.target,
+                    inline: true,
                 },
                 ...(!die.nameEff1 || die.nameEff1 === '-'
                     ? []
@@ -121,6 +125,7 @@ export default async function dice(
                           {
                               name: die.nameEff1,
                               value: eff1 + die.unitEff1,
+                              inline: true,
                           },
                       ]),
                 ...(!die.nameEff2 || die.nameEff2 === '-'
@@ -129,6 +134,7 @@ export default async function dice(
                           {
                               name: die.nameEff2,
                               value: eff2 + die.unitEff2,
+                              inline: true,
                           },
                       ]),
             ])
