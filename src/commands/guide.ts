@@ -9,13 +9,13 @@ export default async function deckGuide(
 ): Promise<void> {
     const { channel, content } = message;
     const guideName = content.replace(/^\.gg guide ?/, '');
-    const guides = (await cache(database, 'decks_guide')) as DeckGuide[];
     if (!guideName) {
         await channel.send(
             'Please include the guide name or use parameter `list` to list guides'
         );
         return;
     }
+    const guides = (await cache(database, 'decks_guide')) as DeckGuide[];
     if (guideName === 'list') {
         await channel.send(
             `Here is the list of guides: ${guides
