@@ -8,6 +8,7 @@ export interface News {
 }
 
 export interface DeckGuide {
+    archived: boolean;
     id: number;
     name: string;
     type: 'PvP' | 'Co-op' | 'Crew';

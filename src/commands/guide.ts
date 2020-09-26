@@ -32,7 +32,7 @@ export default async function deckGuide(
         return;
     }
 
-    const { diceList, name, type, guide } = guideData;
+    const { diceList, name, type, guide, archived } = guideData;
     const emojiDiceList = await Promise.all(
         diceList.map(async list =>
             Promise.all(
@@ -61,7 +61,7 @@ export default async function deckGuide(
             })),
     ];
     const embed = new Discord.MessageEmbed()
-        .setTitle(`${name} (${type})`)
+        .setTitle(`${name} (${type})${archived ? '**ARCHIVED**' : ''}`)
         .setAuthor(
             'Random Dice Community Website',
             'https://randomdice.gg/title_dice.png',

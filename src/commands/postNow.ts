@@ -26,29 +26,31 @@ export async function postGuide(
     const data = (await cache(database, 'decks_guide')) as DeckGuide[];
     const embeds = await (
         await Promise.all(
-            data.map(async guide => {
-                const { type, name } = guide;
-                const diceList = await Promise.all(
-                    guide.diceList.map(async list =>
-                        Promise.all(
-                            list.map(
-                                async die =>
-                                    ((await cache(
-                                        database,
-                                        'discord_bot/emoji'
-                                    )) as EmojiList)[die]
+            data
+                .filter(guide => !guide.archived)
+                .map(async guide => {
+                    const { type, name } = guide;
+                    const diceList = await Promise.all(
+                        guide.diceList.map(async list =>
+                            Promise.all(
+                                list.map(
+                                    async die =>
+                                        ((await cache(
+                                            database,
+                                            'discord_bot/emoji'
+                                        )) as EmojiList)[die]
+                                )
                             )
                         )
-                    )
-                );
-                const paragraph = parsedText(guide.guide).split('\n');
-                return {
-                    name,
-                    type,
-                    diceList,
-                    paragraph,
-                };
-            })
+                    );
+                    const paragraph = parsedText(guide.guide).split('\n');
+                    return {
+                        name,
+                        type,
+                        diceList,
+                        paragraph,
+                    };
+                })
         )
     )
 
