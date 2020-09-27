@@ -12,6 +12,8 @@ import guide from './commands/guide';
 import boss from './commands/boss';
 import randomTip from './commands/tip';
 
+// eslint-disable-next-line no-console
+console.log('Starting client...');
 const client = new Discord.Client();
 admin.initializeApp({
     credential: admin.credential.cert({
@@ -35,15 +37,16 @@ client.on('ready', () => {
     client.user?.setActivity('.gg help', {
         type: 'PLAYING',
     });
+    const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
+        process.env.NODE_ENV
+    }`;
     (
         (client.channels.cache.get(
             process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
         ) as Discord.TextChannel) || undefined
-    )?.send(
-        `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
-            process.env.NODE_ENV
-        }`
-    );
+    )?.send(bootMessage);
+    // eslint-disable-next-line no-console
+    console.log(bootMessage);
 });
 
 client.on('message', async message => {
