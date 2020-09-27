@@ -4,9 +4,9 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon  --ext 'ts' --exec 'ts-node --require=dotenv/config src/bot.ts'",
+    "dev": "NODE_ENV=development nodemon  --ext 'ts' --exec 'npm run lint && ts-node --require=dotenv/config src/bot.ts'",
     "start": "ts-node --require=dotenv/config src/bot.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint src --ext .ts"
   },
   "author": "JackyKit",
   "license": "ISC",
@@ -22,9 +22,9 @@
   },
   "devDependencies": {
     "eslint": "^7.9.0",
-    "eslint-import-resolver-alias": "^1.1.2",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^6.11.0",
+    "eslint-import-resolver-typescript": "^2.3.0",
     "eslint-plugin-prettier": "^3.1.4",
     "nodemon": "^2.0.4",
     "prettier": "^2.1.2"

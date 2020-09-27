@@ -20,14 +20,17 @@ module.exports = {
     ],
     settings: {
         'import/resolver': {
-            alias: {
-                map: ['./src'],
-                extensions: ['.js', '.jsx', '.ts', '.tsx'],
-            },
+            typescript: {},
         },
     },
     rules: {
         'prettier/prettier': 'error',
-        'import/extensions': 0,
+        'import/extensions': [
+            'error',
+            'ignorePackages',
+            {
+                ts: 'never',
+            },
+        ],
     },
 };
