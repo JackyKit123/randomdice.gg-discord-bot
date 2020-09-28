@@ -1,5 +1,68 @@
 import * as Discord from 'discord.js';
 
+export const commandList = [
+    {
+        category: 'Sync Data (require `MANAGE_CHANNEL` permission)',
+        commands: [
+            {
+                command: '.gg register <guide|news|list>',
+                description:
+                    'Register channel to sync data from the website, the channel should be a standalone channel, do not sync multiple categories of data into the same channel. ".gg register list" will return a list of registered channels.',
+            },
+            {
+                command: '.gg postnow <guide|news>',
+                description:
+                    'Force syncing data from the website into your registered channels',
+            },
+        ],
+    },
+    {
+        category: 'Information',
+        commands: [
+            {
+                command: '.gg dice <Dice Name> [--class=?] [--level=?]',
+                description:
+                    'Show information about the dice, alias for arguments `-c=?` `-l=?`',
+            },
+            {
+                command: '.gg deck <PvP|Co-op|Crew> [page#]',
+                description:
+                    'Show the deck list, optional parameter to select the initial page',
+            },
+            {
+                command: '.gg guide <Guide Name|list>',
+                description:
+                    'Show the detail guide for a certain guide. ".gg register list" will return a list of guides\' name.',
+            },
+            {
+                command: '.gg boss <Boss Name>',
+                description: 'Show information about the boss.',
+            },
+            { command: '.gg randomtip', description: 'Show you a random tip' },
+        ],
+    },
+    {
+        category: 'Other Commands',
+        commands: [
+            {
+                command: '.gg ping',
+                description:
+                    'Ping the bot (only available in DM or as `ADMINISTRATOR`)',
+            },
+            {
+                command: '.gg website [/path]',
+                description: 'Send link to website, with optional path',
+            },
+            { command: '.gg app', description: 'Send link to Google Play App' },
+            {
+                command: '.gg support',
+                description:
+                    'Send information about ways to support randomdice.gg',
+            },
+        ],
+    },
+];
+
 export default async function help(message: Discord.Message): Promise<void> {
     const { channel, author } = message;
 
@@ -14,45 +77,17 @@ export default async function help(message: Discord.Message): Promise<void> {
         .setDescription(
             'Here is a list commands, randomdice.gg bot suffix is `.gg`'
         )
-        .addFields([
-            {
-                name: 'Sync Data (require MANAGE_CHANNEL permission)',
-                value: [
-                    '`.gg register <guide|news|list> <channel-mention>`',
-                    '*Register channel to sync data from the website, the channel should be a standalone channel, do not sync multiple categories of data into the same channel. ".gg register list" will return a list of registered channels.*',
-                    '`.gg postnow <guide|news>`',
-                    '*Force syncing data from the website into your registered channels*',
-                ].join('\n'),
-            },
-            {
-                name: 'Information',
-                value: [
-                    '`.gg dice <Dice Name> [--class=?] [--level=?]`',
-                    '*Show information about the dice, alias for arguments `-c=?` `-l=?`*',
-                    '`.gg deck <PvP|Co-op|Crew> [page#]`',
-                    '*Show the deck list, optional parameter to select the initial page*',
-                    '`.gg guide <Guide Name|list>`',
-                    '*Show the detail guide for a certain guide. ".gg register list" will return a list of guides\' name.*',
-                    '`.gg boss <Boss Name>`',
-                    '*Show information about the boss.*',
-                    '`.gg randomtip`',
-                    '*Show you a random tip*',
-                ].join('\n'),
-            },
-            {
-                name: 'Other Commands',
-                value: [
-                    '`.gg ping`',
-                    '*Ping the bot (only available in DM or as `ADMINISTRATOR`)*',
-                    '`.gg website [/path]`',
-                    '*Send link to website, with optional path*',
-                    '`.gg app`',
-                    '*Send link to Google Play App*',
-                    '`.gg support`',
-                    '*Send information about ways to support randomdice.gg*',
-                ].join('\n'),
-            },
-        ]);
+        .addFields(
+            commandList.map(categories => ({
+                name: categories.category,
+                value: categories.commands
+                    .map(
+                        command =>
+                            `\`${command.command}\`\n*${command.description}*`
+                    )
+                    .join('\n'),
+            }))
+        );
 
     await author.send(helpMessage);
     if (channel.type === 'text')
