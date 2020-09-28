@@ -59,11 +59,11 @@ client.on('message', async message => {
     ) {
         return;
     }
-    if (suffix !== '.gg' || !command || author.bot) {
+    if (!suffix.match(/^\\?\.gg\b/) || author.bot) {
         return;
     }
     try {
-        switch (command.toLowerCase()) {
+        switch (command?.toLowerCase()) {
             case 'ping': {
                 await ping(message);
                 break;
@@ -109,9 +109,15 @@ client.on('message', async message => {
             case 'support':
                 await sendLink(message);
                 break;
+            case undefined:
+            case '':
+                await channel.send(
+                    'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'
+                );
+                break;
             default:
                 await channel.send(
-                    `Hi! I am awake. But I don't understand your command for \`${command}\``
+                    `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``
                 );
         }
     } catch (err) {
