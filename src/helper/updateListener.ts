@@ -37,7 +37,7 @@ export default function listener(
         if (!posting.news) {
             posting.news = true;
             try {
-                await post.postGuide(client, database);
+                await post.postNews(client, database);
             } catch (err) {
                 try {
                     (
