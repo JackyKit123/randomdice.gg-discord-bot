@@ -13,7 +13,9 @@ export async function postGuide(
         'discord_bot/registry'
     )) as Registry;
     const registeredChannels = Object.entries(registeredGuilds)
-        .filter(([guildId]) => (guild ? guild.id === guildId : true))
+        .filter(([guildId, config]) =>
+            guild ? guild.id === guildId : config.guide
+        )
         .map(([, config]) => {
             if (!config.guide) {
                 throw new Error('missing registered guide channel.');
@@ -136,7 +138,9 @@ export async function postNews(
         string,
         { news?: string }
     ][])
-        .filter(([guildId]) => (guild ? guild.id === guildId : true))
+        .filter(([guildId, config]) =>
+            guild ? guild.id === guildId : config.news
+        )
         .map(([, config]) => {
             if (!config.news) {
                 throw new Error('missing registered news channel.');
