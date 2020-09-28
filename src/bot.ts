@@ -11,6 +11,7 @@ import deck from './commands/deck';
 import guide from './commands/guide';
 import boss from './commands/boss';
 import randomTip from './commands/tip';
+import guildCreateHandler from './helper/guildCreateHandler';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -129,5 +130,7 @@ client.on('message', async message => {
         }
     }
 });
+
+client.on('guildCreate', guild => guildCreateHandler(client, guild));
 
 client.login(process.env.BOT_TOKEN);
