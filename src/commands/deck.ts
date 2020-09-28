@@ -81,9 +81,7 @@ export default async function decklist(
     await sentMessage.react('▶️');
     await sentMessage.react('⏩');
     const collector = sentMessage.createReactionCollector(
-        (reaction, user) =>
-            ['⏪', '◀️', '▶️', '⏩'].includes(reaction.emoji.name) &&
-            user.id === message.author.id,
+        reaction => ['⏪', '◀️', '▶️', '⏩'].includes(reaction.emoji.name),
         {
             time: 180000,
         }
