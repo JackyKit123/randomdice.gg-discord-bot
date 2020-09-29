@@ -60,7 +60,10 @@ client.on('message', async message => {
     ) {
         return;
     }
-    if (!suffix.match(/^\\?\.gg\b/) || author.bot) {
+    if (
+        !suffix.replace(/[^\040-\176\200-\377]/gi, '').match(/^\\?\.gg\b/) ||
+        author.bot
+    ) {
         return;
     }
     try {

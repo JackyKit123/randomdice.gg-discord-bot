@@ -9,6 +9,7 @@ export default async function dice(
 ): Promise<void> {
     const { channel, content } = message;
     const [diceName, ...args] = content
+        .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg dice ?/, '')
         .split(' ');
     if (!diceName) {
