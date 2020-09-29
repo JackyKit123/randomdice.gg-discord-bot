@@ -8,7 +8,7 @@ export default async function dice(
     database: admin.database.Database
 ): Promise<void> {
     const { channel, content } = message;
-    const bossName = content.replace(/^\.gg boss ?/, '');
+    const bossName = content.replace(/^\\?\.gg dice ?/, '');
     if (!bossName) {
         await channel.send(
             'Please include the boss name in command parameter.'

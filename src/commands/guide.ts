@@ -8,7 +8,7 @@ export default async function deckGuide(
     database: admin.database.Database
 ): Promise<void> {
     const { channel, content } = message;
-    const guideName = content.replace(/^\.gg guide ?/, '');
+    const guideName = content.replace(/^\\?\.gg dice ?/, '');
     if (!guideName) {
         await channel.send(
             'Please include the guide name or use parameter `list` to list guides'
