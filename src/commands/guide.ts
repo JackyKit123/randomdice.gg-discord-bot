@@ -10,7 +10,7 @@ export default async function deckGuide(
     const { channel, content } = message;
     const guideName = content
         .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg dice ?/, '');
+        .replace(/^\\?\.gg guide ?/, '');
     if (!guideName) {
         await channel.send(
             'Please include the guide name or use parameter `list` to list guides'

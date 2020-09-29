@@ -10,7 +10,7 @@ export default async function dice(
     const { channel, content } = message;
     const bossName = content
         .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg dice ?/, '');
+        .replace(/^\\?\.gg boss ?/, '');
     if (!bossName) {
         await channel.send(
             'Please include the boss name in command parameter.'
