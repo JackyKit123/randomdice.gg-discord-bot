@@ -20,9 +20,15 @@ export default async function deckGuide(
     const guides = (await cache(database, 'decks_guide')) as DeckGuide[];
     if (guideName === 'list') {
         await channel.send(
-            `Here is the list of guides: ${guides
-                .map(g => `\`${g.name}\``)
-                .join(', ')}.`
+            `Here is the list of guides:\n${['PvP', 'Co-op', 'Crew']
+                .map(
+                    type =>
+                        `${type} Guides: ${guides
+                            .filter(g => g.type === type)
+                            .map(g => `\`${g.name}\``)
+                            .join(' ')}`
+                )
+                .join('\n')}`
         );
         return;
     }
