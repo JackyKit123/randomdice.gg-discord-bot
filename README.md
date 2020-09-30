@@ -42,6 +42,10 @@ Include the following environment variables in a .env
             <td>FIREBASE_ADMIN_CLIENT_EMAIL</td>
             <td>Client email for firebase service account</td>
         </tr>
+        <tr>
+            <td>DEV_USERS_ID</td>
+            <td>List of discord user id for the bot developers</td>
+        </tr>
     </tbody>
 </table>
 
