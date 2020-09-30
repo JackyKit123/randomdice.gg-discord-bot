@@ -12,6 +12,8 @@ import guide from './commands/guide';
 import boss from './commands/boss';
 import randomTip from './commands/tip';
 import guildCreateHandler from './helper/guildCreateHandler';
+import logMessage from './dev-commands/logMessage';
+import fetchInvites from './dev-commands/fetchInvites';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -41,11 +43,7 @@ client.on('ready', () => {
     const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
         process.env.NODE_ENV
     }`;
-    (
-        (client.channels.cache.get(
-            process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
-        ) as Discord.TextChannel) || undefined
-    )?.send(bootMessage);
+    logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
 });
@@ -67,6 +65,15 @@ client.on('message', async message => {
         return;
     }
     try {
+        if (process.env.DEV_USERS_ID?.includes(author.id)) {
+            switch (command?.toLowerCase()) {
+                case 'createinvites':
+                    await fetchInvites(client);
+                    break;
+                default:
+            }
+            return;
+        }
         switch (command?.toLowerCase()) {
             case 'ping': {
                 await ping(message);
@@ -126,7 +133,10 @@ client.on('message', async message => {
         }
     } catch (err) {
         try {
-            await channel.send(`Oops, something went wrong: ${err.message}`);
+            await logMessage(
+                client,
+                `Oops, something went wrong: ${err.message}`
+            );
         } catch (criticalError) {
             // eslint-disable-next-line no-console
             console.error(criticalError);
