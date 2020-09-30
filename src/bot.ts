@@ -144,9 +144,13 @@ client.on('message', async message => {
         }
     } catch (err) {
         try {
+            await channel.send(`Oops, something went wrong: ${err.message}`);
+
             await logMessage(
                 client,
-                `Oops, something went wrong: ${err.message}`
+                `Oops, something went wrong in ${
+                    guild ? `server ${guild.name}` : `DM with <@${author.id}>`
+                } : ${err.message}`
             );
         } catch (criticalError) {
             // eslint-disable-next-line no-console
