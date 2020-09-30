@@ -48,7 +48,9 @@ export async function register(
         case 'guide':
         case 'news': {
             if (!targetedChannel) {
-                await channel.send('I cannot locate the channel to register.');
+                await channel.send(
+                    `Please mention a channel as in #channel that you would like to register ${type} in.`
+                );
             } else {
                 const registry = (
                     await database
@@ -62,7 +64,7 @@ export async function register(
                 );
                 if (channelRegistered) {
                     await channel.send(
-                        'You cannot register 2 categories into the same channel, please register another channel'
+                        'You cannot register 2 categories into the same channel, please register another channel.'
                     );
                     return;
                 }
