@@ -9,7 +9,8 @@ export default async function handler(
         guild.systemChannel ||
         guild.channels.cache.find(
             channel => !!channel.name.match(/(general|welcome)/)
-        );
+        ) ||
+        guild.channels.cache.first();
 
     logMessage(
         client,
@@ -25,8 +26,11 @@ export default async function handler(
             `Invite link to the server https://discord.gg/${invite.code}`
         );
 
-        if (msgChannel.type === 'text') {
-            (msgChannel as Discord.TextChannel).send(
+        if (
+            msgChannel instanceof Discord.TextChannel &&
+            msgChannel.type === 'text'
+        ) {
+            msgChannel.send(
                 'Thank you for the invitation, you may do `.gg help` to view a list of commands'
             );
         }
