@@ -55,6 +55,11 @@ export const commandList = [
             },
             { command: '.gg app', description: 'Send link to Google Play App' },
             {
+                command: '.gg contact',
+                description:
+                    'Send contact information for the developer of this bot or the community website.',
+            },
+            {
                 command: '.gg support',
                 description:
                     'Send information about ways to support randomdice.gg',

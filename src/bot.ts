@@ -16,6 +16,7 @@ import logMessage from './dev-commands/logMessage';
 import fetchInvites from './dev-commands/fetchInvites';
 import setEmoji from './dev-commands/updateEmoji';
 import devHelp from './dev-commands/help';
+import sendContact from './commands/sendContact';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -126,6 +127,9 @@ client.on('message', async message => {
             case 'app':
             case 'support':
                 await sendLink(message);
+                break;
+            case 'contact':
+                await sendContact(message);
                 break;
             case undefined:
             case '':
