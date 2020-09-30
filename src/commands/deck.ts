@@ -20,7 +20,7 @@ export default async function decklist(
     const fields = decks
         .filter(deck => deck.type.toLowerCase() === type.toLowerCase())
         .map(deckInfo => ({
-            rating: deckInfo.rating,
+            rating: deckInfo.rating.default,
             diceList: deckInfo.decks
                 .map(deck => deck.map(die => emoji[die]).join(''))
                 .join('\n'),
