@@ -15,6 +15,7 @@ import guildCreateHandler from './helper/guildCreateHandler';
 import logMessage from './dev-commands/logMessage';
 import fetchInvites from './dev-commands/fetchInvites';
 import setEmoji from './dev-commands/updateEmoji';
+import devHelp from './dev-commands/help';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -74,6 +75,9 @@ client.on('message', async message => {
                 case 'setemoji':
                     await setEmoji(client, database, message);
                     return;
+                case 'help':
+                    await devHelp(message);
+                    break;
                 default:
             }
         }
