@@ -154,3 +154,5 @@ client.on('message', async message => {
 client.on('guildCreate', guild => guildCreateHandler(client, guild));
 
 client.login(process.env.BOT_TOKEN);
+
+process.on('exit', () => client.destroy());
