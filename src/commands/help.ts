@@ -5,9 +5,14 @@ export const commandList = [
         category: 'Sync Data (require `MANAGE_CHANNEL` permission)',
         commands: [
             {
-                command: '.gg register <guide|news|list>',
+                command: '.gg register <guide|news|list> #channel',
                 description:
                     'Register channel to sync data from the website, the channel should be a standalone channel, do not sync multiple categories of data into the same channel. ".gg register list" will return a list of registered channels.',
+            },
+            {
+                command: '.gg unregister <guide|news>',
+                description:
+                    'Unregister the channel registered from `.gg register`',
             },
             {
                 command: '.gg postnow <guide|news>',

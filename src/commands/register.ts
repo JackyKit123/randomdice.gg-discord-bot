@@ -4,10 +4,13 @@ import * as admin from 'firebase-admin';
 async function checkRegistered(
     guild: Discord.Guild,
     database: admin.database.Database
-): Promise<Discord.MessageEmbed> {
+): Promise<Discord.MessageEmbed | string> {
     const registeredChannel = (
         await database.ref(`/discord_bot/registry/${guild.id}`).once('value')
     ).val();
+    if (!registeredChannel) {
+        return 'You have no registered channel. Start registering channel by doing `.gg register`';
+    }
     return new Discord.MessageEmbed()
         .setTitle('Registered Channels')
         .setDescription('Here is the list of registered channel for the type')
@@ -49,7 +52,7 @@ export async function register(
         case 'news': {
             if (!targetedChannel) {
                 await channel.send(
-                    `Please mention a channel as in #channel that you would like to register ${type} in.`
+                    `Please mention a channel as in \`.gg register ${type.toLowerCase()} #channel\` that you would like to register ${type} in.`
                 );
             } else {
                 const registry = (
