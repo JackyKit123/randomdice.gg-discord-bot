@@ -56,9 +56,12 @@ client.on('message', async message => {
     const { content, channel, guild, author } = message;
     const [suffix, command] = content.split(' ');
     if (
-        process.env.DEV_SERVER_ID &&
-        process.env.NODE_ENV === 'development' &&
-        guild?.id !== process.env.DEV_SERVER_ID
+        // ignoring other servers in development, ignoring dev channel in production
+        (process.env.DEV_SERVER_ID &&
+            process.env.NODE_ENV === 'development' &&
+            guild?.id !== process.env.DEV_SERVER_ID) ||
+        (process.env.NODE_ENV === 'production' &&
+            guild?.id === process.env.DEV_SERVER_ID)
     ) {
         return;
     }

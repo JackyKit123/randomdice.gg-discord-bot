@@ -11,11 +11,12 @@ export default function listener(
         guide: false,
         news: false,
     };
+    const guild = client.guilds.cache.get(process.env.DEV_SERVER_ID || '');
     database.ref('/decks_guide').on('child_changed', async () => {
         if (!posting.guide) {
             posting.guide = true;
             try {
-                await post.postGuide(client, database);
+                await post.postGuide(client, database, guild);
             } catch (err) {
                 try {
                     (
@@ -37,7 +38,7 @@ export default function listener(
         if (!posting.news) {
             posting.news = true;
             try {
-                await post.postNews(client, database);
+                await post.postNews(client, database, guild);
             } catch (err) {
                 try {
                     (
