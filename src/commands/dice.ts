@@ -1,5 +1,6 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
+import * as stringSimilarity from 'string-similarity';
 import cache, { Dice } from '../helper/cache';
 import parsedText from '../helper/parseText';
 
@@ -8,25 +9,37 @@ export default async function dice(
     database: admin.database.Database
 ): Promise<void> {
     const { channel, content } = message;
-    const [diceName, ...args] = content
+    const [...args] = content
         .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg dice ?/, '')
         .split(' ');
-    if (!diceName) {
+    if (!args[0] || args[0].startsWith('-')) {
         await channel.send(
-            'Please include the dice name in command parameter.'
+            'Please include the dice name in the first parameter after `.gg dice`.'
         );
         return;
     }
     const diceList = (await cache(database, 'dice')) as Dice[];
     const die = diceList.find(d =>
-        [diceName, ...args]
-            .join(' ')
-            .toLowerCase()
-            .startsWith(d.name.toLowerCase())
+        args.join(' ').toLowerCase().startsWith(d.name.toLowerCase())
     );
     if (!die) {
-        await channel.send(`Dice \`${diceName}\` is not a valid dice.`);
+        const firstOptionalArgs = args.findIndex(arg => arg.startsWith('-'));
+        if (firstOptionalArgs >= 0) {
+            args.splice(firstOptionalArgs, args.length);
+        }
+        const wrongDiceName = args.join(' ');
+        const { bestMatch } = stringSimilarity.findBestMatch(
+            wrongDiceName,
+            diceList.map(d => d.name)
+        );
+        await channel.send(
+            `\`${wrongDiceName}\` is not a valid dice.${
+                bestMatch.rating >= 0.5
+                    ? ` Did you mean \`${bestMatch.target}\`?`
+                    : ''
+            }`
+        );
         return;
     }
 

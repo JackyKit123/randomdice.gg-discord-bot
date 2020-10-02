@@ -1,5 +1,6 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
+import * as stringSimilarity from 'string-similarity';
 import cache, { Boss } from '../helper/cache';
 import parsedText from '../helper/parseText';
 
@@ -23,7 +24,17 @@ export default async function dice(
     );
 
     if (!boss) {
-        await channel.send(`\`${bossName}\` is not a valid boss.`);
+        const { bestMatch } = stringSimilarity.findBestMatch(
+            bossName,
+            bossList.map(b => b.name)
+        );
+        await channel.send(
+            `\`${bossName}\` is not a valid boss.${
+                bestMatch.rating >= 0.3
+                    ? ` Did you mean \`${bestMatch.target}\`?`
+                    : ''
+            }`
+        );
         return;
     }
 

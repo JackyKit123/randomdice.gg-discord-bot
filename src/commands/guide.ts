@@ -1,5 +1,6 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
+import * as stringSimilarity from 'string-similarity';
 import cache, { DeckGuide, EmojiList } from '../helper/cache';
 import parseText from '../helper/parseText';
 
@@ -24,7 +25,7 @@ export default async function deckGuide(
                 .map(
                     type =>
                         `${type} Guides: ${guides
-                            .filter(g => g.type === type)
+                            .filter(g => g.type === type && !g.archived)
                             .map(g => `\`${g.name}\``)
                             .join(' ')}`
                 )
@@ -36,7 +37,24 @@ export default async function deckGuide(
         g => g.name.toLowerCase() === guideName.toLowerCase()
     );
     if (!guideData) {
-        await channel.send(`Guide \`${guideName}\` not found.`);
+        const matches = stringSimilarity
+            .findBestMatch(
+                guideName,
+                guides.map(g => g.name)
+            )
+            .ratings.filter(match => match.rating >= 0.5)
+            .map(
+                match => guides.find(g => g.name === match.target) as DeckGuide
+            );
+        await channel.send(
+            `Guide \`${guideName}\` not found. ${
+                matches.length > 0
+                    ? `Did you mean ${matches
+                          .map(guide => `\`${guide.name} (${guide.type})\``)
+                          .join(' ')}?`
+                    : 'You can do `.gg guide list` to search for a list of guides.'
+            }`
+        );
         return;
     }
 

@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import help from './commands/help';
+import * as stringSimilarity from 'string-similarity';
+import help, { commandList } from './commands/help';
 import postNow from './commands/postNow';
 import { register, unregister } from './commands/register';
 import updateListener from './helper/updateListener';
@@ -137,10 +138,24 @@ client.on('message', async message => {
                     'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'
                 );
                 break;
-            default:
-                await channel.send(
-                    `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``
+            default: {
+                const listOfCommands = Object.values(
+                    commandList
+                ).flatMap(category =>
+                    category.commands.map(cmd => cmd.command.split(' ')[1])
                 );
+                const { bestMatch } = stringSimilarity.findBestMatch(
+                    command,
+                    listOfCommands
+                );
+                await channel.send(
+                    `Hi! I am awake. But I don't understand your command for \`${command}\`. ${
+                        bestMatch.rating >= 0.5
+                            ? `Did you mean to do \`.gg ${bestMatch.target}\`?`
+                            : 'Need help? type `.gg help`'
+                    }`
+                );
+            }
         }
     } catch (err) {
         try {
