@@ -9,7 +9,11 @@ export default async function decklist(
     const { content, channel } = message;
     const [, , type, page] = content.split(' ');
     if (!type?.match(/^(pvp|co-op|crew)$/)) {
-        await channel.send('Please specify deck type in: `PvP` `Co-op` `Crew`');
+        await channel.send(
+            `${
+                type ? `\`${type}\` is not a valid deck type, p` : 'P'
+            }lease specify deck type in: \`PvP\` \`Co-op\` \`Crew\``
+        );
         return;
     }
 
