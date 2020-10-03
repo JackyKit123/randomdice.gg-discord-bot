@@ -266,15 +266,41 @@ export default async function postNow(
     switch (type) {
         case 'guide':
             await postGuide(client, database, guild);
-            await statusMessage.edit(`Finished Posting ${type}`);
+            try {
+                await statusMessage.edit(`Finished Posting ${type}`);
+            } catch (err) {
+                if (err.message === 'Unknown Message') {
+                    await channel.send(`Finished Posting ${type}`);
+                    return;
+                }
+                throw err;
+            }
             return;
         case 'news':
             await postNews(client, database, guild);
-            await statusMessage.edit(`Finished Posting ${type}`);
+            try {
+                await statusMessage.edit(`Finished Posting ${type}`);
+            } catch (err) {
+                if (err.message === 'Unknown Message') {
+                    await channel.send(`Finished Posting ${type}`);
+                    return;
+                }
+                throw err;
+            }
             return;
         default:
-            await statusMessage.edit(
-                'Target type not found, supported type: `guide` `news`'
-            );
+            try {
+                await statusMessage.edit(
+                    `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``
+                );
+            } catch (err) {
+                if (err.message === 'Unknown Message') {
+                    await channel.send(
+                        `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``
+                    );
+                    return;
+                }
+                throw err;
+            }
     }
 }
