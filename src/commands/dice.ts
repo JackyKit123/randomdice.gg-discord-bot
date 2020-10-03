@@ -58,14 +58,48 @@ export default async function dice(
             minClass = 1;
     }
 
-    const dieClassArg =
-        args
-            .map(arg => arg.match(/^(-c|--class)=(.+)/)?.[2])
-            .find(arg => arg) || minClass;
-    const dieLevelArg =
-        args
-            .map(arg => arg.match(/^(-l|--level)=(.+)/)?.[2])
-            .find(arg => arg) || 1;
+    const firstArgs = args.findIndex(arg => arg.startsWith('-'));
+    if (firstArgs > -1) {
+        const otherArgs = args.filter(
+            (arg, i) =>
+                i >= firstArgs && !/^(-l|--level|-c|--class)=(.+)/.test(arg)
+        );
+        if (otherArgs.length) {
+            await channel.send(
+                `Unknown arguments: ${otherArgs.map(
+                    arg => `\`${arg}\``
+                )}. Acceptable arguments are \`--class=?\` \`--level\` or alias \`-c=?\` \`-l=?\``
+            );
+            return;
+        }
+    }
+
+    const dieClassArgs = args
+        .map(arg => arg.match(/^(-c|--class)=(.+)/))
+        .filter(arg => arg);
+    const dieLevelArgs = args
+        .map(arg => arg.match(/^(-l|--level)=(.+)/))
+        .filter(arg => arg);
+    if (dieClassArgs.length > 1 || dieLevelArgs.length > 1) {
+        if (dieClassArgs.length > 1) {
+            await channel.send(
+                `Duplicated arguments for dice class: ${dieClassArgs
+                    .map(arg => `\`${arg?.[0]}\``)
+                    .join(' ')}`
+            );
+        }
+
+        if (dieLevelArgs.length > 1) {
+            await channel.send(
+                `Duplicated arguments for dice level: ${dieLevelArgs
+                    .map(arg => `\`${arg?.[0]}\``)
+                    .join(' ')}`
+            );
+        }
+        return;
+    }
+    const [, , dieClassArg] = dieClassArgs[0] as RegExpMatchArray;
+    const [, , dieLevelArg] = dieLevelArgs[0] as RegExpMatchArray;
     const dieClass = Number(dieClassArg);
     const dieLevel = Number(dieLevelArg);
 
