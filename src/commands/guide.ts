@@ -50,8 +50,8 @@ export default async function deckGuide(
             `Guide \`${guideName}\` not found. ${
                 matches.length > 0
                     ? `Did you mean ${matches
-                          .map(guide => `\`${guide.name} (${guide.type})\``)
-                          .join(' ')}?`
+                          .map(guide => `${guide.type}: \`${guide.name}\``)
+                          .join('  ')}?`
                     : 'You can do `.gg guide list` to search for a list of guides.'
             }`
         );
