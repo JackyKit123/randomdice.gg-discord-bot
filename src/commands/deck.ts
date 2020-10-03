@@ -8,7 +8,7 @@ export default async function decklist(
 ): Promise<void> {
     const { content, channel } = message;
     const [, , type, page] = content.split(' ');
-    if (!type?.match(/^(pvp|co-op|crew)$/)) {
+    if (!type?.match(/^(pvp|co-op|coop|crew)$/)) {
         await channel.send(
             `${
                 type ? `\`${type}\` is not a valid deck type, p` : 'P'
@@ -21,8 +21,14 @@ export default async function decklist(
         cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
         cache(database, 'decks') as Promise<Deck[]>,
     ]);
+    const deckType = ({
+        pvp: 'PvP',
+        coop: 'Co-op',
+        'co-op': 'Co-op',
+        crew: 'Crew',
+    } as { [key: string]: string })[type.toLowerCase()];
     const fields = decks
-        .filter(deck => deck.type.toLowerCase() === type.toLowerCase())
+        .filter(deck => deckType === deck.type)
         .map(deckInfo => ({
             rating: deckInfo.rating.default,
             diceList: deckInfo.decks
@@ -46,25 +52,13 @@ export default async function decklist(
         .map((_, i) =>
             new Discord.MessageEmbed()
                 .setColor('#6ba4a5')
-                .setTitle(
-                    `Random Dice ${
-                        // eslint-disable-next-line no-nested-ternary
-                        type.toLowerCase() === 'pvp'
-                            ? 'PvP'
-                            : // eslint-disable-next-line no-nested-ternary
-                            type.toLowerCase() === 'co-op'
-                            ? 'Co-op'
-                            : type.toLowerCase() === 'crew'
-                            ? 'Crew'
-                            : ''
-                    } Deck List`
-                )
+                .setTitle(`Random Dice ${deckType} Deck List`)
                 .setAuthor(
                     'Random Dice Community Website',
                     'https://randomdice.gg/title_dice.png',
                     'https://randomdice.gg/'
                 )
-                .setURL(`https://randomdice.gg/decks/${type}`)
+                .setURL(`https://randomdice.gg/decks/${deckType}`)
                 .setDescription(
                     `Showing page ${
                         i + 1
