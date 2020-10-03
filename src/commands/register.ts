@@ -29,6 +29,7 @@ async function checkRegistered(
 }
 
 export async function register(
+    client: Discord.Client,
     message: Discord.Message,
     database: admin.database.Database
 ): Promise<void> {
@@ -37,8 +38,10 @@ export async function register(
         await channel.send('You can only execute this command in a server.');
         return;
     }
-    const type = content.split(' ')[2];
-    const targetedChannel = mentions.channels.first();
+    const args = content.split(' ');
+    const type = args[2];
+    const targetedChannel =
+        mentions.channels.first() || client.channels.cache.get(args[3] || '');
 
     if (!member.hasPermission('MANAGE_CHANNELS')) {
         await channel.send(

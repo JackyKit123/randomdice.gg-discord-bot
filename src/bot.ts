@@ -92,7 +92,7 @@ client.on('message', async message => {
                 break;
             }
             case 'register': {
-                await register(message, database);
+                await register(client, message, database);
                 break;
             }
             case 'unregister': {
