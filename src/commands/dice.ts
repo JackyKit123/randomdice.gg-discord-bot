@@ -9,7 +9,7 @@ export default async function dice(
     database: admin.database.Database
 ): Promise<void> {
     const { channel, content } = message;
-    const [...args] = content
+    const args = content
         .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg dice ?/, '')
         .split(' ');
@@ -57,20 +57,48 @@ export default async function dice(
         default:
             minClass = 1;
     }
-    const dieClass =
-        Number(
-            args
-                .find(arg => arg.match(/^(-c|--class)=(1?[0-5]|[1-9])$/))
-                ?.split('=')[1]
-        ) || minClass;
-    const dieLevel =
-        Number(
-            args.find(arg => arg.match(/^(-l|--level)=[1-5]$/))?.split('=')[1]
-        ) || 1;
-    if (dieClass < minClass) {
-        await channel.send(
-            `${die.name} dice is in ${die.rarity} tier, its minimum class is ${minClass}.`
-        );
+
+    const dieClassArg =
+        args
+            .map(arg => arg.match(/^(-c|--class)=(.+)/)?.[2])
+            .find(arg => arg) || minClass;
+    const dieLevelArg =
+        args
+            .map(arg => arg.match(/^(-l|--level)=(.+)/)?.[2])
+            .find(arg => arg) || 1;
+    const dieClass = Number(dieClassArg);
+    const dieLevel = Number(dieLevelArg);
+
+    if (
+        Number.isNaN(dieClass) ||
+        Number.isNaN(dieLevel) ||
+        dieClass < minClass ||
+        dieClass > 15 ||
+        dieLevel < 1 ||
+        dieLevel > 5
+    ) {
+        if (Number.isNaN(dieClass)) {
+            await channel.send(
+                `Invalid arguments for dice class, \`${dieClassArg}\` is not a number.`
+            );
+        } else if (dieClass < minClass) {
+            await channel.send(
+                `Invalid arguments for dice class, ${die.name} dice is in **${die.rarity} tier**, its minimum class is **${minClass}**.`
+            );
+        } else if (dieClass > 15) {
+            await channel.send(
+                `Invalid arguments for dice class, the maximum dice class is **15**.`
+            );
+        }
+        if (Number.isNaN(dieLevel)) {
+            await channel.send(
+                `Invalid arguments for dice level, \`${dieLevelArg}\` is not a number.`
+            );
+        } else if (dieLevel < 1 || dieLevel > 5) {
+            await channel.send(
+                `Invalid arguments for dice level, dice level should be between **1 - 5**.`
+            );
+        }
         return;
     }
     const atk =
