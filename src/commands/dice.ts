@@ -211,10 +211,9 @@ export default async function dice(
     }
 
     const firstOptionalArgs = args.findIndex(arg => arg.startsWith('-'));
-    if (firstOptionalArgs >= 0) {
-        args.splice(firstOptionalArgs, args.length);
-    }
-    const wrongDiceName = args.join(' ');
+    const wrongDiceName = args
+        .filter((_, i) => firstOptionalArgs >= 0 && i < firstOptionalArgs)
+        .join(' ');
     const { bestMatch } = stringSimilarity.findBestMatch(
         wrongDiceName,
         diceList.map(d => d.name)
