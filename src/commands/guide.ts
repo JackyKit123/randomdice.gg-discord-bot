@@ -36,65 +36,91 @@ export default async function deckGuide(
     const guideData = guides.find(
         g => g.name.toLowerCase() === guideName.toLowerCase()
     );
-    if (!guideData) {
-        const { bestMatch } = stringSimilarity.findBestMatch(
-            guideName,
-            guides.map(g => g.name)
+
+    const execute = async (target: DeckGuide): Promise<void> => {
+        const { diceList, name, type, guide, archived } = target;
+        const emojiDiceList = await Promise.all(
+            diceList.map(async list =>
+                Promise.all(
+                    list.map(
+                        async die =>
+                            ((await cache(
+                                database,
+                                'discord_bot/emoji'
+                            )) as EmojiList)[die]
+                    )
+                )
+            )
         );
-        const bestMatchGuide = guides.find(
-            guide => guide.name === bestMatch.target
-        );
-        await channel.send(
-            `Guide \`${guideName}\` not found. ${
-                bestMatch.rating > 0.5
-                    ? `Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
-                    : 'You can do `.gg guide list` to search for a list of guides.'
-            }`
-        );
+        const paragraph = parseText(guide).split('\n');
+        const embedFields = [
+            ...emojiDiceList.map((list, i, decks) => ({
+                // eslint-disable-next-line no-nested-ternary
+                name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '⠀',
+                value: list.join(' '),
+            })),
+            ...paragraph
+                .filter(p => p !== '')
+                .map((p, i) => ({
+                    name: i === 0 ? 'Guide' : '⠀',
+                    value: p,
+                })),
+        ];
+        const embed = new Discord.MessageEmbed()
+            .setTitle(`${name} (${type})${archived ? '**ARCHIVED**' : ''}`)
+            .setAuthor(
+                'Random Dice Community Website',
+                'https://randomdice.gg/title_dice.png',
+                'https://randomdice.gg/'
+            )
+            .setColor('#6ba4a5')
+            .setURL(`https://randomdice.gg/decks/guide/${encodeURI(name)}`)
+            .addFields(embedFields)
+            .setFooter(
+                'randomdice.gg Decks Guide',
+                'https://randomdice.gg/title_dice.png'
+            );
+        await channel.send(embed);
+    };
+
+    if (guideData) {
+        await execute(guideData);
         return;
     }
 
-    const { diceList, name, type, guide, archived } = guideData;
-    const emojiDiceList = await Promise.all(
-        diceList.map(async list =>
-            Promise.all(
-                list.map(
-                    async die =>
-                        ((await cache(
-                            database,
-                            'discord_bot/emoji'
-                        )) as EmojiList)[die]
-                )
-            )
-        )
+    const { bestMatch } = stringSimilarity.findBestMatch(
+        guideName,
+        guides.map(g => g.name)
     );
-    const paragraph = parseText(guide).split('\n');
-    const embedFields = [
-        ...emojiDiceList.map((list, i, decks) => ({
-            // eslint-disable-next-line no-nested-ternary
-            name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '⠀',
-            value: list.join(' '),
-        })),
-        ...paragraph
-            .filter(p => p !== '')
-            .map((p, i) => ({
-                name: i === 0 ? 'Guide' : '⠀',
-                value: p,
-            })),
-    ];
-    const embed = new Discord.MessageEmbed()
-        .setTitle(`${name} (${type})${archived ? '**ARCHIVED**' : ''}`)
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/title_dice.png',
-            'https://randomdice.gg/'
-        )
-        .setColor('#6ba4a5')
-        .setURL(`https://randomdice.gg/decks/guide/${encodeURI(name)}`)
-        .addFields(embedFields)
-        .setFooter(
-            'randomdice.gg Decks Guide',
-            'https://randomdice.gg/title_dice.png'
+    const bestMatchGuide = guides.find(
+        guide => guide.name === bestMatch.target
+    );
+    if (bestMatch.rating > 0.3) {
+        const sentMessage = await channel.send(
+            `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`? You may answer \`Yes\` to display the guide.`
         );
-    await channel.send(embed);
+        let answeredYes = false;
+        try {
+            await channel.awaitMessages(
+                (newMessage: Discord.Message) =>
+                    newMessage.author === message.author &&
+                    /^y(es)?\b/i.test(newMessage.content),
+                { time: 6000, max: 1, errors: ['time'] }
+            );
+            answeredYes = true;
+        } catch {
+            await sentMessage.edit(
+                `Guide \`${guideName}\` not found. You can do \`.gg guide list\` to search for a list of guides.`
+            );
+        }
+        if (answeredYes) {
+            await execute(
+                guides.find(g => g.name === bestMatch.target) as DeckGuide
+            );
+        }
+    } else {
+        await channel.send(
+            `Guide \`${guideName}\` not found. You can do \`.gg guide list\` to search for a list of guides.`
+        );
+    }
 }
