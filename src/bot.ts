@@ -52,7 +52,7 @@ client.on('ready', () => {
     console.log(bootMessage);
 });
 
-client.on('message', async message => {
+client.on('message', async function messageHandler(message) {
     const { content, channel, guild, author } = message;
     const [suffix, command] = content.split(' ');
     if (
@@ -151,13 +151,40 @@ client.on('message', async message => {
                     command,
                     listOfCommands
                 );
-                await channel.send(
-                    `Hi! I am awake. But I don't understand your command for \`${command}\`. ${
-                        bestMatch.rating >= 0.5
-                            ? `Did you mean to do \`.gg ${bestMatch.target}\`?`
-                            : 'Need help? type `.gg help`'
-                    }`
-                );
+                if (bestMatch.rating >= 0.5) {
+                    const sentMessage = await channel.send(
+                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`? You may answer \`Yes\` to execute the new command.`
+                    );
+                    let answeredYes = false;
+                    try {
+                        await channel.awaitMessages(
+                            (newMessage: Discord.Message) =>
+                                newMessage.author === message.author &&
+                                /^y(es)?\b/i.test(newMessage.content),
+                            { time: 6000, max: 1, errors: ['time'] }
+                        );
+                        answeredYes = true;
+                    } catch {
+                        await sentMessage.edit(
+                            `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`
+                        );
+                    }
+                    if (answeredYes) {
+                        const editedCommandString = content
+                            .replace(/[^\040-\176\200-\377]/gi, '')
+                            .replace(
+                                `.gg ${command}`,
+                                `.gg ${bestMatch.target}`
+                            );
+                        // eslint-disable-next-line no-param-reassign
+                        message.content = editedCommandString;
+                        client.emit('message', message);
+                    }
+                } else {
+                    await channel.send(
+                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``
+                    );
+                }
             }
         }
     } catch (err) {
