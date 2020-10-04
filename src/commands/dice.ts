@@ -98,10 +98,10 @@ export default async function dice(
         }
         return;
     }
-    const [, , dieClassArg] = dieClassArgs[0] as RegExpMatchArray;
-    const [, , dieLevelArg] = dieLevelArgs[0] as RegExpMatchArray;
-    const dieClass = Number(dieClassArg);
-    const dieLevel = Number(dieLevelArg);
+    const dieClassArg = dieClassArgs[0]?.[2];
+    const dieLevelArg = dieLevelArgs[0]?.[2];
+    const dieClass = Number(dieClassArg || minClass);
+    const dieLevel = Number(dieLevelArg || 1);
 
     if (
         Number.isNaN(dieClass) ||
