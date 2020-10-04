@@ -8,7 +8,7 @@ export default async function handler(
     const msgChannel =
         guild.systemChannel ||
         guild.channels.cache.find(
-            channel => !!channel.name?.match(/(general|welcome)/)
+            channel => !!channel.name?.match(/(general|welcome)/i)
         ) ||
         guild.channels.cache.first();
 

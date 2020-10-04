@@ -8,7 +8,7 @@ export default async function decklist(
 ): Promise<void> {
     const { content, channel } = message;
     const [, , type, page] = content.split(' ');
-    if (!type?.match(/^(pvp|co-op|coop|crew)$/)) {
+    if (!type?.match(/^(pvp|co-op|coop|crew)$/i)) {
         await channel.send(
             `${
                 type ? `\`${type}\` is not a valid deck type, p` : 'P'
