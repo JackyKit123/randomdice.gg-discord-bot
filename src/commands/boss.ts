@@ -78,7 +78,9 @@ export default async function dice(
             );
             answeredYes = true;
         } catch {
-            await sentMessage.edit(`\`${bossName}\` is not a valid boss.`);
+            await sentMessage.edit(
+                `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
+            );
         }
         if (answeredYes) {
             await execute(

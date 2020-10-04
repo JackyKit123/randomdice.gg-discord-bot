@@ -233,7 +233,9 @@ export default async function dice(
             );
             answeredYes = true;
         } catch {
-            await sentMessage.edit(`\`${wrongDiceName}\` is not a valid dice.`);
+            await sentMessage.edit(
+                `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
+            );
         }
         if (answeredYes) {
             await execute(

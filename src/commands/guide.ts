@@ -110,7 +110,7 @@ export default async function deckGuide(
             answeredYes = true;
         } catch {
             await sentMessage.edit(
-                `Guide \`${guideName}\` not found. You can do \`.gg guide list\` to search for a list of guides.`
+                `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
             );
         }
         if (answeredYes) {
