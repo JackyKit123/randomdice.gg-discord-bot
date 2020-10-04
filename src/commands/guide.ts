@@ -37,21 +37,17 @@ export default async function deckGuide(
         g => g.name.toLowerCase() === guideName.toLowerCase()
     );
     if (!guideData) {
-        const matches = stringSimilarity
-            .findBestMatch(
-                guideName,
-                guides.map(g => g.name)
-            )
-            .ratings.filter(match => match.rating >= 0.5)
-            .map(
-                match => guides.find(g => g.name === match.target) as DeckGuide
-            );
+        const { bestMatch } = stringSimilarity.findBestMatch(
+            guideName,
+            guides.map(g => g.name)
+        );
+        const bestMatchGuide = guides.find(
+            guide => guide.name === bestMatch.target
+        );
         await channel.send(
             `Guide \`${guideName}\` not found. ${
-                matches.length > 0
-                    ? `Did you mean ${matches
-                          .map(guide => `${guide.type}: \`${guide.name}\``)
-                          .join('  ')}?`
+                bestMatch.rating > 0.5
+                    ? `Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
                     : 'You can do `.gg guide list` to search for a list of guides.'
             }`
         );
