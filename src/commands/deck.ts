@@ -101,4 +101,14 @@ export default async function decklist(
         await sentMessage.edit(embeds[currentPage]);
         await reaction.users.remove(user.id);
     });
+
+    collector.on('end', async () => {
+        await Promise.all([
+            await sentMessage.edit(
+                `The reaction commands has expired, please do \`.gg deck ${deckType}\` again to interact with the message.`,
+                embeds[currentPage]
+            ),
+            await sentMessage.reactions.removeAll(),
+        ]);
+    });
 }
