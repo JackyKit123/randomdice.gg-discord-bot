@@ -228,7 +228,7 @@ export default async function dice(
                 (newMessage: Discord.Message) =>
                     newMessage.author === message.author &&
                     /^y(es)?\b/i.test(newMessage.content),
-                { time: 6000, max: 1, errors: ['time'] }
+                { time: 60000, max: 1, errors: ['time'] }
             );
             answeredYes = true;
         } catch {
