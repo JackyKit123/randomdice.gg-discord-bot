@@ -157,13 +157,21 @@ client.on('message', async function messageHandler(message) {
                     );
                     let answeredYes = false;
                     try {
-                        await channel.awaitMessages(
+                        const awaitedMessage = await channel.awaitMessages(
                             (newMessage: Discord.Message) =>
                                 newMessage.author === message.author &&
-                                /^y(es)?\b/i.test(newMessage.content),
+                                !!newMessage.content
+                                    .replace(/[^\040-\176\200-\377]/gi, '')
+                                    .match(/^(y(es)?|no?|\\?\.gg ?)/i),
                             { time: 60000, max: 1, errors: ['time'] }
                         );
-                        answeredYes = true;
+                        if (
+                            awaitedMessage
+                                .first()
+                                ?.content.replace(/[^\040-\176\200-\377]/gi, '')
+                                .match(/^y(es)?/i)
+                        )
+                            answeredYes = true;
                     } catch {
                         await sentMessage.edit(
                             `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`
@@ -179,6 +187,11 @@ client.on('message', async function messageHandler(message) {
                         // eslint-disable-next-line no-param-reassign
                         message.content = editedCommandString;
                         client.emit('message', message);
+                        await sentMessage.delete();
+                    } else {
+                        await sentMessage.edit(
+                            `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`
+                        );
                     }
                 } else {
                     await channel.send(

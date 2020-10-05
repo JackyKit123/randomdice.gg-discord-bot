@@ -101,13 +101,21 @@ export default async function deckGuide(
         );
         let answeredYes = false;
         try {
-            await channel.awaitMessages(
+            const awaitedMessage = await channel.awaitMessages(
                 (newMessage: Discord.Message) =>
                     newMessage.author === message.author &&
-                    /^y(es)?\b/i.test(newMessage.content),
+                    !!newMessage.content
+                        .replace(/[^\040-\176\200-\377]/gi, '')
+                        .match(/^(y(es)?|no?|\\?\.gg ?)/i),
                 { time: 60000, max: 1, errors: ['time'] }
             );
-            answeredYes = true;
+            if (
+                awaitedMessage
+                    .first()
+                    ?.content.replace(/[^\040-\176\200-\377]/gi, '')
+                    .match(/^y(es)?/i)
+            )
+                answeredYes = true;
         } catch {
             await sentMessage.edit(
                 `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
@@ -116,6 +124,11 @@ export default async function deckGuide(
         if (answeredYes) {
             await execute(
                 guides.find(g => g.name === bestMatch.target) as DeckGuide
+            );
+            await sentMessage.delete();
+        } else {
+            await sentMessage.edit(
+                `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
             );
         }
     } else {

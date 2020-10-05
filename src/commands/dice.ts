@@ -212,7 +212,7 @@ export default async function dice(
 
     const firstOptionalArgs = args.findIndex(arg => arg.startsWith('-'));
     const wrongDiceName = args
-        .filter((_, i) => firstOptionalArgs >= 0 && i < firstOptionalArgs)
+        .filter((_, i) => firstOptionalArgs === -1 || i < firstOptionalArgs)
         .join(' ');
     const { bestMatch } = stringSimilarity.findBestMatch(
         wrongDiceName,
@@ -224,13 +224,21 @@ export default async function dice(
         );
         let answeredYes = false;
         try {
-            await channel.awaitMessages(
+            const awaitedMessage = await channel.awaitMessages(
                 (newMessage: Discord.Message) =>
                     newMessage.author === message.author &&
-                    /^y(es)?\b/i.test(newMessage.content),
+                    !!newMessage.content
+                        .replace(/[^\040-\176\200-\377]/gi, '')
+                        .match(/^(y(es)?|no?|\\?\.gg ?)/i),
                 { time: 60000, max: 1, errors: ['time'] }
             );
-            answeredYes = true;
+            if (
+                awaitedMessage
+                    .first()
+                    ?.content.replace(/[^\040-\176\200-\377]/gi, '')
+                    .match(/^y(es)?/i)
+            )
+                answeredYes = true;
         } catch {
             await sentMessage.edit(
                 `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
@@ -239,6 +247,11 @@ export default async function dice(
         if (answeredYes) {
             await execute(
                 diceList.find(d => d.name === bestMatch.target) as Dice
+            );
+            await sentMessage.delete();
+        } else {
+            await sentMessage.edit(
+                `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
             );
         }
     } else {

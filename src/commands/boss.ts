@@ -70,13 +70,21 @@ export default async function dice(
         );
         let answeredYes = false;
         try {
-            await channel.awaitMessages(
+            const awaitedMessage = await channel.awaitMessages(
                 (newMessage: Discord.Message) =>
                     newMessage.author === message.author &&
-                    /^y(es)?\b/i.test(newMessage.content),
+                    !!newMessage.content
+                        .replace(/[^\040-\176\200-\377]/gi, '')
+                        .match(/^(y(es)?|no?|\\?\.gg ?)/i),
                 { time: 60000, max: 1, errors: ['time'] }
             );
-            answeredYes = true;
+            if (
+                awaitedMessage
+                    .first()
+                    ?.content.replace(/[^\040-\176\200-\377]/gi, '')
+                    .match(/^y(es)?/i)
+            )
+                answeredYes = true;
         } catch {
             await sentMessage.edit(
                 `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
@@ -85,6 +93,11 @@ export default async function dice(
         if (answeredYes) {
             await execute(
                 bossList.find(b => b.name === bestMatch.target) as Boss
+            );
+            await sentMessage.delete();
+        } else {
+            await sentMessage.edit(
+                `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
             );
         }
     } else {
