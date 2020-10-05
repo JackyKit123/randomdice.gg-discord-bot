@@ -114,8 +114,10 @@ export default async function deckGuide(
                     .first()
                     ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                     .match(/^y(es)?/i)
-            )
+            ) {
+                await awaitedMessage.first()?.delete();
                 answeredYes = true;
+            }
         } catch {
             await sentMessage.edit(
                 `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`

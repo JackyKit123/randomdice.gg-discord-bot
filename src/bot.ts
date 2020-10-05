@@ -170,8 +170,10 @@ client.on('message', async function messageHandler(message) {
                                 .first()
                                 ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                                 .match(/^y(es)?/i)
-                        )
+                        ) {
+                            await awaitedMessage.first()?.delete();
                             answeredYes = true;
+                        }
                     } catch {
                         await sentMessage.edit(
                             `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`

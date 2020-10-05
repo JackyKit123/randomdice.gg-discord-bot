@@ -237,8 +237,10 @@ export default async function dice(
                     .first()
                     ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                     .match(/^y(es)?/i)
-            )
+            ) {
+                await awaitedMessage.first()?.delete();
                 answeredYes = true;
+            }
         } catch {
             await sentMessage.edit(
                 `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
