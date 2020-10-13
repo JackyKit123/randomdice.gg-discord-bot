@@ -1,5 +1,6 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
+import postNow from './postNow';
 
 async function checkRegistered(
     guild: Discord.Guild,
@@ -74,6 +75,23 @@ export async function register(
                     );
                     return;
                 }
+                const missingPermissions = (targetedChannel as Discord.GuildChannel)
+                    .permissionsFor(client.user as Discord.ClientUser)
+                    ?.missing([
+                        'VIEW_CHANNEL',
+                        'SEND_MESSAGES',
+                        'READ_MESSAGE_HISTORY',
+                    ]);
+                if (missingPermissions?.length) {
+                    await channel.send(
+                        `Registered failed:\nI do not have ${missingPermissions
+                            .map(perm => `\`${perm}\``)
+                            .join(
+                                ' '
+                            )} permission in ${targetedChannel.toString()}. Please enable this missing permission for ${client.user?.toString()} in ${targetedChannel.toString()}.`
+                    );
+                    return;
+                }
                 await Promise.all([
                     database
                         .ref(`/discord_bot/registry/${guild.id}/${type}`)
@@ -82,9 +100,36 @@ export async function register(
                         .ref('/last_updated/discord_bot')
                         .set(new Date().toISOString()),
                 ]);
-                await channel.send(
-                    `Registered Channel <#${targetedChannel.id}> to provide ${type}`
+                const sentMessage = await channel.send(
+                    `Registered Channel ${targetedChannel.toString()} to provide ${type}. Post information for ${type} in ${targetedChannel.toString()} now? You may answer \`yes\` to post information now.`
                 );
+                try {
+                    const awaitedMessage = await channel.awaitMessages(
+                        (newMessage: Discord.Message) =>
+                            newMessage.author === message.author &&
+                            !!newMessage.content
+                                .replace(/[^\040-\176\200-\377]/gi, '')
+                                .match(/^(y(es)?|no?|\\?\.gg ?)/i),
+                        { time: 60000, max: 1, errors: ['time'] }
+                    );
+                    if (
+                        awaitedMessage
+                            .first()
+                            ?.content.replace(/[^\040-\176\200-\377]/gi, '')
+                            .match(/^y(es)?/i)
+                    ) {
+                        if (awaitedMessage.first()?.deletable) {
+                            await awaitedMessage.first()?.delete();
+                        }
+                        await postNow(message, client, database);
+                    } else {
+                        throw new Error('Answer is not yes.');
+                    }
+                } catch {
+                    await sentMessage.edit(
+                        `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
+                    );
+                }
             }
             break;
         }
@@ -93,7 +138,7 @@ export async function register(
             break;
         default:
             await channel.send(
-                'Targeted type not found, supported type: `guide` `news`, or list all registered channel `.gg register list`'
+                'Targeted type not found, supported type: `guide` `news`. The correct command format is `.gg register <guide|news> #channel-mention` or list all registered channel with `.gg register list`'
             );
     }
 }
@@ -115,9 +160,28 @@ export async function unregister(
         return;
     }
     const type = content.split(' ')[2];
+    if (!type?.toLowerCase().match(/^(?:guide|news)$/)) {
+        await channel.send(
+            `\`${type}\` is an invalid type to unregister. You can only unregister \`news\` or \`guide\``
+        );
+        return;
+    }
+    const registerChannel = (
+        await database
+            .ref(`/discord_bot/registry/${guild.id}/${type}`)
+            .once('value')
+    ).val();
+    if (!registerChannel) {
+        await channel.send(
+            `There is no registered channel for \`${type}\`, you do not need to unregister`
+        );
+        return;
+    }
     await Promise.all([
         database.ref(`/discord_bot/registry/${guild.id}/${type}`).set(null),
         database.ref('/last_updated/discord_bot').set(new Date().toISOString()),
     ]);
-    await channel.send(`Unregistered updates for ${type}`);
+    await channel.send(
+        `Unregistered channel <#${registerChannel}> for \`${type}\`, the previous ${type} information in <#${registerChannel}> stays but will not no longer auto update.`
+    );
 }
