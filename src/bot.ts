@@ -11,6 +11,7 @@ import dice from './commands/dice';
 import deck from './commands/deck';
 import guide from './commands/guide';
 import boss from './commands/boss';
+import battlefield from './commands/battlefield';
 import randomTip from './commands/tip';
 import guildCreateHandler from './helper/guildCreateHandler';
 import logMessage from './dev-commands/logMessage';
@@ -117,6 +118,10 @@ client.on('message', async function messageHandler(message) {
             }
             case 'boss': {
                 await boss(message, database);
+                break;
+            }
+            case 'battlefield': {
+                await battlefield(message, database);
                 break;
             }
             case 'help': {

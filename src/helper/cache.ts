@@ -95,6 +95,17 @@ export interface Tip {
     desc: string;
 }
 
+export interface Battlefield {
+    id: number;
+    name: string;
+    img: string;
+    desc: string;
+    buffName: string;
+    buffValue: number;
+    buffUnit: string;
+    buffCupValue: number;
+}
+
 type Data =
     | News
     | DeckGuide[]
@@ -103,7 +114,8 @@ type Data =
     | EmojiList
     | Registry
     | Boss[]
-    | Tip[];
+    | Tip[]
+    | Battlefield[];
 
 type keys =
     | 'decks_guide'
@@ -113,7 +125,8 @@ type keys =
     | 'discord_bot/emoji'
     | 'discord_bot/registry'
     | 'wiki/boss'
-    | 'wiki/tips';
+    | 'wiki/tips'
+    | 'wiki/battlefield';
 
 export default async function getData(
     database: admin.database.Database,
