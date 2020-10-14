@@ -100,6 +100,7 @@ export interface Battlefield {
     name: string;
     img: string;
     desc: string;
+    source: string;
     buffName: string;
     buffValue: number;
     buffUnit: string;

@@ -88,6 +88,7 @@ export default async function dice(
                         target.buffCupValue * battlefieldLevel
                     }${target.buffUnit}`
                 )
+                .addField('Obtained From', target.source)
                 .setAuthor(
                     'Random Dice Community Website',
                     'https://randomdice.gg/title_dice.png',
