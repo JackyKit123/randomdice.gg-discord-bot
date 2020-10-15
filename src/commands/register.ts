@@ -103,6 +103,7 @@ export async function register(
                 const sentMessage = await channel.send(
                     `Registered Channel ${targetedChannel.toString()} to provide ${type}. Post information for ${type} in ${targetedChannel.toString()} now? You may answer \`yes\` to post information now.`
                 );
+                let answeredYes = false;
                 try {
                     const awaitedMessage = await channel.awaitMessages(
                         (newMessage: Discord.Message) =>
@@ -121,11 +122,17 @@ export async function register(
                         if (awaitedMessage.first()?.deletable) {
                             await awaitedMessage.first()?.delete();
                         }
-                        await postNow(message, client, database);
-                    } else {
-                        throw new Error('Answer is not yes.');
+                        answeredYes = true;
                     }
                 } catch {
+                    await sentMessage.edit(
+                        `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
+                    );
+                }
+                if (answeredYes) {
+                    await postNow(message, client, database);
+                    await sentMessage.delete();
+                } else {
                     await sentMessage.edit(
                         `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
                     );

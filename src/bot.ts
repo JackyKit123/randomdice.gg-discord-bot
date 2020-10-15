@@ -176,7 +176,9 @@ client.on('message', async function messageHandler(message) {
                                 ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                                 .match(/^y(es)?/i)
                         ) {
-                            await awaitedMessage.first()?.delete();
+                            if (awaitedMessage.first()?.deletable) {
+                                await awaitedMessage.first()?.delete();
+                            }
                             answeredYes = true;
                         }
                     } catch {
