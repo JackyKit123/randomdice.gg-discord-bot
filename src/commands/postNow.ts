@@ -152,94 +152,40 @@ export async function postNews(
         .filter(channelId => channelId);
     const data = (await cache(database, 'news')) as News;
 
-    const news = parsedText(data.game).split('\n');
+    let news = parsedText(data.game);
+    const imgUrl = news.match(/{img}((?!.*{img}).*){\/img}/)?.[1];
+    news = news.replace(/{img}((?!.*{img}).*){\/img}/g, '');
 
-    const fields = news
-        .filter(p => p !== '')
-        .map((p, i) => ({
-            name: i === 0 ? 'News' : '⠀',
-            value: p,
-        }));
-
-    const embeds = new Array(Math.ceil(news.length / 16))
-        .fill('')
-        .map((_, i) => {
-            switch (Math.ceil(news.length / 16)) {
-                case 1:
-                    return [
-                        new Discord.MessageEmbed()
-                            .setColor('#6ba4a5')
-                            .setTitle('Random Dice news')
-                            .setAuthor(
-                                'Random Dice Community Website',
-                                'https://randomdice.gg/title_dice.png',
-                                'https://randomdice.gg/'
-                            )
-                            .setURL('https://randomdice.gg/')
-                            .addFields(fields)
-                            .setFooter(
-                                'randomdice.gg News Update',
-                                'https://randomdice.gg/title_dice.png'
-                            ),
-                    ];
-                case 2: {
-                    return i === 0
-                        ? new Discord.MessageEmbed()
-                              .setColor('#6ba4a5')
-                              .setTitle('Random Dice news')
-                              .setAuthor(
-                                  'Random Dice Community Website',
-                                  'https://randomdice.gg/title_dice.png',
-                                  'https://randomdice.gg/'
-                              )
-                              .setColor('#6ba4a5')
-                              .setURL('https://randomdice.gg/')
-                              .addFields(fields.slice(0, 16))
-                        : new Discord.MessageEmbed()
-                              .setColor('#6ba4a5')
-                              .setColor('#6ba4a5')
-                              .addFields(fields.slice(16))
-                              .setFooter(
-                                  'randomdice.gg News Update',
-                                  'https://randomdice.gg/title_dice.png'
-                              );
-                }
-                default: {
-                    if (i === 0) {
-                        return new Discord.MessageEmbed()
-                            .setColor('#6ba4a5')
-                            .setTitle('Random Dice news')
-                            .setAuthor(
-                                'Random Dice Community Website',
-                                'https://randomdice.gg/title_dice.png',
-                                'https://randomdice.gg/'
-                            )
-                            .setURL('https://randomdice.gg/')
-                            .addFields(fields.slice(0, 16));
-                    }
-                    if (i === Math.ceil(news.length / 16)) {
-                        return new Discord.MessageEmbed()
-                            .setColor('#6ba4a5')
-                            .addFields(fields.slice(16 * i))
-                            .setFooter(
-                                'randomdice.gg News Update',
-                                'https://randomdice.gg/title_dice.png'
-                            );
-                    }
-                    return new Discord.MessageEmbed()
-                        .setColor('#6ba4a5')
-                        .addFields(fields.slice(16 * i, 16 * (i + 1)));
-                }
-            }
-        });
+    let embed = new Discord.MessageEmbed()
+        .setColor('#6ba4a5')
+        .setTitle('Random Dice news')
+        .setAuthor(
+            'Random Dice Community Website',
+            'https://randomdice.gg/title_dice.png',
+            'https://randomdice.gg/'
+        )
+        .setURL('https://randomdice.gg/')
+        .setDescription(news)
+        .setFooter(
+            'randomdice.gg News Update',
+            'https://randomdice.gg/title_dice.png'
+        );
+    if (imgUrl) {
+        embed = embed.setImage(imgUrl);
+    }
 
     await Promise.all(
         registeredChannels.map(async channel => {
             const fetched = (
-                await channel.messages.fetch({ limit: 10 })
-            ).filter(message => message.author.id === client.user?.id);
+                await channel.messages.fetch({ limit: 100 })
+            ).filter(
+                message =>
+                    message.author.id === client.user?.id &&
+                    new Date().valueOf() - message.createdTimestamp <=
+                        86400000 * 14
+            );
             await channel.bulkDelete(fetched);
-            return Promise.all(embeds.map(async embed => channel.send(embed)));
+            return channel.send(embed);
         })
     );
 }

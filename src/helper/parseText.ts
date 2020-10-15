@@ -1,6 +1,8 @@
 import * as textVersion from 'textversionjs';
+import { XmlEntities } from 'html-entities';
 
 export default function replace(originalText: string): string {
+    const entities = new XmlEntities();
     let output = originalText;
 
     const escapeDiscordMarkdown = {
@@ -8,15 +10,14 @@ export default function replace(originalText: string): string {
         '~': '\\~',
         _: '\\_',
         '`': '\\`',
+        '\\|': '\\|',
     };
 
     const escapeHTML = {
-        '&amp;': '&',
-        '&lt;': '<',
-        '&gt;': '\\>',
-        '&quot;': '"',
-        '&#39;': "'",
-        '&#x2F;': '/',
+        '<blockquote>': '```',
+        '</blockquote>': '```',
+        '<u>': '__',
+        '</u>': '__',
         '<i>': '*',
         '</i>': '*',
         '<b>': '**',
@@ -24,15 +25,22 @@ export default function replace(originalText: string): string {
         '<strong>': '**',
         '</strong>': '**',
     };
+    output = entities.decode(output);
     [
         ...Object.entries(escapeDiscordMarkdown),
         ...Object.entries(escapeHTML),
     ].forEach(([code, character]) => {
         output = output.replace(new RegExp(code, 'g'), character);
     });
-    const parsedHtml = textVersion(output, {
+    output = textVersion(output, {
         linkProcess: (href, linkText) => linkText,
+        imgProcess: img => `{img}${img}{/img}`,
+        uIndentionChar: '• ',
+        oIndentionChar: '. ',
+        listIndentionTabs: 1,
+        keepNbsps: true,
     });
+    output = output.replace(/>/g, '\\>');
 
-    return parsedHtml;
+    return output;
 }
