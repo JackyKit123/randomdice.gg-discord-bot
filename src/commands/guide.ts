@@ -66,21 +66,40 @@ export default async function deckGuide(
                     value: p,
                 })),
         ];
-        const embed = new Discord.MessageEmbed()
-            .setTitle(`${name} (${type})${archived ? '**ARCHIVED**' : ''}`)
-            .setAuthor(
-                'Random Dice Community Website',
-                'https://randomdice.gg/title_dice.png',
-                'https://randomdice.gg/'
-            )
-            .setColor('#6ba4a5')
-            .setURL(`https://randomdice.gg/decks/guide/${encodeURI(name)}`)
-            .addFields(embedFields)
-            .setFooter(
-                'randomdice.gg Decks Guide',
-                'https://randomdice.gg/title_dice.png'
-            );
-        await channel.send(embed);
+        await Promise.all(
+            new Array(Math.ceil(embedFields.length / 16))
+                .fill(0)
+                .map((_, i, arr) => {
+                    let embed = new Discord.MessageEmbed()
+                        .setColor('#6ba4a5')
+                        .addFields(embedFields.slice(i * 16, i * 16 + 16));
+                    if (i === 0) {
+                        embed = embed
+                            .setTitle(
+                                `${name} (${type})${
+                                    archived ? '**ARCHIVED**' : ''
+                                }`
+                            )
+                            .setAuthor(
+                                'Random Dice Community Website',
+                                'https://randomdice.gg/title_dice.png',
+                                'https://randomdice.gg/'
+                            )
+                            .setURL(
+                                `https://randomdice.gg/decks/guide/${encodeURI(
+                                    name
+                                )}`
+                            );
+                    }
+                    if (i === arr.length) {
+                        embed = embed.setFooter(
+                            'randomdice.gg Decks Guide',
+                            'https://randomdice.gg/title_dice.png'
+                        );
+                    }
+                    return channel.send(embed);
+                })
+        );
     };
 
     if (guideData) {
