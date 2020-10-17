@@ -59,6 +59,7 @@ export interface Dice {
 }
 
 export interface Deck {
+    battlefield: number;
     guide: number[];
     id: number;
     type: 'PvP' | 'Co-op' | 'Crew' | '-';
