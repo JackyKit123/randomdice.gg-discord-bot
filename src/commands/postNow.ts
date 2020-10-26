@@ -36,7 +36,7 @@ export async function postGuide(
         cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
         cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
     ]);
-    const embeds = await (
+    const embeds = (
         await Promise.all(
             guides
                 .filter(guide => !guide.archived)
@@ -58,7 +58,6 @@ export async function postGuide(
                 })
         )
     )
-
         .map((parsedData): Discord.MessageEmbed | Discord.MessageEmbed[] => {
             const fields = [
                 ...parsedData.diceList.map((list, i, decks) => ({
