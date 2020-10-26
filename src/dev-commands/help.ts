@@ -18,6 +18,11 @@ export const commandList = [
                 description:
                     'Create invite links and send to log channel for all servers that the bot live in.',
             },
+            {
+                command: '.gg stat',
+                description:
+                    'Show the member count and server count that the bot is serving.',
+            },
         ],
     },
 ];

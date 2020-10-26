@@ -17,6 +17,7 @@ import guildCreateHandler from './helper/guildCreateHandler';
 import logMessage from './dev-commands/logMessage';
 import fetchInvites from './dev-commands/fetchInvites';
 import setEmoji from './dev-commands/updateEmoji';
+import statistic from './dev-commands/stat';
 import devHelp from './dev-commands/help';
 import sendContact from './commands/sendContact';
 
@@ -80,6 +81,9 @@ client.on('message', async function messageHandler(message) {
                     return;
                 case 'setemoji':
                     await setEmoji(client, database, message);
+                    return;
+                case 'stat':
+                    await statistic(client, channel);
                     return;
                 case 'help':
                     await devHelp(message);
