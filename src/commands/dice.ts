@@ -118,28 +118,28 @@ export default async function dice(
             return;
         }
         const atk =
-            Math.floor(
+            Math.round(
                 (target.atk +
                     target.cupAtk * (dieClass - minClass) +
                     target.pupAtk * (dieLevel - 1)) *
                     100
             ) / 100;
         const spd =
-            Math.floor(
+            Math.round(
                 (target.spd +
                     target.cupSpd * (dieClass - minClass) +
                     target.pupSpd * (dieLevel - 1)) *
                     100
             ) / 100;
         const eff1 =
-            Math.floor(
+            Math.round(
                 (target.eff1 +
                     target.cupEff1 * (dieClass - minClass) +
                     target.pupEff1 * (dieLevel - 1)) *
                     100
             ) / 100;
         const eff2 =
-            Math.floor(
+            Math.round(
                 (target.eff2 +
                     target.cupEff2 * (dieClass - minClass) +
                     target.pupEff2 * (dieLevel - 1)) *

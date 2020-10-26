@@ -84,8 +84,11 @@ export default async function dice(
                 .addField(
                     target.buffName,
                     `${
-                        target.buffValue +
-                        target.buffCupValue * battlefieldLevel
+                        Math.round(
+                            (target.buffValue +
+                                target.buffCupValue * battlefieldLevel) *
+                                100
+                        ) / 100
                     }${target.buffUnit}`
                 )
                 .addField('Obtained From', target.source)
