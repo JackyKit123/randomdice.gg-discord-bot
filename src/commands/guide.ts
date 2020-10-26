@@ -140,9 +140,6 @@ export default async function deckGuide(
                     ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                     .match(/^y(es)?/i)
             ) {
-                if (awaitedMessage.first()?.deletable) {
-                    await awaitedMessage.first()?.delete();
-                }
                 answeredYes = true;
             }
         } catch {
@@ -154,7 +151,6 @@ export default async function deckGuide(
             await execute(
                 guides.find(g => g.name === bestMatch.target) as DeckGuide
             );
-            await sentMessage.delete();
         } else {
             await sentMessage.edit(
                 `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`

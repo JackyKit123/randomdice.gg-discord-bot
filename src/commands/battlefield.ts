@@ -140,9 +140,6 @@ export default async function dice(
                     ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                     .match(/^y(es)?/i)
             ) {
-                if (awaitedMessage.first()?.deletable) {
-                    await awaitedMessage.first()?.delete();
-                }
                 answeredYes = true;
             }
         } catch {
@@ -156,7 +153,6 @@ export default async function dice(
                     b => b.name === bestMatch.target
                 ) as Battlefield
             );
-            await sentMessage.delete();
         } else {
             await sentMessage.edit(
                 `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`?`

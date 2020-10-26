@@ -84,9 +84,6 @@ export default async function dice(
                     ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                     .match(/^y(es)?/i)
             ) {
-                if (awaitedMessage.first()?.deletable) {
-                    await awaitedMessage.first()?.delete();
-                }
                 answeredYes = true;
             }
         } catch {
@@ -98,7 +95,6 @@ export default async function dice(
             await execute(
                 bossList.find(b => b.name === bestMatch.target) as Boss
             );
-            await sentMessage.delete();
         } else {
             await sentMessage.edit(
                 `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`

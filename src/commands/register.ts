@@ -80,6 +80,7 @@ export async function register(
                     ?.missing([
                         'VIEW_CHANNEL',
                         'SEND_MESSAGES',
+                        'MANAGE_MESSAGES',
                         'READ_MESSAGE_HISTORY',
                     ]);
                 if (missingPermissions?.length) {
@@ -119,9 +120,6 @@ export async function register(
                             ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                             .match(/^y(es)?/i)
                     ) {
-                        if (awaitedMessage.first()?.deletable) {
-                            await awaitedMessage.first()?.delete();
-                        }
                         answeredYes = true;
                     }
                 } catch {
@@ -131,7 +129,6 @@ export async function register(
                 }
                 if (answeredYes) {
                     await postNow(message, client, database);
-                    await sentMessage.delete();
                 } else {
                     await sentMessage.edit(
                         `Registered Channel ${targetedChannel.toString()} to provide ${type}.`

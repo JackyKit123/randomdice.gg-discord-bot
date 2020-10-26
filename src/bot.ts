@@ -176,9 +176,6 @@ client.on('message', async function messageHandler(message) {
                                 ?.content.replace(/[^\040-\176\200-\377]/gi, '')
                                 .match(/^y(es)?/i)
                         ) {
-                            if (awaitedMessage.first()?.deletable) {
-                                await awaitedMessage.first()?.delete();
-                            }
                             answeredYes = true;
                         }
                     } catch {
@@ -196,7 +193,6 @@ client.on('message', async function messageHandler(message) {
                         // eslint-disable-next-line no-param-reassign
                         message.content = editedCommandString;
                         client.emit('message', message);
-                        await sentMessage.delete();
                     } else {
                         await sentMessage.edit(
                             `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`
