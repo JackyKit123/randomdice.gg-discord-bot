@@ -1,6 +1,12 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import cache, { News, DeckGuide, Registry, EmojiList } from '../helper/cache';
+import cache, {
+    News,
+    DeckGuide,
+    Registry,
+    EmojiList,
+    Battlefield,
+} from '../helper/cache';
 import parsedText from '../helper/parseText';
 
 export async function postGuide(
@@ -25,24 +31,20 @@ export async function postGuide(
             ) as Discord.TextChannel;
         })
         .filter(channelId => channelId);
-    const data = (await cache(database, 'decks_guide')) as DeckGuide[];
+    const [guides, battlefields, emojiList] = await Promise.all([
+        cache(database, 'decks_guide') as Promise<DeckGuide[]>,
+        cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
+        cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
+    ]);
     const embeds = await (
         await Promise.all(
-            data
+            guides
                 .filter(guide => !guide.archived)
                 .map(async guide => {
-                    const { type, name } = guide;
+                    const { type, name, battlefield } = guide;
                     const diceList = await Promise.all(
                         guide.diceList.map(async list =>
-                            Promise.all(
-                                list.map(
-                                    async die =>
-                                        ((await cache(
-                                            database,
-                                            'discord_bot/emoji'
-                                        )) as EmojiList)[die]
-                                )
-                            )
+                            Promise.all(list.map(async die => emojiList[die]))
                         )
                     );
                     const paragraph = parsedText(guide.guide).split('\n');
@@ -51,6 +53,7 @@ export async function postGuide(
                         type,
                         diceList,
                         paragraph,
+                        battlefield,
                     };
                 })
         )
@@ -63,6 +66,19 @@ export async function postGuide(
                     name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '⠀',
                     value: list.join(' '),
                 })),
+                ...(parsedData.battlefield > -1 && parsedData.type !== 'Crew'
+                    ? [
+                          {
+                              name: 'Battlefield',
+                              value:
+                                  battlefields.find(
+                                      battlefield =>
+                                          battlefield.id ===
+                                          parsedData.battlefield
+                                  )?.name || '*not found*',
+                          },
+                      ]
+                    : []),
                 ...parsedData.paragraph
                     .filter(p => p !== '')
                     .map((p, i) => ({

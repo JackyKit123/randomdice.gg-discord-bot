@@ -13,6 +13,7 @@ export interface DeckGuide {
     name: string;
     type: 'PvP' | 'Co-op' | 'Crew';
     diceList: Dice['id'][][];
+    battlefield: Battlefield['id'];
     guide: string;
 }
 

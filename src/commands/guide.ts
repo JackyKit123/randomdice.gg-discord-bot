@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import * as stringSimilarity from 'string-similarity';
-import cache, { DeckGuide, EmojiList } from '../helper/cache';
+import cache, { DeckGuide, EmojiList, Battlefield } from '../helper/cache';
 import parseText from '../helper/parseText';
 
 export default async function deckGuide(
@@ -18,7 +18,11 @@ export default async function deckGuide(
         );
         return;
     }
-    const guides = (await cache(database, 'decks_guide')) as DeckGuide[];
+    const [guides, battlefields, emojiList] = await Promise.all([
+        cache(database, 'decks_guide') as Promise<DeckGuide[]>,
+        cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
+        cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
+    ]);
     if (guideName === 'list') {
         await channel.send(
             `Here is the list of guides:\n${['PvP', 'Co-op', 'Crew']
@@ -38,18 +42,10 @@ export default async function deckGuide(
     );
 
     const execute = async (target: DeckGuide): Promise<void> => {
-        const { diceList, name, type, guide, archived } = target;
+        const { diceList, name, type, guide, archived, battlefield } = target;
         const emojiDiceList = await Promise.all(
             diceList.map(async list =>
-                Promise.all(
-                    list.map(
-                        async die =>
-                            ((await cache(
-                                database,
-                                'discord_bot/emoji'
-                            )) as EmojiList)[die]
-                    )
-                )
+                Promise.all(list.map(async die => emojiList[die]))
             )
         );
         const paragraph = parseText(guide).split('\n');
@@ -59,6 +55,16 @@ export default async function deckGuide(
                 name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '⠀',
                 value: list.join(' '),
             })),
+            ...(battlefield > -1 && type !== 'Crew'
+                ? [
+                      {
+                          name: 'Battlefield',
+                          value:
+                              battlefields.find(b => b.id === battlefield)
+                                  ?.name || '*not found*',
+                      },
+                  ]
+                : []),
             ...paragraph
                 .filter(p => p !== '')
                 .map((p, i) => ({
