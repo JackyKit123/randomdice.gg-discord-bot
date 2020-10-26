@@ -76,7 +76,7 @@ export async function postGuide(
                           .setTitle(`${parsedData.name} (${parsedData.type})`)
                           .setAuthor(
                               'Random Dice Community Website',
-                              'https://randomdice.gg/favicon.ico',
+                              'https://randomdice.gg/android-chrome-512x512.png',
                               'https://randomdice.gg/'
                           )
                           .setColor('#6ba4a5')
@@ -91,14 +91,14 @@ export async function postGuide(
                           .addFields(fields.slice(16))
                           .setFooter(
                               'randomdice.gg Decks Guide',
-                              'https://randomdice.gg/favicon.ico'
+                              'https://randomdice.gg/android-chrome-512x512.png'
                           ),
                   ]
                 : new Discord.MessageEmbed()
                       .setTitle(`${parsedData.name} (${parsedData.type})`)
                       .setAuthor(
                           'Random Dice Community Website',
-                          'https://randomdice.gg/favicon.ico',
+                          'https://randomdice.gg/android-chrome-512x512.png',
                           'https://randomdice.gg/'
                       )
                       .setColor('#6ba4a5')
@@ -110,7 +110,7 @@ export async function postGuide(
                       .addFields(fields)
                       .setFooter(
                           'randomdice.gg Decks Guide',
-                          'https://randomdice.gg/favicon.ico'
+                          'https://randomdice.gg/android-chrome-512x512.png'
                       );
         })
         .flat();
@@ -161,14 +161,14 @@ export async function postNews(
         .setTitle('Random Dice news')
         .setAuthor(
             'Random Dice Community Website',
-            'https://randomdice.gg/favicon.ico',
+            'https://randomdice.gg/android-chrome-512x512.png',
             'https://randomdice.gg/'
         )
         .setURL('https://randomdice.gg/')
         .setDescription(news)
         .setFooter(
             'randomdice.gg News Update',
-            'https://randomdice.gg/favicon.ico'
+            'https://randomdice.gg/android-chrome-512x512.png'
         );
     if (imgUrl) {
         embed = embed.setImage(imgUrl);

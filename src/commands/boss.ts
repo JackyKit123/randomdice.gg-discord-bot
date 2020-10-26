@@ -38,7 +38,7 @@ export default async function dice(
                 .setThumbnail(target.img)
                 .setAuthor(
                     'Random Dice Community Website',
-                    'https://randomdice.gg/favicon.ico',
+                    'https://randomdice.gg/android-chrome-512x512.png',
                     'https://randomdice.gg/'
                 )
                 .setColor('#6ba4a5')
@@ -50,7 +50,7 @@ export default async function dice(
                 .addFields(embedFields)
                 .setFooter(
                     'randomdice.gg Boos Information',
-                    'https://randomdice.gg/favicon.ico'
+                    'https://randomdice.gg/android-chrome-512x512.png'
                 )
         );
     };

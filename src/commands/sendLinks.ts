@@ -27,7 +27,7 @@ export default async function sendLinks(
                     .setTitle('Support Us')
                     .setAuthor(
                         'Random Dice Community Website',
-                        'https://randomdice.gg/favicon.ico',
+                        'https://randomdice.gg/android-chrome-512x512.png',
                         'https://randomdice.gg/'
                     )
                     .setColor('#6ba4a5')

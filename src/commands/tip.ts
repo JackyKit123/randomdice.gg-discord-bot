@@ -16,7 +16,7 @@ export default async function dice(
             .setTitle('Random Dice Tips and Tricks')
             .setAuthor(
                 'Random Dice Community Website',
-                'https://randomdice.gg/favicon.ico',
+                'https://randomdice.gg/android-chrome-512x512.png',
                 'https://randomdice.gg/'
             )
             .setColor('#6ba4a5')
@@ -25,7 +25,7 @@ export default async function dice(
             .setDescription(parseText(randomTip.desc))
             .setFooter(
                 'randomdice.gg Tips',
-                'https://randomdice.gg/favicon.ico'
+                'https://randomdice.gg/android-chrome-512x512.png'
             )
     );
 }

@@ -82,7 +82,7 @@ export default async function deckGuide(
                             )
                             .setAuthor(
                                 'Random Dice Community Website',
-                                'https://randomdice.gg/favicon.ico',
+                                'https://randomdice.gg/android-chrome-512x512.png',
                                 'https://randomdice.gg/'
                             )
                             .setURL(
@@ -94,7 +94,7 @@ export default async function deckGuide(
                     if (i === arr.length) {
                         embed = embed.setFooter(
                             'randomdice.gg Decks Guide',
-                            'https://randomdice.gg/favicon.ico'
+                            'https://randomdice.gg/android-chrome-512x512.png'
                         );
                     }
                     return channel.send(embed);

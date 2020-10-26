@@ -29,7 +29,7 @@ export default async function help(message: Discord.Message): Promise<void> {
         .setTitle('Developer Commands')
         .setAuthor(
             'Random Dice Community Website',
-            'https://randomdice.gg/favicon.ico',
+            'https://randomdice.gg/android-chrome-512x512.png',
             'https://randomdice.gg/'
         )
         .setColor('#6ba4a5')

@@ -153,7 +153,7 @@ export default async function dice(
                 .setThumbnail(target.img)
                 .setAuthor(
                     'Random Dice Community Website',
-                    'https://randomdice.gg/favicon.ico',
+                    'https://randomdice.gg/android-chrome-512x512.png',
                     'https://randomdice.gg/'
                 )
                 .setColor('#6ba4a5')
@@ -200,7 +200,7 @@ export default async function dice(
                 ])
                 .setFooter(
                     'randomdice.gg Dice Information',
-                    'https://randomdice.gg/favicon.ico'
+                    'https://randomdice.gg/android-chrome-512x512.png'
                 )
         );
     };
