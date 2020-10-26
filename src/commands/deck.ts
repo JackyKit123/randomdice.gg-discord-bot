@@ -140,7 +140,7 @@ export default async function decklist(
                 .setTitle(`Random Dice ${deckType} Deck List`)
                 .setAuthor(
                     'Random Dice Community Website',
-                    'https://randomdice.gg/title_dice.png',
+                    'https://randomdice.gg/favicon.ico',
                     'https://randomdice.gg/'
                 )
                 .setURL(`https://randomdice.gg/decks/${deckType}`)
@@ -152,7 +152,7 @@ export default async function decklist(
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setFooter(
                     `randomdice.gg Deck List #page ${i + 1}/${pageNumbers}`,
-                    'https://randomdice.gg/title_dice.png'
+                    'https://randomdice.gg/favicon.ico'
                 )
         );
     const sentMessage = await channel.send(embeds[currentPage]);

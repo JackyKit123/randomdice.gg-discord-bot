@@ -86,7 +86,7 @@ export default async function help(message: Discord.Message): Promise<void> {
         .setTitle('List of Commands')
         .setAuthor(
             'Random Dice Community Website',
-            'https://randomdice.gg/title_dice.png',
+            'https://randomdice.gg/favicon.ico',
             'https://randomdice.gg/'
         )
         .setColor('#6ba4a5')

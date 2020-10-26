@@ -91,7 +91,7 @@ export default async function dice(
                 .addField('Obtained From', target.source)
                 .setAuthor(
                     'Random Dice Community Website',
-                    'https://randomdice.gg/title_dice.png',
+                    'https://randomdice.gg/favicon.ico',
                     'https://randomdice.gg/'
                 )
                 .setColor('#6ba4a5')
@@ -102,7 +102,7 @@ export default async function dice(
                 )
                 .setFooter(
                     'randomdice.gg Battlefield Information',
-                    'https://randomdice.gg/title_dice.png'
+                    'https://randomdice.gg/favicon.ico'
                 )
         );
     };

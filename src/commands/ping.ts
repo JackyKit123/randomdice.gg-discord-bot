@@ -19,6 +19,6 @@ export default async function ping(message: Discord.Message): Promise<void> {
             .setTitle('Pong')
             .setDescription(`Time elapsed: ${latency}ms`)
             .setColor('#6ba4a5')
-            .setThumbnail('https://randomdice.gg/title_dice.png')
+            .setThumbnail('https://randomdice.gg/favicon.ico')
     );
 }
