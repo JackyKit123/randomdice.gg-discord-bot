@@ -91,7 +91,7 @@ export default async function deckGuide(
                                 )}`
                             );
                     }
-                    if (i === arr.length) {
+                    if (i === arr.length - 1) {
                         embed = embed.setFooter(
                             'randomdice.gg Decks Guide',
                             'https://randomdice.gg/android-chrome-512x512.png'
