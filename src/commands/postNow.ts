@@ -8,6 +8,7 @@ import cache, {
     Battlefield,
 } from '../helper/cache';
 import parsedText from '../helper/parseText';
+import logMessage from '../dev-commands/logMessage';
 
 export async function postGuide(
     client: Discord.Client,
@@ -131,11 +132,33 @@ export async function postGuide(
         .flat();
     await Promise.all(
         registeredChannels.map(async channel => {
+            const channelPermission = channel.permissionsFor(
+                client.user as Discord.ClientUser
+            );
+            const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
+            const cantDeleteMessage = !channelPermission?.has(
+                'MANAGE_MESSAGES'
+            );
+            if (cantSendMessage || cantDeleteMessage) {
+                if (cantSendMessage) {
+                    await logMessage(
+                        client,
+                        `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
+                    );
+                }
+                if (cantDeleteMessage) {
+                    await logMessage(
+                        client,
+                        `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
+                    );
+                    return;
+                }
+            }
             const fetched = (
                 await channel.messages.fetch({ limit: 100 })
             ).filter(message => message.author.id === client.user?.id);
             await channel.bulkDelete(fetched);
-            return Promise.all(embeds.map(async embed => channel.send(embed)));
+            await Promise.all(embeds.map(async embed => channel.send(embed)));
         })
     );
 }
@@ -191,6 +214,28 @@ export async function postNews(
 
     await Promise.all(
         registeredChannels.map(async channel => {
+            const channelPermission = channel.permissionsFor(
+                client.user as Discord.ClientUser
+            );
+            const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
+            const cantDeleteMessage = !channelPermission?.has(
+                'MANAGE_MESSAGES'
+            );
+            if (cantSendMessage || cantDeleteMessage) {
+                if (cantSendMessage) {
+                    await logMessage(
+                        client,
+                        `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
+                    );
+                }
+                if (cantDeleteMessage) {
+                    await logMessage(
+                        client,
+                        `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
+                    );
+                    return;
+                }
+            }
             const fetched = (
                 await channel.messages.fetch({ limit: 100 })
             ).filter(
@@ -200,7 +245,7 @@ export async function postNews(
                         86400000 * 14
             );
             await channel.bulkDelete(fetched);
-            return channel.send(embed);
+            await channel.send(embed);
         })
     );
 }
