@@ -272,41 +272,20 @@ export default async function postNow(
     switch (type) {
         case 'guide':
             await postGuide(client, database, guild);
-            try {
+            if (statusMessage.editable)
                 await statusMessage.edit(`Finished Posting ${type}`);
-            } catch (err) {
-                if (err.message === 'Unknown Message') {
-                    await channel.send(`Finished Posting ${type}`);
-                    return;
-                }
-                throw err;
-            }
+            await channel.send(`Finished Posting ${type}`);
             return;
         case 'news':
             await postNews(client, database, guild);
-            try {
+            if (statusMessage.editable)
                 await statusMessage.edit(`Finished Posting ${type}`);
-            } catch (err) {
-                if (err.message === 'Unknown Message') {
-                    await channel.send(`Finished Posting ${type}`);
-                    return;
-                }
-                throw err;
-            }
+            await channel.send(`Finished Posting ${type}`);
             return;
         default:
-            try {
-                await statusMessage.edit(
-                    `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``
-                );
-            } catch (err) {
-                if (err.message === 'Unknown Message') {
-                    await channel.send(
-                        `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``
-                    );
-                    return;
-                }
-                throw err;
-            }
+            if (statusMessage.deletable) await statusMessage.delete();
+            await channel.send(
+                `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``
+            );
     }
 }

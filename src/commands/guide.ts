@@ -143,15 +143,16 @@ export default async function deckGuide(
                 answeredYes = true;
             }
         } catch {
-            await sentMessage.edit(
-                `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
-            );
+            if (sentMessage.editable)
+                await sentMessage.edit(
+                    `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
+                );
         }
         if (answeredYes) {
             await execute(
                 guides.find(g => g.name === bestMatch.target) as DeckGuide
             );
-        } else {
+        } else if (sentMessage.editable) {
             await sentMessage.edit(
                 `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
             );

@@ -123,13 +123,14 @@ export async function register(
                         answeredYes = true;
                     }
                 } catch {
-                    await sentMessage.edit(
-                        `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
-                    );
+                    if (sentMessage.editable)
+                        await sentMessage.edit(
+                            `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
+                        );
                 }
                 if (answeredYes) {
                     await postNow(message, client, database);
-                } else {
+                } else if (sentMessage.editable) {
                     await sentMessage.edit(
                         `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
                     );

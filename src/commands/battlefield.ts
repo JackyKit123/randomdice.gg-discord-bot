@@ -146,9 +146,10 @@ export default async function dice(
                 answeredYes = true;
             }
         } catch {
-            await sentMessage.edit(
-                `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`?`
-            );
+            if (sentMessage.editable)
+                await sentMessage.edit(
+                    `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`?`
+                );
         }
         if (answeredYes) {
             await execute(
@@ -156,7 +157,7 @@ export default async function dice(
                     b => b.name === bestMatch.target
                 ) as Battlefield
             );
-        } else {
+        } else if (sentMessage.editable) {
             await sentMessage.edit(
                 `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`?`
             );

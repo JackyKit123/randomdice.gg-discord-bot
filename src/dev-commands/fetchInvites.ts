@@ -34,13 +34,14 @@ export default async function createInvites(
         })
     );
 
-    await creatingMessage?.edit(
-        `Here is a list of guilds that the bot is in as of ${new Date().toISOString()}:\n${createdInvites
-            .map(inviteData =>
-                inviteData.code
-                    ? `https://discord.gg/${inviteData.code} : ${inviteData.name}`
-                    : `Error For ${inviteData.name} - ${inviteData.error}`
-            )
-            .join('\n')}`
-    );
+    if (creatingMessage?.editable)
+        await creatingMessage?.edit(
+            `Here is a list of guilds that the bot is in as of ${new Date().toISOString()}:\n${createdInvites
+                .map(inviteData =>
+                    inviteData.code
+                        ? `https://discord.gg/${inviteData.code} : ${inviteData.name}`
+                        : `Error For ${inviteData.name} - ${inviteData.error}`
+                )
+                .join('\n')}`
+        );
 }

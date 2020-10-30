@@ -241,15 +241,16 @@ export default async function dice(
                 answeredYes = true;
             }
         } catch {
-            await sentMessage.edit(
-                `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
-            );
+            if (sentMessage.editable)
+                await sentMessage.edit(
+                    `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
+                );
         }
         if (answeredYes) {
             await execute(
                 diceList.find(d => d.name === bestMatch.target) as Dice
             );
-        } else {
+        } else if (sentMessage.editable) {
             await sentMessage.edit(
                 `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
             );

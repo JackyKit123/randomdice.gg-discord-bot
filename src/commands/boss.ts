@@ -87,15 +87,17 @@ export default async function dice(
                 answeredYes = true;
             }
         } catch {
-            await sentMessage.edit(
-                `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
-            );
+            if (sentMessage.editable)
+                await sentMessage.edit(
+                    `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
+                );
         }
         if (answeredYes) {
             await execute(
                 bossList.find(b => b.name === bestMatch.target) as Boss
             );
-        } else {
+        }
+        if (sentMessage.editable) {
             await sentMessage.edit(
                 `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
             );

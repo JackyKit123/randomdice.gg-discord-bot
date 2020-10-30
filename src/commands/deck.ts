@@ -189,17 +189,22 @@ export default async function decklist(
         if (reaction.emoji.name === '⏩') {
             currentPage = pageNumbers - 1;
         }
-        await sentMessage.edit(embeds[currentPage]);
+        if (sentMessage.editable) await sentMessage.edit(embeds[currentPage]);
         await reaction.users.remove(user.id);
     });
 
     collector.on('end', async () => {
-        await Promise.all([
-            await sentMessage.edit(
-                `The reaction commands has expired, please do \`.gg deck ${deckType}\` again to interact with the message.`,
-                embeds[currentPage]
-            ),
-            await sentMessage.reactions.removeAll(),
-        ]);
+        await Promise.all(
+            [await sentMessage.reactions.removeAll()].concat(
+                sentMessage.editable
+                    ? [
+                          await sentMessage.edit(
+                              `The reaction commands has expired, please do \`.gg deck ${deckType}\` again to interact with the message.`,
+                              embeds[currentPage]
+                          ),
+                      ]
+                    : []
+            )
+        );
     });
 }
