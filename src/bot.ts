@@ -217,9 +217,7 @@ client.on('message', async function messageHandler(message) {
                 client,
                 `Oops, something went wrong in ${
                     guild ? `server ${guild.name}` : `DM with <@${author.id}>`
-                } : ${
-                    err.message
-                }\nCommand Attempting to execute:\`${content}\``
+                } : ${err.stack}\nCommand Attempting to execute:\`${content}\``
             );
         } catch (criticalError) {
             // eslint-disable-next-line no-console
