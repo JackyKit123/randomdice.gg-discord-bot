@@ -5,8 +5,17 @@ export default async function statistic(
     channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel
 ): Promise<void> {
     const guildCount = client.guilds.cache.size;
-    const userCount = client.users.cache.size;
+    const guildData = client.guilds.cache.map(guild => {
+        let memberCountString = guild.memberCount.toString();
+        while (memberCountString.length < 6) {
+            memberCountString = ` ${memberCountString}`;
+        }
+        return `${guild.id}|      ${memberCountString}|${guild.name}`;
+    });
+
     await channel.send(
-        `I am ${client.user?.toString()}, I am now serving **${userCount}** users across **${guildCount}** discord servers.`
+        `I am ${client.user?.toString()}, I am now serving in **${guildCount}** discord servers.\n\`\`\`Server Id         |Member Count|Server Name\n${guildData.join(
+            '\n'
+        )}\`\`\``
     );
 }
