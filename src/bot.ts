@@ -42,14 +42,14 @@ admin.initializeApp({
 const database = admin.database();
 updateListener(client, database);
 
-client.on('ready', () => {
+client.on('ready', async () => {
     client.user?.setActivity('.gg help', {
         type: 'PLAYING',
     });
     const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
         process.env.NODE_ENV
     }`;
-    logMessage(client, bootMessage);
+    await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
 });
