@@ -23,18 +23,32 @@ export default async function deckGuide(
         cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
         cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
     ]);
-    if (guideName === 'list') {
+
+    const listing = async (): Promise<void> => {
         await channel.send(
-            `Here is the list of guides:\n${['PvP', 'Co-op', 'Crew']
-                .map(
-                    type =>
-                        `${type} Guides: ${guides
+            new Discord.MessageEmbed()
+                .setColor('#6ba4a5')
+                .setTitle('Random Dice Deck Guides List')
+                .setAuthor(
+                    'Random Dice Community Website',
+                    'https://randomdice.gg/android-chrome-512x512.png',
+                    'https://randomdice.gg/'
+                )
+                .setURL(`https://randomdice.gg/decks/guide/}`)
+                .addFields(
+                    ['PvP', 'Co-op', 'Crew'].map(type => ({
+                        name: `${type} Guides`,
+                        value: guides
                             .filter(g => g.type === type && !g.archived)
                             .map(g => `\`${g.name}\``)
-                            .join(' ')}`
+                            .join('\n'),
+                    }))
                 )
-                .join('\n')}`
         );
+    };
+
+    if (guideName === 'list') {
+        await listing();
         return;
     }
     const guideData = guides.find(
@@ -43,11 +57,10 @@ export default async function deckGuide(
 
     const execute = async (target: DeckGuide): Promise<void> => {
         const { diceList, name, type, guide, archived, battlefield } = target;
-        const emojiDiceList = await Promise.all(
-            diceList.map(async list =>
-                Promise.all(list.map(async die => emojiList[die]))
-            )
+        const emojiDiceList = diceList.map(list =>
+            list.map(die => emojiList[die])
         );
+
         const paragraph = parseText(guide).split('\n');
         const embedFields = [
             ...emojiDiceList.map((list, i, decks) => ({
@@ -120,46 +133,53 @@ export default async function deckGuide(
     const bestMatchGuide = guides.find(
         guide => guide.name === bestMatch.target
     );
-    if (bestMatch.rating > 0.3) {
-        const sentMessage = await channel.send(
-            `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`? You may answer \`Yes\` to display the guide.`
+    const sentMessage = await channel.send(
+        bestMatch.rating > 0.3
+            ? `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`? You may answer \`Yes\` to display the guide or answer \`No\` to display a list of guides to search for.`
+            : `Guide \`${guideName}\` not found. Do you want to display the list of guides to search for the guide you want?  You may answer \`Yes\` to display the guide list.`
+    );
+    let answer = null;
+    try {
+        const awaitedMessage = await channel.awaitMessages(
+            (newMessage: Discord.Message) =>
+                newMessage.author === message.author &&
+                !!newMessage.content
+                    .replace(/[^\040-\176\200-\377]/gi, '')
+                    .match(/^(y(es)?|no?|\\?\.gg ?)/i),
+            { time: 60000, max: 1, errors: ['time'] }
         );
-        let answeredYes = false;
-        try {
-            const awaitedMessage = await channel.awaitMessages(
-                (newMessage: Discord.Message) =>
-                    newMessage.author === message.author &&
-                    !!newMessage.content
-                        .replace(/[^\040-\176\200-\377]/gi, '')
-                        .match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                { time: 60000, max: 1, errors: ['time'] }
-            );
-            if (
-                awaitedMessage
-                    .first()
-                    ?.content.replace(/[^\040-\176\200-\377]/gi, '')
-                    .match(/^y(es)?/i)
-            ) {
-                answeredYes = true;
-            }
-        } catch {
-            if (sentMessage.editable)
-                await sentMessage.edit(
-                    `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
-                );
+        const response = awaitedMessage
+            .first()
+            ?.content.replace(/[^\040-\176\200-\377]/gi, '');
+        if (response?.match(/^y(es)?/i)) {
+            answer = 'yes';
+        } else if (response?.match(/^no?/i)) {
+            answer = 'no';
         }
-        if (answeredYes) {
+    } catch {
+        if (sentMessage.editable) {
+            await sentMessage.edit(
+                bestMatch.rating > 0.3
+                    ? `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
+                    : `Guide \`${guideName}\` not found. You may do \`.gg guide list\` to display the list of guides for search.`
+            );
+        }
+    }
+    if (bestMatch.rating > 0.3) {
+        if (answer === 'yes') {
             await execute(
                 guides.find(g => g.name === bestMatch.target) as DeckGuide
             );
-        } else if (sentMessage.editable) {
-            await sentMessage.edit(
-                `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
-            );
+        } else if (answer === 'no') {
+            await listing();
         }
-    } else {
-        await channel.send(
-            `Guide \`${guideName}\` not found. You can do \`.gg guide list\` to search for a list of guides.`
+    } else if (answer === 'yes') {
+        await listing();
+    } else if (sentMessage.editable) {
+        await sentMessage.edit(
+            bestMatch.rating > 0.3
+                ? `Guide \`${guideName}\` not found. Did you mean ${bestMatchGuide?.type}: \`${bestMatchGuide?.name}\`?`
+                : `Guide \`${guideName}\` not found. You may do \`.gg guide list\` to display the list of guides for search.`
         );
     }
 }
