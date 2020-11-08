@@ -1,37 +1,67 @@
 import * as Discord from 'discord.js';
-import logMessage from './logMessage';
 
 export default async function createInvites(
-    client: Discord.Client
+    client: Discord.Client,
+    message: Discord.Message
 ): Promise<void> {
-    const creatingMessage = await logMessage(
-        client,
+    const { content, channel } = message;
+
+    const guildId = content.split(' ')[2]?.match(/^\d{18}$/)?.[0];
+
+    const makeInvites = async (
+        guildData: Discord.Guild
+    ): Promise<{
+        name: string;
+        code?: string;
+        error?: string;
+    }> => {
+        try {
+            const code = (
+                await guildData.channels.cache
+                    .find(
+                        c =>
+                            c.name === 'welcome' ||
+                            c.name === 'general' ||
+                            c.type === 'text'
+                    )
+                    ?.createInvite()
+            )?.code;
+            return {
+                name: guildData.name,
+                code,
+            };
+        } catch (err) {
+            return {
+                name: guildData.name,
+                error: err.message,
+            };
+        }
+    };
+
+    if (guildId) {
+        const guild = client.guilds.cache.get(guildId);
+
+        if (!guild) {
+            await channel.send(
+                `Guild id: \`${guildId}\` is not a server I am in.`
+            );
+            return;
+        }
+
+        const res = await makeInvites(guild);
+        await channel.send(
+            res.code
+                ? `Invite for server \`${res.name}\`: https://discord.gg/${res.code}`
+                : `Error For ${res.name} - ${res.error}`
+        );
+        return;
+    }
+
+    const creatingMessage = await channel.send(
         'Creating Invites... Please allow sometime.'
     );
     const createdInvites = await Promise.all(
-        client.guilds.cache.map(async guildData => {
-            try {
-                const code = (
-                    await guildData.channels.cache
-                        .find(
-                            channel =>
-                                channel.name === 'welcome' ||
-                                channel.name === 'general' ||
-                                channel.type === 'text'
-                        )
-                        ?.createInvite()
-                )?.code;
-                return {
-                    name: guildData.name,
-                    code,
-                };
-            } catch (err) {
-                return {
-                    name: guildData.name,
-                    error: err.message,
-                };
-            }
-        })
+        client.guilds.cache.map(makeInvites)
     );
 
     if (creatingMessage?.editable)

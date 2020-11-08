@@ -77,7 +77,7 @@ client.on('message', async function messageHandler(message) {
         if (process.env.DEV_USERS_ID?.includes(author.id)) {
             switch (command?.toLowerCase()) {
                 case 'createinvites':
-                    await fetchInvites(client);
+                    await fetchInvites(client, message);
                     return;
                 case 'setemoji':
                     await setEmoji(client, database, message);
