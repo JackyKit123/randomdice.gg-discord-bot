@@ -59,7 +59,7 @@ export async function postGuide(
                 })
         )
     )
-        .map((parsedData): Discord.MessageEmbed | Discord.MessageEmbed[] => {
+        .map((parsedData): Discord.MessageEmbed[] => {
             const fields = [
                 ...parsedData.diceList.map((list, i, decks) => ({
                     // eslint-disable-next-line no-nested-ternary
@@ -86,48 +86,34 @@ export async function postGuide(
                         value: p,
                     })),
             ];
-            return fields.length > 16
-                ? [
-                      new Discord.MessageEmbed()
-                          .setTitle(`${parsedData.name} (${parsedData.type})`)
-                          .setAuthor(
-                              'Random Dice Community Website',
-                              'https://randomdice.gg/android-chrome-512x512.png',
-                              'https://randomdice.gg/'
-                          )
-                          .setColor('#6ba4a5')
-                          .setURL(
-                              `https://randomdice.gg/decks/guide/${encodeURI(
-                                  parsedData.name
-                              )}`
-                          )
-                          .addFields(fields.slice(0, 16)),
-                      new Discord.MessageEmbed()
-                          .setColor('#6ba4a5')
-                          .addFields(fields.slice(16))
-                          .setFooter(
-                              'randomdice.gg Decks Guide',
-                              'https://randomdice.gg/android-chrome-512x512.png'
-                          ),
-                  ]
-                : new Discord.MessageEmbed()
-                      .setTitle(`${parsedData.name} (${parsedData.type})`)
-                      .setAuthor(
-                          'Random Dice Community Website',
-                          'https://randomdice.gg/android-chrome-512x512.png',
-                          'https://randomdice.gg/'
-                      )
-                      .setColor('#6ba4a5')
-                      .setURL(
-                          `https://randomdice.gg/decks/guide/${encodeURI(
-                              parsedData.name
-                          )}`
-                      )
-                      .addFields(fields)
-                      .setFooter(
-                          'randomdice.gg Decks Guide',
-                          'https://randomdice.gg/android-chrome-512x512.png'
-                      );
+            return new Array(Math.ceil(fields.length / 16))
+                .fill('')
+                .map((_, i, arr) => {
+                    let embed = new Discord.MessageEmbed()
+                        .setColor('#6ba4a5')
+                        .addFields(fields.slice(i * 16, i * 16 + 16));
+                    if (i === 0) {
+                        embed = embed
+                            .setTitle(`${parsedData.name} (${parsedData.type})`)
+                            .setAuthor(
+                                'Random Dice Community Website',
+                                'https://randomdice.gg/android-chrome-512x512.png',
+                                'https://randomdice.gg/'
+                            )
+                            .setURL(
+                                `https://randomdice.gg/decks/guide/${encodeURI(
+                                    parsedData.name
+                                )}`
+                            );
+                    }
+                    if (i === arr.length - 1) {
+                        embed = embed.setFooter(
+                            'randomdice.gg Decks Guide',
+                            'https://randomdice.gg/android-chrome-512x512.png'
+                        );
+                    }
+                    return embed;
+                });
         })
         .flat();
     await Promise.all(
