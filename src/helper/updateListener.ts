@@ -34,7 +34,7 @@ export default function listener(
             }
         }
     });
-    database.ref('/news').on('child_changed', async () => {
+    database.ref('/news/game').on('child_changed', async () => {
         if (!posting.news) {
             posting.news = true;
             try {
