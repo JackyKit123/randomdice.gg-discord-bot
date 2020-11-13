@@ -161,14 +161,14 @@ export default async function getData(
     localVersion[target] = remoteVersion;
 
     await Promise.all([
-        await new Promise((resolve, reject) =>
+        await new Promise<void>((resolve, reject) =>
             fs.writeFile(
                 cachePath('last_updated'),
                 JSON.stringify(localVersion),
                 err => (err ? reject(err) : resolve())
             )
         ),
-        await new Promise((resolve, reject) =>
+        await new Promise<void>((resolve, reject) =>
             fs.writeFile(cachePath(target), JSON.stringify(newData), err =>
                 err ? reject(err) : resolve()
             )
