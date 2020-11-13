@@ -19,19 +19,27 @@ export async function postGuide(
         database,
         'discord_bot/registry'
     )) as Registry;
-    const registeredChannels = Object.entries(registeredGuilds)
-        .filter(([guildId, config]) =>
-            guild ? guild.id === guildId : config.guide
+    const registeredChannels = (
+        await Promise.all(
+            (Object.entries(registeredGuilds) as [string, { guide?: string }][])
+                .filter(([guildId, config]) =>
+                    guild ? guild.id === guildId : config.guide
+                )
+                .map(async ([, config]) => {
+                    if (!config.guide) {
+                        throw new Error('missing registered guide channel.');
+                    }
+                    try {
+                        const guideChannel = await client.channels.fetch(
+                            config.guide
+                        );
+                        return guideChannel;
+                    } catch {
+                        return undefined;
+                    }
+                })
         )
-        .map(([, config]) => {
-            if (!config.guide) {
-                throw new Error('missing registered guide channel.');
-            }
-            return client.channels.cache.get(
-                config.guide
-            ) as Discord.TextChannel;
-        })
-        .filter(channelId => channelId);
+    ).filter(channel => channel) as Discord.TextChannel[];
     const [guides, battlefields, emojiList] = await Promise.all([
         cache(database, 'decks_guide') as Promise<DeckGuide[]>,
         cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
@@ -121,11 +129,18 @@ export async function postGuide(
             const channelPermission = channel.permissionsFor(
                 client.user as Discord.ClientUser
             );
+            const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
             const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
             const cantDeleteMessage = !channelPermission?.has(
                 'MANAGE_MESSAGES'
             );
-            if (cantSendMessage || cantDeleteMessage) {
+            if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
+                if (cantViewChannel) {
+                    await logMessage(
+                        client,
+                        `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
+                    );
+                }
                 if (cantSendMessage) {
                     await logMessage(
                         client,
@@ -137,8 +152,8 @@ export async function postGuide(
                         client,
                         `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
                     );
-                    return;
                 }
+                return;
             }
             const fetched = (
                 await channel.messages.fetch({ limit: 100 })
@@ -158,22 +173,27 @@ export async function postNews(
         database,
         'discord_bot/registry'
     )) as Registry;
-    const registeredChannels = (Object.entries(registeredGuilds) as [
-        string,
-        { news?: string }
-    ][])
-        .filter(([guildId, config]) =>
-            guild ? guild.id === guildId : config.news
+    const registeredChannels = (
+        await Promise.all(
+            (Object.entries(registeredGuilds) as [string, { news?: string }][])
+                .filter(([guildId, config]) =>
+                    guild ? guild.id === guildId : config.news
+                )
+                .map(async ([, config]) => {
+                    if (!config.news) {
+                        throw new Error('missing registered news channel.');
+                    }
+                    try {
+                        const newsChannel = await client.channels.fetch(
+                            config.news
+                        );
+                        return newsChannel;
+                    } catch {
+                        return undefined;
+                    }
+                })
         )
-        .map(([, config]) => {
-            if (!config.news) {
-                throw new Error('missing registered news channel.');
-            }
-            return client.channels.cache.get(
-                config.news
-            ) as Discord.TextChannel;
-        })
-        .filter(channelId => channelId);
+    ).filter(channel => channel) as Discord.TextChannel[];
     const data = (await cache(database, 'news')) as News;
 
     let news = parsedText(data.game);
@@ -203,11 +223,18 @@ export async function postNews(
             const channelPermission = channel.permissionsFor(
                 client.user as Discord.ClientUser
             );
+            const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
             const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
             const cantDeleteMessage = !channelPermission?.has(
                 'MANAGE_MESSAGES'
             );
-            if (cantSendMessage || cantDeleteMessage) {
+            if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
+                if (cantViewChannel) {
+                    await logMessage(
+                        client,
+                        `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
+                    );
+                }
                 if (cantSendMessage) {
                     await logMessage(
                         client,
@@ -219,8 +246,8 @@ export async function postNews(
                         client,
                         `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
                     );
-                    return;
                 }
+                return;
             }
             const fetched = (
                 await channel.messages.fetch({ limit: 100 })
