@@ -34,7 +34,11 @@ export default function listener(
             }
         }
     });
-    database.ref('/news/game').on('value', async () => {
+    database.ref('/news').on('child_changed', async snapshot => {
+        console.log(snapshot.key);
+        if (snapshot.key !== 'game') {
+            return;
+        }
         if (!posting.news) {
             posting.news = true;
             try {
