@@ -13,9 +13,17 @@ export default async function statistic(
         return `${guild.id}|      ${memberCountString}|${guild.name}`;
     });
 
-    await channel.send(
-        `I am ${client.user?.toString()}, I am now serving in **${guildCount}** discord servers.\n\`\`\`Server Id         |Member Count|Server Name\n${guildData.join(
-            '\n'
-        )}\`\`\``
+    await Promise.all(
+        new Array(Math.ceil(guildData.length / 20))
+            .fill('')
+            .map((_, i) =>
+                channel.send(
+                    `${
+                        i === 0
+                            ? `I am ${client.user?.toString()}, I am now serving in **${guildCount}** discord servers.\n\`\`\`Server Id         |Member Count|Server Name\n`
+                            : '```'
+                    }${guildData.slice(20 * i, 20 * i + 20).join('\n')}\`\`\``
+                )
+            )
     );
 }
