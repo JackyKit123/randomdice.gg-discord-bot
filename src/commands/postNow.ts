@@ -196,6 +196,9 @@ export async function postNews(
     ).filter(channel => channel) as Discord.TextChannel[];
     const data = (await cache(database, 'news')) as News;
 
+    const ytUrl = data.game.match(
+        /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/
+    )?.[0];
     const news = parsedText(data.game);
     const imgUrl = news.match(/{img}((?!.*{img}).*){\/img}/)?.[1];
     const fields = news
@@ -264,6 +267,9 @@ export async function postNews(
             );
             await channel.bulkDelete(fetched);
             await channel.send(embed);
+            if (ytUrl) {
+                await channel.send(ytUrl);
+            }
         })
     );
 }
