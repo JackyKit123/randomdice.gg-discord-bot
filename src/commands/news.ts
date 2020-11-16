@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import cache, { News } from '../helper/cache';
 import parsedText from '../helper/parseText';
