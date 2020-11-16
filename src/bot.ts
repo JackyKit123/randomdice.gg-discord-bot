@@ -43,6 +43,7 @@ const database = admin.database();
 updateListener(client, database);
 
 client.on('ready', async () => {
+    // eslint-disable-next-line no-unused-expressions
     client.user?.setActivity('.gg help', {
         type: 'PLAYING',
     });

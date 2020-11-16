@@ -19,6 +19,7 @@ export default function listener(
                 await post.postGuide(client, database, guild);
             } catch (err) {
                 try {
+                    // eslint-disable-next-line no-unused-expressions
                     (
                         (client.channels.cache.get(
                             process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
@@ -45,6 +46,7 @@ export default function listener(
                 await post.postNews(client, database, guild);
             } catch (err) {
                 try {
+                    // eslint-disable-next-line no-unused-expressions
                     (
                         (client.channels.cache.get(
                             process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
