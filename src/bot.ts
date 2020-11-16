@@ -7,6 +7,7 @@ import { register, unregister } from './commands/register';
 import updateListener from './helper/updateListener';
 import sendLink from './commands/sendLinks';
 import ping from './commands/ping';
+import news from './commands/news';
 import dice from './commands/dice';
 import deck from './commands/deck';
 import guide from './commands/guide';
@@ -127,6 +128,10 @@ client.on('message', async function messageHandler(message) {
             }
             case 'battlefield': {
                 await battlefield(message, database);
+                break;
+            }
+            case 'news': {
+                await news(message, database);
                 break;
             }
             case 'help': {

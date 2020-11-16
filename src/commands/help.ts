@@ -25,6 +25,10 @@ export const commandList = [
         category: 'Information',
         commands: [
             {
+                command: '.gg news',
+                description: 'Show the latest news for random dice',
+            },
+            {
                 command: '.gg dice <Dice Name> [--class=?] [--level=?]',
                 description:
                     'Show information about the dice, alias for arguments `-c=?` `-l=?`',
