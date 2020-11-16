@@ -196,10 +196,15 @@ export async function postNews(
     ).filter(channel => channel) as Discord.TextChannel[];
     const data = (await cache(database, 'news')) as News;
 
-    let news = parsedText(data.game);
+    const news = parsedText(data.game);
     const imgUrl = news.match(/{img}((?!.*{img}).*){\/img}/)?.[1];
-    news = news.replace(/{img}((?!.*{img}).*){\/img}/g, '');
-
+    const fields = news
+        .replace(/{img}((?!.*{img}).*){\/img}/g, '')
+        .split('\n\n')
+        .map((value, i) => ({
+            name: i === 0 ? 'News' : '⠀',
+            value,
+        }));
     let embed = new Discord.MessageEmbed()
         .setColor('#6ba4a5')
         .setTitle('Random Dice news')
@@ -209,7 +214,7 @@ export async function postNews(
             'https://randomdice.gg/'
         )
         .setURL('https://randomdice.gg/')
-        .setDescription(news)
+        .addFields(fields)
         .setFooter(
             'randomdice.gg News Update',
             'https://randomdice.gg/android-chrome-512x512.png'
