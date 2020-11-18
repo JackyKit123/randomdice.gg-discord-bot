@@ -36,7 +36,6 @@ export default function listener(
         }
     });
     database.ref('/news').on('child_changed', async snapshot => {
-        console.log(snapshot.key);
         if (snapshot.key !== 'game') {
             return;
         }
