@@ -32,6 +32,7 @@ export default async function sendNews(
         )
         .setURL('https://randomdice.gg/')
         .addFields(fields)
+        .setTimestamp()
         .setFooter(
             'randomdice.gg News Update',
             'https://randomdice.gg/android-chrome-512x512.png'

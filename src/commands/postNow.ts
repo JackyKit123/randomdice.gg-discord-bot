@@ -99,6 +99,7 @@ export async function postGuide(
                 .map((_, i, arr) => {
                     let embed = new Discord.MessageEmbed()
                         .setColor('#6ba4a5')
+                        .setTimestamp()
                         .addFields(fields.slice(i * 16, i * 16 + 16));
                     if (i === 0) {
                         embed = embed
@@ -218,6 +219,7 @@ export async function postNews(
         )
         .setURL('https://randomdice.gg/')
         .addFields(fields)
+        .setTimestamp()
         .setFooter(
             'randomdice.gg News Update',
             'https://randomdice.gg/android-chrome-512x512.png'
