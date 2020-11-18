@@ -20,8 +20,10 @@ export default async function dice(
         return;
     }
     const diceList = (await cache(database, 'dice')) as Dice[];
-    const die = diceList.find(d =>
-        args.join(' ').toLowerCase().startsWith(d.name.toLowerCase())
+    const die = diceList.find(
+        d =>
+            args.join(' ').replace(/-.*/, '').toLowerCase().trim() ===
+            d.name.toLowerCase()
     );
     const execute = async (target: Dice): Promise<void> => {
         let minClass: number;
