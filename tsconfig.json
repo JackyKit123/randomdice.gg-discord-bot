@@ -9,7 +9,7 @@
         "target": "es2020",
         "noEmit": false,
         "moduleResolution": "node",
-        "lib": ["esnext.array", "ES2020.String"],
+        "lib": ["esnext.array", "ES2020"],
         "declaration": true,
         "skipLibCheck": true,
         "allowSyntheticDefaultImports": true,
