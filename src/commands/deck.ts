@@ -7,8 +7,11 @@ export default async function decklist(
     database: admin.database.Database
 ): Promise<void> {
     const { content, channel } = message;
-    const [, , type, ...args] = content.split(' ');
-    if (!type?.match(/^(pvp|co-op|coop|crew)$/i)) {
+    const command = content
+        .replace(/[^\040-\176\200-\377]/gi, '')
+        .replace(/^\\?\.gg deck ?/i, '');
+    const type = command.split(' ')[0];
+    if (command.search(/^(pvp|co-op|coop|crew)$/i) === 0) {
         await channel.send(
             `${
                 type ? `\`${type}\` is not a valid deck type, p` : 'P'
@@ -17,28 +20,34 @@ export default async function decklist(
         return;
     }
 
-    const firstArgs = args.findIndex(arg => arg.startsWith('-'));
+    const firstArgs = command.indexOf('-');
     if (firstArgs > -1) {
-        const otherArgs = args.filter(
-            (arg, i) =>
-                i >= firstArgs && !/^(-l|--legendary|-p|--page)=(.+)/i.test(arg)
-        );
+        const otherArgs = [
+            ...command
+                .slice(firstArgs, command.length)
+                .replace(/(?:-l|--legendary|-p|--page)[=| +]\w+/gi, '')
+                .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
+        ];
         if (otherArgs.length) {
             await channel.send(
                 `Unknown arguments: ${otherArgs.map(
-                    arg => `\`${arg}\``
-                )}. Acceptable arguments are \`--legendary=?\` \`--page=?\` or alias \`-l=?\` \`-p=?\``
+                    ([arg]) => `\`${arg}\``
+                )}. Acceptable arguments are \`--legendary\` \`--page\` or alias \`-l\` \`-p\``
             );
             return;
         }
     }
 
-    const legendaryClassArgs = args
-        .map(arg => arg.match(/^(?:-l|--legendary)=(.+)/))
-        .filter(arg => arg);
-    const pageArgs = args
-        .map(arg => arg.match(/^(?:-p|--page)=(\d+)/))
-        .filter(arg => arg);
+    const legendaryClassArgs = [
+        ...command
+            .slice(firstArgs, command.length)
+            .matchAll(/(?:-l|--legendary)[=| +](\w+)/gi),
+    ];
+    const pageArgs = [
+        ...command
+            .slice(firstArgs, command.length)
+            .matchAll(/(?:-p|--page)[=| +](\w+)/gi),
+    ];
 
     if (legendaryClassArgs.length > 1 || pageArgs.length > 1) {
         if (legendaryClassArgs.length > 1) {

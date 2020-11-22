@@ -29,15 +29,15 @@ export const commandList = [
                 description: 'Show the latest news for random dice',
             },
             {
-                command: '.gg dice <Dice Name> [--class=?] [--level=?]',
+                command: '.gg dice <Dice Name> [--class] [--level]',
                 description:
-                    'Show information about the dice, alias for arguments `-c=?` `-l=?`',
+                    'Show information about the dice, alias for arguments `-c` `-l`',
             },
             {
                 command:
-                    '.gg deck <PvP|Co-op|Crew> [--page=?] [--legendary=(c7|c8|c9|c10)]',
+                    '.gg deck <PvP|Co-op|Crew> [--page] [--legendary=(c7|c8|c9|c10)]',
                 description:
-                    'Show the deck list, optional arguments to select page or show variations for different legendary class, alias for arguments `-p=?` `-l=?`',
+                    'Show the deck list, optional arguments to select page or show variations for different legendary class, alias for arguments `-p` `-l`',
             },
             {
                 command: '.gg guide <Guide Name|list>',
@@ -49,9 +49,9 @@ export const commandList = [
                 description: 'Show information about the boss.',
             },
             {
-                command: '.gg battlefield <Battlefield Name> [--level=?]',
+                command: '.gg battlefield <Battlefield Name> [--level]',
                 description:
-                    'Show information about the battlefield. alias for arguments `-l=?`',
+                    'Show information about the battlefield. alias for arguments `-l`',
             },
             { command: '.gg randomtip', description: 'Show you a random tip' },
         ],

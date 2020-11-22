@@ -9,11 +9,10 @@ export default async function dice(
     database: admin.database.Database
 ): Promise<void> {
     const { channel, content } = message;
-    const args = content
+    const command = content
         .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg battlefield ?/i, '')
-        .split(' ');
-    if (!args[0] || args[0].startsWith('-')) {
+        .replace(/^\\?\.gg battlefield ?/i, '');
+    if (!command || command.startsWith('-')) {
         await channel.send(
             'Please include the battlefield name in the first parameter after `.gg battlefield`.'
         );
@@ -24,28 +23,33 @@ export default async function dice(
         'wiki/battlefield'
     )) as Battlefield[];
     const battlefield = battlefieldList.find(b =>
-        args.join(' ').toLowerCase().startsWith(b.name.toLowerCase())
+        command.toLowerCase().startsWith(b.name.toLowerCase())
     );
 
     const execute = async (target: Battlefield): Promise<void> => {
-        const firstArgs = args.findIndex(arg => arg.startsWith('-'));
+        const firstArgs = command.indexOf('-');
         if (firstArgs > -1) {
-            const otherArgs = args.filter(
-                (arg, i) => i >= firstArgs && !/^(-l|--level)=(.+)/i.test(arg)
-            );
+            const otherArgs = [
+                ...command
+                    .slice(firstArgs, command.length)
+                    .replace(/(?:-l|--level)[=| +]\w+/gi, '')
+                    .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
+            ];
             if (otherArgs.length) {
                 await channel.send(
                     `Unknown arguments: ${otherArgs.map(
-                        arg => `\`${arg}\``
-                    )}. Acceptable arguments are \`--level\` or alias \`-l=?\``
+                        ([arg]) => `\`${arg}\``
+                    )}. Acceptable arguments are \`--level\` or alias \`-l\``
                 );
                 return;
             }
         }
 
-        const battlefieldLevelArgs = args
-            .map(arg => arg.match(/^(-l|--level)=(.+)/))
-            .filter(arg => arg);
+        const battlefieldLevelArgs = [
+            ...command
+                .slice(firstArgs, command.length)
+                .matchAll(/(?:-l|--level)[=| +](\w+)/gi),
+        ];
 
         if (battlefieldLevelArgs.length > 1) {
             await channel.send(
@@ -56,7 +60,7 @@ export default async function dice(
             return;
         }
 
-        const battlefieldLevelArg = battlefieldLevelArgs[0]?.[2];
+        const battlefieldLevelArg = battlefieldLevelArgs[0]?.[1];
         const battlefieldLevel = Number(battlefieldLevelArg || 0);
 
         if (Number.isNaN(battlefieldLevel)) {
@@ -115,10 +119,11 @@ export default async function dice(
         return;
     }
 
-    const firstOptionalArgs = args.findIndex(arg => arg.startsWith('-'));
-    const wrongBattlefieldName = args
-        .filter((_, i) => firstOptionalArgs === -1 || i < firstOptionalArgs)
-        .join(' ');
+    const firstOptionalArgs = command.indexOf('-');
+    const wrongBattlefieldName =
+        firstOptionalArgs > -1
+            ? command.slice(0, firstOptionalArgs).trim()
+            : command;
     const { bestMatch } = stringSimilarity.findBestMatch(
         wrongBattlefieldName,
         battlefieldList.map(b => b.name)

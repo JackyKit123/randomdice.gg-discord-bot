@@ -9,11 +9,10 @@ export default async function dice(
     database: admin.database.Database
 ): Promise<void> {
     const { channel, content } = message;
-    const args = content
+    const command = content
         .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg dice ?/i, '')
-        .split(' ');
-    if (!args[0] || args[0].startsWith('-')) {
+        .replace(/^\\?\.gg dice ?/i, '');
+    if (!command || command.startsWith('-')) {
         await channel.send(
             'Please include the dice name in the first parameter after `.gg dice`.'
         );
@@ -22,7 +21,7 @@ export default async function dice(
     const diceList = (await cache(database, 'dice')) as Dice[];
     const die = diceList.find(
         d =>
-            args.join(' ').replace(/-.*/, '').toLowerCase().trim() ===
+            command.toLowerCase().replace(/-.*/, '').trim() ===
             d.name.toLowerCase()
     );
     const execute = async (target: Dice): Promise<void> => {
@@ -41,29 +40,34 @@ export default async function dice(
                 minClass = 1;
         }
 
-        const firstArgs = args.findIndex(arg => arg.startsWith('-'));
+        const firstArgs = command.indexOf('-');
         if (firstArgs > -1) {
-            const otherArgs = args.filter(
-                (arg, i) =>
-                    i >= firstArgs &&
-                    !/^(-l|--level|-c|--class)=(.+)/i.test(arg)
-            );
+            const otherArgs = [
+                ...command
+                    .slice(firstArgs, command.length)
+                    .replace(/(?:-l|--level|-c|--class)[=| +]\w+/gi, '')
+                    .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
+            ];
             if (otherArgs.length) {
                 await channel.send(
                     `Unknown arguments: ${otherArgs.map(
-                        arg => `\`${arg}\``
-                    )}. Acceptable arguments are \`--class=?\` \`--level\` or alias \`-c=?\` \`-l=?\``
+                        ([arg]) => `\`${arg}\``
+                    )}. Acceptable arguments are \`--class\` \`--level\` or alias \`-c\` \`-l\``
                 );
                 return;
             }
         }
 
-        const dieClassArgs = args
-            .map(arg => arg.match(/^(-c|--class)=(.+)/))
-            .filter(arg => arg);
-        const dieLevelArgs = args
-            .map(arg => arg.match(/^(-l|--level)=(.+)/))
-            .filter(arg => arg);
+        const dieClassArgs = [
+            ...command
+                .slice(firstArgs, command.length)
+                .matchAll(/(?:-c|--class)[=| +](\w+)/gi),
+        ];
+        const dieLevelArgs = [
+            ...command
+                .slice(firstArgs, command.length)
+                .matchAll(/(?:-l|--level)[=| +](\w+)/gi),
+        ];
         if (dieClassArgs.length > 1 || dieLevelArgs.length > 1) {
             if (dieClassArgs.length > 1) {
                 await channel.send(
@@ -82,8 +86,8 @@ export default async function dice(
             }
             return;
         }
-        const dieClassArg = dieClassArgs[0]?.[2];
-        const dieLevelArg = dieLevelArgs[0]?.[2];
+        const dieClassArg = dieClassArgs[0]?.[1];
+        const dieLevelArg = dieLevelArgs[0]?.[1];
         const dieClass = Number(dieClassArg || minClass);
         const dieLevel = Number(dieLevelArg || 1);
 
@@ -212,10 +216,11 @@ export default async function dice(
         return;
     }
 
-    const firstOptionalArgs = args.findIndex(arg => arg.startsWith('-'));
-    const wrongDiceName = args
-        .filter((_, i) => firstOptionalArgs === -1 || i < firstOptionalArgs)
-        .join(' ');
+    const firstOptionalArgs = command.indexOf('-');
+    const wrongDiceName =
+        firstOptionalArgs > -1
+            ? command.slice(0, firstOptionalArgs).trim()
+            : command;
     const { bestMatch } = stringSimilarity.findBestMatch(
         wrongDiceName,
         diceList.map(d => d.name)
