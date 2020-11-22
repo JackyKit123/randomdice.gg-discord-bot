@@ -28,7 +28,7 @@ const client = new Discord.Client();
 admin.initializeApp({
     credential: admin.credential.cert({
         projectId: 'random-dice-web',
-        privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(
+        privateKey: (process.env.FIREBASE_ADMIN_PRIVATE_KEY || '').replace(
             /\\n/g,
             '\n'
         ),
