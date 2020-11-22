@@ -8,6 +8,9 @@
     "start": "ts-node --require=dotenv/config src/bot.ts",
     "lint": "eslint src --ext .ts"
   },
+  "engines": {
+    "node": "14"
+  },
   "author": "JackyKit",
   "license": "ISC",
   "dependencies": {
