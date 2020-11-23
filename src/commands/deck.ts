@@ -11,7 +11,7 @@ export default async function decklist(
         .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg deck ?/i, '');
     const type = command.split(' ')[0];
-    if (command.search(/^(pvp|co-op|coop|crew)$/i) === 0) {
+    if (command.search(/^(pvp|co-op|coop|crew)$/i) !== 0) {
         await channel.send(
             `${
                 type ? `\`${type}\` is not a valid deck type, p` : 'P'
