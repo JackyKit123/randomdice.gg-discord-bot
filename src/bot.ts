@@ -21,6 +21,7 @@ import setEmoji from './dev-commands/updateEmoji';
 import statistic from './dev-commands/stat';
 import devHelp from './dev-commands/help';
 import sendContact from './commands/sendContact';
+import drawUntil from './commands/drawUntil';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -132,6 +133,10 @@ client.on('message', async function messageHandler(message) {
             }
             case 'news': {
                 await news(message, database);
+                break;
+            }
+            case 'drawuntil': {
+                await drawUntil(message, database);
                 break;
             }
             case 'help': {

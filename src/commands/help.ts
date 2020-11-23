@@ -70,6 +70,11 @@ export const commandList = [
             },
             { command: '.gg app', description: 'Send link to Google Play App' },
             {
+                command: '.gg drawUntil <c7-c15>',
+                description:
+                    'Simulate draws and show the expected draws for certain legendary class',
+            },
+            {
                 command: '.gg contact',
                 description:
                     'Send contact information for the developer of this bot or the community website.',
