@@ -149,6 +149,7 @@ client.on('message', async function messageHandler(message) {
             }
             case 'website':
             case 'app':
+            case 'invite':
             case 'support':
                 await sendLink(message);
                 break;

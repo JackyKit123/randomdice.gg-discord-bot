@@ -21,6 +21,11 @@ export default async function sendLinks(
                 'https://play.google.com/store/apps/details?id=gg.randomdice.twa'
             );
             break;
+        case 'invite':
+            await channel.send(
+                'You can click this link to invite <@!723917706641801316> to your own server.\nhttps://discord.com/oauth2/authorize?client_id=723917706641801316&permissions=355393&scope=bot'
+            );
+            break;
         case 'support':
             await channel.send(
                 new Discord.MessageEmbed()

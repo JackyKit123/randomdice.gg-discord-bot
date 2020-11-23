@@ -65,6 +65,10 @@ export const commandList = [
                     'Ping the bot (only available in DM or as `ADMINISTRATOR`)',
             },
             {
+                command: '.gg invite',
+                description: `Send link for invitation for <@!723917706641801316> to your server.`,
+            },
+            {
                 command: '.gg website [/path]',
                 description: 'Send link to website, with optional path',
             },
