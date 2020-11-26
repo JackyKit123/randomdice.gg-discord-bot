@@ -18,7 +18,7 @@ export default function listener(
     const guild = client.guilds.cache.get(process.env.DEV_SERVER_ID || '');
     const postGuideListener = async (
         snapshot: admin.database.DataSnapshot,
-        event: 'added' | 'changed' | 'removed'
+        event: 'added' | 'updated' | 'removed'
     ): Promise<void> => {
         if (!posting.guide) {
             posting.guide = true;
@@ -46,7 +46,7 @@ export default function listener(
         }
     };
     database.ref('/decks_guide').on('child_changed', async snapshot => {
-        postGuideListener(snapshot, 'changed');
+        postGuideListener(snapshot, 'updated');
     });
     database.ref('/decks_guide').on('child_added', async snapshot => {
         if (init) {

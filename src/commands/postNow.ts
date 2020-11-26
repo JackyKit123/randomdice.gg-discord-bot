@@ -16,7 +16,7 @@ export async function postGuide(
     guild?: Discord.Guild,
     updateListener?: {
         snapshot: admin.database.DataSnapshot;
-        event: 'added' | 'changed' | 'removed';
+        event: 'added' | 'updated' | 'removed';
     }
 ): Promise<void> {
     const registeredGuilds = (await cache(
@@ -172,9 +172,11 @@ export async function postGuide(
                         .setTimestamp()
                         .setTitle(
                             `Deck Guide **${
-                                updateListener?.snapshot.val().name
+                                updateListener.snapshot.val().name
                             }** is ${
-                                updateListener?.event
+                                updateListener.snapshot.val().archived
+                                    ? 'archived'
+                                    : updateListener.event
                             }. Refreshing all deck guides.`
                         )
                         .setAuthor(
@@ -193,7 +195,11 @@ export async function postGuide(
                         .setTitle(
                             `Last Updated: Deck Guide **${
                                 updateListener.snapshot.val().name
-                            }** is ${updateListener.event}.`
+                            }** is ${
+                                updateListener.snapshot.val().archived
+                                    ? 'archived'
+                                    : updateListener.event
+                            }.`
                         )
                         .setAuthor(
                             'Random Dice Community Website',
