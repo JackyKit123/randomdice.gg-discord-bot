@@ -12,11 +12,17 @@ export default function listener(
         news: false,
     };
     const guild = client.guilds.cache.get(process.env.DEV_SERVER_ID || '');
-    database.ref('/decks_guide').on('child_changed', async () => {
+    const postGuideListener = async (
+        snapshot: admin.database.DataSnapshot,
+        event: 'added' | 'changed' | 'removed'
+    ): Promise<void> => {
         if (!posting.guide) {
             posting.guide = true;
             try {
-                await post.postGuide(client, database, guild);
+                await post.postGuide(client, database, guild, {
+                    snapshot,
+                    event,
+                });
             } catch (err) {
                 try {
                     // eslint-disable-next-line no-unused-expressions
@@ -34,6 +40,15 @@ export default function listener(
                 posting.guide = false;
             }
         }
+    };
+    database.ref('/decks_guide').on('child_changed', async snapshot => {
+        postGuideListener(snapshot, 'changed');
+    });
+    database.ref('/decks_guide').on('child_added', async snapshot => {
+        postGuideListener(snapshot, 'added');
+    });
+    database.ref('/decks_guide').on('child_removed', async snapshot => {
+        postGuideListener(snapshot, 'removed');
     });
     database.ref('/news').on('child_changed', async snapshot => {
         if (snapshot.key !== 'game') {

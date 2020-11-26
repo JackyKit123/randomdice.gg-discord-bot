@@ -13,7 +13,11 @@ import logMessage from '../dev-commands/logMessage';
 export async function postGuide(
     client: Discord.Client,
     database: admin.database.Database,
-    guild?: Discord.Guild
+    guild?: Discord.Guild,
+    updateListener?: {
+        snapshot: admin.database.DataSnapshot;
+        event: 'added' | 'changed' | 'removed';
+    }
 ): Promise<void> {
     const registeredGuilds = (await cache(
         database,
@@ -160,7 +164,50 @@ export async function postGuide(
                 await channel.messages.fetch({ limit: 100 })
             ).filter(message => message.author.id === client.user?.id);
             await channel.bulkDelete(fetched);
+            let statusMessage;
+            if (updateListener)
+                statusMessage = await channel.send(
+                    new Discord.MessageEmbed()
+                        .setColor('#6ba4a5')
+                        .setTimestamp()
+                        .setTitle(
+                            `Deck Guide **${
+                                updateListener?.snapshot.val().name
+                            }** is ${
+                                updateListener?.event
+                            }. Refreshing all deck guides.`
+                        )
+                        .setAuthor(
+                            'Random Dice Community Website',
+                            'https://randomdice.gg/android-chrome-512x512.png',
+                            'https://randomdice.gg/'
+                        )
+                        .setURL(`https://randomdice.gg/decks/guide/`)
+                );
             await Promise.all(embeds.map(async embed => channel.send(embed)));
+            if (updateListener && statusMessage?.deletable) {
+                await statusMessage.delete();
+                await channel.send(
+                    new Discord.MessageEmbed()
+                        .setColor('#6ba4a5')
+                        .setTimestamp()
+                        .setTitle(
+                            `Last Updated: Deck Guide **${
+                                updateListener.snapshot.val().name
+                            }** is ${updateListener.event}.`
+                        )
+                        .setAuthor(
+                            'Random Dice Community Website',
+                            'https://randomdice.gg/android-chrome-512x512.png',
+                            'https://randomdice.gg/'
+                        )
+                        .setURL(`https://randomdice.gg/decks/guide/`)
+                        .setFooter(
+                            'Last Updated Timestamp',
+                            'https://randomdice.gg/android-chrome-512x512.png'
+                        )
+                );
+            }
         })
     );
 }
