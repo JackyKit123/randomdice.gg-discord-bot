@@ -182,7 +182,6 @@ export async function postGuide(
                             'https://randomdice.gg/android-chrome-512x512.png',
                             'https://randomdice.gg/'
                         )
-                        .setURL(`https://randomdice.gg/decks/guide/`)
                 );
             await Promise.all(embeds.map(async embed => channel.send(embed)));
             if (updateListener && statusMessage?.deletable) {
@@ -201,7 +200,6 @@ export async function postGuide(
                             'https://randomdice.gg/android-chrome-512x512.png',
                             'https://randomdice.gg/'
                         )
-                        .setURL(`https://randomdice.gg/decks/guide/`)
                         .setFooter(
                             'Last Updated Timestamp',
                             'https://randomdice.gg/android-chrome-512x512.png'
