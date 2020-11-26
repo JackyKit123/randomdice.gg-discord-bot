@@ -1,37 +1,11 @@
 import * as Discord from 'discord.js';
+import * as admin from 'firebase-admin';
+import cache, { Help } from '../helper/cache';
 
-export const commandList = [
-    {
-        category: 'Config',
-        commands: [
-            {
-                command: '.gg setEmoji <emoji> <Dice Name>',
-                description: 'Set Emoji for a certain dice',
-            },
-        ],
-    },
-    {
-        category: 'Statistic',
-        commands: [
-            {
-                command: '.gg version',
-                description: 'Return the version number of the bot.',
-            },
-            {
-                command: '.gg createInvites [guild id]',
-                description:
-                    'Create invite links and send to log channel for all servers that the bot live in, optional param to create invite for 1 single guild',
-            },
-            {
-                command: '.gg stat',
-                description:
-                    'Show the member count and server count that the bot is serving.',
-            },
-        ],
-    },
-];
-
-export default async function help(message: Discord.Message): Promise<void> {
+export default async function help(
+    message: Discord.Message,
+    database: admin.database.Database
+): Promise<void> {
     const { author } = message;
 
     const helpMessage = new Discord.MessageEmbed()
@@ -44,15 +18,17 @@ export default async function help(message: Discord.Message): Promise<void> {
         .setColor('#6ba4a5')
         .setDescription('Here is a list commands for the bot developer.')
         .addFields(
-            commandList.map(categories => ({
-                name: categories.category,
-                value: categories.commands
-                    .map(
-                        command =>
-                            `\`${command.command}\`\n*${command.description}*`
-                    )
-                    .join('\n'),
-            }))
+            ((await cache(database, 'discord_bot/dev_help')) as Help[]).map(
+                categories => ({
+                    name: categories.category,
+                    value: categories.commands
+                        .map(
+                            command =>
+                                `\`${command.command}\`\n*${command.description}*`
+                        )
+                        .join('\n'),
+                })
+            )
         );
 
     await author.send(helpMessage);

@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import * as stringSimilarity from 'string-similarity';
-import help, { commandList } from './commands/help';
+import help from './commands/help';
 import postNow from './commands/postNow';
 import { register, unregister } from './commands/register';
 import updateListener from './helper/updateListener';
@@ -23,6 +23,7 @@ import devHelp from './dev-commands/help';
 import sendContact from './commands/sendContact';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
+import cache, { Help } from './helper/cache';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -93,7 +94,7 @@ client.on('message', async function messageHandler(message) {
                     await version(client, message);
                     return;
                 case 'help':
-                    await devHelp(message);
+                    await devHelp(message, database);
                     break;
                 default:
             }
@@ -144,7 +145,7 @@ client.on('message', async function messageHandler(message) {
                 break;
             }
             case 'help': {
-                await help(client, message);
+                await help(message, database);
                 break;
             }
             case 'randomtip': {
@@ -168,7 +169,7 @@ client.on('message', async function messageHandler(message) {
                 break;
             default: {
                 const listOfCommands = Object.values(
-                    commandList(client.user as Discord.ClientUser)
+                    (await cache(database, 'discord_bot/help')) as Help[]
                 ).flatMap(category =>
                     category.commands.map(cmd => cmd.command.split(' ')[1])
                 );

@@ -109,6 +109,11 @@ export interface Battlefield {
     buffCupValue: number;
 }
 
+export interface Help {
+    category: string;
+    commands: { command: string; description: string }[];
+}
+
 type Data =
     | News
     | DeckGuide[]
@@ -116,6 +121,7 @@ type Data =
     | Deck[]
     | EmojiList
     | Registry
+    | Help[]
     | Boss[]
     | Tip[]
     | Battlefield[];
@@ -127,6 +133,8 @@ type keys =
     | 'news'
     | 'discord_bot/emoji'
     | 'discord_bot/registry'
+    | 'discord_bot/help'
+    | 'discord_bot/dev_help'
     | 'wiki/boss'
     | 'wiki/tips'
     | 'wiki/battlefield';
