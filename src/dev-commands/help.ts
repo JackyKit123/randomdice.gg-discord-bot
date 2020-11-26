@@ -14,6 +14,10 @@ export const commandList = [
         category: 'Statistic',
         commands: [
             {
+                command: '.gg version',
+                description: 'Return the version number of the bot.',
+            },
+            {
                 command: '.gg createInvites [guild id]',
                 description:
                     'Create invite links and send to log channel for all servers that the bot live in, optional param to create invite for 1 single guild',

@@ -22,6 +22,7 @@ import statistic from './dev-commands/stat';
 import devHelp from './dev-commands/help';
 import sendContact from './commands/sendContact';
 import drawUntil from './commands/drawUntil';
+import version from './dev-commands/version';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -87,6 +88,9 @@ client.on('message', async function messageHandler(message) {
                     return;
                 case 'stat':
                     await statistic(client, channel);
+                    return;
+                case 'version':
+                    await version(client, message);
                     return;
                 case 'help':
                     await devHelp(message);
