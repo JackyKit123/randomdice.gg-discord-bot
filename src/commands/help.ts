@@ -1,6 +1,11 @@
 import * as Discord from 'discord.js';
 
-export const commandList = [
+export const commandList = (
+    bot: Discord.ClientUser
+): {
+    category: string;
+    commands: { command: string; description: string }[];
+}[] => [
     {
         category: 'Sync Data (require `MANAGE_CHANNEL` permission)',
         commands: [
@@ -53,7 +58,10 @@ export const commandList = [
                 description:
                     'Show information about the battlefield. alias for arguments `-l`',
             },
-            { command: '.gg randomtip', description: 'Show you a random tip' },
+            {
+                command: '.gg randomtip',
+                description: 'Show you a random tip',
+            },
         ],
     },
     {
@@ -66,13 +74,16 @@ export const commandList = [
             },
             {
                 command: '.gg invite',
-                description: `Send link for invitation for <@!723917706641801316> to your server.`,
+                description: `Send link for invitation for ${bot.toString()} to your server.`,
             },
             {
                 command: '.gg website [/path]',
                 description: 'Send link to website, with optional path',
             },
-            { command: '.gg app', description: 'Send link to Google Play App' },
+            {
+                command: '.gg app',
+                description: 'Send link to Google Play App',
+            },
             {
                 command: '.gg drawUntil <c7-c15>',
                 description:
@@ -92,7 +103,10 @@ export const commandList = [
     },
 ];
 
-export default async function help(message: Discord.Message): Promise<void> {
+export default async function help(
+    client: Discord.Client,
+    message: Discord.Message
+): Promise<void> {
     const { channel, author } = message;
 
     const helpMessage = new Discord.MessageEmbed()
@@ -107,7 +121,7 @@ export default async function help(message: Discord.Message): Promise<void> {
             'Here is a list commands, randomdice.gg bot suffix is `.gg`'
         )
         .addFields(
-            commandList.map(categories => ({
+            commandList(client.user as Discord.ClientUser).map(categories => ({
                 name: categories.category,
                 value: categories.commands
                     .map(

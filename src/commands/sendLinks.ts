@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 
 export default async function sendLinks(
+    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
     const { channel, content } = message;
@@ -23,7 +24,7 @@ export default async function sendLinks(
             break;
         case 'invite':
             await channel.send(
-                'You can click this link to invite <@!723917706641801316> to your own server.\nhttps://discord.com/oauth2/authorize?client_id=723917706641801316&permissions=355393&scope=bot'
+                `You can click this link to invite ${(client.user as Discord.ClientUser).toString()} to your own server.\nhttps://discord.com/oauth2/authorize?client_id=723917706641801316&permissions=355393&scope=bot`
             );
             break;
         case 'support':

@@ -144,7 +144,7 @@ client.on('message', async function messageHandler(message) {
                 break;
             }
             case 'help': {
-                await help(message);
+                await help(client, message);
                 break;
             }
             case 'randomtip': {
@@ -155,7 +155,7 @@ client.on('message', async function messageHandler(message) {
             case 'app':
             case 'invite':
             case 'support':
-                await sendLink(message);
+                await sendLink(client, message);
                 break;
             case 'contact':
                 await sendContact(message);
@@ -168,7 +168,7 @@ client.on('message', async function messageHandler(message) {
                 break;
             default: {
                 const listOfCommands = Object.values(
-                    commandList
+                    commandList(client.user as Discord.ClientUser)
                 ).flatMap(category =>
                     category.commands.map(cmd => cmd.command.split(' ')[1])
                 );
