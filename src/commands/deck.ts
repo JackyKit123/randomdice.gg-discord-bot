@@ -11,7 +11,7 @@ export default async function decklist(
         .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg deck ?/i, '');
     const type = command.split(' ')[0];
-    if (command.search(/^(pvp|co-op|coop|crew)$/i) !== 0) {
+    if (!type.match(/^(pvp|co-op|coop|crew)$/i)) {
         await channel.send(
             `${
                 type ? `\`${type}\` is not a valid deck type, p` : 'P'
@@ -20,10 +20,11 @@ export default async function decklist(
         return;
     }
 
-    const firstArgs = command.indexOf('-');
+    const firstArgs = command.replace(/^co-op ?/i, '').indexOf('-');
     if (firstArgs > -1) {
         const otherArgs = [
             ...command
+                .replace(/^co-op ?/i, '')
                 .slice(firstArgs, command.length)
                 .replace(/(?:-l|--legendary|-p|--page)[=| +]\w+/gi, '')
                 .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
