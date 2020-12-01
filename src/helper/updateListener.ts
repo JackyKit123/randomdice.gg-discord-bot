@@ -16,6 +16,9 @@ export default function listener(
         news: true,
     };
     const guild = client.guilds.cache.get(process.env.DEV_SERVER_ID || '');
+    const member = guild?.members.cache.get(
+        (client.user as Discord.ClientUser).id
+    );
     const postGuideListener = async (
         snapshot: admin.database.DataSnapshot,
         event: 'added' | 'updated' | 'removed'
@@ -23,7 +26,7 @@ export default function listener(
         if (!posting.guide) {
             posting.guide = true;
             try {
-                await post.postGuide(client, database, guild, {
+                await post.postGuide(client, database, member, {
                     snapshot,
                     event,
                 });

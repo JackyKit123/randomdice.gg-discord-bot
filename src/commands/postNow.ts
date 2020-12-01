@@ -13,7 +13,7 @@ import logMessage from '../dev-commands/logMessage';
 export async function postGuide(
     client: Discord.Client,
     database: admin.database.Database,
-    guild?: Discord.Guild,
+    member?: Discord.GuildMember,
     updateListener?: {
         snapshot: admin.database.DataSnapshot;
         event: 'added' | 'updated' | 'removed';
@@ -27,7 +27,7 @@ export async function postGuide(
         await Promise.all(
             (Object.entries(registeredGuilds) as [string, { guide?: string }][])
                 .filter(([guildId, config]) =>
-                    guild ? guild.id === guildId : config.guide
+                    member ? member.guild.id === guildId : config.guide
                 )
                 .map(async ([, config]) => {
                     if (!config.guide) {
@@ -51,8 +51,12 @@ export async function postGuide(
     ]);
     const embeds = (
         await Promise.all(
-            guides
-                .filter(guide => !guide.archived)
+            ['PvP', 'Co-op', 'Crew']
+                .flatMap(type =>
+                    guides.filter(
+                        guide => guide.type === type && !guide.archived
+                    )
+                )
                 .map(async guide => {
                     const { type, name, battlefield } = guide;
                     const diceList = await Promise.all(
@@ -103,7 +107,6 @@ export async function postGuide(
                 .map((_, i, arr) => {
                     let embed = new Discord.MessageEmbed()
                         .setColor('#6ba4a5')
-                        .setTimestamp()
                         .addFields(fields.slice(i * 16, i * 16 + 16));
                     if (i === 0) {
                         embed = embed
@@ -120,10 +123,12 @@ export async function postGuide(
                             );
                     }
                     if (i === arr.length - 1) {
-                        embed = embed.setFooter(
-                            'randomdice.gg Decks Guide',
-                            'https://randomdice.gg/android-chrome-512x512.png'
-                        );
+                        embed = embed
+                            .setTimestamp()
+                            .setFooter(
+                                'randomdice.gg Decks Guide',
+                                'https://randomdice.gg/android-chrome-512x512.png'
+                            );
                     }
                     return embed;
                 });
@@ -164,54 +169,112 @@ export async function postGuide(
                 await channel.messages.fetch({ limit: 100 })
             ).filter(message => message.author.id === client.user?.id);
             await channel.bulkDelete(fetched);
-            let statusMessage;
-            if (updateListener)
-                statusMessage = await channel.send(
-                    new Discord.MessageEmbed()
-                        .setColor('#6ba4a5')
-                        .setTimestamp()
-                        .setTitle(
-                            `Deck Guide **${
-                                updateListener.snapshot.val().name
-                            }** is ${
-                                updateListener.snapshot.val().archived
-                                    ? 'archived'
-                                    : updateListener.event
-                            }. Refreshing all deck guides.`
+            const statusMessage = await channel.send(
+                new Discord.MessageEmbed()
+                    .setColor('#6ba4a5')
+                    .setTimestamp()
+                    .setTitle(
+                        `${
+                            updateListener
+                                ? `Deck Guide **${
+                                      updateListener.snapshot.val().name
+                                  }** is ${
+                                      updateListener.snapshot.val().archived
+                                          ? 'archived'
+                                          : updateListener.event
+                                  }.`
+                                : `\`.gg postnow guide\` is executed.`
+                        } Refreshing all deck guides.`
+                    )
+                    .setAuthor(
+                        'Random Dice Community Website',
+                        'https://randomdice.gg/android-chrome-512x512.png',
+                        'https://randomdice.gg/'
+                    )
+                    .setDescription(
+                        member
+                            ? `Requested By: ${member.toString()}`
+                            : undefined
+                    )
+            );
+            const messageIds = (
+                await Promise.all(
+                    embeds.map(async embed => {
+                        if (embed.footer) {
+                            embed
+                                .addField('⠀', '⠀')
+                                .addField(
+                                    'Finished Reading? Click Here to navigate back to the top',
+                                    `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`
+                                );
+                        }
+                        const { id } = await channel.send(embed);
+                        return embed.title ? id : undefined;
+                    })
+                )
+            ).filter(id => id !== undefined);
+            const guideListEmbed = new Discord.MessageEmbed()
+                .setColor('#6ba4a5')
+                .setTimestamp()
+                .setTitle('Deck Guide List')
+                .setDescription(
+                    'Click on the url for quick navigation to a guide'
+                )
+                .setAuthor(
+                    'Random Dice Community Website',
+                    'https://randomdice.gg/android-chrome-512x512.png',
+                    'https://randomdice.gg/'
+                )
+                .setURL(`https://randomdice.gg/decks/guide/}`)
+                .addFields(
+                    ['PvP', 'Co-op', 'Crew']
+                        .flatMap(type =>
+                            guides.filter(
+                                guide => guide.type === type && !guide.archived
+                            )
                         )
-                        .setAuthor(
-                            'Random Dice Community Website',
-                            'https://randomdice.gg/android-chrome-512x512.png',
-                            'https://randomdice.gg/'
-                        )
+                        .map((guide, i) => ({
+                            name: `${guide.name} (${guide.type})`,
+                            value: `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${messageIds[i]}`,
+                        }))
                 );
-            await Promise.all(embeds.map(async embed => channel.send(embed)));
-            if (updateListener && statusMessage?.deletable) {
-                await statusMessage.delete();
-                await channel.send(
-                    new Discord.MessageEmbed()
-                        .setColor('#6ba4a5')
-                        .setTimestamp()
-                        .setTitle(
-                            `Last Updated: Deck Guide **${
-                                updateListener.snapshot.val().name
-                            }** is ${
-                                updateListener.snapshot.val().archived
-                                    ? 'archived'
-                                    : updateListener.event
-                            }.`
-                        )
-                        .setAuthor(
-                            'Random Dice Community Website',
-                            'https://randomdice.gg/android-chrome-512x512.png',
-                            'https://randomdice.gg/'
-                        )
-                        .setFooter(
-                            'Last Updated Timestamp',
-                            'https://randomdice.gg/android-chrome-512x512.png'
-                        )
-                );
+            if (statusMessage.editable) {
+                await statusMessage.edit(guideListEmbed);
+            } else {
+                await channel.send(guideListEmbed);
             }
+
+            await channel.send(
+                new Discord.MessageEmbed()
+                    .setColor('#6ba4a5')
+                    .setTimestamp()
+                    .setTitle(
+                        updateListener
+                            ? `Last Updated: Deck Guide **${
+                                  updateListener.snapshot.val().name
+                              }** is ${
+                                  updateListener.snapshot.val().archived
+                                      ? 'archived'
+                                      : updateListener.event
+                              }.`
+                            : `Last Updated: \`.gg postnow guide\` is executed. Manual requested refresh.`
+                    )
+                    .setDescription(
+                        `Navigate to the list of guides for quick navigation by clicking here. https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`
+                    )
+                    .setAuthor(
+                        'Random Dice Community Website',
+                        'https://randomdice.gg/android-chrome-512x512.png',
+                        'https://randomdice.gg/'
+                    )
+                    .setFooter(
+                        updateListener
+                            ? 'Last Updated Timestamp'
+                            : `Requested by ${member?.user.username}#${member?.user.discriminator}`,
+                        member?.user.avatarURL({ dynamic: true }) ||
+                            'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Dice%20Images%2FTime?alt=media&token=5c459fc5-4059-4099-b93d-f4bc86debf6d'
+                    )
+            );
         })
     );
 }
@@ -348,16 +411,20 @@ export default async function postNow(
     const statusMessage = await channel.send(`Now posting ${type}...`);
     switch (type) {
         case 'guide':
-            await postGuide(client, database, guild);
-            if (statusMessage.editable)
+            await postGuide(client, database, member);
+            if (statusMessage.editable) {
                 await statusMessage.edit(`Finished Posting ${type}`);
-            await channel.send(`Finished Posting ${type}`);
+            } else {
+                await channel.send(`Finished Posting ${type}`);
+            }
             return;
         case 'news':
             await postNews(client, database, guild);
-            if (statusMessage.editable)
+            if (statusMessage.editable) {
                 await statusMessage.edit(`Finished Posting ${type}`);
-            await channel.send(`Finished Posting ${type}`);
+            } else {
+                await channel.send(`Finished Posting ${type}`);
+            }
             return;
         default:
             if (statusMessage.deletable) await statusMessage.delete();
