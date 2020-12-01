@@ -201,12 +201,24 @@ export async function postGuide(
                 await Promise.all(
                     embeds.map(async embed => {
                         if (embed.footer) {
-                            embed
-                                .addField('⠀', '⠀')
-                                .addField(
-                                    'Finished Reading? Click Here to navigate back to the top',
-                                    `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`
-                                );
+                            const existFieldIndex = embed.fields.findIndex(
+                                field =>
+                                    field.name ===
+                                    'Finished Reading? Click Here to navigate back to the top'
+                            );
+                            if (existFieldIndex > -1) {
+                                // eslint-disable-next-line no-param-reassign
+                                embed.fields[
+                                    existFieldIndex
+                                ].value = `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`;
+                            } else {
+                                embed
+                                    .addField('⠀', '⠀')
+                                    .addField(
+                                        'Finished Reading? Click Here to navigate back to the top',
+                                        `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`
+                                    );
+                            }
                         }
                         const { id } = await channel.send(embed);
                         return embed.title ? id : undefined;
