@@ -17,9 +17,9 @@ export default function listener(
     };
     const guild = client.guilds.cache.get(process.env.DEV_SERVER_ID || '');
     const member =
-        process.env.NODE_ENV === 'production'
-            ? undefined
-            : guild?.members.cache.get((client.user as Discord.ClientUser).id);
+        process.env.NODE_ENV === 'development'
+            ? guild?.members.cache.get((client.user as Discord.ClientUser).id)
+            : undefined;
     const postGuideListener = async (
         snapshot: admin.database.DataSnapshot,
         event: 'added' | 'updated' | 'removed'
