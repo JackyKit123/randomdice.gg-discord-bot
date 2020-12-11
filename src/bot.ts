@@ -21,6 +21,7 @@ import setEmoji from './dev-commands/updateEmoji';
 import statistic from './dev-commands/stat';
 import devHelp from './dev-commands/help';
 import sendContact from './commands/sendContact';
+import randomdeck from './commands/randomdeck';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { Help } from './helper/cache';
@@ -142,6 +143,10 @@ client.on('message', async function messageHandler(message) {
             }
             case 'drawuntil': {
                 await drawUntil(message, database);
+                break;
+            }
+            case 'randomdeck': {
+                await randomdeck(message, database);
                 break;
             }
             case 'help': {
