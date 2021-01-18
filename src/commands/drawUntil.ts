@@ -62,7 +62,7 @@ export default async function drawUntil(
                     return new Promise(resolve => {
                         const legendaryOwned = new Array(
                             mode === 'kings birth'
-                                ? legendaryPoolSize / 2
+                                ? Math.floor(legendaryPoolSize / 2)
                                 : legendaryPoolSize
                         ).fill(0);
                         let numberOfDraws = 0;
@@ -77,7 +77,7 @@ export default async function drawUntil(
                                 const drawRandom = Math.floor(
                                     Math.random() *
                                         (mode === 'kings birth'
-                                            ? legendaryPoolSize / 2
+                                            ? Math.floor(legendaryPoolSize / 2)
                                             : legendaryPoolSize)
                                 );
                                 legendaryOwned[drawRandom] += 1;
