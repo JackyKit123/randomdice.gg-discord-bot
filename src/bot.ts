@@ -25,6 +25,7 @@ import randomdeck from './commands/randomdeck';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { Help } from './helper/cache';
+import banned from './helper/ban';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -79,6 +80,11 @@ client.on('message', async function messageHandler(message) {
     ) {
         return;
     }
+
+    if (await banned(channel)) {
+        return;
+    }
+
     try {
         if (process.env.DEV_USERS_ID?.includes(author.id)) {
             switch (command?.toLowerCase()) {

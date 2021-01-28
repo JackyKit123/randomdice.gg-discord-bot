@@ -17,6 +17,6 @@ export default async function contact(message: Discord.Message): Promise<void> {
             : `The developer of this bot and https://randomdice.gg is ${developerList[0]}. You can reach the developer via admin@randomdice.gg or by joining the randomdice discord.`;
     await message.channel.send(contactMessage);
     await message.channel.send(
-        'The randomdice discord is https://discord.gg/zQj6tCM'
+        'The randomdice discord is https://discord.gg/ZrXRpZq2mq'
     );
 }
