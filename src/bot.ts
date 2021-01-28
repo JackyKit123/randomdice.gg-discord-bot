@@ -25,7 +25,6 @@ import randomdeck from './commands/randomdeck';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { Help } from './helper/cache';
-import banned from './helper/ban';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -78,10 +77,6 @@ client.on('message', async function messageHandler(message) {
         !suffix.replace(/[^\040-\176\200-\377]/gi, '').match(/^\\?\.gg\b/i) ||
         author.bot
     ) {
-        return;
-    }
-
-    if (await banned(channel)) {
         return;
     }
 
