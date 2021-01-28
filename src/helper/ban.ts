@@ -7,7 +7,7 @@ export default async function Banned(
 
     if (channel.type !== 'dm' && bannedServers.includes(channel.guild.id)) {
         await channel.send(
-            'This server can no longer running `.gg` commands, consider joining our brand new community server for better support!\n https://discord.gg/ZrXRpZq2mq'
+            'This server can no longer run `.gg` commands, consider joining our brand new community server for better support!\n https://discord.gg/ZrXRpZq2mq'
         );
         return true;
     }
