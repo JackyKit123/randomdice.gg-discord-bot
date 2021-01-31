@@ -25,6 +25,8 @@ import randomdeck from './commands/randomdeck';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { Help } from './helper/cache';
+import setChannel from './community discord/ban appeal/setChannel';
+import closeAppeal from './community discord/ban appeal/closeAppeal';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -63,6 +65,27 @@ client.on('ready', async () => {
 client.on('message', async function messageHandler(message) {
     const { content, channel, guild, author } = message;
     const [suffix, command] = content.split(' ');
+
+    if (process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id) {
+        if (
+            channel.id ===
+            process.env.COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID
+        ) {
+            await setChannel(client, message);
+            return;
+        }
+        if (content.startsWith('!')) {
+            await closeAppeal(client, message);
+            return;
+        }
+        if (suffix === '.gg') {
+            await author.send(
+                'Normal randomdice.gg command cannot be executed in the ban appeal discord.'
+            );
+        }
+        return;
+    }
+
     if (
         // ignoring other servers in development, ignoring dev channel in production
         (process.env.DEV_SERVER_ID &&
@@ -73,6 +96,7 @@ client.on('message', async function messageHandler(message) {
     ) {
         return;
     }
+
     if (
         !suffix.replace(/[^\040-\176\200-\377]/gi, '').match(/^\\?\.gg\b/i) ||
         author.bot
