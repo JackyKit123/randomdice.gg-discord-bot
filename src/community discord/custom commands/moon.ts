@@ -41,6 +41,23 @@ export default async function custom(
             return;
         }
         const originalName = target.displayName;
+        const randomMoonEmoji = [
+            '🌝',
+            '🌕',
+            '🌗',
+            '🌘',
+            '🌖',
+            '🌙',
+            '🌛',
+            '🌚',
+            '🌑',
+            '🌓',
+            '🌒',
+            '🌔',
+            '☪',
+            '☾',
+            '☽',
+        ][Math.floor(Math.random() * 15)];
         const sentMessage = await channel.send(`${target.toString()}...🌚`);
         await wait(500);
         await sentMessage.edit(`${target.toString()}...🌘`);
