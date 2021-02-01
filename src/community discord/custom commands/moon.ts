@@ -30,6 +30,18 @@ export default async function custom(
             );
             return;
         }
+        if (target.id === author.id) {
+            await channel.send(
+                `${author.toString()}, why are your mooning yourself? <:what:770517830852542475>`
+            );
+            return;
+        }
+        if (target.roles.cache.has('804508975503638558')) {
+            await channel.send(
+                `${target.toString()} has already been mooned, wait a bit before your moon again.`
+            );
+            return;
+        }
         const clientRole = (guild.member(
             (client.user as Discord.ClientUser).id
         ) as Discord.GuildMember).roles.highest;
