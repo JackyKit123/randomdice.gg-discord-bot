@@ -76,8 +76,8 @@ export default async function custom(
             ),
             target.setNickname(
                 originalName.length >= 30
-                    ? `${originalName.slice(0, 29)}…🌛`
-                    : `${originalName}🌛`
+                    ? `${originalName.slice(0, 29)}…${randomMoonEmoji}`
+                    : `${originalName}${randomMoonEmoji}`
             ),
             target.roles.add('804508975503638558'),
         ]);
