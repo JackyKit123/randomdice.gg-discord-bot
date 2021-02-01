@@ -69,7 +69,7 @@ client.on('message', async function messageHandler(message) {
 
     if (
         process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id &&
-        process.env.NODE_ENV !== 'development'
+        process.env.NODE_ENV === 'production'
     ) {
         if (
             channel.id ===
@@ -92,7 +92,7 @@ client.on('message', async function messageHandler(message) {
 
     if (
         process.env.COMMUNITY_SERVER_ID === guild?.id &&
-        process.env.NODE_ENV !== 'development'
+        process.env.NODE_ENV === 'production'
     ) {
         await custom(client, message);
     }
