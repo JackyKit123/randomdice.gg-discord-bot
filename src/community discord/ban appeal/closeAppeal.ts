@@ -20,43 +20,58 @@ export default async function closeAppeal(
     }
 
     const accept = async (target: Discord.GuildMember): Promise<void> => {
-        (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
-            target,
-            'Appealed accepted in appeal server.'
-        );
-        await target.send(
-            'Your appeal is accepted, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
-        );
-        await target.ban({
-            reason: 'Appeal accepted.',
-        });
-        await channel.send(
-            `Accepted appeal for **${target.user.username}#${target.user.discriminator}**.`
-        );
+        try {
+            (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
+                target,
+                'Appealed accepted in appeal server.'
+            );
+        } finally {
+            try {
+                await target.send(
+                    'Your appeal is accepted, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+                );
+            } finally {
+                await target.ban({
+                    reason: 'Appeal accepted.',
+                });
+                await channel.send(
+                    `Accepted appeal for **${target.user.username}#${target.user.discriminator}**.`
+                );
+            }
+        }
     };
 
     const reject = async (target: Discord.GuildMember): Promise<void> => {
-        await target.send('Your appeal is rejected.');
-        await target.ban({
-            reason: 'Appeal rejected.',
-        });
-        await channel.send(
-            `Rejected appeal for **${target.user.username}#${target.user.discriminator}**.`
-        );
+        try {
+            await target.send('Your appeal is rejected.');
+        } finally {
+            await target.ban({
+                reason: 'Appeal rejected.',
+            });
+            await channel.send(
+                `Rejected appeal for **${target.user.username}#${target.user.discriminator}**.`
+            );
+        }
     };
 
     const falsebanned = async (target: Discord.GuildMember): Promise<void> => {
-        (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
-            target,
-            'Appealed accepted in appeal server, member is not guilty.'
-        );
-        await target.send(
-            'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
-        );
-        await target.kick('Member is not guilty, appeal closed.');
-        await channel.send(
-            `Closed appeal for **${target.user.username}#${target.user.discriminator}**. User is clean.`
-        );
+        try {
+            (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
+                target,
+                'Appealed accepted in appeal server, member is not guilty.'
+            );
+        } finally {
+            try {
+                await target.send(
+                    'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+                );
+            } finally {
+                await target.kick('Member is not guilty, appeal closed.');
+                await channel.send(
+                    `Closed appeal for **${target.user.username}#${target.user.discriminator}**. User is clean.`
+                );
+            }
+        }
     };
 
     if (!['!accept', '!reject', '!falsebanned'].includes(command)) {
