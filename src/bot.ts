@@ -25,6 +25,7 @@ import randomdeck from './commands/randomdeck';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { Help } from './helper/cache';
+import validateCrewAds from './community discord/checkCrewAds';
 import custom from './community discord/custom commands/moon';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
@@ -72,8 +73,9 @@ client.on('message', async function messageHandler(message) {
         process.env.NODE_ENV === 'production'
     ) {
         if (
+            !author.bot &&
             channel.id ===
-            process.env.COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID
+                process.env.COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID
         ) {
             await setChannel(client, message);
             return;
@@ -91,9 +93,11 @@ client.on('message', async function messageHandler(message) {
     }
 
     if (
+        !author.bot &&
         process.env.COMMUNITY_SERVER_ID === guild?.id &&
         process.env.NODE_ENV === 'production'
     ) {
+        await validateCrewAds(message);
         await custom(client, message);
     }
 
