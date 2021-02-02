@@ -27,6 +27,7 @@ import version from './dev-commands/version';
 import cache, { Help } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
 import eventPing from './community discord/eventping';
+import lock from './community discord/lock';
 import lfg from './community discord/lfg';
 import custom from './community discord/custom commands/moon';
 import setChannel from './community discord/ban appeal/setChannel';
@@ -95,6 +96,7 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
+        await lock(message);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
