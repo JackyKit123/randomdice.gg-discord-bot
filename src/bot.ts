@@ -95,12 +95,12 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
-        await lfg(message);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
+            await lfg(message);
             await eventPing(message);
             await validateCrewAds(message);
             await custom(client, message);
