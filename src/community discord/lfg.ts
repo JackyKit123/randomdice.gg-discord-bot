@@ -1,8 +1,6 @@
 import * as Discord from 'discord.js';
 
-export default async function eventPing(
-    message: Discord.Message
-): Promise<void> {
+export default async function LFG(message: Discord.Message): Promise<void> {
     const { member, channel, content, deletable, reply } = message;
 
     const [command, ...args] = content.split(' ');
@@ -20,7 +18,9 @@ export default async function eventPing(
     }
 
     if (channel.id !== '804224162364129320') {
-        await reply('You can only use this command in <#804224162364129320>');
+        await channel.send(
+            'You can only use this command in <#804224162364129320>'
+        );
         return;
     }
 
