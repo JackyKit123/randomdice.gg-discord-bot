@@ -26,6 +26,8 @@ import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { Help } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
+import eventPing from './community discord/eventping';
+import lfg from './community discord/lfg';
 import custom from './community discord/custom commands/moon';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
@@ -68,58 +70,61 @@ client.on('message', async function messageHandler(message) {
     const { content, channel, guild, author } = message;
     const [suffix, command] = content.split(' ');
 
-    if (
-        process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id &&
-        process.env.NODE_ENV === 'production'
-    ) {
+    try {
+        if (
+            process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id &&
+            process.env.NODE_ENV === 'production'
+        ) {
+            if (
+                !author.bot &&
+                channel.id ===
+                    process.env.COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID
+            ) {
+                await setChannel(client, message);
+                return;
+            }
+            if (content.startsWith('!')) {
+                await closeAppeal(client, message);
+                return;
+            }
+            if (suffix === '.gg') {
+                await author.send(
+                    'Normal randomdice.gg command cannot be executed in the ban appeal discord.'
+                );
+            }
+            return;
+        }
+
         if (
             !author.bot &&
-            channel.id ===
-                process.env.COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID
+            process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            process.env.NODE_ENV === 'production'
         ) {
-            await setChannel(client, message);
+            await eventPing(message);
+            await lfg(message);
+            await validateCrewAds(message);
+            await custom(client, message);
+        }
+
+        if (
+            // ignoring other servers in development, ignoring dev channel in production
+            (process.env.DEV_SERVER_ID &&
+                process.env.NODE_ENV === 'development' &&
+                guild?.id !== process.env.DEV_SERVER_ID) ||
+            (process.env.NODE_ENV === 'production' &&
+                guild?.id === process.env.DEV_SERVER_ID)
+        ) {
             return;
         }
-        if (content.startsWith('!')) {
-            await closeAppeal(client, message);
+
+        if (
+            !suffix
+                .replace(/[^\040-\176\200-\377]/gi, '')
+                .match(/^\\?\.gg\b/i) ||
+            author.bot
+        ) {
             return;
         }
-        if (suffix === '.gg') {
-            await author.send(
-                'Normal randomdice.gg command cannot be executed in the ban appeal discord.'
-            );
-        }
-        return;
-    }
-
-    if (
-        !author.bot &&
-        process.env.COMMUNITY_SERVER_ID === guild?.id &&
-        process.env.NODE_ENV === 'production'
-    ) {
-        await validateCrewAds(message);
-        await custom(client, message);
-    }
-
-    if (
-        // ignoring other servers in development, ignoring dev channel in production
-        (process.env.DEV_SERVER_ID &&
-            process.env.NODE_ENV === 'development' &&
-            guild?.id !== process.env.DEV_SERVER_ID) ||
-        (process.env.NODE_ENV === 'production' &&
-            guild?.id === process.env.DEV_SERVER_ID)
-    ) {
-        return;
-    }
-
-    if (
-        !suffix.replace(/[^\040-\176\200-\377]/gi, '').match(/^\\?\.gg\b/i) ||
-        author.bot
-    ) {
-        return;
-    }
-
-    try {
         if (process.env.DEV_USERS_ID?.includes(author.id)) {
             switch (command?.toLowerCase()) {
                 case 'createinvites':
