@@ -5,15 +5,26 @@ export default async function LFG(message: Discord.Message): Promise<void> {
 
     const [command, ...args] = content.split(' ');
 
+    if (command.toLowerCase() !== '!lfg' || !member) {
+        return;
+    }
+
     if (
-        command.toLowerCase() !== '!lfg' ||
         !(
-            member?.roles.cache.has('804513079319592980') ||
-            member?.roles.cache.has('804496339794264085') ||
-            member?.roles.cache.has('805817742081916988') ||
-            member?.hasPermission('MENTION_EVERYONE')
+            member.roles.cache.has('804513079319592980') ||
+            member.roles.cache.has('804496339794264085') ||
+            member.roles.cache.has('805817742081916988') ||
+            member.hasPermission('MENTION_EVERYONE')
         )
     ) {
+        await channel.send(
+            new Discord.MessageEmbed()
+                .setTitle('Unable to cast command')
+                .setDescription(
+                    'You need one of the following roles to use this command.\n' +
+                        '<@&804513079319592980> <@&804496339794264085> <@&805817742081916988>'
+                )
+        );
         return;
     }
 
@@ -33,7 +44,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             })
         )
         .setColor(member.displayHexColor)
-        .addField('Hosted by', member);
+        .addField('Ping / DM', member);
 
     if (args.join(' ')) {
         if (args.join(' ').length > 1024) {
