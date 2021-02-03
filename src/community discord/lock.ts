@@ -105,7 +105,7 @@ export default async function lockUnlock(
                     return;
                 }
                 await channel.send(
-                    `Delay **${parseMsIntoReadableText}** is too ${
+                    `Delay **${parseMsIntoReadableText(timer)}** is too ${
                         timer <= 3000 ? 'short' : 'long'
                     }`
                 );
@@ -123,7 +123,7 @@ export default async function lockUnlock(
                     return;
                 }
                 await channel.send(
-                    `Delay **${parseMsIntoReadableText}** is too ${
+                    `Delay **${parseMsIntoReadableText(timer)}** is too ${
                         timer <= 3000 ? 'short' : 'long'
                     }`
                 );
