@@ -8,7 +8,7 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     let memberCount = 0;
 
     async function updateTime(): Promise<void> {
-        const channel = guild.channels.cache.get('806611099775664218');
+        const channel = guild.channels.cache.get('806658300220407819');
         if (!channel) {
             return;
         }
