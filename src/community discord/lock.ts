@@ -100,16 +100,38 @@ export default async function lockUnlock(
     ) {
         if (command === '!lock') {
             lock();
-            await wait(timer);
-            timer = 0;
-            unlock();
+            if (timer > 2147483647 || timer <= 3000) {
+                if (timer === 0) {
+                    return;
+                }
+                await channel.send(
+                    `Delay **${parseMsIntoReadableText}** is too ${
+                        timer <= 3000 ? 'short' : 'long'
+                    }`
+                );
+            } else {
+                await wait(timer);
+                timer = 0;
+                unlock();
+            }
             return;
         }
         if (command === '!unlock') {
             unlock();
-            await wait(timer);
-            timer = 0;
-            lock();
+            if (timer > 2147483647 || timer <= 3000) {
+                if (timer === 0) {
+                    return;
+                }
+                await channel.send(
+                    `Delay **${parseMsIntoReadableText}** is too ${
+                        timer <= 3000 ? 'short' : 'long'
+                    }`
+                );
+            } else {
+                await wait(timer);
+                timer = 0;
+                lock();
+            }
             return;
         }
     }
