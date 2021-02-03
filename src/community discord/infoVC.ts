@@ -1,10 +1,17 @@
 import * as Discord from 'discord.js';
+import { promisify } from 'util';
+
+const wait = promisify(setTimeout);
 
 export default async function infoVC(client: Discord.Client): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
     const now = new Date();
     const hour = now.getUTCHours();
     const minutes = now.getUTCMinutes();
+    const seconds = now.getUTCSeconds();
+
+
+
     let { memberCount } = guild;
 
     async function updateTime(): Promise<void> {
@@ -12,7 +19,7 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
         if (!channel) {
             return;
         }
-        const timeString = `${String(hour).length === 1 ? `0${hour}` : hour}:${
+        const timeString = `${hour > 12 ? hour - 12 + 1 : hour + 1}:${
             String(minutes).length === 1 ? `0${minutes}` : minutes
         }${hour >= 12 ? 'PM' : 'AM'}`;
         try {
@@ -38,6 +45,9 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
         }
     }
 
+    updateTime();
+    updateMember();
+    await wait(60 - seconds);
     setInterval(updateTime, 1000 * 60);
     setInterval(updateMember, 1000 * 60);
 }
