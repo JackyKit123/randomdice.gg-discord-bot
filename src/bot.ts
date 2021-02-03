@@ -63,10 +63,10 @@ client.on('ready', async () => {
         process.env.NODE_ENV
     }`;
     fetchAll(database);
-    await infoVC(client);
     await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
+    await infoVC(client);
 });
 
 client.on('message', async function messageHandler(message) {

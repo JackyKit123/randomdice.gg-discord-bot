@@ -5,26 +5,26 @@ const wait = promisify(setTimeout);
 
 export default async function infoVC(client: Discord.Client): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
-    const now = new Date();
-    const hour = now.getUTCHours();
-    const minutes = now.getUTCMinutes();
-    const seconds = now.getUTCSeconds();
-
-    let { memberCount } = guild;
+    let memberCount = 0;
 
     async function updateTime(): Promise<void> {
         const channel = guild.channels.cache.get('806611099775664218');
         if (!channel) {
+            console.log('channel not found');
             return;
         }
+        const now = new Date();
+        const hour = now.getUTCHours();
+        const minutes = now.getUTCMinutes();
         // eslint-disable-next-line no-nested-ternary
         const timeString = `${hour > 12 ? hour - 12 : hour === 0 ? 12 : hour}:${
             String(minutes).length === 1 ? `0${minutes}` : minutes
         }${hour >= 12 ? 'PM' : 'AM'}`;
         try {
+            console.log(`🕒 UTC ${timeString}`);
             await channel.setName(`🕒 UTC ${timeString}`);
-        } catch {
-            //
+        } catch (err) {
+            console.error(err.message);
         }
     }
 
@@ -46,7 +46,10 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
 
     updateTime();
     updateMember();
-    await wait(60 - seconds);
+    const now = new Date();
+    const seconds = now.getUTCSeconds();
+    await wait(1000 * 60 - seconds);
+    console.log('waited');
     setInterval(updateTime, 1000 * 60);
     setInterval(updateMember, 1000 * 60);
 }
