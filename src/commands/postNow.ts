@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import cache from '../helper/cache';
 import parsedText from '../helper/parseText';
 import logMessage from '../dev-commands/logMessage';
+import cooldown from '../helper/cooldown';
 
 export async function postGuide(
     client: Discord.Client,
@@ -395,6 +396,15 @@ export default async function postNow(
     const type = message.content.split(' ')[2];
     const { member, guild, channel } = message;
     if (!member || !guild) {
+        return;
+    }
+
+    if (
+        await cooldown(message, '.gg postnow', {
+            default: 60 * 1000,
+            donator: 10 * 1000,
+        })
+    ) {
         return;
     }
 

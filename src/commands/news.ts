@@ -1,12 +1,21 @@
 import * as Discord from 'discord.js';
 import cache from '../helper/cache';
 import parsedText from '../helper/parseText';
+import cooldown from '../helper/cooldown';
 
 export default async function sendNews(
     message: Discord.Message
 ): Promise<void> {
     const { channel } = message;
 
+    if (
+        await cooldown(message, '.gg news', {
+            default: 60 * 1000,
+            donator: 10 * 1000,
+        })
+    ) {
+        return;
+    }
     const newsData = cache.news;
     const ytUrl = newsData.game.match(
         /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/

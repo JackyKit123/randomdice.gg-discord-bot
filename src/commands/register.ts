@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import postNow from './postNow';
+import cooldown from '../helper/cooldown';
 
 async function checkRegistered(
     guild: Discord.Guild,
@@ -35,6 +36,15 @@ export async function register(
     database: admin.database.Database
 ): Promise<void> {
     const { member, guild, content, mentions, channel } = message;
+
+    if (
+        await cooldown(message, '.gg register', {
+            default: 5 * 1000,
+            donator: 1 * 1000,
+        })
+    ) {
+        return;
+    }
     if (!member || !guild) {
         await channel.send('You can only execute this command in a server.');
         return;

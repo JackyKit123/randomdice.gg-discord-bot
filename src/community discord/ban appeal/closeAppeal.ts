@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import cooldown from '../../helper/cooldown';
 
 export default async function closeAppeal(
     client: Discord.Client,
@@ -9,6 +10,15 @@ export default async function closeAppeal(
     const { COMMUNITY_SERVER_ID } = process.env;
 
     if (!member || !guild) {
+        return;
+    }
+
+    if (
+        await cooldown(message, '!closeappeal', {
+            default: 60 * 1000,
+            donator: 60 * 1000,
+        })
+    ) {
         return;
     }
 

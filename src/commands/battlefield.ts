@@ -2,9 +2,19 @@ import * as Discord from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
 import cache, { Battlefield } from '../helper/cache';
 import parsedText from '../helper/parseText';
+import cooldown from '../helper/cooldown';
 
 export default async function dice(message: Discord.Message): Promise<void> {
     const { channel, content } = message;
+
+    if (
+        await cooldown(message, '.gg battlefield', {
+            default: 10 * 1000,
+            donator: 2 * 1000,
+        })
+    ) {
+        return;
+    }
     const command = content
         .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg battlefield ?/i, '');

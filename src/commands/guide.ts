@@ -2,11 +2,21 @@ import * as Discord from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
 import cache, { DeckGuide } from '../helper/cache';
 import parseText from '../helper/parseText';
+import cooldown from '../helper/cooldown';
 
 export default async function deckGuide(
     message: Discord.Message
 ): Promise<void> {
     const { channel, content } = message;
+
+    if (
+        await cooldown(message, '.gg guide', {
+            default: 30 * 1000,
+            donator: 5 * 1000,
+        })
+    ) {
+        return;
+    }
     const guideName = content
         .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg guide ?/i, '');

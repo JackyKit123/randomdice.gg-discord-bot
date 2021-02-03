@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import cooldown from '../helper/cooldown';
 
 export default async function LFG(message: Discord.Message): Promise<void> {
     const { member, channel, content, deletable, reply } = message;
@@ -6,6 +7,15 @@ export default async function LFG(message: Discord.Message): Promise<void> {
     const [command, ...args] = content.split(' ');
 
     if (command.toLowerCase() !== '!lfg' || !member) {
+        return;
+    }
+
+    if (
+        await cooldown(message, '!eventping', {
+            default: 600 * 1000,
+            donator: 600 * 1000,
+        })
+    ) {
         return;
     }
 

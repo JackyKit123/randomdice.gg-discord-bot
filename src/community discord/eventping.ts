@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import cooldown from '../helper/cooldown';
 
 export default async function eventPing(
     message: Discord.Message
@@ -15,6 +16,15 @@ export default async function eventPing(
             member?.roles.cache.has('805000661133295616') ||
             member?.hasPermission('MENTION_EVERYONE')
         )
+    ) {
+        return;
+    }
+
+    if (
+        await cooldown(message, '!eventping', {
+            default: 60 * 1000,
+            donator: 60 * 1000,
+        })
     ) {
         return;
     }

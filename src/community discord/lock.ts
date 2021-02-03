@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import cooldown from '../helper/cooldown';
 
 export default async function lockUnlock(
     message: Discord.Message
@@ -8,6 +9,15 @@ export default async function lockUnlock(
     const [command, ...args] = content.split(' ');
 
     if (!(command === '!lock' || command === '!unlock') || !member || !guild) {
+        return;
+    }
+
+    if (
+        await cooldown(message, '!eventping', {
+            default: 2 * 1000,
+            donator: 2 * 1000,
+        })
+    ) {
         return;
     }
 

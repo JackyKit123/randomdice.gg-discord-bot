@@ -1,9 +1,18 @@
 import * as Discord from 'discord.js';
+import cooldown from '../helper/cooldown';
 
 export default async function contact(message: Discord.Message): Promise<void> {
     const developerList = process.env.DEV_USERS_ID?.split(',').map(
         id => `<@${id.trim()}>`
     );
+    if (
+        await cooldown(message, '.gg contact', {
+            default: 10 * 1000,
+            donator: 2 * 1000,
+        })
+    ) {
+        return;
+    }
     if (!developerList) {
         throw new Error(
             'Unable to parse contact information for the developers.'

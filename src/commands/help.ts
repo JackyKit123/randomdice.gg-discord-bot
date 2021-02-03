@@ -1,9 +1,18 @@
 import * as Discord from 'discord.js';
 import cache from '../helper/cache';
+import cooldown from '../helper/cooldown';
 
 export default async function help(message: Discord.Message): Promise<void> {
     const { channel, author } = message;
 
+    if (
+        await cooldown(message, '.gg help', {
+            default: 10 * 1000,
+            donator: 2 * 1000,
+        })
+    ) {
+        return;
+    }
     const helpMessage = new Discord.MessageEmbed()
         .setTitle('List of Commands')
         .setAuthor(

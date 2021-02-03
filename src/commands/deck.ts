@@ -1,10 +1,20 @@
 import * as Discord from 'discord.js';
 import cache, { Deck } from '../helper/cache';
+import cooldown from '../helper/cooldown';
 
 export default async function decklist(
     message: Discord.Message
 ): Promise<void> {
     const { content, channel } = message;
+
+    if (
+        await cooldown(message, '.gg deck', {
+            default: 30 * 1000,
+            donator: 5 * 1000,
+        })
+    ) {
+        return;
+    }
     const command = content
         .replace(/[^\040-\176\200-\377]/gi, '')
         .replace(/^\\?\.gg deck ?/i, '');
