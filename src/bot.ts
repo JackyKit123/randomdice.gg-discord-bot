@@ -25,6 +25,7 @@ import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
+import infoVC from './community discord/infoVC';
 import eventPing from './community discord/eventping';
 import lock from './community discord/lock';
 import lfg from './community discord/lfg';
@@ -62,6 +63,7 @@ client.on('ready', async () => {
         process.env.NODE_ENV
     }`;
     fetchAll(database);
+    await infoVC(client);
     await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
