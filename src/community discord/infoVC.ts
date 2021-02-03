@@ -10,7 +10,6 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     async function updateTime(): Promise<void> {
         const channel = guild.channels.cache.get('806611099775664218');
         if (!channel) {
-            console.log('channel not found');
             return;
         }
         const now = new Date();
@@ -21,10 +20,9 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
             String(minutes).length === 1 ? `0${minutes}` : minutes
         }${hour >= 12 ? 'PM' : 'AM'}`;
         try {
-            console.log(`🕒 UTC ${timeString}`);
             await channel.setName(`🕒 UTC ${timeString}`);
         } catch (err) {
-            console.error(err.message);
+            //
         }
     }
 
@@ -49,7 +47,6 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     const now = new Date();
     const seconds = now.getUTCSeconds();
     await wait(1000 * 60 - seconds);
-    console.log('waited');
-    setInterval(updateTime, 1000 * 60);
-    setInterval(updateMember, 1000 * 60);
+    setInterval(updateTime, 1000 * 60 * 5);
+    setInterval(updateMember, 1000 * 60 * 5);
 }
