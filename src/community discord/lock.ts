@@ -101,6 +101,7 @@ export default async function lockUnlock(
         if (command === '!lock') {
             if (timer > 2147483647 || timer <= 3000) {
                 if (timer === 0) {
+                    lock();
                     return;
                 }
                 await channel.send(
@@ -108,7 +109,6 @@ export default async function lockUnlock(
                         timer <= 3000 ? 'short' : 'long'
                     }.`
                 );
-                lock();
             } else {
                 lock();
                 await wait(timer);
@@ -120,6 +120,7 @@ export default async function lockUnlock(
         if (command === '!unlock') {
             if (timer > 2147483647 || timer <= 3000) {
                 if (timer === 0) {
+                    unlock();
                     return;
                 }
                 await channel.send(
@@ -127,7 +128,6 @@ export default async function lockUnlock(
                         timer <= 3000 ? 'short' : 'long'
                     }.`
                 );
-                unlock();
             } else {
                 unlock();
                 await wait(timer);
