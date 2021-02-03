@@ -38,7 +38,9 @@ export default async function Cooldown(
 
         return `${day > 0 ? `${day}d ` : ''}${hour > 0 ? `${hour}h ` : ''}${
             minute > 0 ? `${minute}m ` : ''
-        }${seconds}${tenthseconds > 0 ? `.${tenthseconds}` : ''}s`;
+        }${seconds > 0 || tenthseconds > 0 ? seconds : ''}${
+            tenthseconds > 0 ? `.${tenthseconds}` : ''
+        }${seconds > 0 && tenthseconds > 0 ? 's' : ''}`;
     };
 
     if (

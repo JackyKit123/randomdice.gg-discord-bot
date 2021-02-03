@@ -49,7 +49,9 @@ export default async function lockUnlock(
 
         return `${d > 0 ? `${d}d ` : ''}${h > 0 ? `${h}h ` : ''}${
             m > 0 ? `${m}m ` : ''
-        }${seconds}${tenthseconds > 0 ? `.${tenthseconds}` : ''}s`;
+        }${seconds > 0 || tenthseconds > 0 ? seconds : ''}${
+            tenthseconds > 0 ? `.${tenthseconds}` : ''
+        }${seconds > 0 && tenthseconds > 0 ? 's' : ''}`;
     };
     const target = guild.channels.cache.get(
         anotherChannelArg?.[1] || anotherChannelArg?.[2] || channel.id
