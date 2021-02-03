@@ -64,6 +64,6 @@ export default async function lockUnlock(
         }
     }
     await channel.send(
-        `You don't permission to ${command.replace('!', '')} ${target}`
+        `You don't have permission to ${command.replace('!', '')} ${target}`
     );
 }
