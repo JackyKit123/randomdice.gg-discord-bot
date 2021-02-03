@@ -91,10 +91,11 @@ export default async function closeAppeal(
     const target = (guild as Discord.Guild).members.cache.find(
         m =>
             m.user.id === arg ||
-            m.nickname === arg ||
-            m.user.username === arg ||
-            `${m.user.username}#${m.user.discriminator}` === arg ||
-            m.user.id === arg.match(/<@!?(\d{18})>/)?.[1]
+            m.user.id === arg.match(/<@!?(\d{18})>/)?.[1] ||
+            `${m.user.username}#${m.user.discriminator}` ===
+                arg.toLowerCase() ||
+            m.user.username === arg.toLowerCase() ||
+            m.nickname === arg.toLowerCase()
     );
     if (!target) {
         await channel.send(
