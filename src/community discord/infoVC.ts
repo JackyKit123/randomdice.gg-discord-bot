@@ -14,7 +14,7 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
         }
         const timeString = `${String(hour).length === 1 ? `0${hour}` : hour}:${
             String(minutes).length === 1 ? `0${minutes}` : minutes
-        }`;
+        }${hour >= 12 ? 'PM' : 'AM'}`;
         try {
             await channel.setName(`🕒 UTC ${timeString}`);
         } catch {
@@ -32,7 +32,7 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
         }
         try {
             memberCount = guild.memberCount;
-            await channel.setName(`Member Count: ${guild.memberCount}`);
+            await channel.setName(`Members: ${guild.memberCount}`);
         } catch {
             //
         }
