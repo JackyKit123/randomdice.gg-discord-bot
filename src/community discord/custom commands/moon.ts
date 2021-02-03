@@ -19,9 +19,10 @@ export default async function custom(
         const target = guild.members.cache.find(
             m =>
                 m.user.id === arg ||
-                m.nickname === arg ||
-                m.user.username === arg ||
-                `${m.user.username}#${m.user.discriminator}` === arg ||
+                m.user.username === arg.toLowerCase() ||
+                m.nickname === arg.toLowerCase() ||
+                `${m.user.username}#${m.user.discriminator}` ===
+                    arg.toLowerCase() ||
                 m.user.id === arg?.match(/<@!?(\d{18})>/)?.[1]
         );
         if (!target) {
