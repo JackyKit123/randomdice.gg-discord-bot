@@ -11,7 +11,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
     }
 
     if (
-        await cooldown(message, '!eventping', {
+        await cooldown(message, '!lfg', {
             default: 600 * 1000,
             donator: 600 * 1000,
         })
