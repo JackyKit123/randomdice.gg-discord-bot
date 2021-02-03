@@ -10,8 +10,6 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     const minutes = now.getUTCMinutes();
     const seconds = now.getUTCSeconds();
 
-
-
     let { memberCount } = guild;
 
     async function updateTime(): Promise<void> {
