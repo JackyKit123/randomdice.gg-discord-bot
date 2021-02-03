@@ -1,10 +1,8 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
-import cache, { Dice } from '../helper/cache';
+import cache from '../helper/cache';
 
 export default async function drawUntil(
-    message: Discord.Message,
-    database: admin.database.Database
+    message: Discord.Message
 ): Promise<void> {
     const { content, channel } = message;
 
@@ -29,10 +27,8 @@ export default async function drawUntil(
     }
 
     const sentMessage = await channel.send('Running Simulation...');
-    const legendaryPoolSize = ((await cache(
-        database,
-        'dice'
-    )) as Dice[]).filter(d => d.rarity === 'Legendary').length;
+    const legendaryPoolSize = cache.dice.filter(d => d.rarity === 'Legendary')
+        .length;
     const simulationRuns = 100;
 
     const [

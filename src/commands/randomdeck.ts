@@ -1,14 +1,12 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
-import cache, { EmojiList } from '../helper/cache';
+import cache from '../helper/cache';
 
 export default async function RandomDeck(
-    message: Discord.Message,
-    database: admin.database.Database
+    message: Discord.Message
 ): Promise<void> {
     const { channel } = message;
 
-    const emoji = (await cache(database, 'discord_bot/emoji')) as EmojiList;
+    const emoji = cache['discord_bot/emoji'];
     const shuffleArray = Object.keys(emoji)
         .filter(key => key !== '-1')
         .map(key => Number(key)) as number[];

@@ -1,13 +1,9 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
 import * as stringSimilarity from 'string-similarity';
 import cache, { Battlefield } from '../helper/cache';
 import parsedText from '../helper/parseText';
 
-export default async function dice(
-    message: Discord.Message,
-    database: admin.database.Database
-): Promise<void> {
+export default async function dice(message: Discord.Message): Promise<void> {
     const { channel, content } = message;
     const command = content
         .replace(/[^\040-\176\200-\377]/gi, '')
@@ -18,10 +14,7 @@ export default async function dice(
         );
         return;
     }
-    const battlefieldList = (await cache(
-        database,
-        'wiki/battlefield'
-    )) as Battlefield[];
+    const battlefieldList = cache['wiki/battlefield'];
     const battlefield = battlefieldList.find(b =>
         command.toLowerCase().startsWith(b.name.toLowerCase())
     );

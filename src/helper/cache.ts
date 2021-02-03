@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as admin from 'firebase-admin';
 
 export interface News {
@@ -114,73 +112,60 @@ export interface Help {
     commands: { command: string; description: string }[];
 }
 
-type Data =
-    | News
-    | DeckGuide[]
-    | Dice[]
-    | Deck[]
-    | EmojiList
-    | Registry
-    | Help[]
-    | Boss[]
-    | Tip[]
-    | Battlefield[];
+export interface Users {
+    [uid: string]: {
+        'linked-account': {
+            discord?: string;
+            patreon?: string;
+        };
+        'patreon-tier'?: number;
+    };
+}
 
-type keys =
-    | 'decks_guide'
-    | 'dice'
-    | 'decks'
-    | 'news'
-    | 'discord_bot/emoji'
-    | 'discord_bot/registry'
-    | 'discord_bot/help'
-    | 'discord_bot/dev_help'
-    | 'wiki/boss'
-    | 'wiki/tips'
-    | 'wiki/battlefield';
+interface CacheObject {
+    decks_guide: DeckGuide[];
+    dice: Dice[];
+    decks: Deck[];
+    news: News;
+    'discord_bot/emoji': EmojiList;
+    'discord_bot/registry': Registry;
+    'discord_bot/help': Help[];
+    'discord_bot/dev_help': Help[];
+    'wiki/boss': Boss[];
+    'wiki/tips': Tip[];
+    'wiki/battlefield': Battlefield[];
+    users: Users;
+}
 
-export default async function getData(
-    database: admin.database.Database,
-    target: keys
-): Promise<Data> {
-    const cachePath = (location: string): string =>
-        path.resolve(__dirname, '..', '..', 'cache', `${location}.json`);
-    const localVersion = JSON.parse(
-        fs.readFileSync(cachePath('last_updated'), {
-            encoding: 'utf8',
-            flag: 'w+',
-        }) || '{}'
-    );
-    const remoteVersion = (
-        await database
-            .ref(`/last_updated/${target.split('/')[0]}`)
-            .once('value')
-    ).val();
-    if (localVersion[target] === remoteVersion) {
-        return JSON.parse(
-            fs.readFileSync(cachePath(target), {
-                encoding: 'utf8',
-                flag: 'w+',
-            }) || 'null'
-        );
-    }
+const cacheData = {
+    // eslint-disable-next-line @typescript-eslint/camelcase
+    decks_guide: [] as DeckGuide[],
+    dice: [] as Dice[],
+    decks: [] as Deck[],
+    news: {
+        game: '',
+        website: '',
+    },
+    'discord_bot/emoji': [] as EmojiList,
+    'discord_bot/registry': {} as Registry,
+    'discord_bot/help': [] as Help[],
+    'discord_bot/dev_help': [] as Help[],
+    'wiki/boss': [] as Boss[],
+    'wiki/tips': [] as Tip[],
+    'wiki/battlefield': [] as Battlefield[],
+    users: {} as Users,
+};
+export default cacheData;
 
-    const newData = (await database.ref(`/${target}`).once('value')).val();
-    localVersion[target] = remoteVersion;
-
-    await Promise.all([
-        await new Promise<void>((resolve, reject) =>
-            fs.writeFile(
-                cachePath('last_updated'),
-                JSON.stringify(localVersion),
-                err => (err ? reject(err) : resolve())
-            )
-        ),
-        await new Promise<void>((resolve, reject) =>
-            fs.writeFile(cachePath(target), JSON.stringify(newData), err =>
-                err ? reject(err) : resolve()
-            )
-        ),
-    ]);
-    return newData;
+export function fetchAll(database: admin.database.Database): void {
+    Object.keys(cacheData).forEach(key => {
+        const ref = database.ref(key);
+        const snapshotHandler = (
+            snapshot: admin.database.DataSnapshot
+        ): void => {
+            cacheData[key as keyof CacheObject] = snapshot.val();
+        };
+        ref.on('value', snapshotHandler);
+        ref.once('value').then(snapshotHandler);
+    });
 }

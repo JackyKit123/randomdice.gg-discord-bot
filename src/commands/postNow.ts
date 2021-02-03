@@ -1,28 +1,18 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import cache, {
-    News,
-    DeckGuide,
-    Registry,
-    EmojiList,
-    Battlefield,
-} from '../helper/cache';
+import cache from '../helper/cache';
 import parsedText from '../helper/parseText';
 import logMessage from '../dev-commands/logMessage';
 
 export async function postGuide(
     client: Discord.Client,
-    database: admin.database.Database,
     member?: Discord.GuildMember,
     updateListener?: {
         snapshot: admin.database.DataSnapshot;
         event: 'added' | 'updated' | 'removed';
     }
 ): Promise<void> {
-    const registeredGuilds = (await cache(
-        database,
-        'discord_bot/registry'
-    )) as Registry;
+    const registeredGuilds = cache['discord_bot/registry'];
     const registeredChannels = (
         await Promise.all(
             (Object.entries(registeredGuilds) as [string, { guide?: string }][])
@@ -44,11 +34,11 @@ export async function postGuide(
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
-    const [guides, battlefields, emojiList] = await Promise.all([
-        cache(database, 'decks_guide') as Promise<DeckGuide[]>,
-        cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
-        cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
-    ]);
+    const [guides, battlefields, emojiList] = [
+        cache.decks_guide,
+        cache['wiki/battlefield'],
+        cache['discord_bot/emoji'],
+    ];
     const embeds = (
         await Promise.all(
             ['PvP', 'Co-op', 'Crew']
@@ -293,13 +283,9 @@ export async function postGuide(
 
 export async function postNews(
     client: Discord.Client,
-    database: admin.database.Database,
     guild?: Discord.Guild
 ): Promise<void> {
-    const registeredGuilds = (await cache(
-        database,
-        'discord_bot/registry'
-    )) as Registry;
+    const registeredGuilds = cache['discord_bot/registry'];
     const registeredChannels = (
         await Promise.all(
             (Object.entries(registeredGuilds) as [string, { news?: string }][])
@@ -321,7 +307,7 @@ export async function postNews(
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
-    const data = (await cache(database, 'news')) as News;
+    const data = cache.news;
 
     const ytUrl = data.game.match(
         /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/
@@ -404,8 +390,7 @@ export async function postNews(
 
 export default async function postNow(
     message: Discord.Message,
-    client: Discord.Client,
-    database: admin.database.Database
+    client: Discord.Client
 ): Promise<void> {
     const type = message.content.split(' ')[2];
     const { member, guild, channel } = message;
@@ -423,7 +408,7 @@ export default async function postNow(
     const statusMessage = await channel.send(`Now posting ${type}...`);
     switch (type) {
         case 'guide':
-            await postGuide(client, database, member);
+            await postGuide(client, member);
             if (statusMessage.editable) {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } else {
@@ -431,7 +416,7 @@ export default async function postNow(
             }
             return;
         case 'news':
-            await postNews(client, database, guild);
+            await postNews(client, guild);
             if (statusMessage.editable) {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } else {

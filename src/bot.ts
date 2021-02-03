@@ -24,7 +24,7 @@ import sendContact from './commands/sendContact';
 import randomdeck from './commands/randomdeck';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
-import cache, { Help } from './helper/cache';
+import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
 import eventPing from './community discord/eventping';
 import lock from './community discord/lock';
@@ -62,6 +62,7 @@ client.on('ready', async () => {
     const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
         process.env.NODE_ENV
     }`;
+    fetchAll(database);
     await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
@@ -142,7 +143,7 @@ client.on('message', async function messageHandler(message) {
                     await version(client, message);
                     return;
                 case 'help':
-                    await devHelp(message, database);
+                    await devHelp(message);
                     break;
                 default:
             }
@@ -161,47 +162,47 @@ client.on('message', async function messageHandler(message) {
                 break;
             }
             case 'postnow': {
-                await postNow(message, client, database);
+                await postNow(message, client);
                 break;
             }
             case 'dice': {
-                await dice(message, database);
+                await dice(message);
                 break;
             }
             case 'guide': {
-                await guide(message, database);
+                await guide(message);
                 break;
             }
             case 'deck': {
-                await deck(message, database);
+                await deck(message);
                 break;
             }
             case 'boss': {
-                await boss(message, database);
+                await boss(message);
                 break;
             }
             case 'battlefield': {
-                await battlefield(message, database);
+                await battlefield(message);
                 break;
             }
             case 'news': {
-                await news(message, database);
+                await news(message);
                 break;
             }
             case 'drawuntil': {
-                await drawUntil(message, database);
+                await drawUntil(message);
                 break;
             }
             case 'randomdeck': {
-                await randomdeck(message, database);
+                await randomdeck(message);
                 break;
             }
             case 'help': {
-                await help(message, database);
+                await help(message);
                 break;
             }
             case 'randomtip': {
-                await randomTip(message, database);
+                await randomTip(message);
                 break;
             }
             case 'website':
@@ -221,7 +222,7 @@ client.on('message', async function messageHandler(message) {
                 break;
             default: {
                 const listOfCommands = Object.values(
-                    (await cache(database, 'discord_bot/help')) as Help[]
+                    cache['discord_bot/help']
                 ).flatMap(category =>
                     category.commands.map(cmd => cmd.command.split(' ')[1])
                 );

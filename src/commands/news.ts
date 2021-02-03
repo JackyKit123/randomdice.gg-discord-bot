@@ -1,15 +1,13 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
-import cache, { News } from '../helper/cache';
+import cache from '../helper/cache';
 import parsedText from '../helper/parseText';
 
 export default async function sendNews(
-    message: Discord.Message,
-    database: admin.database.Database
+    message: Discord.Message
 ): Promise<void> {
     const { channel } = message;
 
-    const newsData = (await cache(database, 'news')) as News;
+    const newsData = cache.news;
     const ytUrl = newsData.game.match(
         /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/
     )?.[0];

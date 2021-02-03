@@ -1,13 +1,9 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
 import * as stringSimilarity from 'string-similarity';
 import cache, { Boss } from '../helper/cache';
 import parsedText from '../helper/parseText';
 
-export default async function dice(
-    message: Discord.Message,
-    database: admin.database.Database
-): Promise<void> {
+export default async function dice(message: Discord.Message): Promise<void> {
     const { channel, content } = message;
     const bossName = content
         .replace(/[^\040-\176\200-\377]/gi, '')
@@ -18,7 +14,7 @@ export default async function dice(
         );
         return;
     }
-    const bossList = (await cache(database, 'wiki/boss')) as Boss[];
+    const bossList = cache['wiki/boss'];
     const boss = bossList.find(
         b => b.name.toLowerCase() === bossName.toLowerCase()
     );

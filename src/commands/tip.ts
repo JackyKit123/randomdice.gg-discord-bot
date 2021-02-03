@@ -1,14 +1,10 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
-import cache, { Boss } from '../helper/cache';
+import cache from '../helper/cache';
 import parseText from '../helper/parseText';
 
-export default async function dice(
-    message: Discord.Message,
-    database: admin.database.Database
-): Promise<void> {
+export default async function dice(message: Discord.Message): Promise<void> {
     const { channel } = message;
-    const tips = (await cache(database, 'wiki/tips')) as Boss[];
+    const tips = cache['wiki/tips'];
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
 
     await channel.send(

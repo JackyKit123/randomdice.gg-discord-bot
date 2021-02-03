@@ -1,11 +1,7 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
-import cache, { Help } from '../helper/cache';
+import cache from '../helper/cache';
 
-export default async function help(
-    message: Discord.Message,
-    database: admin.database.Database
-): Promise<void> {
+export default async function help(message: Discord.Message): Promise<void> {
     const { author } = message;
 
     const helpMessage = new Discord.MessageEmbed()
@@ -18,17 +14,15 @@ export default async function help(
         .setColor('#6ba4a5')
         .setDescription('Here is a list commands for the bot developer.')
         .addFields(
-            ((await cache(database, 'discord_bot/dev_help')) as Help[]).map(
-                categories => ({
-                    name: categories.category,
-                    value: categories.commands
-                        .map(
-                            command =>
-                                `\`${command.command}\`\n*${command.description}*`
-                        )
-                        .join('\n'),
-                })
-            )
+            cache['discord_bot/dev_help'].map(categories => ({
+                name: categories.category,
+                value: categories.commands
+                    .map(
+                        command =>
+                            `\`${command.command}\`\n*${command.description}*`
+                    )
+                    .join('\n'),
+            }))
         );
 
     await author.send(helpMessage);

@@ -27,7 +27,7 @@ export default function listener(
         if (!posting.guide) {
             posting.guide = true;
             try {
-                await post.postGuide(client, database, member, {
+                await post.postGuide(client, member, {
                     snapshot,
                     event,
                 });
@@ -69,7 +69,7 @@ export default function listener(
         if (!posting.news) {
             posting.news = true;
             try {
-                await post.postNews(client, database, guild);
+                await post.postNews(client, guild);
             } catch (err) {
                 try {
                     // eslint-disable-next-line no-unused-expressions

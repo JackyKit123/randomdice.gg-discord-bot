@@ -1,12 +1,10 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
 import * as stringSimilarity from 'string-similarity';
-import cache, { DeckGuide, EmojiList, Battlefield } from '../helper/cache';
+import cache, { DeckGuide } from '../helper/cache';
 import parseText from '../helper/parseText';
 
 export default async function deckGuide(
-    message: Discord.Message,
-    database: admin.database.Database
+    message: Discord.Message
 ): Promise<void> {
     const { channel, content } = message;
     const guideName = content
@@ -18,11 +16,11 @@ export default async function deckGuide(
         );
         return;
     }
-    const [guides, battlefields, emojiList] = await Promise.all([
-        cache(database, 'decks_guide') as Promise<DeckGuide[]>,
-        cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
-        cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
-    ]);
+    const [guides, battlefields, emojiList] = [
+        cache.decks_guide,
+        cache['wiki/battlefield'],
+        cache['discord_bot/emoji'],
+    ];
 
     const guideList = new Discord.MessageEmbed()
         .setColor('#6ba4a5')

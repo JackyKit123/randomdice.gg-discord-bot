@@ -1,10 +1,8 @@
 import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
-import cache, { Battlefield, Deck, EmojiList } from '../helper/cache';
+import cache, { Deck } from '../helper/cache';
 
 export default async function decklist(
-    message: Discord.Message,
-    database: admin.database.Database
+    message: Discord.Message
 ): Promise<void> {
     const { content, channel } = message;
     const command = content
@@ -105,11 +103,11 @@ export default async function decklist(
         legendaryClass = `c${legendaryClass}`;
     }
 
-    const [emoji, decks, battlefields] = await Promise.all([
-        cache(database, 'discord_bot/emoji') as Promise<EmojiList>,
-        cache(database, 'decks') as Promise<Deck[]>,
-        cache(database, 'wiki/battlefield') as Promise<Battlefield[]>,
-    ]);
+    const [emoji, decks, battlefields] = [
+        cache['discord_bot/emoji'],
+        cache.decks,
+        cache['wiki/battlefield'],
+    ];
     const deckType = ({
         pvp: 'PvP',
         coop: 'Co-op',

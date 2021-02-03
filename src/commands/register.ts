@@ -129,7 +129,7 @@ export async function register(
                         );
                 }
                 if (answeredYes) {
-                    await postNow(message, client, database);
+                    await postNow(message, client);
                 } else if (sentMessage.editable) {
                     await sentMessage.edit(
                         `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
