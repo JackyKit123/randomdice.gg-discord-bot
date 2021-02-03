@@ -99,7 +99,6 @@ export default async function lockUnlock(
         member.permissions.has('ADMINISTRATOR')
     ) {
         if (command === '!lock') {
-            lock();
             if (timer > 2147483647 || timer <= 3000) {
                 if (timer === 0) {
                     return;
@@ -107,9 +106,11 @@ export default async function lockUnlock(
                 await channel.send(
                     `Delay **${parseMsIntoReadableText(timer)}** is too ${
                         timer <= 3000 ? 'short' : 'long'
-                    }`
+                    }.`
                 );
+                lock();
             } else {
+                lock();
                 await wait(timer);
                 timer = 0;
                 unlock();
@@ -117,7 +118,6 @@ export default async function lockUnlock(
             return;
         }
         if (command === '!unlock') {
-            unlock();
             if (timer > 2147483647 || timer <= 3000) {
                 if (timer === 0) {
                     return;
@@ -125,9 +125,11 @@ export default async function lockUnlock(
                 await channel.send(
                     `Delay **${parseMsIntoReadableText(timer)}** is too ${
                         timer <= 3000 ? 'short' : 'long'
-                    }`
+                    }.`
                 );
+                unlock();
             } else {
+                unlock();
                 await wait(timer);
                 timer = 0;
                 lock();
