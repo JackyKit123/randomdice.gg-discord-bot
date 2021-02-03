@@ -17,7 +17,8 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
         if (!channel) {
             return;
         }
-        const timeString = `${hour > 12 ? hour - 12 + 1 : hour + 1}:${
+        // eslint-disable-next-line no-nested-ternary
+        const timeString = `${hour > 12 ? hour - 12 : hour === 0 ? 12 : hour}:${
             String(minutes).length === 1 ? `0${minutes}` : minutes
         }${hour >= 12 ? 'PM' : 'AM'}`;
         try {
