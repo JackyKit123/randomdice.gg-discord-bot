@@ -13,7 +13,6 @@ import deck from './commands/deck';
 import guide from './commands/guide';
 import boss from './commands/boss';
 import battlefield from './commands/battlefield';
-import randomTip from './commands/tip';
 import guildCreateHandler from './helper/guildCreateHandler';
 import logMessage from './dev-commands/logMessage';
 import fetchInvites from './dev-commands/fetchInvites';
@@ -199,10 +198,6 @@ client.on('message', async function messageHandler(message) {
             }
             case 'help': {
                 await help(message);
-                break;
-            }
-            case 'randomtip': {
-                await randomTip(message);
                 break;
             }
             case 'website':
