@@ -29,7 +29,9 @@ import infoVC from './community discord/infoVC';
 import eventPing from './community discord/eventping';
 import lock from './community discord/lock';
 import lfg from './community discord/lfg';
-import custom from './community discord/custom commands/moon';
+import custom, {
+    purgeRolesOnReboot,
+} from './community discord/custom commands/moon';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 
@@ -66,7 +68,7 @@ client.on('ready', async () => {
     await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
-    await infoVC(client);
+    await Promise.all([infoVC(client), purgeRolesOnReboot(client)]);
 });
 
 client.on('message', async function messageHandler(message) {

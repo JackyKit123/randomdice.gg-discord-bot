@@ -96,12 +96,30 @@ export default async function custom(
         ]);
         await wait(1000 * 60 * 5);
         try {
-            await Promise.all([
-                target.setNickname(originalName),
-                target.roles.remove('804508975503638558'),
-            ]);
+            if (target.roles.cache.has('804508975503638558')) {
+                await target.roles.remove('804508975503638558');
+            }
+            await target.setNickname(originalName);
         } catch (err) {
             // suppress error
         }
     }
+}
+
+export async function purgeRolesOnReboot(
+    client: Discord.Client
+): Promise<void> {
+    const guild = await client.guilds.fetch('804222694488932362');
+    const logs = await guild.fetchAuditLogs({
+        user: client.user as Discord.ClientUser,
+        type: 'MEMBER_ROLE_UPDATE',
+    });
+    logs.entries.forEach(async entry => {
+        if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 5) {
+            const member = guild.member((entry.target as Discord.User).id);
+            if (member?.roles.cache.has('804508975503638558')) {
+                await member.roles.remove('804508975503638558');
+            }
+        }
+    });
 }
