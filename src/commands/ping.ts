@@ -8,8 +8,8 @@ export default async function ping(message: Discord.Message): Promise<void> {
 
     if (
         await cooldown(message, '.gg ping', {
-            default: 2 * 1000,
-            donator: 0.5 * 1000,
+            default: 5 * 1000,
+            donator: 2 * 1000,
         })
     ) {
         return;

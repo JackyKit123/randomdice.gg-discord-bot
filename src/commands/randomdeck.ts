@@ -9,8 +9,8 @@ export default async function RandomDeck(
 
     if (
         await cooldown(message, '.gg randomdeck', {
-            default: 5 * 1000,
-            donator: 1 * 1000,
+            default: 8 * 1000,
+            donator: 2 * 1000,
         })
     ) {
         return;
