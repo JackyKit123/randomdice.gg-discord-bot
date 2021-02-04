@@ -101,12 +101,12 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
-        await report(message);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
+            await report(message);
             await lock(message);
             await lfg(message);
             await eventPing(message);
