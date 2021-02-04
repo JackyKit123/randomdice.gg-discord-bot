@@ -42,8 +42,6 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
         }
     }
 
-    updateTime();
-    updateMember();
     const now = new Date();
     const seconds = now.getUTCSeconds();
     await wait(1000 * 60 - seconds);
