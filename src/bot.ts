@@ -28,6 +28,7 @@ import validateCrewAds from './community discord/checkCrewAds';
 import infoVC from './community discord/infoVC';
 import eventPing from './community discord/eventping';
 import lock from './community discord/lock';
+import report from './community discord/report';
 import lfg from './community discord/lfg';
 import custom, {
     purgeRolesOnReboot,
@@ -100,6 +101,7 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
+        await report(message);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
