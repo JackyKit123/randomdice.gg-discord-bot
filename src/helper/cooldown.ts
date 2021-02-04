@@ -40,7 +40,7 @@ export default async function Cooldown(
             minute > 0 ? `${minute}m ` : ''
         }${seconds > 0 || tenthseconds > 0 ? seconds : ''}${
             tenthseconds > 0 ? `.${tenthseconds}` : ''
-        }${seconds > 0 && tenthseconds > 0 ? 's' : ''}`;
+        }${seconds > 0 || tenthseconds > 0 ? 's' : ''}`.trim();
     };
 
     if (
