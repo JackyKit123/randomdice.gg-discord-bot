@@ -84,9 +84,6 @@ export default async function custom(
         await sentMessage.edit(`${target.toString()}...🌝`);
         await wait(500);
         await Promise.all([
-            sentMessage.edit(
-                `${target.toString()}...You have been mooned! <a:Taxi:780350572212781086>`
-            ),
             target.setNickname(
                 originalName.length >= 30
                     ? `${originalName.slice(0, 29)}…${randomMoonEmoji}`
@@ -94,6 +91,9 @@ export default async function custom(
             ),
             target.roles.add('804508975503638558'),
         ]);
+        await sentMessage.edit(
+            `${target.toString()}...You have been mooned! <a:Taxi:780350572212781086>`
+        );
         await wait(1000 * 60 * 5);
         try {
             if (target.roles.cache.has('804508975503638558')) {
