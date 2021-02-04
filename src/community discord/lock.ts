@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import { promisify } from 'util';
 import cooldown from '../helper/cooldown';
+import parseMsIntoReadableText from '../helper/parseMS';
 
 const wait = promisify(setTimeout);
 
@@ -40,19 +41,6 @@ export default async function lockUnlock(
             (second + minute * 60 + hour * 60 * 60 + day * 60 * 60 * 24) * 1000;
     }
 
-    const parseMsIntoReadableText = (ms: number): string => {
-        const d = Math.floor(ms / (1000 * 60 * 60 * 24));
-        const h = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-        const tenthseconds = Math.floor((ms % 1000) / 100);
-
-        return `${d > 0 ? `${d}d ` : ''}${h > 0 ? `${h}h ` : ''}${
-            m > 0 ? `${m}m ` : ''
-        }${seconds > 0 || tenthseconds > 0 ? seconds : ''}${
-            tenthseconds > 0 ? `.${tenthseconds}` : ''
-        }${seconds > 0 || tenthseconds > 0 ? 's' : ''}`.trim();
-    };
     const target = guild.channels.cache.get(
         anotherChannelArg?.[1] || anotherChannelArg?.[2] || channel.id
     ) as Discord.TextChannel;
