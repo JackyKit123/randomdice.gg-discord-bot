@@ -391,7 +391,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                                 })
                             );
                             await channel.send(
-                                `Added ${position} application and it's opened for application.`
+                                `Edited ${position} application.`
                             );
                         }
                         if (collection.emoji.name === '❌') {
