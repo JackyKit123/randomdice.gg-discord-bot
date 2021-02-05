@@ -124,7 +124,7 @@ export async function purgeRolesOnReboot(
         type: 'MEMBER_ROLE_UPDATE',
     });
     logs.entries.forEach(async entry => {
-        if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 5) {
+        if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 7) {
             const member = guild.member((entry.target as Discord.User).id);
             if (member?.roles.cache.has('804508975503638558')) {
                 await member.roles.remove('804508975503638558');
