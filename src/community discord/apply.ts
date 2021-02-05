@@ -6,15 +6,6 @@ import cooldown from '../helper/cooldown';
 export default async function Apply(message: Discord.Message): Promise<void> {
     const { member, channel, guild, content, deletable } = message;
 
-    if (
-        await cooldown(message, '!apply', {
-            default: 1000 * 60 * 10,
-            donator: 1000 * 60 * 10,
-        })
-    ) {
-        return;
-    }
-
     if (!member || !guild) {
         return;
     }
@@ -22,6 +13,14 @@ export default async function Apply(message: Discord.Message): Promise<void> {
     const [command, ...args] = content.split(' ');
 
     if (command !== '!apply') {
+        return;
+    }
+    if (
+        await cooldown(message, '!apply', {
+            default: 1000 * 60 * 10,
+            donator: 1000 * 60 * 10,
+        })
+    ) {
         return;
     }
     try {
@@ -209,15 +208,6 @@ export async function fetchApps(client: Discord.Client): Promise<void> {
 export async function configApps(message: Discord.Message): Promise<void> {
     const { member, guild, content, channel } = message;
 
-    if (
-        await cooldown(message, '!application', {
-            default: 5 * 1000,
-            donator: 5 * 1000,
-        })
-    ) {
-        return;
-    }
-
     const [command, subcommand, ...args] = content.split(' ');
     const [position, arg] = args
         ?.join(' ')
@@ -228,6 +218,15 @@ export async function configApps(message: Discord.Message): Promise<void> {
     const existingApplications = cache['discord_bot/community/applications'];
 
     if (!member || !guild || command !== '!application') {
+        return;
+    }
+
+    if (
+        await cooldown(message, '!application', {
+            default: 5 * 1000,
+            donator: 5 * 1000,
+        })
+    ) {
         return;
     }
 
