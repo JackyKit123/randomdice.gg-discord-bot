@@ -14,18 +14,17 @@ export default async function custom(
         return;
     }
 
-    if (
-        await cooldown(message, '!moon', {
-            default: 10 * 1000,
-            donator: 10 * 1000,
-        })
-    ) {
-        return;
-    }
-
     const [command, arg] = content.split(' ');
 
     if (command === '!moon' && author.id === '722951439567290458') {
+        if (
+            await cooldown(message, '!moon', {
+                default: 10 * 1000,
+                donator: 10 * 1000,
+            })
+        ) {
+            return;
+        }
         const target = guild.members.cache.find(
             m =>
                 m.user.id === arg ||
