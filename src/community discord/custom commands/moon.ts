@@ -1,5 +1,6 @@
 import * as Discord from 'discord.js';
 import { promisify } from 'util';
+import cooldown from '../../helper/cooldown';
 
 const wait = promisify(setTimeout);
 
@@ -10,6 +11,15 @@ export default async function custom(
     const { content, author, guild, channel } = message;
 
     if (!guild) {
+        return;
+    }
+
+    if (
+        await cooldown(message, '!moon', {
+            default: 10 * 1000,
+            donator: 10 * 1000,
+        })
+    ) {
         return;
     }
 

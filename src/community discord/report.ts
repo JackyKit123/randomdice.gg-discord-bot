@@ -4,6 +4,15 @@ import parseMsIntoReadableText from '../helper/parseMS';
 
 async function closeReport(message: Discord.Message): Promise<void> {
     const { member, channel, guild, content } = message;
+
+    if (
+        await cooldown(message, '!closereport', {
+            default: 10 * 1000,
+            donator: 10 * 1000,
+        })
+    ) {
+        return;
+    }
     if (!guild || !member) {
         return;
     }
