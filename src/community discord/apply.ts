@@ -75,7 +75,7 @@ export default async function Apply(message: Discord.Message): Promise<void> {
             member.user.displayAvatarURL({ dynamic: true })
         )
         .setFooter(
-            'React to ✅ when finished, react to ❌ to cross to cancel your application.'
+            'React to ✅ when finished, react to ❌ to cancel your application.'
         )
         .setTimestamp();
     application.questions.forEach((question, i) => {
