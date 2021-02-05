@@ -102,12 +102,12 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
-        await apply(message);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
+            await apply(message);
             await report(message);
             await lock(message);
             await lfg(message);
@@ -306,11 +306,13 @@ client.on('guildCreate', guild => guildCreateHandler(client, guild));
 
 client.on('messageReactionAdd', async (reaction, user) => {
     const { guild } = reaction.message;
-    if (user.bot) {
-        return;
-    }
+
     try {
-        if (process.env.NODE_ENV === 'production') {
+        if (
+            !user.bot &&
+            process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            process.env.NODE_ENV === 'production'
+        ) {
             await closeApplication(
                 reaction,
                 user,
