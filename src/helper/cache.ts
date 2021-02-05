@@ -122,6 +122,12 @@ export interface Users {
     };
 }
 
+export interface CommunityDiscordApplication {
+    position: string;
+    isOpen: boolean;
+    questions: string[];
+}
+
 interface CacheObject {
     decks_guide: DeckGuide[];
     dice: Dice[];
@@ -131,6 +137,7 @@ interface CacheObject {
     'discord_bot/registry': Registry;
     'discord_bot/help': Help[];
     'discord_bot/dev_help': Help[];
+    'discord_bot/community/applications': CommunityDiscordApplication[];
     'wiki/boss': Boss[];
     'wiki/tips': Tip[];
     'wiki/battlefield': Battlefield[];
@@ -150,6 +157,7 @@ const cacheData = {
     'discord_bot/registry': {} as Registry,
     'discord_bot/help': [] as Help[],
     'discord_bot/dev_help': [] as Help[],
+    'discord_bot/community/applications': [] as CommunityDiscordApplication[],
     'wiki/boss': [] as Boss[],
     'wiki/tips': [] as Tip[],
     'wiki/battlefield': [] as Battlefield[],

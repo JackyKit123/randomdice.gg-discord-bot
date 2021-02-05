@@ -26,6 +26,7 @@ import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
 import infoVC from './community discord/infoVC';
+import apply, { closeApplication } from './community discord/apply';
 import eventPing from './community discord/eventping';
 import lock from './community discord/lock';
 import report from './community discord/report';
@@ -101,6 +102,7 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
+        await apply(message);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
@@ -301,6 +303,36 @@ client.on('message', async function messageHandler(message) {
 });
 
 client.on('guildCreate', guild => guildCreateHandler(client, guild));
+
+client.on('messageReactionAdd', async (reaction, user) => {
+    const { guild } = reaction.message;
+    if (user.bot) {
+        return;
+    }
+    try {
+        if (process.env.NODE_ENV === 'production') {
+            await closeApplication(
+                reaction,
+                user,
+                (client.user as Discord.ClientUser).id
+            );
+        }
+    } catch (err) {
+        try {
+            await logMessage(
+                client,
+                `Oops, something went wrong in ${
+                    guild ? `server ${guild.name}` : `DM with <@${user.id}>`
+                } : ${
+                    err.stack || err.message || err
+                }\n when handling message reaction.`
+            );
+        } catch (criticalError) {
+            // eslint-disable-next-line no-console
+            console.error(criticalError);
+        }
+    }
+});
 
 client.login(process.env.BOT_TOKEN);
 
