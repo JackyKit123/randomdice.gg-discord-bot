@@ -26,7 +26,11 @@ import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
 import infoVC from './community discord/infoVC';
-import apply, { closeApplication, fetchApps } from './community discord/apply';
+import apply, {
+    closeApplication,
+    fetchApps,
+    configApps,
+} from './community discord/apply';
 import eventPing from './community discord/eventping';
 import lock from './community discord/lock';
 import report from './community discord/report';
@@ -106,6 +110,7 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
+        await configApps(message);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
