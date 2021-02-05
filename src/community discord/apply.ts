@@ -175,3 +175,22 @@ export async function closeApplication(
         }
     }
 }
+
+export async function fetchApps(client: Discord.Client): Promise<void> {
+    const guild = await client.guilds.fetch(
+        process.env.COMMUNITY_SERVER_ID as string
+    );
+    const applications = guild.channels.cache.get('807183574645735474');
+    if (applications?.type === 'category') {
+        (applications as Discord.CategoryChannel).children.forEach(
+            async child => {
+                if (child.type === 'text') {
+                    await (child as Discord.TextChannel).messages.fetch(
+                        { limit: 100 },
+                        true
+                    );
+                }
+            }
+        );
+    }
+}

@@ -70,7 +70,11 @@ client.on('ready', async () => {
     await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
-    await Promise.all([infoVC(client), purgeRolesOnReboot(client)]);
+    await Promise.all([
+        infoVC(client),
+        purgeRolesOnReboot(client),
+        fetchApps(client),
+    ]);
 });
 
 client.on('message', async function messageHandler(message) {
