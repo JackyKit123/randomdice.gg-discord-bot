@@ -120,14 +120,16 @@ client.on('message', async function messageHandler(message) {
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            await apply(message);
-            await report(message);
-            await lock(message);
-            await lfg(message);
-            await eventPing(message);
-            await chatRevivePing(message);
-            await validateCrewAds(message);
-            await custom(client, message);
+            await Promise.all([
+                apply(message),
+                report(message),
+                lock(message),
+                lfg(message),
+                eventPing(message),
+                chatRevivePing(message),
+                validateCrewAds(message),
+                custom(client, message),
+            ]);
         }
 
         if (
