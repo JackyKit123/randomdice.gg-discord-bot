@@ -17,6 +17,7 @@ import guildCreateHandler from './helper/guildCreateHandler';
 import logMessage from './dev-commands/logMessage';
 import fetchInvites from './dev-commands/fetchInvites';
 import setEmoji from './dev-commands/updateEmoji';
+import reboot from './dev-commands/reboot';
 import statistic from './dev-commands/stat';
 import devHelp from './dev-commands/help';
 import sendContact from './commands/sendContact';
@@ -161,6 +162,9 @@ client.on('message', async function messageHandler(message) {
                     return;
                 case 'stat':
                     await statistic(client, channel);
+                    return;
+                case 'reboot':
+                    await reboot(message);
                     return;
                 case 'version':
                     await version(client, message);
