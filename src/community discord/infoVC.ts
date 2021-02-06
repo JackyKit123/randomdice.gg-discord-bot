@@ -26,7 +26,9 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     }
 
     async function updateMember(): Promise<void> {
-        guild = client.guilds.cache.get('804222694488932362') as Discord.Guild;
+        guild = (await client.guilds.fetch(
+            '804222694488932362'
+        )) as Discord.Guild;
         const channel = guild.channels.cache.get('804370301818765322');
         if (!channel) {
             return;
