@@ -4,7 +4,7 @@ import { promisify } from 'util';
 const wait = promisify(setTimeout);
 
 export default async function infoVC(client: Discord.Client): Promise<void> {
-    const guild = await client.guilds.fetch('804222694488932362');
+    let guild = await client.guilds.fetch('804222694488932362');
 
     async function updateTime(): Promise<void> {
         const channel = guild.channels.cache.get('806658300220407819');
@@ -26,14 +26,14 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     }
 
     async function updateMember(): Promise<void> {
-        const g = await client.guilds.fetch('804222694488932362');
+        guild = client.guilds.cache.get('804222694488932362') as Discord.Guild;
         const channel = guild.channels.cache.get('804370301818765322');
         if (!channel) {
             return;
         }
         try {
             await channel.setName(
-                `Members: ${g.memberCount}`,
+                `Members: ${guild.memberCount}`,
                 'update member count'
             );
         } catch {
