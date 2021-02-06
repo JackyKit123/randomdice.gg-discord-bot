@@ -7,8 +7,9 @@ export default async function chatRevivePing(
     if (channel.id !== '804222694488932364') {
         return;
     }
-    try {
-        await channel.awaitMessages(
+
+    channel
+        .awaitMessages(
             (msg: Discord.Message) =>
                 !msg.author.bot && msg.channel.id === channel.id,
             {
@@ -16,12 +17,12 @@ export default async function chatRevivePing(
                 time: 1000 * 60 * 10,
                 errors: ['time'],
             }
+        )
+        .catch(async () =>
+            channel.send(
+                '<@&807578981003689984> come and revive this dead chat.'
+            )
         );
-    } catch {
-        await channel.send(
-            '<@&807578981003689984> come and revive this dead chat.'
-        );
-    }
 }
 
 export async function fetchGeneralOnBoot(
