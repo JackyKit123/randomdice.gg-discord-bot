@@ -32,7 +32,9 @@ import apply, {
     configApps,
 } from './community discord/apply';
 import eventPing from './community discord/eventping';
-import chatRevivePing from './community discord/chatrevivePing';
+import chatRevivePing, {
+    fetchGeneralOnBoot,
+} from './community discord/chatrevivePing';
 import lock from './community discord/lock';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
@@ -79,6 +81,7 @@ client.on('ready', async () => {
         infoVC(client),
         purgeRolesOnReboot(client),
         fetchApps(client),
+        fetchGeneralOnBoot(client),
     ]);
 });
 
