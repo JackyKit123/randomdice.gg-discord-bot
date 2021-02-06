@@ -5,7 +5,6 @@ const wait = promisify(setTimeout);
 
 export default async function infoVC(client: Discord.Client): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
-    let memberCount = 0;
 
     async function updateTime(): Promise<void> {
         const channel = guild.channels.cache.get('806658300220407819');
@@ -31,11 +30,7 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
         if (!channel) {
             return;
         }
-        if (memberCount === guild.memberCount) {
-            return;
-        }
         try {
-            memberCount = guild.memberCount;
             await channel.setName(`Members: ${guild.memberCount}`);
         } catch {
             //
@@ -45,6 +40,8 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     const now = new Date();
     const seconds = now.getUTCSeconds();
     await wait(1000 * 60 - seconds);
-    setInterval(updateTime, 1000 * 60 * 5);
-    setInterval(updateMember, 1000 * 60 * 5);
+    setInterval(() => {
+        updateTime();
+        updateMember();
+    }, 1000 * 60 * 5);
 }
