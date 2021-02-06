@@ -26,13 +26,14 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
     }
 
     async function updateMember(): Promise<void> {
+        const g = await client.guilds.fetch('804222694488932362');
         const channel = guild.channels.cache.get('804370301818765322');
         if (!channel) {
             return;
         }
         try {
             await channel.setName(
-                `Members: ${guild.memberCount}`,
+                `Members: ${g.memberCount}`,
                 'update member count'
             );
         } catch {

@@ -13,6 +13,7 @@ export default async function eventPing(
         !guild ||
         !(
             member?.roles.cache.has('804223928427216926') ||
+            member?.roles.cache.has('807219483311603722') ||
             member?.roles.cache.has('805000661133295616') ||
             member?.hasPermission('MENTION_EVERYONE')
         )

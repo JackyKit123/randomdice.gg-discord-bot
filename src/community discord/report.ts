@@ -17,9 +17,11 @@ async function closeReport(message: Discord.Message): Promise<void> {
         return;
     }
     const modRoleId = '804223928427216926';
+    const tModRoleId = '807219483311603722';
     if (
         !(
             member.roles.cache.has(modRoleId) ||
+            member.roles.cache.has(tModRoleId) ||
             (channel as Discord.TextChannel)
                 .permissionsFor(member)
                 ?.has('MANAGE_CHANNELS')
@@ -259,6 +261,7 @@ export default async function report(message: Discord.Message): Promise<void> {
     const logChannel = guild.channels.cache.get('806812461302022145');
     const supportCategory = guild.channels.cache.get('804230480475848754');
     const modRole = guild.roles.cache.get('804223928427216926');
+    const tModRole = guild.roles.cache.get('807219483311603722');
     const { everyone } = guild.roles;
     if (logChannel?.type === 'text') {
         await (logChannel as Discord.TextChannel).send(
@@ -283,11 +286,15 @@ export default async function report(message: Discord.Message): Promise<void> {
                     id: modRole as Discord.Role,
                     allow: ['VIEW_CHANNEL', 'MANAGE_MESSAGES'],
                 },
+                {
+                    id: tModRole as Discord.Role,
+                    allow: ['VIEW_CHANNEL', 'MANAGE_MESSAGES'],
+                },
             ],
         }
     );
     const initMessage = await reportRoom.send(
-        `${author.toString()}, please wait patiently for our <@&804223928427216926> team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
+        `${author.toString()}, please wait patiently for our ${modRole} ${tModRole} team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
         embed
     );
     await initMessage.pin();
