@@ -19,7 +19,7 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
             String(minutes).length === 1 ? `0${minutes}` : minutes
         }${hour >= 12 ? 'PM' : 'AM'}`;
         try {
-            await channel.setName(`🕒 UTC ${timeString}`);
+            await channel.setName(`🕒 UTC ${timeString}`, 'update utc time');
         } catch (err) {
             //
         }
@@ -31,17 +31,21 @@ export default async function infoVC(client: Discord.Client): Promise<void> {
             return;
         }
         try {
-            await channel.setName(`Members: ${guild.memberCount}`);
+            await channel.setName(
+                `Members: ${guild.memberCount}`,
+                'update member count'
+            );
         } catch {
             //
         }
     }
 
-    const now = new Date();
-    const seconds = now.getUTCSeconds();
-    await wait(1000 * 60 - seconds);
-    setInterval(() => {
-        updateTime();
-        updateMember();
+    await Promise.all([
+        updateTime(),
+        updateMember(),
+        wait((59 - new Date().getUTCSeconds()) * 1000),
+    ]);
+    setInterval(async () => {
+        await Promise.all([updateTime(), updateMember()]);
     }, 1000 * 60 * 5);
 }
