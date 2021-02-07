@@ -69,6 +69,8 @@ export default async function lotto(
         .split(' ')
         .map(word => word.trim());
 
+    if (!member || !guild || command?.toLowerCase() !== '!lottery') return;
+
     if (channel.id !== '807229757049012266') {
         await channel.send(
             'You can only use this command in <#807229757049012266>'
@@ -84,8 +86,6 @@ export default async function lotto(
     ) {
         return;
     }
-
-    if (!member || !guild || command?.toLowerCase() !== '!lottery') return;
 
     const ref = database.ref('discord_bot/community/lottery');
     const lottery = cache['discord_bot/community/lottery'];
