@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import { promisify } from 'util';
 import cooldown from '../helper/cooldown';
-import parseMsIntoReadableText from '../helper/parseMS';
+import parseMsIntoReadableText, { parseStringIntoMs } from '../helper/parseMS';
 
 const wait = promisify(setTimeout);
 
@@ -26,20 +26,9 @@ export default async function lockUnlock(
     }
 
     const channelRegex = /^(?:<#(\d{18})>|(\d{18}))$/;
-    const timerRegex = /^(?:(\d*)d)?(?:(\d*)h)?(?:(\d*)m)?(?:(\d*)s)?$/;
     const anotherChannelArg = args?.[0]?.match(channelRegex);
-    const timerArg =
-        args?.[0]?.match(timerRegex) || args?.[1]?.match(timerRegex);
-
-    let [day, hour, minute, second] = [0, 0, 0, 0];
-    let timer = 0;
-    if (timerArg) {
-        [, day, hour, minute, second] = Array.from(timerArg).map(
-            arg => Number(arg) || 0
-        );
-        timer =
-            (second + minute * 60 + hour * 60 * 60 + day * 60 * 60 * 24) * 1000;
-    }
+    const timer =
+        parseStringIntoMs(args?.[0]) ?? parseStringIntoMs(args?.[1]) ?? 0;
 
     const target = guild.channels.cache.get(
         anotherChannelArg?.[1] || anotherChannelArg?.[2] || channel.id
@@ -102,7 +91,6 @@ export default async function lockUnlock(
             } else {
                 lock();
                 await wait(timer);
-                timer = 0;
                 unlock();
             }
             return;
@@ -121,7 +109,6 @@ export default async function lockUnlock(
             } else {
                 unlock();
                 await wait(timer);
-                timer = 0;
                 lock();
             }
             return;
