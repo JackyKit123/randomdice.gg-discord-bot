@@ -42,3 +42,27 @@ export default function parseMsIntoReadableText(
 
     return `${yearString}${monthString}${weekString}${dayString}${hourString}${minuteString}${secondString}`.trim();
 }
+
+export function parseStringIntoMs(str: string): number | null {
+    const regex = /(?:(\d+)y)?(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/i;
+    const [, y, w, d, h, m, s] = Array.from(
+        str?.match(regex) || Array(6).fill(undefined)
+    ) as (string | undefined)[];
+
+    if (
+        [y, w, d, h, m, s].every(
+            timeString => typeof timeString === 'undefined'
+        )
+    ) {
+        return null;
+    }
+
+    return (
+        (Number(s) || 0) * 1000 +
+        (Number(m) || 0) * 1000 * 60 +
+        (Number(h) || 0) * 1000 * 60 * 60 +
+        (Number(d) || 0) * 1000 * 60 * 60 * 24 +
+        (Number(w) || 0) * 1000 * 60 * 60 * 24 * 7 +
+        (Number(y) || 0) * 1000 * 60 * 60 * 24 * 365
+    );
+}

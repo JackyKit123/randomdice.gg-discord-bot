@@ -128,6 +128,16 @@ export interface CommunityDiscordApplication {
     questions: string[];
 }
 
+export interface Lottery {
+    ticketCost: number;
+    maxEntries: number;
+    endTimestamp: number;
+    hostId: number;
+    tickets: {
+        [ticketNumber: number]: string;
+    };
+}
+
 interface CacheObject {
     decks_guide: DeckGuide[];
     dice: Dice[];
@@ -138,6 +148,7 @@ interface CacheObject {
     'discord_bot/help': Help[];
     'discord_bot/dev_help': Help[];
     'discord_bot/community/applications': CommunityDiscordApplication[];
+    'discord_bot/community/lottery': Lottery;
     'wiki/boss': Boss[];
     'wiki/tips': Tip[];
     'wiki/battlefield': Battlefield[];
@@ -158,6 +169,13 @@ const cacheData = {
     'discord_bot/help': [] as Help[],
     'discord_bot/dev_help': [] as Help[],
     'discord_bot/community/applications': [] as CommunityDiscordApplication[],
+    'discord_bot/community/lottery': {
+        ticketCost: 0,
+        maxEntries: 0,
+        endTimestamp: NaN,
+        hostId: 0,
+        tickets: {},
+    } as Lottery,
     'wiki/boss': [] as Boss[],
     'wiki/tips': [] as Tip[],
     'wiki/battlefield': [] as Battlefield[],

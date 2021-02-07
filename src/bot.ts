@@ -26,6 +26,7 @@ import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
+import lottery, { setTimerOnBoot } from './community discord/lotto';
 import infoVC from './community discord/infoVC';
 import apply, {
     closeApplication,
@@ -79,6 +80,7 @@ client.on('ready', async () => {
     // eslint-disable-next-line no-console
     console.log(bootMessage);
     await Promise.all([
+        setTimerOnBoot(client, database),
         infoVC(client),
         purgeRolesOnReboot(client),
         fetchApps(client),
@@ -115,13 +117,14 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
-        await configApps(message);
+        await lottery(message, database);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
             await Promise.all([
+                configApps(message),
                 apply(message),
                 report(message),
                 lock(message),
