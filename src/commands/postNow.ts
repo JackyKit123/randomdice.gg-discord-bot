@@ -197,7 +197,7 @@ export async function postGuide(
                                 // eslint-disable-next-line no-param-reassign
                                 embed.fields[
                                     existFieldIndex
-                                ].value = `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`;
+                                ].value = `[Click Here to navigate back to the top.](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id})`;
                             } else {
                                 embed
                                     .addField('‎', '‎')
@@ -210,9 +210,12 @@ export async function postGuide(
                         const { id } = await channel.send(embed);
                         return {
                             isTitle: !!embed.title,
-                            isUpdated: (embed.title || '').startsWith(
-                                updateListener?.snapshot.val().name
-                            ),
+                            isUpdated:
+                                (embed.title?.replace(
+                                    / \((?:PvP|Co-op|Crew)\)$)/,
+                                    ''
+                                ) || '') ===
+                                updateListener?.snapshot.val().name,
                             id,
                         };
                     })
@@ -265,7 +268,8 @@ export async function postGuide(
                             : `Last Updated: \`.gg postnow guide\` is executed. Manual requested refresh.`
                     )
                     .setDescription(
-                        updateListener
+                        updateListener?.event === 'added' ||
+                            updateListener?.event === 'updated'
                             ? `Navigate to the update guide by [clicking here](https://discordapp.com/channels/${
                                   channel.guild.id
                               }/${channel.id}/${
