@@ -2,6 +2,7 @@ import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import { parseStringIntoMs } from '../helper/parseMS';
 import cache, { Lottery } from '../helper/cache';
+import cooldown from '../helper/cooldown';
 
 async function announceWinner(
     database: firebase.database.Database,
@@ -67,6 +68,22 @@ export default async function lotto(
     const [command, subcommand, arg, arg2, arg3] = content
         .split(' ')
         .map(word => word.trim());
+
+    if (channel.id !== '807229757049012266') {
+        await channel.send(
+            'You can only use this command in <#807229757049012266>'
+        );
+        return;
+    }
+
+    if (
+        await cooldown(message, '!lottery', {
+            default: 60 * 1000,
+            donator: 60 * 1000,
+        })
+    ) {
+        return;
+    }
 
     if (!member || !guild || command?.toLowerCase() !== '!lottery') return;
 
