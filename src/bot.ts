@@ -26,7 +26,7 @@ import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
-import lottery, { setTimerOnBoot } from './community discord/lotto';
+import raffle, { setTimerOnBoot } from './community discord/raffle';
 import infoVC from './community discord/infoVC';
 import apply, {
     closeApplication,
@@ -117,13 +117,13 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
+        await raffle(message, database);
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
             await Promise.all([
-                lottery(message, database),
                 configApps(message),
                 apply(message),
                 report(message),
