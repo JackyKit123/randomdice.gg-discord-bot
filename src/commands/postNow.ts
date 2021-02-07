@@ -70,7 +70,7 @@ export async function postGuide(
             const fields = [
                 ...parsedData.diceList.map((list, i, decks) => ({
                     // eslint-disable-next-line no-nested-ternary
-                    name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '⠀',
+                    name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '‎',
                     value: list.join(' '),
                 })),
                 ...(parsedData.battlefield > -1 && parsedData.type !== 'Crew'
@@ -89,7 +89,7 @@ export async function postGuide(
                 ...parsedData.paragraph
                     .filter(p => p !== '')
                     .map((p, i) => ({
-                        name: i === 0 ? 'Guide' : '⠀',
+                        name: i === 0 ? 'Guide' : '‎',
                         value: p,
                     })),
             ];
@@ -183,9 +183,7 @@ export async function postGuide(
                         'https://randomdice.gg/'
                     )
                     .setDescription(
-                        member
-                            ? `Requested By: ${member.toString()}`
-                            : undefined
+                        member ? `Requested By: ${member.toString()}` : ''
                     )
             );
             const messageIds = (
@@ -193,9 +191,7 @@ export async function postGuide(
                     embeds.map(async embed => {
                         if (embed.footer) {
                             const existFieldIndex = embed.fields.findIndex(
-                                field =>
-                                    field.name ===
-                                    'Finished Reading? Click Here to navigate back to the top'
+                                field => field.name === 'Finished Reading?'
                             );
                             if (existFieldIndex > -1) {
                                 // eslint-disable-next-line no-param-reassign
@@ -204,18 +200,24 @@ export async function postGuide(
                                 ].value = `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`;
                             } else {
                                 embed
-                                    .addField('⠀', '⠀')
+                                    .addField('‎', '‎')
                                     .addField(
-                                        'Finished Reading? Click Here to navigate back to the top',
-                                        `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`
+                                        'Finished Reading?',
+                                        `[Click Here to navigate back to the top.](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id})`
                                     );
                             }
                         }
                         const { id } = await channel.send(embed);
-                        return embed.title ? id : undefined;
+                        return {
+                            isTitle: !!embed.title,
+                            isUpdated: (embed.title || '').startsWith(
+                                updateListener?.snapshot.val().name
+                            ),
+                            id,
+                        };
                     })
                 )
-            ).filter(id => id !== undefined);
+            ).filter(msg => msg.isTitle);
             const guideListEmbed = new Discord.MessageEmbed()
                 .setColor('#6ba4a5')
                 .setTimestamp()
@@ -238,7 +240,7 @@ export async function postGuide(
                         )
                         .map((guide, i) => ({
                             name: `${guide.name} (${guide.type})`,
-                            value: `https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${messageIds[i]}`,
+                            value: `[Click here to jump](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${messageIds[i]?.id})`,
                         }))
                 );
             if (statusMessage.editable) {
@@ -263,7 +265,14 @@ export async function postGuide(
                             : `Last Updated: \`.gg postnow guide\` is executed. Manual requested refresh.`
                     )
                     .setDescription(
-                        `Navigate to the list of guides for quick navigation by clicking here. https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}`
+                        updateListener
+                            ? `Navigate to the update guide by [clicking here](https://discordapp.com/channels/${
+                                  channel.guild.id
+                              }/${channel.id}/${
+                                  messageIds.find(id => id.isUpdated)?.id ||
+                                  statusMessage.id
+                              }).`
+                            : `Navigate to the list of guides for quick navigation by [clicking here](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}).`
                     )
                     .setAuthor(
                         'Random Dice Community Website',
@@ -319,7 +328,7 @@ export async function postNews(
         .replace(/{img}((?!.*{img}).*){\/img}/g, '')
         .split('\n\n')
         .map((value, i) => ({
-            name: i === 0 ? 'News' : '⠀',
+            name: i === 0 ? 'News' : '‎',
             value,
         }));
     let embed = new Discord.MessageEmbed()
@@ -411,6 +420,13 @@ export default async function postNow(
     if (!member.hasPermission('MANAGE_MESSAGES')) {
         await channel.send(
             'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`'
+        );
+        return;
+    }
+
+    if (!type) {
+        await channel.send(
+            `Usage of the command: \`\`\`.gg postnow <guide|news>\`\`\``
         );
         return;
     }
