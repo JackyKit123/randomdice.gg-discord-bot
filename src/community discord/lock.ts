@@ -27,7 +27,7 @@ export default async function lockUnlock(
 
     const channelRegex = /^(?:<#(\d{18})>|(\d{18}))$/;
     const anotherChannelArg = args?.[0]?.match(channelRegex);
-    const timer =
+    let timer =
         parseStringIntoMs(args?.[0]) ?? parseStringIntoMs(args?.[1]) ?? 0;
 
     const target = guild.channels.cache.get(
@@ -91,6 +91,7 @@ export default async function lockUnlock(
             } else {
                 lock();
                 await wait(timer);
+                timer = 0;
                 unlock();
             }
             return;
@@ -109,6 +110,7 @@ export default async function lockUnlock(
             } else {
                 unlock();
                 await wait(timer);
+                timer = 0;
                 lock();
             }
             return;
