@@ -123,7 +123,7 @@ client.on('message', async function messageHandler(message) {
             process.env.NODE_ENV === 'production'
         ) {
             await Promise.all([
-                lottery(message, database);
+                lottery(message, database),
                 configApps(message),
                 apply(message),
                 report(message),
