@@ -69,7 +69,7 @@ export default async function deckGuide(
         const embedFields = [
             ...emojiDiceList.map((list, i, decks) => ({
                 // eslint-disable-next-line no-nested-ternary
-                name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '⠀',
+                name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '‎',
                 value: list.join(' '),
             })),
             ...(battlefield > -1 && type !== 'Crew'
@@ -85,7 +85,7 @@ export default async function deckGuide(
             ...paragraph
                 .filter(p => p !== '')
                 .map((p, i) => ({
-                    name: i === 0 ? 'Guide' : '⠀',
+                    name: i === 0 ? 'Guide' : '‎',
                     value: p,
                 })),
         ];

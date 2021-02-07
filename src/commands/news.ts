@@ -26,7 +26,7 @@ export default async function sendNews(
         .replace(/{img}((?!.*{img}).*){\/img}/g, '')
         .split('\n\n')
         .map((value, i) => ({
-            name: i === 0 ? 'News' : '⠀',
+            name: i === 0 ? 'News' : '‎',
             value,
         }));
     let embed = new Discord.MessageEmbed()

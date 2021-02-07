@@ -34,7 +34,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
             .split('\n')
             .filter(p => p !== '')
             .map((desc, i) => ({
-                name: i === 0 ? 'Boss Mechanic' : '⠀',
+                name: i === 0 ? 'Boss Mechanic' : '‎',
                 value: desc,
             }));
 
