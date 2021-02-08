@@ -162,6 +162,12 @@ export default async function lotto(
                 const logChannel = guild.channels.cache.get(
                     '806033486850162708'
                 );
+                if (!Number.isInteger(currEntry) || currEntry < 1) {
+                    await channel.send(
+                        'Tickets entered should be a positive integer'
+                    );
+                    return;
+                }
                 if (logChannel?.type !== 'text') {
                     await channel.send(
                         'Error, <#806033486850162708> does not exist.'
