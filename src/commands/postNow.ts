@@ -212,7 +212,7 @@ export async function postGuide(
                             isTitle: !!embed.title,
                             isUpdated:
                                 (embed.title?.replace(
-                                    / \((?:PvP|Co-op|Crew)\)$)/,
+                                    / \((?:PvP|Co-op|Crew)\)$/,
                                     ''
                                 ) || '') ===
                                 updateListener?.snapshot.val().name,
