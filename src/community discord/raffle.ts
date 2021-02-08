@@ -114,6 +114,13 @@ export default async function lotto(
                             } EXP** (${currentEntries.length} Tickets)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
+                        .addField(
+                            'Your Entries',
+                            Object.entries(raffle.tickets)
+                                .filter(([, uid]) => uid === author.id)
+                                .map(([ticketNumber]) => `**${ticketNumber}**`)
+                                .join(', ') || '*none*'
+                        )
                         .setFooter('Raffle ends at')
                         .setTimestamp(raffle.endTimestamp)
                 );
