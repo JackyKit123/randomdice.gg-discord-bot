@@ -19,17 +19,20 @@ async function announceWinner(
     setTimeout(async () => {
         raffle = (await ref.once('value')).val() as Raffle;
 
-        const entries = Object.entries(raffle.tickets ?? {}).filter(
+        const entries = Object.entries(raffle.tickets ?? {});
+        const validEntries = entries.filter(
             ([, user]) => user !== 'invalidated'
         );
         const uniqueEntry = {} as { [uid: string]: string };
-        entries.forEach(([, uid]) => {
+        validEntries.forEach(([, uid]) => {
             if (!uniqueEntry[uid]) {
                 uniqueEntry[uid] = uid;
             }
         });
-        const winner =
-            raffle.tickets[Math.ceil(Math.random() * entries.length)];
+        let winner = raffle.tickets[Math.ceil(entries.length * Math.random())];
+        while (winner === 'invalidated') {
+            winner = raffle.tickets[Math.ceil(entries.length * Math.random())];
+        }
         await (channel as Discord.TextChannel).send(
             '<@&804544088153391124>',
             new Discord.MessageEmbed()
@@ -40,14 +43,14 @@ async function announceWinner(
                 .setColor('#800080')
                 .setTitle('XP Raffle')
                 .setDescription(
-                    entries.length === 0
+                    validEntries.length === 0
                         ? 'Raffle ended but no one entered the raffle.'
                         : `Raffle ended, **${
                               Object.keys(uniqueEntry).length
                           }** people entered the raffle with a total of **${
-                              entries.length
+                              validEntries.length
                           }** tickets. <@${winner}> walked away grabbing **${
-                              entries.length * raffle.ticketCost
+                              validEntries.length * raffle.ticketCost
                           } exp**. Congratulations!`
                 )
                 .setFooter('A new round of raffle will be hosted very soon')
