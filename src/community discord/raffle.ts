@@ -94,7 +94,8 @@ export default async function lotto(
 
     const ref = database.ref('discord_bot/community/raffle');
     const raffle = cache['discord_bot/community/raffle'];
-    const currentEntries = Object.entries(raffle.tickets ?? {}).filter(
+    const currentEntries = Object.entries(raffle.tickets ?? {});
+    const validEntries = currentEntries.filter(
         ([, user]) => user !== 'invalidated'
     );
     const raffleTimeLeft = raffle.endTimestamp - Date.now();
@@ -117,8 +118,8 @@ export default async function lotto(
                         .addField(
                             'Current Prize Pool',
                             `**${
-                                currentEntries.length * raffle.ticketCost
-                            } EXP** (${currentEntries.length} Tickets)`
+                                validEntries.length * raffle.ticketCost
+                            } EXP** (${validEntries.length} Tickets)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
@@ -171,7 +172,7 @@ export default async function lotto(
                 }
                 const currEntry = Number(arg) || 1;
                 const prevEntry =
-                    currentEntries.filter(([, uid]) => uid === author.id)
+                    validEntries.filter(([, uid]) => uid === author.id)
                         ?.length || 0;
                 const logChannel = guild.channels.cache.get(
                     '806033486850162708'
@@ -344,7 +345,7 @@ export default async function lotto(
                 return;
             }
             raffle.tickets = raffle.tickets || {};
-            const userEntry = currentEntries
+            const userEntry = validEntries
                 .filter(([, user]) => user === target.id)
                 .map(([tickets]) => tickets);
             if (!userEntry.length) {
