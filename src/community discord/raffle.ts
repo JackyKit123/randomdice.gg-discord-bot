@@ -19,7 +19,9 @@ async function announceWinner(
     setTimeout(async () => {
         raffle = (await ref.once('value')).val() as Raffle;
 
-        const entries = Object.entries(raffle.tickets ?? {});
+        const entries = Object.entries(raffle.tickets ?? {}).filter(
+            ([, user]) => user !== 'invalidated'
+        );
         const uniqueEntry = {} as { [uid: string]: string };
         entries.forEach(([, uid]) => {
             if (!uniqueEntry[uid]) {
@@ -89,7 +91,9 @@ export default async function lotto(
 
     const ref = database.ref('discord_bot/community/raffle');
     const raffle = cache['discord_bot/community/raffle'];
-    const currentEntries = Object.entries(raffle.tickets ?? {});
+    const currentEntries = Object.entries(raffle.tickets ?? {}).filter(
+        ([, user]) => user !== 'invalidated'
+    );
     const raffleTimeLeft = raffle.endTimestamp - Date.now();
 
     switch (subcommand?.toLowerCase()) {
@@ -284,6 +288,76 @@ export default async function lotto(
             );
             return;
         }
+        case 'invalidate': {
+            if (raffleTimeLeft < 0) {
+                await channel.send(
+                    new Discord.MessageEmbed()
+                        .setAuthor(
+                            'randomdice.gg Server',
+                            guild.iconURL({ dynamic: true }) ?? undefined
+                        )
+                        .setColor('#ff0000')
+                        .setTitle('XP Raffle')
+                        .setDescription(
+                            'There is no active raffle at the moment'
+                        )
+                );
+                return;
+            }
+            if (
+                !(
+                    member.roles.cache.has('805772165394858015') ||
+                    member.roles.cache.has('805000661133295616') ||
+                    member.hasPermission('ADMINISTRATOR')
+                )
+            ) {
+                await channel.send(
+                    'You do not have permission to invalidate entries.'
+                );
+                return;
+            }
+            const target = guild.members.cache.find(
+                m =>
+                    m.user.id === arg ||
+                    m.user.username === arg.toLowerCase() ||
+                    m.nickname === arg.toLowerCase() ||
+                    `${m.user.username}#${m.user.discriminator}` ===
+                        arg.toLowerCase() ||
+                    m.user.id === arg?.match(/<@!?(\d{18})>/)?.[1]
+            );
+            if (!target) {
+                await channel.send(
+                    new Discord.MessageEmbed()
+                        .setTitle('Command Parse Error')
+                        .setColor('#ff0000')
+                        .setDescription('usage of the command')
+                        .addField(
+                            'Invalidating Entries (requires Event Manager)',
+                            '`!raffle invalidate <member>`' +
+                                '\n' +
+                                'Example```!raffle invalidate @JackyKit#0333\n!raffle invalidate JackyKit\n!raffle invalidate 195174308052467712```'
+                        )
+                );
+                return;
+            }
+            raffle.tickets = raffle.tickets || {};
+            const userEntry = currentEntries
+                .filter(([, user]) => user === target.id)
+                .map(([tickets]) => tickets);
+            if (!userEntry.length) {
+                await channel.send(`${target} has no entry to invalidate`);
+            }
+            userEntry.forEach(entryTicket => {
+                raffle.tickets[Number(entryTicket)] = 'invalidated';
+            });
+            await ref.child('tickets').set(raffle.tickets);
+            await channel.send(
+                `Invalidated Tickets ${userEntry
+                    .map(entry => `**${entry}**`)
+                    .join(', ')} from ${target}`
+            );
+            return;
+        }
         case 'cancel':
             if (raffleTimeLeft < 0) {
                 await channel.send(
@@ -356,6 +430,12 @@ export default async function lotto(
                         '`!raffle host <time> <ticketCost> [maxEntries default=1]`' +
                             '\n' +
                             'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
+                    )
+                    .addField(
+                        'Invalidating Entries (requires Event Manager)',
+                        '`!raffle invalidate <member>`' +
+                            '\n' +
+                            'Example```!raffle invalidate @JackyKit#0333\n!raffle invalidate JackyKit\n!raffle invalidate 195174308052467712```'
                     )
                     .addField(
                         'Canceling a raffle (requires Event Manager)',
