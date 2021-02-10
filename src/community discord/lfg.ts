@@ -24,6 +24,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             member.roles.cache.has('804513079319592980') ||
             member.roles.cache.has('804496339794264085') ||
             member.roles.cache.has('805817742081916988') ||
+            member.roles.cache.has('806896328255733780') ||
             member.hasPermission('MENTION_EVERYONE')
         )
     ) {
@@ -32,7 +33,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
                 .setTitle('Unable to cast command')
                 .setDescription(
                     'You need one of the following roles to use this command.\n' +
-                        '<@&804513079319592980> <@&804496339794264085> <@&805817742081916988>'
+                        '<@&804513079319592980> <@&804496339794264085> <@&805817742081916988> <@&806896328255733780>'
                 )
         );
         return;
