@@ -17,6 +17,18 @@ export default async function validateCrewAds(
         limit: 6,
     });
 
+    if (messages.filter(msg => msg.author.id === author.id).size > 1) {
+        await message.delete({
+            reason: 'Spam Detection: Member has not waited 5 messages',
+        });
+        const warningMessage = await channel.send(
+            `${author.toString()} I have delete your message. Reason: **Spam Detection: You have posted a crew ad in the last 5 messages**`
+        );
+        await wait(5000);
+        await warningMessage.delete();
+        return;
+    }
+
     if (
         messages.filter(
             msg =>
