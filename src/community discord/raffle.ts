@@ -29,10 +29,9 @@ async function announceWinner(
                 uniqueEntry[uid] = uid;
             }
         });
-        let winner = raffle.tickets[Math.ceil(entries.length * Math.random())];
-        while (winner === 'invalidated') {
-            winner = raffle.tickets[Math.ceil(entries.length * Math.random())];
-        }
+        const [winningTicket, winner] = validEntries[
+            Math.ceil(validEntries.length * Math.random())
+        ];
         await (channel as Discord.TextChannel).send(
             '<@&804544088153391124>',
             new Discord.MessageEmbed()
@@ -49,7 +48,7 @@ async function announceWinner(
                               Object.keys(uniqueEntry).length
                           }** people entered the raffle with a total of **${
                               validEntries.length
-                          }** tickets. <@${winner}> walked away grabbing **${
+                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing **${
                               validEntries.length * raffle.ticketCost
                           } exp**. Congratulations!`
                 )
