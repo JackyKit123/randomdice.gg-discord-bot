@@ -14,7 +14,7 @@ export default async function validateCrewAds(
     }
 
     const messages = await channel.messages.fetch({
-        limit: 5,
+        limit: 6,
     });
 
     if (
