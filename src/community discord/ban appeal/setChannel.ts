@@ -69,6 +69,13 @@ export default async function setChannel(
             throw err;
         }
     };
+    if (deletable) {
+        try {
+            await message.delete();
+        } finally {
+            //
+        }
+    }
     if (content === '!request') {
         const banObject = await fetchBan();
         if (banObject === 'Unknown Ban') {
@@ -114,13 +121,7 @@ export default async function setChannel(
                 )
                 .setTimestamp()
         );
-        if (deletable) {
-            await message.delete();
-        }
         return;
     }
     await kick(2);
-    if (deletable) {
-        await message.delete();
-    }
 }
