@@ -77,10 +77,10 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             rawMessage = '@here';
             break;
         default:
-            rawMessage = '';
             await channel.send(
                 'You can only use this command in <#804224162364129320>, <#806589220000890930>, <#806589343354847302>, <#806589489068638239>'
             );
+            return;
     }
 
     if (args.join(' ')) {
