@@ -49,28 +49,35 @@ export default async function LFG(message: Discord.Message): Promise<void> {
         .setColor(member.displayHexColor)
         .addField('Ping / DM', member);
 
+    let rawMessage: string;
+
     switch (channel.id) {
         case '804224162364129320': // #lfg
             embed = embed.setTitle(
                 `${member.displayName} is looking for a Random Dice partner!`
             );
+            rawMessage = '<@&805757095232274442>';
             break;
         case '806589220000890930': // # bloons-td-6
             embed = embed.setTitle(
                 `${member.displayName} is organizing a Bloons TD 6 game!`
             );
+            rawMessage = '@here';
             break;
         case '806589343354847302': // #among-us-lfg
             embed = embed.setTitle(
                 `${member.displayName} is organizing an Among Us game!`
             );
+            rawMessage = '@here';
             break;
         case '806589489068638239': // #catag-lfg
             embed = embed.setTitle(
                 `${member.displayName} is organizing a Catan game!`
             );
+            rawMessage = '@here';
             break;
         default:
+            rawMessage = '';
             await channel.send(
                 'You can only use this command in <#804224162364129320>, <#806589220000890930>, <#806589343354847302>, <#806589489068638239>'
             );
@@ -85,10 +92,5 @@ export default async function LFG(message: Discord.Message): Promise<void> {
     }
 
     if (deletable) await message.delete();
-    await channel.send(
-        channel.id === '804224162364129320'
-            ? '<@&805757095232274442>'
-            : '@here',
-        embed
-    );
+    await channel.send(rawMessage, embed);
 }
