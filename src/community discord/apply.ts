@@ -335,7 +335,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     )
                 ) {
                     await channel.send(
-                        `Application for ${position} does not exist, use \`addd\` to add a new application.`
+                        `Application for ${position} does not exist, use \`add\` to add a new application.`
                     );
                     return;
                 }
