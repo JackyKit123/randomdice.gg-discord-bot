@@ -258,7 +258,10 @@ client.on('message', async function messageHandler(message) {
                 );
                 if (bestMatch.rating >= 0.5) {
                     const sentMessage = await channel.send(
-                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`? You may answer \`Yes\` to execute the new command.`
+                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`? You may answer \`Yes\` to execute the new command.`,
+                        {
+                            disableMentions: 'all',
+                        }
                     );
                     let answeredYes = false;
                     try {
@@ -301,7 +304,10 @@ client.on('message', async function messageHandler(message) {
                     }
                 } else {
                     await channel.send(
-                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``
+                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``,
+                        {
+                            disableMentions: 'all',
+                        }
                     );
                 }
             }
