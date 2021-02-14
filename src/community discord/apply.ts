@@ -35,7 +35,8 @@ export default async function Apply(message: Discord.Message): Promise<void> {
         .setColor('#ff0000')
         .addField(
             'Opened Applications',
-            openedApplications.map(app => `\`${app.position}\``).join('\n')
+            openedApplications.map(app => `\`${app.position}\``).join('\n') ||
+                '*none*'
         )
         .setFooter(`Opened Application Count: ${openedApplications.length}`);
     if (!args.join(' ')) {
