@@ -84,8 +84,8 @@ export default async function lotto(
 
     if (
         await cooldown(message, '!raffle', {
-            default: 60 * 1000,
-            donator: 60 * 1000,
+            default: 10 * 1000,
+            donator: 10 * 1000,
         })
     ) {
         return;
