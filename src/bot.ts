@@ -118,14 +118,13 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
-        if (process.env.COMMUNITY_SERVER_ID === guild?.id) await snipe(message);
-
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
             await Promise.all([
+                snipe(message),
                 raffle(message, database),
                 configApps(message),
                 apply(message),
@@ -371,7 +370,6 @@ client.on('messageReactionAdd', async (reaction, user) => {
 client.on('messageDelete', async message => {
     const { guild, author } = message;
     try {
-        await snipeListener('delete', message);
         if (
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
@@ -403,7 +401,6 @@ client.on('messageDelete', async message => {
 client.on('messageUpdate', async message => {
     const { guild, author } = message;
     try {
-        await snipeListener('edit', message);
         if (
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
