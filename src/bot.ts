@@ -43,12 +43,13 @@ import lfg from './community discord/lfg';
 import custom, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
+import snipe, { snipeListener } from './community discord/snipe';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
-const client = new Discord.Client();
+const client = new Discord.Client({ partials: ['MESSAGE'] });
 admin.initializeApp({
     credential: admin.credential.cert({
         projectId: 'random-dice-web',
@@ -116,6 +117,8 @@ client.on('message', async function messageHandler(message) {
             }
             return;
         }
+
+        if (process.env.COMMUNITY_SERVER_ID === guild?.id) await snipe(message);
 
         if (
             !author.bot &&
@@ -357,6 +360,70 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 } : ${
                     err.stack || err.message || err
                 }\n when handling message reaction.`
+            );
+        } catch (criticalError) {
+            // eslint-disable-next-line no-console
+            console.error(criticalError);
+        }
+    }
+});
+
+client.on('messageDelete', async message => {
+    const { guild, author } = message;
+    try {
+        await snipeListener('delete', message);
+        if (
+            process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            process.env.NODE_ENV === 'production'
+        ) {
+            await snipeListener('delete', message);
+        }
+    } catch (err) {
+        try {
+            await logMessage(
+                client,
+                `Oops, something went wrong ${
+                    // eslint-disable-next-line no-nested-ternary
+                    guild
+                        ? `in server ${guild.name}`
+                        : author
+                        ? `in DM with <@${author.id}>`
+                        : ''
+                } : ${
+                    err.stack || err.message || err
+                }\n when listening to message deletion.`
+            );
+        } catch (criticalError) {
+            // eslint-disable-next-line no-console
+            console.error(criticalError);
+        }
+    }
+});
+
+client.on('messageUpdate', async message => {
+    const { guild, author } = message;
+    try {
+        await snipeListener('edit', message);
+        if (
+            process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            process.env.NODE_ENV === 'production'
+        ) {
+            await snipeListener('edit', message);
+        }
+    } catch (err) {
+        try {
+            await logMessage(
+                client,
+                `Oops, something went wrong ${
+                    // eslint-disable-next-line no-nested-ternary
+                    guild
+                        ? `in server ${guild.name}`
+                        : author
+                        ? `in DM with <@${author.id}>`
+                        : ''
+                } : ${
+                    err.stack || err.message || err
+                }\n when listening to message edition.`
             );
         } catch (criticalError) {
             // eslint-disable-next-line no-console
