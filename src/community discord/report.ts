@@ -139,6 +139,7 @@ async function closeReport(message: Discord.Message): Promise<void> {
     }
     const { everyone } = guild.roles;
     const modRole = guild.roles.cache.get(modRoleId);
+    const tModRole = guild.roles.cache.get(tModRoleId);
     await (channel as Discord.TextChannel).overwritePermissions(
         [
             {
@@ -147,6 +148,10 @@ async function closeReport(message: Discord.Message): Promise<void> {
             },
             {
                 id: modRole as Discord.Role,
+                allow: ['VIEW_CHANNEL'],
+            },
+            {
+                id: tModRole as Discord.Role,
                 allow: ['VIEW_CHANNEL'],
             },
         ],
