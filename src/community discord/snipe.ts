@@ -32,11 +32,11 @@ export async function snipeListener(
 
 export default async function snipe(message: Discord.Message): Promise<void> {
     const { member, channel, content, author } = message;
-    const command = content.toLowerCase().trim();
+    const [command] = content.split(' ');
 
     if (
         !member ||
-        (await cooldown(message, '!snipe', {
+        (await cooldown(message, command, {
             default: 10 * 1000,
             donator: 2 * 1000,
         }))
@@ -55,7 +55,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     ) {
         await channel.send(
             new Discord.MessageEmbed()
-                .setTitle(`You cannot use ${command.toLowerCase()}`)
+                .setTitle(`You cannot use ${command?.toLowerCase()}`)
                 .setDescription(
                     'You need one of the following roles to use this command.\n' +
                         '<@&804513079319592980> <@&804496339794264085> <@&805817742081916988> <@&806896328255733780> <@&805388604791586826>'
@@ -65,7 +65,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     }
 
     const sniped = snipeStore[
-        command.toLowerCase() === '!snipe' ? 'snipe' : 'editsnipe'
+        command?.toLowerCase().replace('!', '') as 'snipe' | 'editsnipe'
     ].get(channel.id);
 
     if (!sniped) {
