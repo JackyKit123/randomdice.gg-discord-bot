@@ -73,17 +73,20 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         return;
     }
 
-    await channel.send(
-        new Discord.MessageEmbed()
-            .setAuthor(
-                `${sniped.author.username}#${sniped.author.discriminator}`,
-                sniped.author.displayAvatarURL({
-                    dynamic: true,
-                })
-            )
-            .setColor(sniped.member?.displayHexColor || '#ff0000')
-            .setDescription(sniped.content)
-            .setFooter(`Sniped by: ${author.username}#${author.discriminator}`)
-            .setTimestamp()
-    );
+    let embed = new Discord.MessageEmbed()
+        .setAuthor(
+            `${sniped.author.username}#${sniped.author.discriminator}`,
+            sniped.author.displayAvatarURL({
+                dynamic: true,
+            })
+        )
+        .setDescription(sniped.content)
+        .setFooter(`Sniped by: ${author.username}#${author.discriminator}`)
+        .setTimestamp();
+
+    if (sniped.member && sniped.member.displayHexColor !== '#000000') {
+        embed = embed.setColor(sniped.member?.displayHexColor);
+    }
+
+    await channel.send(embed);
 }
