@@ -35,17 +35,11 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     const command = content.toLowerCase().trim();
 
     if (
-        !(command.startsWith('!snipe') || command.startsWith('!editsnipe')) ||
-        !member
-    ) {
-        return;
-    }
-
-    if (
-        await cooldown(message, '!snipe', {
+        !member ||
+        (await cooldown(message, '!snipe', {
             default: 10 * 1000,
             donator: 2 * 1000,
-        })
+        }))
     ) {
         return;
     }

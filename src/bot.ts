@@ -40,7 +40,7 @@ import chatRevivePing, {
 import lock from './community discord/lock';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
-import custom, {
+import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
 import snipe, { snipeListener } from './community discord/snipe';
@@ -123,19 +123,42 @@ client.on('message', async function messageHandler(message) {
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            await Promise.all([
-                snipe(message),
-                raffle(message, database),
-                configApps(message),
-                apply(message),
-                report(message),
-                lock(message),
-                lfg(message),
-                eventPing(message),
-                chatRevivePing(message),
-                validateCrewAds(message),
-                custom(client, message),
-            ]);
+            switch (suffix?.toLowerCase()) {
+                case '!snipe':
+                case '!editsnipe':
+                    await snipe(message);
+                    break;
+                case '!raffle':
+                    await raffle(message, database);
+                    break;
+                case '!application':
+                    await configApps(message);
+                    break;
+                case '!apply':
+                    await apply(message);
+                    break;
+                case '!report':
+                    await report(message);
+                    break;
+                case '!lock':
+                case '!unlock':
+                    await lock(message);
+                    break;
+                case '!lfg':
+                    await lfg(message);
+                    break;
+                case '!eventping':
+                    await eventPing(message);
+                    break;
+                case '!moon':
+                    await moon(client, message);
+                    break;
+                default:
+                    await Promise.all([
+                        chatRevivePing(message),
+                        validateCrewAds(message),
+                    ]);
+            }
         }
 
         if (

@@ -69,11 +69,11 @@ export default async function lotto(
 ): Promise<void> {
     const { channel, member, content, guild, author } = message;
 
-    const [command, subcommand, arg, arg2, arg3] = content
+    const [, subcommand, arg, arg2, arg3] = content
         .split(' ')
         .map(word => word.trim());
 
-    if (!member || !guild || command?.toLowerCase() !== '!raffle') return;
+    if (!member || !guild) return;
 
     if (channel.id !== '807229757049012266') {
         await channel.send(

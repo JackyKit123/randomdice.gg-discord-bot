@@ -10,11 +10,8 @@ export default async function Apply(message: Discord.Message): Promise<void> {
         return;
     }
 
-    const [command, ...args] = content.split(' ');
+    const [, ...args] = content.split(' ');
 
-    if (command !== '!apply') {
-        return;
-    }
     if (
         await cooldown(message, '!apply', {
             default: 1000 * 60 * 10,
@@ -209,7 +206,7 @@ export async function fetchApps(client: Discord.Client): Promise<void> {
 export async function configApps(message: Discord.Message): Promise<void> {
     const { member, guild, content, channel } = message;
 
-    const [command, subcommand, ...args] = content.split(' ');
+    const [, subcommand, ...args] = content.split(' ');
     const [position, arg] = args
         ?.join(' ')
         .split('|')
@@ -218,7 +215,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
     const ref = database.ref('discord_bot/community/applications');
     const existingApplications = cache['discord_bot/community/applications'];
 
-    if (!member || !guild || command !== '!application') {
+    if (!member || !guild) {
         return;
     }
 

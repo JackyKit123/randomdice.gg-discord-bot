@@ -6,10 +6,9 @@ export default async function eventPing(
 ): Promise<void> {
     const { member, channel, content, deletable, guild, reply } = message;
 
-    const [command, ...args] = content.split(' ');
+    const msg = content.replace(/!lfg ?/i, '');
 
     if (
-        command.toLowerCase() !== '!eventping' ||
         !guild ||
         !(
             member?.roles.cache.has('804223928427216926') ||
@@ -42,13 +41,11 @@ export default async function eventPing(
         .setFooter('Enjoy the event!')
         .addField('Hosted by', member);
 
-    if (args) {
-        if (args.join(' ').length > 1024) {
-            await reply('Event detail cannot be longer than 1024 characters.');
-            return;
-        }
-        embed = embed.addField('Event Detail', args.join(' '));
+    if (msg.length > 1024) {
+        await reply('Event detail cannot be longer than 1024 characters.');
+        return;
     }
+    embed = embed.addField('Event Detail', msg);
 
     if (deletable) await message.delete();
     await channel.send('<@&804544088153391124>', embed);
