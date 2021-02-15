@@ -77,9 +77,15 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             );
             rawMessage = '@here';
             break;
+        case '810879645196222495': // #skribbl-io-lfg
+            embed = embed.setTitle(
+                `${member.displayName} is organizing a Skribbl.io game!`
+            );
+            rawMessage = '@here';
+            break;
         default:
             await channel.send(
-                'You can only use this command in <#804224162364129320>, <#806589220000890930>, <#806589343354847302>, <#806589489068638239>'
+                'You can only use this command in dedicated lfg channels.'
             );
             return;
     }
