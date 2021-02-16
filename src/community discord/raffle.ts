@@ -128,7 +128,7 @@ export default async function lotto(
                                 raffle.ticketCost * raffle.maxEntries * 0.1
                             } EXP** (${validEntries.length} Tickets) + **${
                                 raffle.ticketCost * raffle.maxEntries * 0.1
-                            }** (Base Pool)`
+                            } EXP** (Base Pool)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
