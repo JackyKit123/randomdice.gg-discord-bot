@@ -6,7 +6,7 @@ export default async function eventPing(
 ): Promise<void> {
     const { member, channel, content, deletable, guild, reply } = message;
 
-    const msg = content.replace(/!lfg ?/i, '');
+    const msg = content.replace(/!eventping ?/i, '');
 
     if (
         !guild ||
