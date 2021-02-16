@@ -267,8 +267,8 @@ export default async function lotto(
                 );
                 return;
             }
-            if (maxEntries < 0 || maxEntries > 50) {
-                await channel.send('Max entries should be between 0 - 50');
+            if (maxEntries < 0 || maxEntries > 100) {
+                await channel.send('Max entries should be between 0 - 100');
                 return;
             }
             if (time > 604800000) {
