@@ -116,13 +116,19 @@ export default async function lotto(
                             `**${raffle.ticketCost} xp per ticket** (${raffle.maxEntries} ticket(s) max)`
                         )
                         .addField(
+                            'Base Pool (10% of max entries)',
+                            `**${
+                                raffle.ticketCost * raffle.maxEntries * 0.1
+                            } EXP**`
+                        )
+                        .addField(
                             'Current Prize Pool',
                             `**${
                                 validEntries.length * raffle.ticketCost +
                                 raffle.ticketCost * raffle.maxEntries * 0.1
-                            } EXP** (${validEntries.length} Tickets) (${
+                            } EXP** (${validEntries.length} Tickets) + **${
                                 raffle.ticketCost * raffle.maxEntries * 0.1
-                            } Base Pool)`
+                            }** (Base Pool)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
@@ -290,7 +296,7 @@ export default async function lotto(
                         `**${ticketCost} xp per ticket** (${maxEntries} max)`
                     )
                     .addField(
-                        'Base Pool',
+                        'Base Pool (10% of max entries)',
                         `**${ticketCost * maxEntries * 0.1} EXP**`
                     )
                     .addField('Hosted by', `${author}`)
