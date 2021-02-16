@@ -49,7 +49,8 @@ async function announceWinner(
                           }** people entered the raffle with a total of **${
                               validEntries.length
                           }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing **${
-                              validEntries.length * raffle.ticketCost
+                              validEntries.length * raffle.ticketCost +
+                              raffle.maxEntries * raffle.ticketCost * 0.1
                           } exp**. Congratulations!`
                 )
                 .setFooter('A new round of raffle will be hosted very soon')
@@ -117,8 +118,11 @@ export default async function lotto(
                         .addField(
                             'Current Prize Pool',
                             `**${
-                                validEntries.length * raffle.ticketCost
-                            } EXP** (${validEntries.length} Tickets)`
+                                validEntries.length * raffle.ticketCost +
+                                raffle.ticketCost * raffle.maxEntries * 0.1
+                            } EXP** (${validEntries.length} Tickets) (${
+                                raffle.ticketCost * raffle.maxEntries * 0.1
+                            } Base Pool)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
@@ -284,6 +288,10 @@ export default async function lotto(
                     .addField(
                         'Ticket Entries',
                         `**${ticketCost} xp per ticket** (${maxEntries} max)`
+                    )
+                    .addField(
+                        'Base Pool',
+                        `**${ticketCost * maxEntries * 0.1} EXP**`
                     )
                     .addField('Hosted by', `${author}`)
                     .setFooter('Raffle ends at')
