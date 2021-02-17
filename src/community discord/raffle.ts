@@ -124,8 +124,7 @@ export default async function lotto(
                         .addField(
                             'Current Prize Pool',
                             `**${
-                                validEntries.length * raffle.ticketCost +
-                                raffle.ticketCost * raffle.maxEntries * 0.1
+                                validEntries.length * raffle.ticketCost
                             } EXP** (${validEntries.length} Tickets) + **${
                                 raffle.ticketCost * raffle.maxEntries * 0.1
                             } EXP** (Base Pool)`
