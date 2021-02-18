@@ -14,7 +14,7 @@ export default async function validate(
         !/^(?:[A-Z]|[a-z]|'|-|\?|\.|!|$|%|\(|\)|\/|\[|\])+$/i.test(content)
     ) {
         try {
-            message.delete();
+            await message.delete();
         } finally {
             // nothing
         }
