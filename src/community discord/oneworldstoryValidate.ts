@@ -10,7 +10,7 @@ export default async function validate(
     const [last2, last1] = channel.messages.cache.last(2);
 
     if (
-        last2.author?.id === last1.author?.id ||
+        last2?.author.id === last1?.author.id ||
         !/^(?:[A-Z]|[a-z]|'|-|\?|\.|!|$|%|\(|\)|\/|\[|\])+$/i.test(content)
     ) {
         try {
