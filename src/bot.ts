@@ -41,6 +41,7 @@ import lock from './community discord/lock';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
+import gtn from './community discord/gtn';
 import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
@@ -148,6 +149,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!lfg':
                     await lfg(message);
+                    break;
+                case '!gtn':
+                    await gtn(message);
                     break;
                 case '!eventping':
                     await eventPing(message);
