@@ -30,7 +30,7 @@ export default async function gtn(message: Discord.Message): Promise<void> {
     try {
         const awaitedMessage = await numberPrompt.channel.awaitMessages(
             (newMessage: Discord.Message) =>
-                !Number.isInteger(Number(newMessage.content)),
+                Number.isInteger(Number(newMessage.content)),
             { time: 20000, max: 1, errors: ['time'] }
         );
         const numberInMind = Number(awaitedMessage.first()?.content);
@@ -87,7 +87,7 @@ export default async function gtn(message: Discord.Message): Promise<void> {
         try {
             const awaitedMessage = await channel.awaitMessages(
                 (newMessage: Discord.Message) =>
-                    !Number.isInteger(Number(newMessage.content)) &&
+                    Number.isInteger(Number(newMessage.content)) &&
                     newMessage.author.id === currentParticipant.id,
                 { time: 20000, max: 1, errors: ['time'] }
             );
