@@ -40,6 +40,7 @@ import chatRevivePing, {
 import lock from './community discord/lock';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
+import validateOneWordStory from './community discord/oneworldstoryValidate';
 import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
@@ -158,6 +159,7 @@ client.on('message', async function messageHandler(message) {
                     await Promise.all([
                         chatRevivePing(message),
                         validateCrewAds(message),
+                        validateOneWordStory(message),
                     ]);
             }
         }
