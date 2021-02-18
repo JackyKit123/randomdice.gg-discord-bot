@@ -219,7 +219,15 @@ export default async function lotto(
                 await (logChannel as Discord.TextChannel).send(
                     `${author} entered the raffle with ${currEntry} ticket(s). Total exp deduction: ${
                         currEntry * raffle.ticketCost
-                    }`
+                    }`,
+                    new Discord.MessageEmbed()
+                        .setTitle('Copy the exp command')
+                        .setDescription(
+                            `\`?modifyexp remove ${Math.min(
+                                currEntry * raffle.ticketCost,
+                                9999
+                            )} ${author}\``
+                        )
                 );
                 await channel.send(
                     `You have entered the raffle with ${currEntry} ticket(s)${
