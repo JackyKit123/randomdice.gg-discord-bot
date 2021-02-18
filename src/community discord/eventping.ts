@@ -45,7 +45,9 @@ export default async function eventPing(
         await reply('Event detail cannot be longer than 1024 characters.');
         return;
     }
-    embed = embed.addField('Event Detail', msg);
+    if (msg) {
+        embed = embed.addField('Event Detail', msg);
+    }
 
     if (deletable) await message.delete();
     await channel.send('<@&804544088153391124>', embed);
