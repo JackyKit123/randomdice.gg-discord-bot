@@ -138,6 +138,7 @@ client.on('message', async function messageHandler(message) {
                     await apply(message);
                     break;
                 case '!report':
+                case '!closereport':
                     await report(message);
                     break;
                 case '!lock':
