@@ -44,12 +44,14 @@ export default async function gtn(message: Discord.Message): Promise<void> {
         }
         const numberInMind = Number(awaitedMessage.first()?.content);
         if (numberInMind > maxRange) {
+            numberToGuess.set(channel.id, -1);
             await author.send(
                 `**${numberInMind}** is larger than the max range ${maxRange} you specified.`
             );
             return;
         }
         if (numberInMind < 1) {
+            numberToGuess.set(channel.id, -1);
             await author.send('The number cannot be smaller than 1.');
             return;
         }
