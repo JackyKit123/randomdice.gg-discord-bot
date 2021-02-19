@@ -88,14 +88,17 @@ export default async function gtn(message: Discord.Message): Promise<void> {
 
     let i = 0;
     let afks = 0;
-
+    let smallGuess = 1;
+    let bigGuess = maxRange;
     while (numberToGuess.get(channel.id) || 0 > -1) {
         if (i === participants.length) {
             i = 0;
         }
         const currentParticipant = participants[i];
         /* eslint-disable no-await-in-loop */
-        await channel.send(`${currentParticipant}, guess the number!`);
+        await channel.send(
+            `${currentParticipant}, guess the number! Current: \`${smallGuess} - ${bigGuess}\``
+        );
         try {
             const awaitedMessage = await channel.awaitMessages(
                 (newMessage: Discord.Message) =>
@@ -106,10 +109,12 @@ export default async function gtn(message: Discord.Message): Promise<void> {
             afks = 0;
             const guess = Number(awaitedMessage.first()?.content);
             if (guess > (numberToGuess.get(channel.id) as number)) {
+                bigGuess = guess - 1;
                 await channel.send(
                     `**${guess}** is not the number, go smaller!`
                 );
             } else if (guess < (numberToGuess.get(channel.id) as number)) {
+                smallGuess = guess + 1;
                 await channel.send(
                     `**${guess}** is not the number, go bigger!`
                 );
