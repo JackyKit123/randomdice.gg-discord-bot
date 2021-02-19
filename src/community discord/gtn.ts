@@ -104,14 +104,16 @@ export default async function gtn(message: Discord.Message): Promise<void> {
             const awaitedMessage = await channel.awaitMessages(
                 (newMessage: Discord.Message) =>
                     Number.isInteger(Number(newMessage.content)) &&
-                    Number(newMessage.content) > smallGuess &&
-                    Number(newMessage.content) < bigGuess &&
                     newMessage.author.id === currentParticipant.id,
                 { time: 20000, max: 1, errors: ['time'] }
             );
             afks = 0;
             const guess = Number(awaitedMessage.first()?.content);
-            if (guess > (numberToGuess.get(channel.id) as number)) {
+            if (guess < smallGuess || guess > bigGuess) {
+                await channel.send(
+                    `**${guess}** is out of range. You failed this round.`
+                );
+            } else if (guess > (numberToGuess.get(channel.id) as number)) {
                 bigGuess = guess - 1;
                 await channel.send(
                     `**${guess}** is not the number, go smaller!`
@@ -123,7 +125,7 @@ export default async function gtn(message: Discord.Message): Promise<void> {
                 );
             } else {
                 await channel.send(
-                    `**${guess}** is the number, congratulations to ${currentParticipant}!`
+                    `**${guess}** is the number from ${author}, congratulations to ${currentParticipant}!`
                 );
                 numberToGuess.set(channel.id, -1);
                 return;
