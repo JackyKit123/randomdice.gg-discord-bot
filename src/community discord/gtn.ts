@@ -107,7 +107,7 @@ export default async function gtn(message: Discord.Message): Promise<void> {
             const guess = Number(awaitedMessage.first()?.content);
             if (guess > (numberToGuess.get(channel.id) as number)) {
                 await channel.send(
-                    `${currentParticipant}, **${guess}** is not the number, go smaller!`
+                    `**${guess}** is not the number, go smaller!`
                 );
             } else if (guess < (numberToGuess.get(channel.id) as number)) {
                 await channel.send(
