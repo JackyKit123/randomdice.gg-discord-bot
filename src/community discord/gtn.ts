@@ -67,6 +67,7 @@ export default async function gtn(message: Discord.Message): Promise<void> {
         .find(reaction => reaction.emoji.name === '✅')
         ?.users.cache.filter(user => user.id !== author.id && !user.bot)
         .array();
+    await message.reactions.removeAll();
 
     if (!participants?.length) {
         numberToGuess.set(channel.id, -1);
@@ -99,7 +100,7 @@ export default async function gtn(message: Discord.Message): Promise<void> {
                 );
             } else if (guess < (numberToGuess.get(channel.id) as number)) {
                 await channel.send(
-                    `${currentParticipant}, **${guess}** is not the number, go bigger!`
+                    `**${guess}** is not the number, go bigger!`
                 );
             } else {
                 await channel.send(
