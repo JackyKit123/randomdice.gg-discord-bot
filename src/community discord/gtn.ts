@@ -33,6 +33,12 @@ export default async function gtn(message: Discord.Message): Promise<void> {
                 Number.isInteger(Number(newMessage.content)),
             { time: 20000, max: 1, errors: ['time'] }
         );
+        if (numberToGuess.get(channel.id) !== -1) {
+            await author.send(
+                'Someone else has started a game, please wait for the next round.'
+            );
+            return;
+        }
         const numberInMind = Number(awaitedMessage.first()?.content);
         if (numberInMind > maxRange) {
             await author.send(
