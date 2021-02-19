@@ -100,9 +100,12 @@ export default async function gtn(message: Discord.Message): Promise<void> {
             `${currentParticipant}, guess the number! Current: \`${smallGuess} - ${bigGuess}\``
         );
         try {
+            /* eslint-disable no-loop-func */
             const awaitedMessage = await channel.awaitMessages(
                 (newMessage: Discord.Message) =>
                     Number.isInteger(Number(newMessage.content)) &&
+                    Number(newMessage.content) > smallGuess &&
+                    Number(newMessage.content) < bigGuess &&
                     newMessage.author.id === currentParticipant.id,
                 { time: 20000, max: 1, errors: ['time'] }
             );
