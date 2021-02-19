@@ -10,7 +10,10 @@ export default async function gtn(message: Discord.Message): Promise<void> {
 
     const maxRange = Number(content.split(' ')[1]);
 
-    if (numberToGuess.get(channel.id) && numberToGuess.get(channel.id) !== -1) {
+    if (
+        typeof numberToGuess.get(channel.id) !== 'undefined' &&
+        numberToGuess.get(channel.id) !== -1
+    ) {
         await channel.send(`There's a game already going on in this channel.`);
         return;
     }
@@ -33,7 +36,10 @@ export default async function gtn(message: Discord.Message): Promise<void> {
                 Number.isInteger(Number(newMessage.content)),
             { time: 20000, max: 1, errors: ['time'] }
         );
-        if (numberToGuess.get(channel.id) !== -1) {
+        if (
+            typeof numberToGuess.get(channel.id) !== 'undefined' &&
+            numberToGuess.get(channel.id) !== -1
+        ) {
             await author.send(
                 'Someone else has started a game, please wait for the next round.'
             );
