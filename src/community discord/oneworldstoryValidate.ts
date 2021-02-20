@@ -15,7 +15,7 @@ export default async function validate(
     ) {
         try {
             await message.delete();
-        } finally {
+        } catch {
             // nothing
         }
     }
