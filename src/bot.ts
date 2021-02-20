@@ -42,6 +42,7 @@ import report from './community discord/report';
 import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
 import gtn from './community discord/gtn';
+import welcomeReward from './community discord/welcomeReward';
 import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
@@ -120,6 +121,12 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
+        if (
+            process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            process.env.NODE_ENV === 'production'
+        ) {
+            welcomeReward(message);
+        }
         if (
             !author.bot &&
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
