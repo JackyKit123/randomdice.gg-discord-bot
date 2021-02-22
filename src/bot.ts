@@ -49,6 +49,7 @@ import currencyUpdate from './community discord/currency/update';
 import prestige from './community discord/currency/prestige';
 import share from './community discord/currency/share';
 import leaderboard from './community discord/currency/leaderboard';
+import drawDice from './community discord/currency/drawDice';
 import timed from './community discord/currency/timed';
 import moon, {
     purgeRolesOnReboot,
@@ -166,6 +167,10 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!eventping':
                     await eventPing(message);
+                    break;
+                case 'dd':
+                case '!drawDice':
+                    await drawDice(message);
                     break;
                 case '!bal':
                 case '!balance':
