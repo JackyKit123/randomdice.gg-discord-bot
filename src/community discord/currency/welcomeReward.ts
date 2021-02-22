@@ -1,11 +1,13 @@
 import * as Discord from 'discord.js';
-
-const timeoutStore = new Map<string, NodeJS.Timeout>();
+import * as firebase from 'firebase-admin';
+import getBalance from './balance';
 
 export default async function welcomeReward(
     message: Discord.Message
 ): Promise<void> {
     const { guild, embeds, channel } = message;
+    const app = firebase.app();
+    const database = app.database();
 
     if (!guild || channel.id !== '804235804506324992' /* #join-leave-log */)
         return;
@@ -21,19 +23,18 @@ export default async function welcomeReward(
         { time: 60 * 1000 }
     );
     const saidWelcome = [] as string[];
-    collector.on('collect', (collected: Discord.Message) => {
-        const { roles, id } = collected.member as Discord.GuildMember;
+    collector.on('collect', async (collected: Discord.Message) => {
+        const { id } = collected.member as Discord.GuildMember;
         if (saidWelcome.includes(id)) return;
         saidWelcome.push(id);
-        const memberTimeout = timeoutStore.get(id);
-        if (memberTimeout) clearTimeout(memberTimeout);
-        roles.add('812692808318189649', 'Welcome Reward');
-        timeoutStore.set(
-            id,
-            setTimeout(
-                () => roles.remove('812692808318189649', 'Welcome Reward ends'),
-                60 * 1000
-            )
+        const balance = await getBalance(
+            message,
+            'silence',
+            collected.member as Discord.GuildMember
         );
+        if (balance === false) return;
+        await database
+            .ref(`discord_bot/community/currency/${id}/balance`)
+            .set(balance + 100);
     });
 }
