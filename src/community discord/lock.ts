@@ -32,22 +32,35 @@ export default async function lockUnlock(
 
     const target = guild.channels.cache.get(
         anotherChannelArg?.[1] || anotherChannelArg?.[2] || channel.id
-    ) as Discord.TextChannel;
+    ) as Discord.GuildChannel;
 
     const { everyone } = guild.roles;
     async function lock(): Promise<void> {
-        if (
-            target.permissionsFor(everyone.id)?.serialize().SEND_MESSAGES ===
-            false
-        ) {
-            await channel.send(`${target} is already locked.`);
-            return;
-        }
+        if (target.type === 'voice') {
+            if (
+                target.permissionsFor(everyone.id)?.serialize().CONNECT ===
+                false
+            ) {
+                await channel.send(`${target} is already locked.`);
+                return;
+            }
 
-        target.updateOverwrite(everyone, {
-            SEND_MESSAGES: false,
-            CONNECT: false,
-        });
+            target.updateOverwrite(everyone, {
+                CONNECT: false,
+            });
+        } else if (target.type === 'text' || target.type === 'news') {
+            if (
+                target.permissionsFor(everyone.id)?.serialize()
+                    .SEND_MESSAGES === false
+            ) {
+                await channel.send(`${target} is already locked.`);
+                return;
+            }
+
+            target.updateOverwrite(everyone, {
+                SEND_MESSAGES: false,
+            });
+        }
         await channel.send(
             `Locked down ${target}${
                 timer > 0 ? ` for **${parseMsIntoReadableText(timer)}**` : ''
@@ -56,14 +69,25 @@ export default async function lockUnlock(
     }
 
     async function unlock(): Promise<void> {
-        if (target.permissionsFor(everyone.id)?.has('SEND_MESSAGES')) {
-            await channel.send(`${target} is already unlocked.`);
-            return;
+        if (target.type === 'voice') {
+            if (target.permissionsFor(everyone.id)?.has('CONNECT')) {
+                await channel.send(`${target} is already unlocked.`);
+                return;
+            }
+            target.updateOverwrite(everyone, {
+                CONNECT: null,
+            });
+        } else if (target.type === 'text' || target.type === 'news') {
+            if (target.permissionsFor(everyone.id)?.has('SEND_MESSAGES')) {
+                await channel.send(`${target} is already unlocked.`);
+                return;
+            }
+            target.updateOverwrite(everyone, {
+                SEND_MESSAGES: null,
+                CONNECT: null,
+            });
         }
-        target.updateOverwrite(everyone, {
-            SEND_MESSAGES: null,
-            CONNECT: null,
-        });
+
         await channel.send(
             `Unlocked channel ${target}${
                 timer > 0 ? ` for **${parseMsIntoReadableText(timer)}**` : ''
@@ -74,7 +98,9 @@ export default async function lockUnlock(
         (target.permissionsFor(member)?.has('MANAGE_ROLES') &&
             target.permissionOverwrites.some(
                 perm =>
-                    perm.allow.has('SEND_MESSAGES') &&
+                    perm.allow.has(
+                        target.type === 'voice' ? 'CONNECT' : 'SEND_MESSAGES'
+                    ) &&
                     (member.roles.cache.has(perm.id) || author.id === perm.id)
             )) ||
         member.permissions.has('ADMINISTRATOR')
