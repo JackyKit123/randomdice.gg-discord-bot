@@ -10,8 +10,8 @@ export default async function coinflip(
     const database = app.database();
     const numberFormat = new Intl.NumberFormat();
     if (
-        await cooldown(message, `!coinflip`, {
-            default: 3 * 1000,
+        await cooldown(message, 'coinflip', {
+            default: 4 * 1000,
             donator: 1 * 1000,
         })
     )
