@@ -46,6 +46,7 @@ export default async function lockUnlock(
 
         target.updateOverwrite(everyone, {
             SEND_MESSAGES: false,
+            CONNECT: false,
         });
         await channel.send(
             `Locked down ${target}${
@@ -61,6 +62,7 @@ export default async function lockUnlock(
         }
         target.updateOverwrite(everyone, {
             SEND_MESSAGES: null,
+            CONNECT: null,
         });
         await channel.send(
             `Unlocked channel ${target}${
