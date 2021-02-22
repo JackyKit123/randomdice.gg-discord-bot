@@ -169,7 +169,8 @@ client.on('message', async function messageHandler(message) {
                     await eventPing(message);
                     break;
                 case 'dd':
-                case '!drawDice':
+                case '!drawdice':
+                case '!dicedraw':
                     await drawDice(message);
                     break;
                 case '!bal':
