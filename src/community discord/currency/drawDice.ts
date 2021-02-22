@@ -16,7 +16,7 @@ export default async function drawDice(
     if (balance === false) return;
     if (
         await cooldown(message, `!drawdice`, {
-            default: 5 * 1000,
+            default: 3.14 * 1000,
             donator: 1 * 1000,
         })
     ) {
