@@ -2,7 +2,7 @@ import * as Discord from 'discord.js';
 import cache from './cache';
 import parseMsIntoReadableText from './parseMS';
 
-let commandCooldown = new Map<string, Map<string, number>>();
+const commandCooldown = new Map<string, Map<string, number>>();
 export default async function Cooldown(
     message: Discord.Message,
     command: string,
@@ -83,9 +83,6 @@ export default async function Cooldown(
         return true;
     }
 
-    commandCooldown = commandCooldown.set(
-        command,
-        commandCooldownList.set(author.id, now)
-    );
+    commandCooldown.set(command, commandCooldownList.set(author.id, now));
     return false;
 }
