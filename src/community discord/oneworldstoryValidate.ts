@@ -11,7 +11,7 @@ export default async function validate(
 
     if (
         last2?.author?.id === last1?.author?.id ||
-        !/^(?:[A-Z]|[a-z]|'|-|\?|\.|!|$|%|\(|\)|\/|\[|\])+$/i.test(content)
+        !/^(?:[A-Z]|[a-z]|'|-|\?|\.|!|$|%|\(|\)|\/|\[|\]|‘)+$/i.test(content)
     ) {
         try {
             await message.delete();
