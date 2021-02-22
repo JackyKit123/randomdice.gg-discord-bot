@@ -18,6 +18,14 @@ export default async function coinflip(
         return;
 
     const { channel, content, author, member } = message;
+
+    if (author.id === '285696350702796801') {
+        await channel.send(
+            'As per request, you are not allowed to use this command.'
+        );
+        return;
+    }
+
     if (!member) return;
     const balance = await getBalance(message, 'emit new member');
     if (balance === false) return;

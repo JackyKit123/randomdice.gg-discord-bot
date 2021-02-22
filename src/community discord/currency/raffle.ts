@@ -169,6 +169,13 @@ export default async function lotto(message: Discord.Message): Promise<void> {
             return;
         case 'join':
             {
+                if (author.id === '285696350702796801') {
+                    await channel.send(
+                        'As per request, you are not allowed to use this command.'
+                    );
+                    return;
+                }
+
                 if (raffleTimeLeft < 0) {
                     await channel.send(
                         new Discord.MessageEmbed()
