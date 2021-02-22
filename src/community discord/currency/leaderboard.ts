@@ -30,10 +30,11 @@ export default async function leaderboard(
         return;
     const currencyList = cache['discord_bot/community/currency'];
     const fields = Object.entries(currencyList)
-        .sort(
-            ([, profileA], [, profileB]) =>
-                (profileB.prestige - profileA.prestige) * 100000000000 +
-                (profileB.balance - profileA.balance)
+        .sort(([, profileA], [, profileB]) =>
+            typeof profileA.prestige !== 'undefined' &&
+            profileB.prestige !== profileA.prestige
+                ? (profileB.prestige || 0) - (profileA.prestige || 0)
+                : profileB.balance - profileA.balance
         )
         .map(([uid, profile], i) => ({
             name: `#${i + 1}`,
