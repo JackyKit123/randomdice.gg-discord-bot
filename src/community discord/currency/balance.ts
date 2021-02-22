@@ -55,7 +55,8 @@ export default async function balance(
             member;
     }
 
-    if (!Object.keys(cache['discord_bot/community/currency'])) return false;
+    if (!Object.keys(cache['discord_bot/community/currency']).length)
+        return false;
     const profile = cache['discord_bot/community/currency'][target.id];
 
     let prestigeLevel = 0;
