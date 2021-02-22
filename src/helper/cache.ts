@@ -138,6 +138,17 @@ export interface Raffle {
     };
 }
 
+export interface MemberCurrency {
+    [memberId: string]: {
+        balance: number;
+        prestige: number;
+        hourly: number;
+        daily: number;
+        weekly: number;
+        monthly: number;
+    };
+}
+
 interface CacheObject {
     decks_guide: DeckGuide[];
     dice: Dice[];
@@ -176,6 +187,7 @@ const cacheData = {
         hostId: 0,
         tickets: {},
     } as Raffle,
+    'discord_bot/community/currency': {} as MemberCurrency,
     'wiki/boss': [] as Boss[],
     'wiki/tips': [] as Tip[],
     'wiki/battlefield': [] as Battlefield[],

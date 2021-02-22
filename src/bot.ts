@@ -26,7 +26,7 @@ import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
-import raffle, { setTimerOnBoot } from './community discord/raffle';
+import raffle, { setTimerOnBoot } from './community discord/currency/raffle';
 import infoVC from './community discord/infoVC';
 import apply, {
     closeApplication,
@@ -43,6 +43,12 @@ import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
 import gtn from './community discord/gtn';
 import welcomeReward from './community discord/welcomeReward';
+import balance from './community discord/currency/balance';
+import coinflip from './community discord/currency/coinflip';
+import currencyUpdate from './community discord/currency/update';
+import prestige from './community discord/currency/prestige';
+import leaderboard from './community discord/currency/leaderboard';
+import timed from './community discord/currency/timed';
 import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
@@ -123,6 +129,43 @@ client.on('message', async function messageHandler(message) {
 
         if (
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            process.env.NODE_ENV === 'development'
+        ) {
+            switch (suffix?.toLowerCase()) {
+                case '!bal':
+                case '!balance':
+                    await balance(message, 'emit');
+                    break;
+                case '!coinflip':
+                case '!cf':
+                    await coinflip(message);
+                    break;
+                case '!richest':
+                case '!leaderboard':
+                case '!lb':
+                    await leaderboard(message);
+                    break;
+                case '!prestige':
+                    await prestige(message);
+                    break;
+                case '!raffle':
+                    await raffle(message);
+                    break;
+                case '!hourly':
+                case '!daily':
+                case '!weekly':
+                case '!monthly':
+                    await timed(message);
+                    break;
+                case '!currency':
+                    await currencyUpdate(message);
+                    break;
+                default:
+            }
+        }
+
+        if (
+            process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
             welcomeReward(message);
@@ -136,9 +179,6 @@ client.on('message', async function messageHandler(message) {
                 case '!snipe':
                 case '!editsnipe':
                     await snipe(message);
-                    break;
-                case '!raffle':
-                    await raffle(message, database);
                     break;
                 case '!application':
                     await configApps(message);
