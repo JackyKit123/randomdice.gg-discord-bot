@@ -32,6 +32,12 @@ export default async function coinflip(
         return;
     }
 
+    if (balance < 100) {
+        await channel.send(
+            'You do not even have <:Dice_TierX_Coin:813149167585067008> 100 to bet on a coinflip.'
+        );
+        return;
+    }
     let amount;
     if (typeof amountArg === 'undefined') {
         amount = 100;
