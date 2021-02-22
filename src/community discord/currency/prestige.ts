@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import getBalance from './balance';
+import cooldown from '../../helper/cooldown';
 
 export default async function prestige(
     message: Discord.Message
@@ -9,6 +10,13 @@ export default async function prestige(
     const app = firebase.app();
     const database = app.database();
     const numberFormat = new Intl.NumberFormat();
+    if (
+        await cooldown(message, `!prestige`, {
+            default: 20 * 1000,
+            donator: 5 * 1000,
+        })
+    )
+        return;
     if (!member || !guild) return;
     const balance = await getBalance(message, 'emit new member');
     if (balance === false) return;
