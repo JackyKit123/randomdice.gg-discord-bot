@@ -42,7 +42,7 @@ import report from './community discord/report';
 import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
 import gtn from './community discord/gtn';
-import welcomeReward from './community discord/welcomeReward';
+import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
 import coinflip from './community discord/currency/coinflip';
 import currencyUpdate from './community discord/currency/update';
