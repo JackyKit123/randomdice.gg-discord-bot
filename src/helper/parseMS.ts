@@ -40,7 +40,10 @@ export default function parseMsIntoReadableText(
             : ''
     }`;
 
-    return `${yearString}${monthString}${weekString}${dayString}${hourString}${minuteString}${secondString}`.trim();
+    return (
+        `${yearString}${monthString}${weekString}${dayString}${hourString}${minuteString}${secondString}`.trim() ||
+        `> 0.0s`
+    );
 }
 
 export function parseStringIntoMs(str: string): number | null {
