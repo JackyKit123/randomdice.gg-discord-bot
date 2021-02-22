@@ -77,7 +77,7 @@ export default async function balance(
                   )?.name
                 : ''
         );
-    if (!profile) {
+    if (!profile.prestige) {
         if (target.id !== member.id && output === 'emit') {
             await channel?.send(
                 'They have not started using currency command yet.'
