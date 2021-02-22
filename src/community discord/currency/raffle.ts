@@ -1,13 +1,14 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
-import { parseStringIntoMs } from '../helper/parseMS';
-import cache, { Raffle } from '../helper/cache';
-import cooldown from '../helper/cooldown';
+import getBalance from './balance';
+import { parseStringIntoMs } from '../../helper/parseMS';
+import cache, { Raffle } from '../../helper/cache';
+import cooldown from '../../helper/cooldown';
 
-async function announceWinner(
-    database: firebase.database.Database,
-    guild: Discord.Guild
-): Promise<void> {
+const numberFormat = new Intl.NumberFormat();
+
+async function announceWinner(guild: Discord.Guild): Promise<void> {
+    const database = firebase.app().database();
     const channel = guild.channels.cache.get('807229757049012266');
     const ref = database.ref('discord_bot/community/raffle');
     if (channel?.type !== 'text') return;
@@ -20,19 +21,20 @@ async function announceWinner(
         raffle = (await ref.once('value')).val() as Raffle;
 
         const entries = Object.entries(raffle.tickets ?? {});
-        const validEntries = entries.filter(
-            ([, user]) => user !== 'invalidated'
-        );
         const uniqueEntry = {} as { [uid: string]: string };
-        validEntries.forEach(([, uid]) => {
+        entries.forEach(([, uid]) => {
             if (!uniqueEntry[uid]) {
                 uniqueEntry[uid] = uid;
             }
         });
-        const [winningTicket, winner] = validEntries[
-            Math.ceil(validEntries.length * Math.random())
+        const [winningTicket, winner] = entries[
+            Math.ceil(entries.length * Math.random())
         ];
-        await (channel as Discord.TextChannel).send(
+
+        const amount =
+            entries.length * raffle.ticketCost +
+            raffle.maxEntries * raffle.ticketCost * 0.1;
+        const winningMessage = await (channel as Discord.TextChannel).send(
             '<@&804544088153391124>',
             new Discord.MessageEmbed()
                 .setAuthor(
@@ -40,18 +42,17 @@ async function announceWinner(
                     guild.iconURL({ dynamic: true }) ?? undefined
                 )
                 .setColor('#800080')
-                .setTitle('XP Raffle')
+                .setTitle('Dice Coins Raffle')
                 .setDescription(
-                    validEntries.length === 0
+                    entries.length === 0
                         ? 'Raffle ended but no one entered the raffle.'
                         : `Raffle ended, **${
                               Object.keys(uniqueEntry).length
                           }** people entered the raffle with a total of **${
-                              validEntries.length
-                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing **${
-                              validEntries.length * raffle.ticketCost +
-                              raffle.maxEntries * raffle.ticketCost * 0.1
-                          } exp**. Congratulations!`
+                              entries.length
+                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                              amount
+                          )}**. Congratulations!`
                 )
                 .setFooter('A new round of raffle will be hosted very soon')
         );
@@ -61,13 +62,22 @@ async function announceWinner(
             maxEntries: 0,
             ticketCost: 0,
         });
+        const target = await guild.members.fetch(winner);
+        if (!target) {
+            await (channel as Discord.TextChannel).send(
+                `Cannot add currency to ${target}`
+            );
+            return;
+        }
+        let balance = await getBalance(winningMessage, 'silence', target);
+        if (balance === false) balance = 10000;
+        await database
+            .ref(`discord_bot/community/currency/${target.id}/balance`)
+            .set(balance + amount);
     }, Math.max(raffle.endTimestamp - Date.now(), 0));
 }
 
-export default async function lotto(
-    message: Discord.Message,
-    database: firebase.database.Database
-): Promise<void> {
+export default async function lotto(message: Discord.Message): Promise<void> {
     const { channel, member, content, guild, author } = message;
 
     const [, subcommand, arg, arg2, arg3] = content
@@ -92,12 +102,12 @@ export default async function lotto(
         return;
     }
 
+    const database = firebase.app().database();
+    const balance = await getBalance(message, 'emit new member', member);
+    if (balance === false) return;
     const ref = database.ref('discord_bot/community/raffle');
     const raffle = cache['discord_bot/community/raffle'];
     const currentEntries = Object.entries(raffle.tickets ?? {});
-    const validEntries = currentEntries.filter(
-        ([, user]) => user !== 'invalidated'
-    );
     const raffleTimeLeft = raffle.endTimestamp - Date.now();
 
     switch (subcommand?.toLowerCase()) {
@@ -110,24 +120,26 @@ export default async function lotto(
                             guild.iconURL({ dynamic: true }) ?? undefined
                         )
                         .setColor('#00ff00')
-                        .setTitle('XP Raffle')
+                        .setTitle('Dice Coins Raffle')
                         .addField(
                             'Ticket Entries',
-                            `**${raffle.ticketCost} xp per ticket** (${raffle.maxEntries} ticket(s) max)`
+                            `<:Dice_TierX_Coin:813149167585067008> **${raffle.ticketCost} per ticket** (${raffle.maxEntries} ticket(s) max)`
                         )
                         .addField(
                             'Base Pool (10% of max entries)',
-                            `**${
+                            `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
                                 raffle.ticketCost * raffle.maxEntries * 0.1
-                            } EXP**`
+                            )}**`
                         )
                         .addField(
                             'Current Prize Pool',
-                            `**${
-                                validEntries.length * raffle.ticketCost
-                            } EXP** (${validEntries.length} Tickets) + **${
+                            `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                                currentEntries.length * raffle.ticketCost
+                            )}** (${
+                                currentEntries.length
+                            } Tickets) + <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
                                 raffle.ticketCost * raffle.maxEntries * 0.1
-                            } EXP** (Base Pool)`
+                            )}** (Base Pool)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
@@ -148,7 +160,7 @@ export default async function lotto(
                             guild.iconURL({ dynamic: true }) ?? undefined
                         )
                         .setColor('#ff0000')
-                        .setTitle('XP Raffle')
+                        .setTitle('Dice Coins Raffle')
                         .setDescription(
                             'There is no active raffle at the moment'
                         )
@@ -165,7 +177,7 @@ export default async function lotto(
                                 guild.iconURL({ dynamic: true }) ?? undefined
                             )
                             .setColor('#ff0000')
-                            .setTitle('XP Raffle')
+                            .setTitle('Dice Coins Raffle')
                             .setDescription(
                                 'There is no active raffle at the moment'
                             )
@@ -180,20 +192,11 @@ export default async function lotto(
                 }
                 const currEntry = Number(arg) || 1;
                 const prevEntry =
-                    validEntries.filter(([, uid]) => uid === author.id)
+                    currentEntries.filter(([, uid]) => uid === author.id)
                         ?.length || 0;
-                const logChannel = guild.channels.cache.get(
-                    '806033486850162708'
-                );
                 if (!Number.isInteger(currEntry) || currEntry < 1) {
                     await channel.send(
                         'Tickets entered should be a positive integer'
-                    );
-                    return;
-                }
-                if (logChannel?.type !== 'text') {
-                    await channel.send(
-                        'Error, <#806033486850162708> does not exist.'
                     );
                     return;
                 }
@@ -207,6 +210,16 @@ export default async function lotto(
                     );
                     return;
                 }
+                if (balance < currEntry * raffle.ticketCost) {
+                    await channel.send(
+                        `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                            currEntry * raffle.ticketCost
+                        )}** but you have only <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                            balance
+                        )}**.`
+                    );
+                    return;
+                }
                 raffle.tickets = raffle.tickets || {};
                 for (
                     let i = currentEntries.length;
@@ -216,21 +229,13 @@ export default async function lotto(
                     raffle.tickets[i + 1] = author.id;
                 }
                 await ref.child('tickets').set(raffle.tickets);
-                await (logChannel as Discord.TextChannel).send(
-                    `${author} entered the raffle with ${currEntry} ticket(s). Total exp deduction: ${
-                        currEntry * raffle.ticketCost
-                    }`,
-                    new Discord.MessageEmbed()
-                        .setTitle('Copy the exp command')
-                        .setDescription(
-                            `\`?modifyexp remove ${Math.min(
-                                currEntry * raffle.ticketCost,
-                                9999
-                            )} ${author}\``
-                        )
-                );
+                await database
+                    .ref(`discord_bot/community/currency/${member.id}/balance`)
+                    .set(balance - currEntry * raffle.ticketCost);
                 await channel.send(
-                    `You have entered the raffle with ${currEntry} ticket(s)${
+                    `You have entered the raffle with ${currEntry} ticket(s), costing you <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                        currEntry * raffle.ticketCost
+                    )}**${
                         prevEntry > 0
                             ? `, you now have a total of ${
                                   currEntry + prevEntry
@@ -288,7 +293,7 @@ export default async function lotto(
                 maxEntries,
                 ticketCost,
             });
-            announceWinner(database, guild);
+            announceWinner(guild);
             await channel.send(
                 '<@&804544088153391124>',
                 new Discord.MessageEmbed()
@@ -297,88 +302,20 @@ export default async function lotto(
                         guild.iconURL({ dynamic: true }) ?? undefined
                     )
                     .setColor('#00ff00')
-                    .setTitle('New XP Raffle')
+                    .setTitle('New Dice Coins Raffle')
                     .addField(
                         'Ticket Entries',
-                        `**${ticketCost} xp per ticket** (${maxEntries} max)`
+                        `<:Dice_TierX_Coin:813149167585067008> **${ticketCost} per ticket** (${maxEntries} max)`
                     )
                     .addField(
                         'Base Pool (10% of max entries)',
-                        `**${ticketCost * maxEntries * 0.1} EXP**`
+                        `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                            ticketCost * maxEntries * 0.1
+                        )}**`
                     )
                     .addField('Hosted by', `${author}`)
                     .setFooter('Raffle ends at')
                     .setTimestamp(Date.now() + time)
-            );
-            return;
-        }
-        case 'invalidate': {
-            if (raffleTimeLeft < 0) {
-                await channel.send(
-                    new Discord.MessageEmbed()
-                        .setAuthor(
-                            'randomdice.gg Server',
-                            guild.iconURL({ dynamic: true }) ?? undefined
-                        )
-                        .setColor('#ff0000')
-                        .setTitle('XP Raffle')
-                        .setDescription(
-                            'There is no active raffle at the moment'
-                        )
-                );
-                return;
-            }
-            if (
-                !(
-                    member.roles.cache.has('805772165394858015') ||
-                    member.roles.cache.has('805000661133295616') ||
-                    member.hasPermission('ADMINISTRATOR')
-                )
-            ) {
-                await channel.send(
-                    'You do not have permission to invalidate entries.'
-                );
-                return;
-            }
-            const target = guild.members.cache.find(
-                m =>
-                    m.user.id === arg ||
-                    m.user.username === arg.toLowerCase() ||
-                    m.nickname === arg.toLowerCase() ||
-                    `${m.user.username}#${m.user.discriminator}` ===
-                        arg.toLowerCase() ||
-                    m.user.id === arg?.match(/<@!?(\d{18})>/)?.[1]
-            );
-            if (!target) {
-                await channel.send(
-                    new Discord.MessageEmbed()
-                        .setTitle('Command Parse Error')
-                        .setColor('#ff0000')
-                        .setDescription('usage of the command')
-                        .addField(
-                            'Invalidating Entries (requires Event Manager)',
-                            '`!raffle invalidate <member>`' +
-                                '\n' +
-                                'Example```!raffle invalidate @JackyKit#0333\n!raffle invalidate JackyKit\n!raffle invalidate 195174308052467712```'
-                        )
-                );
-                return;
-            }
-            raffle.tickets = raffle.tickets || {};
-            const userEntry = validEntries
-                .filter(([, user]) => user === target.id)
-                .map(([tickets]) => tickets);
-            if (!userEntry.length) {
-                await channel.send(`${target} has no entry to invalidate`);
-            }
-            userEntry.forEach(entryTicket => {
-                raffle.tickets[Number(entryTicket)] = 'invalidated';
-            });
-            await ref.child('tickets').set(raffle.tickets);
-            await channel.send(
-                `Invalidated Tickets ${userEntry
-                    .map(entry => `**${entry}**`)
-                    .join(', ')} from ${target}`
             );
             return;
         }
@@ -391,7 +328,7 @@ export default async function lotto(
                             guild.iconURL({ dynamic: true }) ?? undefined
                         )
                         .setColor('#ff0000')
-                        .setTitle('XP Raffle')
+                        .setTitle('Dice Coins Raffle')
                         .setDescription(
                             'There is no active raffle at the moment'
                         )
@@ -456,12 +393,6 @@ export default async function lotto(
                             'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
                     )
                     .addField(
-                        'Invalidating Entries (requires Event Manager)',
-                        '`!raffle invalidate <member>`' +
-                            '\n' +
-                            'Example```!raffle invalidate @JackyKit#0333\n!raffle invalidate JackyKit\n!raffle invalidate 195174308052467712```'
-                    )
-                    .addField(
                         'Canceling a raffle (requires Event Manager)',
                         '`!raffle cancel`' +
                             '\n' +
@@ -477,5 +408,5 @@ export async function setTimerOnBoot(
 ): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
     if (!guild) return;
-    announceWinner(database, guild);
+    announceWinner(guild);
 }
