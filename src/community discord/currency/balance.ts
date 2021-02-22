@@ -26,7 +26,7 @@ export default async function balance(
     const numberFormat = new Intl.NumberFormat();
     const { member, channel, guild } = message;
     if (!guild || !member) return false;
-    if (channel) {
+    if (output === 'emit') {
         if (
             await cooldown(message, `!balance`, {
                 default: 10 * 1000,
