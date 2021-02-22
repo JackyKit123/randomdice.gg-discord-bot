@@ -129,43 +129,6 @@ client.on('message', async function messageHandler(message) {
 
         if (
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
-            process.env.NODE_ENV === 'development'
-        ) {
-            switch (suffix?.toLowerCase()) {
-                case '!bal':
-                case '!balance':
-                    await balance(message, 'emit');
-                    break;
-                case '!coinflip':
-                case '!cf':
-                    await coinflip(message);
-                    break;
-                case '!richest':
-                case '!leaderboard':
-                case '!lb':
-                    await leaderboard(message);
-                    break;
-                case '!prestige':
-                    await prestige(message);
-                    break;
-                case '!raffle':
-                    await raffle(message);
-                    break;
-                case '!hourly':
-                case '!daily':
-                case '!weekly':
-                case '!monthly':
-                    await timed(message);
-                    break;
-                case '!currency':
-                    await currencyUpdate(message);
-                    break;
-                default:
-            }
-        }
-
-        if (
-            process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
             welcomeReward(message);
@@ -202,6 +165,34 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!eventping':
                     await eventPing(message);
+                    break;
+                case '!bal':
+                case '!balance':
+                    await balance(message, 'emit');
+                    break;
+                case '!coinflip':
+                case '!cf':
+                    await coinflip(message);
+                    break;
+                case '!richest':
+                case '!leaderboard':
+                case '!lb':
+                    await leaderboard(message);
+                    break;
+                case '!prestige':
+                    await prestige(message);
+                    break;
+                case '!raffle':
+                    await raffle(message);
+                    break;
+                case '!hourly':
+                case '!daily':
+                case '!weekly':
+                case '!monthly':
+                    await timed(message);
+                    break;
+                case '!currency':
+                    await currencyUpdate(message);
                     break;
                 case '!moon':
                     await moon(client, message);
