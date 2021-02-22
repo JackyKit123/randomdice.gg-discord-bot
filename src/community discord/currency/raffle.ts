@@ -144,7 +144,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
                             'Your Entries',
-                            Object.entries(raffle.tickets)
+                            Object.entries(raffle.tickets ?? {})
                                 .filter(([, uid]) => uid === author.id)
                                 .map(([ticketNumber]) => `**${ticketNumber}**`)
                                 .join(', ') || '*none*'
@@ -241,7 +241,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                                   currEntry + prevEntry
                               } ticket(s)`
                             : '.'
-                    }\nTicket Numbers: ${Object.entries(raffle.tickets)
+                    }\nTicket Numbers: ${Object.entries(raffle.tickets ?? {})
                         .filter(([, uid]) => uid === author.id)
                         .map(([ticketNumber]) => `**${ticketNumber}**`)
                         .join(', ')}`
