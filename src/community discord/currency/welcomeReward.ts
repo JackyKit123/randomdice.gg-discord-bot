@@ -27,11 +27,7 @@ export default async function welcomeReward(
         const { id } = collected.member as Discord.GuildMember;
         if (saidWelcome.includes(id)) return;
         saidWelcome.push(id);
-        const balance = await getBalance(
-            message,
-            'silence',
-            collected.member as Discord.GuildMember
-        );
+        const balance = await getBalance(collected, 'silence');
         if (balance === false) return;
         await database
             .ref(`discord_bot/community/currency/${id}/balance`)
