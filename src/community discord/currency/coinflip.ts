@@ -11,8 +11,8 @@ export default async function coinflip(
     const numberFormat = new Intl.NumberFormat();
     if (
         await cooldown(message, '!coinflip', {
-            default: 4 * 1000,
-            donator: 1 * 1000,
+            default: 10 * 1000,
+            donator: 5 * 1000,
         })
     )
         return;
@@ -46,15 +46,16 @@ export default async function coinflip(
         );
         return;
     }
-    let amount;
+    let amount = Number(amountArg);
     if (typeof amountArg === 'undefined') {
         amount = 100;
     } else if (
-        !Number.isInteger(Number(amountArg)) ||
-        Number(amountArg) < 100
+        !Number.isInteger(amount) ||
+        Number(amountArg) < 100 ||
+        Number(amountArg) > 1000
     ) {
         await channel.send(
-            'Coinflip amount must be a positive integer larger than 100'
+            'Coinflip amount must be a integer between 100 - 1000'
         );
         return;
     }
