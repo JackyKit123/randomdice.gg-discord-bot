@@ -21,7 +21,7 @@ export default async function voteReward(
     const uid = embed.description?.match(/\(id:(\d{18})\)/)?.[1];
     if (!uid) return;
 
-    const member = guild.member(uid);
+    const member = await guild.members.fetch(uid);
     if (!member) return;
     const balance = (await getBalance(message, 'silence', member)) || 10000;
 
