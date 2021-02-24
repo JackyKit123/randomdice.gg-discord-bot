@@ -18,10 +18,11 @@ export default async function voteReward(
     const [embed] = embeds;
     if (!embed) return;
 
-    const uid = embed.description.match(/\(id:(\d{18})\)/)?.[1];
+    const uid = embed.description?.match(/\(id:(\d{18})\)/)?.[1];
     if (!uid) return;
 
     const member = guild.member(uid);
+    if (!member) return;
     const balance = (await getBalance(message, 'silence', member)) || 10000;
 
     await database
