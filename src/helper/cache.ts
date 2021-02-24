@@ -148,6 +148,7 @@ export interface MemberCurrency {
         weekly?: number;
         monthly?: number;
         weeklyChat?: number;
+        dailyStreak?: number;
     };
 }
 
