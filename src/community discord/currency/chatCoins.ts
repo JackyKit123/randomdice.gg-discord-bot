@@ -4,14 +4,35 @@ import getBalance from './balance';
 import cache from '../../helper/cache';
 
 const cooldown = new Map<string, number>();
+let deadChat = false;
 export default async function chatCoins(
     message: Discord.Message,
     dd?: true
 ): Promise<void> {
     const database = firebase.app().database();
-    const { content, member, channel } = message;
+    const { content, member, channel, author } = message;
 
-    if (!member || content.startsWith('!') || (/^dd/i.test(content) && !dd)) {
+    if (
+        author.id === '723917706641801316' &&
+        channel.id === '804222694488932364' &&
+        content === '<@&807578981003689984> come and revive this dead chat.'
+    ) {
+        deadChat = true;
+        setTimeout(() => {
+            deadChat = false;
+        }, 10 * 60 * 1000);
+        await channel.send(
+            `For the next 10 minutes, ${channel} has extra \`x10\` multiplier!`
+        );
+        return;
+    }
+
+    if (
+        author.bot ||
+        !member ||
+        content.startsWith('!') ||
+        (/^dd/i.test(content) && !dd)
+    ) {
         return;
     }
 
@@ -36,6 +57,7 @@ export default async function chatCoins(
     });
     if (reward === 0) return;
 
+    reward += channel.id === '804222694488932364' && deadChat ? 10 : 0;
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + reward);
