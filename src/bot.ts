@@ -136,6 +136,7 @@ client.on('message', async function messageHandler(message) {
             process.env.NODE_ENV === 'production'
         ) {
             welcomeReward(message);
+            validateOneWordStory(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
@@ -222,7 +223,6 @@ client.on('message', async function messageHandler(message) {
                         chatCoins(message),
                         chatRevivePing(message),
                         validateCrewAds(message),
-                        validateOneWordStory(message),
                     ]);
             }
         }
