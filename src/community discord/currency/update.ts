@@ -34,16 +34,17 @@ export default async function coinflip(
         return;
     }
 
-    const target =
-        guild.members.cache.find(
-            m =>
-                m.user.id === memberArg ||
-                m.user.username.toLowerCase() === memberArg?.toLowerCase() ||
-                m.nickname?.toLowerCase() === memberArg?.toLowerCase() ||
-                `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                    memberArg?.toLowerCase() ||
-                m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
-        ) || guild.member(memberArg || '');
+    const target = memberArg
+        ? guild.members.cache.find(
+              m =>
+                  m.user.id === memberArg ||
+                  m.user.username.toLowerCase() === memberArg.toLowerCase() ||
+                  m.nickname?.toLowerCase() === memberArg.toLowerCase() ||
+                  `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
+                      memberArg.toLowerCase() ||
+                  m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
+          )
+        : guild.member(member);
 
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !target) {
@@ -56,8 +57,7 @@ export default async function coinflip(
         await channel.send('The amount entered should be a non-zero integer.');
         return;
     }
-    let balance = await getBalance(message, 'silence', target);
-    if (balance === false) balance = 10000;
+    const balance = (await getBalance(message, 'silence', target)) as number;
 
     const deduction = amount < 0;
 

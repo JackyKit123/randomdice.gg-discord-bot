@@ -51,6 +51,8 @@ import share from './community discord/currency/share';
 import leaderboard from './community discord/currency/leaderboard';
 import drawDice from './community discord/currency/drawDice';
 import timed from './community discord/currency/timed';
+import chatCoins from './community discord/currency/chatCoins';
+import multiplier from './community discord/currency/multiplier';
 import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
@@ -135,11 +137,14 @@ client.on('message', async function messageHandler(message) {
         ) {
             welcomeReward(message);
         }
-        if (
-            !author.bot &&
-            process.env.COMMUNITY_SERVER_ID === guild?.id &&
-            process.env.NODE_ENV === 'production'
-        ) {
+        if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
+            if (
+                (process.env.NODE_ENV === 'production' &&
+                    channel.id === '804640084007321600') ||
+                (process.env.NODE_ENV === 'development' &&
+                    channel.id !== '804640084007321600')
+            )
+                return;
             switch (suffix?.toLowerCase()) {
                 case '!snipe':
                 case '!editsnipe':
@@ -205,11 +210,16 @@ client.on('message', async function messageHandler(message) {
                 case '!currency':
                     await currencyUpdate(message);
                     break;
+                case '!multi':
+                case '!multiplier':
+                    await multiplier(message);
+                    break;
                 case '!moon':
                     await moon(client, message);
                     break;
                 default:
                     await Promise.all([
+                        chatCoins(message),
                         chatRevivePing(message),
                         validateCrewAds(message),
                         validateOneWordStory(message),

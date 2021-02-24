@@ -141,11 +141,25 @@ export interface Raffle {
 export interface MemberCurrency {
     [memberId: string]: {
         balance: number;
+        initiated?: true;
         prestige: number;
-        hourly: number;
-        daily: number;
-        weekly: number;
-        monthly: number;
+        hourly?: number;
+        daily?: number;
+        weekly?: number;
+        monthly?: number;
+        weeklyChat?: number;
+    };
+}
+
+export interface CurrencyConfig {
+    multiplier: {
+        channels: {
+            [channelId: string]: number;
+        };
+        roles: {
+            [roleId: string]: number;
+        };
+        blacklisted: string[];
     };
 }
 
@@ -160,6 +174,8 @@ interface CacheObject {
     'discord_bot/dev_help': Help[];
     'discord_bot/community/applications': CommunityDiscordApplication[];
     'discord_bot/community/raffle': Raffle;
+    'discord_bot/community/currency': MemberCurrency;
+    'discord_bot/community/currencyConfig': CurrencyConfig;
     'wiki/boss': Boss[];
     'wiki/tips': Tip[];
     'wiki/battlefield': Battlefield[];
@@ -188,6 +204,17 @@ const cacheData = {
         tickets: {},
     } as Raffle,
     'discord_bot/community/currency': {} as MemberCurrency,
+    'discord_bot/community/currencyConfig': {
+        multiplier: {
+            channels: {} as {
+                [channelId: string]: number;
+            },
+            roles: {} as {
+                [roleId: string]: number;
+            },
+            blacklisted: [] as string[],
+        },
+    },
     'wiki/boss': [] as Boss[],
     'wiki/tips': [] as Tip[],
     'wiki/battlefield': [] as Battlefield[],

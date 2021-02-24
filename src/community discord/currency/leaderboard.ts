@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import * as firebase from 'firebase-admin';
 import cache from '../../helper/cache';
 import cooldown from '../../helper/cooldown';
 
@@ -18,9 +19,10 @@ const prestigeRoleIds = [
 export default async function leaderboard(
     message: Discord.Message
 ): Promise<void> {
-    const { channel, guild } = message;
+    const { channel, guild, content, member } = message;
+    const database = firebase.app().database();
     const numberFormat = new Intl.NumberFormat();
-    if (!guild) return;
+    if (!guild || !member) return;
     if (
         await cooldown(message, `!leaderboard`, {
             default: 60 * 1000,
@@ -28,11 +30,68 @@ export default async function leaderboard(
         })
     )
         return;
+
+    const isWeekly = /^(w|week|weekly)$/i.test(content.split(' ')[1] || '');
+    const isReset = /^reset$/i.test(content.split(' ')[2] || '');
     const currencyList = cache['discord_bot/community/currency'];
+
+    if (isReset && isWeekly) {
+        if (member.hasPermission('MANAGE_GUILD')) {
+            const [a, b, c] = Object.entries(currencyList).sort(
+                ([, profileA], [, profileB]) =>
+                    (profileB.weeklyChat || 0) - (profileA.weeklyChat || 0)
+            );
+            Object.keys(currencyList).forEach(id =>
+                database
+                    .ref(`discord_bot/community/currency/${id}/weeklyChat`)
+                    .set(0)
+            );
+            await channel.send(
+                new Discord.MessageEmbed()
+                    .setColor('#6ba4a5')
+                    .setThumbnail(
+                        'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
+                    )
+                    .setTitle(`Top 3 Weekly Winners`)
+                    .setAuthor(
+                        'Randomdice.gg Server',
+                        guild.iconURL({
+                            dynamic: true,
+                        }) ?? undefined,
+                        `https://discord.gg/randomdice`
+                    )
+                    .addFields(
+                        [a, b, c].map(([uid, profile], i) => ({
+                            name: `#${i + 1}`,
+                            value: `<@!${uid}> ${
+                                profile.prestige > 0
+                                    ? `***${
+                                          guild.roles.cache.get(
+                                              prestigeRoleIds[
+                                                  profile.prestige - 1
+                                              ]
+                                          )?.name
+                                      }***`
+                                    : ''
+                            }\n<:Dice_TierX_Coin:813149167585067008> **__${numberFormat.format(
+                                profile.weeklyChat || 0
+                            )}__**`,
+                        }))
+                    )
+            );
+            return;
+        }
+        await channel.send('You do not have permission to reset weekly');
+        return;
+    }
+
     const fields = Object.entries(currencyList)
         .sort(([, profileA], [, profileB]) =>
-            typeof profileA.prestige !== 'undefined' &&
-            profileB.prestige !== profileA.prestige
+            // eslint-disable-next-line no-nested-ternary
+            isWeekly
+                ? (profileB.weeklyChat || 0) - (profileA.weeklyChat || 0)
+                : typeof profileA.prestige !== 'undefined' &&
+                  profileB.prestige !== profileA.prestige
                 ? (profileB.prestige || 0) - (profileA.prestige || 0)
                 : profileB.balance - profileA.balance
         )
@@ -47,7 +106,7 @@ export default async function leaderboard(
                       }***`
                     : ''
             }\n<:Dice_TierX_Coin:813149167585067008> **__${numberFormat.format(
-                profile.balance
+                isWeekly ? profile.weeklyChat || 0 : profile.balance
             )}__**`,
         }));
 
@@ -65,7 +124,11 @@ export default async function leaderboard(
                 .setThumbnail(
                     'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
                 )
-                .setTitle(`Richest People in the Server`)
+                .setTitle(
+                    isWeekly
+                        ? 'Most Active People this week'
+                        : `Richest People in the Server`
+                )
                 .setAuthor(
                     'Randomdice.gg Server',
                     guild.iconURL({
