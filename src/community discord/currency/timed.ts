@@ -79,24 +79,66 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 )
         );
     }
+    const now = new Date();
+    const msNow = now.getUTCMilliseconds();
+    const secondsNow = now.getUTCSeconds();
+    const minutesNow = now.getUTCMinutes();
+    const hoursNow = now.getUTCHours();
+    const dayNow = now.getUTCDay();
+    const dateNow = now.getUTCDate();
 
     switch (mode) {
         case 'hourly':
-            if (await cooldown(memberProfile.hourly, 1000 * 60 * 60)) return;
+            if (
+                await cooldown(
+                    memberProfile.hourly,
+                    1000 * 60 * 60 - msNow + secondsNow + minutesNow
+                )
+            )
+                return;
             await reward(100);
             break;
         case 'daily':
-            if (await cooldown(memberProfile.daily, 1000 * 60 * 60 * 24))
+            if (
+                await cooldown(
+                    memberProfile.daily,
+                    1000 * 60 * 60 * 24 -
+                        msNow +
+                        secondsNow +
+                        minutesNow +
+                        hoursNow
+                )
+            )
                 return;
             await reward(1000);
             break;
         case 'weekly':
-            if (await cooldown(memberProfile.weekly, 1000 * 60 * 60 * 24 * 7))
+            if (
+                await cooldown(
+                    memberProfile.weekly,
+                    1000 * 60 * 60 * 24 * 7 -
+                        msNow +
+                        secondsNow +
+                        minutesNow +
+                        hoursNow +
+                        dayNow
+                )
+            )
                 return;
             await reward(5000);
             break;
         case 'monthly':
-            if (await cooldown(memberProfile.monthly, 1000 * 60 * 60 * 24 * 30))
+            if (
+                await cooldown(
+                    memberProfile.monthly,
+                    1000 * 60 * 60 * 24 * 30 -
+                        msNow +
+                        secondsNow +
+                        minutesNow +
+                        hoursNow +
+                        dateNow
+                )
+            )
                 return;
             await reward(10000);
             break;
