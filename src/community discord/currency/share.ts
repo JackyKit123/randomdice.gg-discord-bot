@@ -27,16 +27,17 @@ export default async function share(message: Discord.Message): Promise<void> {
             m =>
                 m.user.id === memberArg ||
                 m.user.username.toLowerCase() === memberArg?.toLowerCase() ||
-                m.nickname?.toLowerCase() === memberArg?.toLowerCase() ||
+                (m.nickname || m.user.username).toLowerCase() ===
+                    memberArg?.toLowerCase() ||
                 `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
                     memberArg?.toLowerCase() ||
                 m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
-        ) || guild.member(memberArg || '');
+        ) || (await guild.members.fetch(memberArg || ''));
 
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !target) {
         await channel.send(
-            'Usage of the command `!share <amount> <member>`, example```!currency +5000 @JackyKit#0333```'
+            'Usage of the command `!share <amount> <member>`, example```!share 5000 @JackyKit#0333```'
         );
         return;
     }
