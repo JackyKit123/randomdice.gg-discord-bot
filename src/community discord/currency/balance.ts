@@ -101,6 +101,9 @@ export default async function balance(
                     )}`
                 )
             );
+            await database
+                .ref(`discord_bot/community/currency/${target.id}/initiated`)
+                .set(true);
         }
         return output === 'silence' ? profile.balance || 10000 : false;
     }
