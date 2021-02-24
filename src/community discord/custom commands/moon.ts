@@ -25,15 +25,18 @@ export default async function custom(
         ) {
             return;
         }
-        const target = guild.members.cache.find(
-            m =>
-                m.user.id === arg ||
-                m.user.username === arg.toLowerCase() ||
-                m.nickname === arg.toLowerCase() ||
-                `${m.user.username}#${m.user.discriminator}` ===
-                    arg.toLowerCase() ||
-                m.user.id === arg?.match(/<@!?(\d{18})>/)?.[1]
-        );
+        const target =
+            guild.members.cache.find(
+                m =>
+                    m.user.id === arg ||
+                    m.user.username.toLowerCase() === arg?.toLowerCase() ||
+                    (m.nickname || m.user.username).toLowerCase() ===
+                        arg?.toLowerCase() ||
+                    `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
+                        arg?.toLowerCase() ||
+                    m.user.id === arg.match(/<@!?(\d{18})>/)?.[1]
+            ) || (await guild.members.fetch(arg || ''));
+
         if (!target) {
             await channel.send(
                 `Usage of the command: \`\`\`${command} <@mention | user id | username>\`\`\``

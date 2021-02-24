@@ -34,17 +34,17 @@ export default async function coinflip(
         return;
     }
 
-    const target = memberArg
-        ? guild.members.cache.find(
-              m =>
-                  m.user.id === memberArg ||
-                  m.user.username.toLowerCase() === memberArg.toLowerCase() ||
-                  m.nickname?.toLowerCase() === memberArg.toLowerCase() ||
-                  `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                      memberArg.toLowerCase() ||
-                  m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
-          )
-        : guild.member(member);
+    const target =
+        guild.members.cache.find(
+            m =>
+                m.user.id === memberArg ||
+                m.user.username.toLowerCase() === memberArg?.toLowerCase() ||
+                (m.nickname || m.user.username).toLowerCase() ===
+                    memberArg?.toLowerCase() ||
+                `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
+                    memberArg?.toLowerCase() ||
+                m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
+        ) || (await guild.members.fetch(memberArg || ''));
 
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !target) {
