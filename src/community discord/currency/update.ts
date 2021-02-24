@@ -38,12 +38,11 @@ export default async function coinflip(
         ? guild.members.cache.find(
               m =>
                   m.user.id === memberArg ||
-                  m.user.username.toLowerCase() === memberArg.toLowerCase() ||
-                  m.nickname?.toLowerCase() === memberArg.toLowerCase() ||
+                  m.user.username.toLowerCase() === memberArg?.toLowerCase() ||
                   `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                      memberArg.toLowerCase() ||
+                      memberArg?.toLowerCase() ||
                   m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
-          )
+          ) || (await guild.members.fetch(memberArg || ''))
         : guild.member(member);
 
     const amount = Number(amountArg);
