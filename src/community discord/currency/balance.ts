@@ -39,7 +39,7 @@ export default async function balance(
 
     const memberArg = message.content.split(' ')[1];
     let target = optionalTarget || member;
-    if (memberArg && !optionalTarget) {
+    if (memberArg && !optionalTarget && output === 'emit') {
         target =
             guild.members.cache.find(
                 m =>
