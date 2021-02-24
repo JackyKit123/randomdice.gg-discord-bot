@@ -105,7 +105,7 @@ export default async function balance(
                 .ref(`discord_bot/community/currency/${target.id}/initiated`)
                 .set(true);
         }
-        return output === 'silence' ? profile.balance || 10000 : false;
+        return output === 'silence' ? profile?.balance || 10000 : false;
     }
     if (output !== 'emit') {
         return profile.balance;
@@ -113,7 +113,7 @@ export default async function balance(
     await channel.send(
         embed.setDescription(
             `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
-                profile.balance
+                profile?.balance
             )}`
         )
     );
