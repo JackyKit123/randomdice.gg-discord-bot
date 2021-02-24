@@ -45,6 +45,7 @@ import gtn from './community discord/gtn';
 import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
 import coinflip from './community discord/currency/coinflip';
+import voteReward from './community discord/currency/voteReward';
 import currencyUpdate from './community discord/currency/update';
 import prestige from './community discord/currency/prestige';
 import share from './community discord/currency/share';
@@ -220,10 +221,9 @@ client.on('message', async function messageHandler(message) {
                     await moon(client, message);
                     break;
                 default:
-                    await Promise.all([
-                        chatRevivePing(message),
-                        validateCrewAds(message),
-                    ]);
+                    chatRevivePing(message);
+                    validateCrewAds(message);
+                    voteReward(message);
             }
         }
 
