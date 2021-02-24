@@ -79,16 +79,16 @@ export default async function balance(
                   )?.name
                 : ''
         );
-    if (!profile) {
+    if (!profile || !profile.initiated) {
         if (target.id !== member.id && output === 'emit') {
             await channel?.send(
                 'They have not started using currency command yet.'
             );
-            return 10000;
+            return profile.balance || 10000;
         }
         await database
             .ref(`discord_bot/community/currency/${target.id}/balance`)
-            .set(10000);
+            .set(profile.balance || 10000);
         await database
             .ref(`discord_bot/community/currency/${target.id}/prestige`)
             .set(prestigeLevel);
@@ -97,12 +97,12 @@ export default async function balance(
                 'Looks like you are the first time using server currency command, you have been granted **<:Dice_TierX_Coin:813149167585067008> 10,000** as a starter reward.',
                 embed.setDescription(
                     `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
-                        10000
+                        profile.balance || 10000
                     )}`
                 )
             );
         }
-        return false;
+        return output === 'silence' ? profile.balance || 10000 : false;
     }
     if (output !== 'emit') {
         return profile.balance;

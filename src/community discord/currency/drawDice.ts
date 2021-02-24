@@ -1,5 +1,6 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
+import chatCoins from './chatCoins';
 import cooldown from '../../helper/cooldown';
 import getBalanced from './balance';
 import cache, { Dice } from '../../helper/cache';
@@ -98,4 +99,5 @@ export default async function drawDice(
                 )}`
             )
     );
+    await chatCoins(message, true);
 }

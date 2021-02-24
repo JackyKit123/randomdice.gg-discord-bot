@@ -22,7 +22,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
     if (balance === false || !member) return;
     const memberProfile = cache['discord_bot/community/currency'][member.id];
 
-    async function cooldown(timestamp: number, cd: number): Promise<boolean> {
+    async function cooldown(timestamp = 0, cd: number): Promise<boolean> {
         const now = Date.now().valueOf();
         if (now - timestamp < cd) {
             await channel.send(
