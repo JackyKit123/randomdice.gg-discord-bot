@@ -92,7 +92,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
             if (
                 await cooldown(
                     memberProfile.hourly,
-                    1000 * 60 * 60 - msNow + secondsNow + minutesNow
+                    1000 * 60 * 60 - (msNow + secondsNow + minutesNow)
                 )
             )
                 return;
@@ -103,10 +103,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 await cooldown(
                     memberProfile.daily,
                     1000 * 60 * 60 * 24 -
-                        msNow +
-                        secondsNow +
-                        minutesNow +
-                        hoursNow
+                        (msNow + secondsNow + minutesNow + hoursNow)
                 )
             )
                 return;
@@ -117,11 +114,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 await cooldown(
                     memberProfile.weekly,
                     1000 * 60 * 60 * 24 * 7 -
-                        msNow +
-                        secondsNow +
-                        minutesNow +
-                        hoursNow +
-                        dayNow
+                        (msNow + secondsNow + minutesNow + hoursNow + dayNow)
                 )
             )
                 return;
@@ -132,11 +125,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 await cooldown(
                     memberProfile.monthly,
                     1000 * 60 * 60 * 24 * 30 -
-                        msNow +
-                        secondsNow +
-                        minutesNow +
-                        hoursNow +
-                        dateNow
+                        (msNow + secondsNow + minutesNow + hoursNow + dateNow)
                 )
             )
                 return;
