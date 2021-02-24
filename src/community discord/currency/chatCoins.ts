@@ -15,7 +15,7 @@ export default async function chatCoins(
         return;
     }
 
-    const balance = (await getBalance(message, 'silence')) as number;
+    const balance = (await getBalance(message, 'silence')) || 10000;
 
     const now = Date.now().valueOf();
     const userCooldown = cooldown.get(member.id) || 0;
