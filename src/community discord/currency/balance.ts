@@ -45,14 +45,10 @@ export default async function balance(
                 m =>
                     m.user.id === memberArg ||
                     m.user.username.toLowerCase() === memberArg.toLowerCase() ||
-                    (m.nickname || m.user.username).toLowerCase() ===
-                        memberArg.toLowerCase() ||
                     `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
                         memberArg.toLowerCase() ||
-                    m.user.id === memberArg.match(/<@!?(\d{18})>/)?.[1]
-            ) ||
-            (await guild.members.fetch(memberArg || member.id)) ||
-            member;
+                    m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
+            ) || (await guild.members.fetch(memberArg || ''));
     }
 
     if (!Object.keys(cache['discord_bot/community/currency']).length)

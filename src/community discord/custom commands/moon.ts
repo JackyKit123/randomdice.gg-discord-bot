@@ -14,7 +14,7 @@ export default async function custom(
         return;
     }
 
-    const [command, arg] = content.split(' ');
+    const [command, memberArg] = content.split(' ');
 
     if (command === '!moon' && author.id === '722951439567290458') {
         if (
@@ -25,15 +25,16 @@ export default async function custom(
         ) {
             return;
         }
-        const target = guild.members.cache.find(
-            m =>
-                m.user.id === arg ||
-                m.user.username === arg.toLowerCase() ||
-                m.nickname === arg.toLowerCase() ||
-                `${m.user.username}#${m.user.discriminator}` ===
-                    arg.toLowerCase() ||
-                m.user.id === arg?.match(/<@!?(\d{18})>/)?.[1]
-        );
+        const target =
+            guild.members.cache.find(
+                m =>
+                    m.user.id === memberArg ||
+                    m.user.username.toLowerCase() ===
+                        memberArg?.toLowerCase() ||
+                    `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
+                        memberArg?.toLowerCase() ||
+                    m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
+            ) || (await guild.members.fetch(memberArg || ''));
         if (!target) {
             await channel.send(
                 `Usage of the command: \`\`\`${command} <@mention | user id | username>\`\`\``
