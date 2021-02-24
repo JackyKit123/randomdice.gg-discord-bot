@@ -135,6 +135,7 @@ client.on('message', async function messageHandler(message) {
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
+            chatCoins(message);
             welcomeReward(message);
             validateOneWordStory(message);
         }
@@ -220,7 +221,6 @@ client.on('message', async function messageHandler(message) {
                     break;
                 default:
                     await Promise.all([
-                        chatCoins(message),
                         chatRevivePing(message),
                         validateCrewAds(message),
                     ]);
