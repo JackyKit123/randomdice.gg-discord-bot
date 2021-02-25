@@ -187,9 +187,12 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             'Your Server Rank',
             `**#${
                 Object.entries(currency)
-                    .sort(
-                        ([, profileA], [, profileB]) =>
-                            (profileB.balance || 0) - (profileA.balance || 0)
+                    .sort(([, profileA], [, profileB]) =>
+                        typeof profileA.prestige !== 'undefined' &&
+                        profileB.prestige !== profileA.prestige
+                            ? (profileB.prestige || 0) -
+                              (profileA.prestige || 0)
+                            : profileB.balance - profileA.balance
                     )
                     .findIndex(([uid]) => uid === member.id) + 1
             }** in <:Dice_TierX_Coin:813149167585067008> wealth\n**#${
@@ -200,7 +203,8 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                             (profileA.weeklyChat || 0)
                     )
                     .findIndex(([uid]) => uid === member.id) + 1
-            }** in weekly rank`
+            }** in weekly rank`,
+            true
         )
         .setFooter(
             'Showing page GENERAL of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
