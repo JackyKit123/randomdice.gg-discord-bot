@@ -31,7 +31,7 @@ export default async function drawDice(
     const memberDD = ddCasted.get(member.id) || 0;
     ddCasted.set(member.id, memberDD + 1);
     if (memberDD > 50) {
-        const challenge = Math.random() > 0.05;
+        const challenge = Math.random() < 0.05;
         if (challenge && challenged !== 'challenging') {
             const str = randomstring.generate(10);
             memberChallengeState.set(member.id, 'challenging');
@@ -46,11 +46,12 @@ export default async function drawDice(
             );
             const collector = channel.createMessageCollector(
                 awaited => awaited.author.id === member.id,
-                { max: 10 }
+                { max: 10, time: 30 * 10000 }
             );
             collector.on('collect', async msg => {
                 if (msg.content === str) {
                     memberChallengeState.set(member.id, 'none');
+                    ddCasted.set(member.id, 0);
                     await channel.send('You may now continue.');
                 }
             });
