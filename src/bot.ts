@@ -44,6 +44,7 @@ import validateOneWordStory from './community discord/oneworldstoryValidate';
 import gtn from './community discord/gtn';
 import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
+import profile from './community discord/currency/profile';
 import coinflip from './community discord/currency/coinflip';
 import voteReward from './community discord/currency/voteReward';
 import currencyUpdate from './community discord/currency/update';
@@ -187,6 +188,11 @@ client.on('message', async function messageHandler(message) {
                 case '!bal':
                 case '!balance':
                     await balance(message, 'emit');
+                    break;
+                case '!rank':
+                case '!profile':
+                case '!stat':
+                    await profile(message);
                     break;
                 case '!coinflip':
                 case '!cf':
