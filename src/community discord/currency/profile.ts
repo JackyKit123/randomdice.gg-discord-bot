@@ -4,11 +4,11 @@ import cache from '../../helper/cache';
 import parseMsIntoReadableText from '../../helper/parseMS';
 
 export default async function Profile(message: Discord.Message): Promise<void> {
-    const { member, channel, author } = message;
+    const { member, channel, author, guild } = message;
     const numberFormat = new Intl.NumberFormat();
 
     const balance = await getBalance(message, 'emit new member');
-    if (balance === false || !member) return;
+    if (balance === false || !member || !guild) return;
 
     const prestigeLevels = {
         1: { id: '806312627877838878', coinsNeeded: 196055 },
@@ -114,7 +114,9 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .setDescription(
             profile.prestige > 0
-                ? `**PRESTIGE ${prestigeLevels[profile.prestige]}**`
+                ? `**${guild.roles.cache
+                      .get(prestigeLevels[profile.prestige].id)
+                      ?.name.toUpperCase()}**`
                 : ''
         )
         .addField(
