@@ -90,6 +90,11 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     }
 
     const profile = cache['discord_bot/community/currency'][member.id];
+    const emoji = cache['discord_bot/emoji'];
+    const { dice } = cache;
+    const drawnDice = ['Common', 'Rare', 'Unique', 'Legendary']
+        .flatMap(rarity => dice.filter(d => d.rarity === rarity))
+        .flatMap(d => `${emoji[d.id]} x${profile.diceDrawn?.[d.id] || 0}`);
     const progress = balance / prestigeLevels[profile.prestige + 1].coinsNeeded;
     const embed = new Discord.MessageEmbed()
         .setAuthor(
@@ -152,6 +157,24 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 profile.weekly || 0,
                 'weekly'
             )}\n**Monthly**\n${cooldown(profile.monthly || 0, 'monthly')}`
+        )
+        .addField(
+            'Gamble Info',
+            `Total won: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                profile.gamble?.gain || 0
+            )}\nTotal lose: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                profile.gamble?.lose || 0
+            )}\nTotal earning: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                (profile.gamble?.gain || 0) - (profile.gamble?.lose || 0)
+            )}\n`
+        )
+        .addFields(
+            new Array(Math.ceil(drawnDice.length / 20))
+                .fill(' ')
+                .map((_, i) => ({
+                    name: i === 0 ? 'Dice Drawn' : '‎',
+                    value: drawnDice.slice(i * 20, i * 20 + 20).join('  '),
+                }))
         );
     await channel.send(embed);
 }

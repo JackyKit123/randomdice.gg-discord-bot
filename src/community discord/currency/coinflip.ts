@@ -1,6 +1,7 @@
 import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
 import getBalance from './balance';
+import cache from '../../helper/cache';
 import cooldown from '../../helper/cooldown';
 
 export default async function coinflip(
@@ -29,6 +30,8 @@ export default async function coinflip(
     if (!member) return;
     const balance = await getBalance(message, 'emit new member');
     if (balance === false) return;
+    const gambleProfile =
+        cache['discord_bot/community/currency'][member.id]?.gamble;
     const [, headTail, amountArg] = content.split(' ');
 
     const isHead = headTail?.match(/^(heads?|h)$/i)?.[1];
@@ -72,6 +75,13 @@ export default async function coinflip(
     await database
         .ref(`discord_bot/community/currency/${author.id}/balance`)
         .set(balance + amount * (won ? 1 : -1));
+    await database
+        .ref(
+            `discord_bot/community/currency/${author.id}/gamble/${
+                won ? 'gain' : 'lose'
+            }`
+        )
+        .set((gambleProfile?.[won ? 'gain' : 'lose'] || 0) + amount);
     await channel.send(
         new Discord.MessageEmbed()
             .setAuthor(
