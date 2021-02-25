@@ -48,16 +48,21 @@ export default async function drawDice(
                 awaited => awaited.author.id === member.id,
                 { max: 10, time: 30 * 10000 }
             );
+            let completed = false;
             collector.on('collect', async msg => {
                 if (msg.content === str) {
                     memberChallengeState.set(member.id, 'none');
                     ddCasted.set(member.id, 0);
+                    completed = true;
                     await channel.send('You may now continue.');
+                    collector.stop();
                 }
             });
             collector.on('end', async () => {
-                memberChallengeState.set(member.id, 'ban');
-                await channel.send('You failed the verification.');
+                if (!completed) {
+                    memberChallengeState.set(member.id, 'ban');
+                    await channel.send('You failed the verification.');
+                }
             });
             return;
         }
