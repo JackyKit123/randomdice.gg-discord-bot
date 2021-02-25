@@ -125,7 +125,8 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         return '✅ Ready to Claim';
     }
 
-    const profile = cache['discord_bot/community/currency'][target.id];
+    const currency = cache['discord_bot/community/currency'];
+    const profile = currency[target.id];
     const emoji = cache['discord_bot/emoji'];
     const { dice } = cache;
     const drawnDice = ['Common', 'Rare', 'Unique', 'Legendary']
@@ -181,6 +182,25 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             'Weekly Chat Points',
             `\`${numberFormat.format(profile.weeklyChat || 0)}\``,
             true
+        )
+        .addField(
+            'Your Server Rank',
+            `**#${
+                Object.entries(currency)
+                    .sort(
+                        ([, profileA], [, profileB]) =>
+                            (profileB.balance || 0) - (profileA.balance || 0)
+                    )
+                    .findIndex(([uid]) => uid === member.id) + 1
+            }** in <:Dice_TierX_Coin:813149167585067008> wealth\n**#${
+                Object.entries(currency)
+                    .sort(
+                        ([, profileA], [, profileB]) =>
+                            (profileB.weeklyChat || 0) -
+                            (profileA.weeklyChat || 0)
+                    )
+                    .findIndex(([uid]) => uid === member.id) + 1
+            }** in weekly rank`
         )
         .setFooter(
             'Showing page GENERAL of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
