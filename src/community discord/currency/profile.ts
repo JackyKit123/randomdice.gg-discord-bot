@@ -197,7 +197,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                               (profileA.prestige || 0)
                             : profileB.balance - profileA.balance
                     )
-                    .findIndex(([uid]) => uid === member.id) + 1
+                    .findIndex(([uid]) => uid === target.id) + 1
             }** in <:Dice_TierX_Coin:813149167585067008> wealth\n**#${
                 Object.entries(currency)
                     .sort(
@@ -205,7 +205,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                             (profileB.weeklyChat || 0) -
                             (profileA.weeklyChat || 0)
                     )
-                    .findIndex(([uid]) => uid === member.id) + 1
+                    .findIndex(([uid]) => uid === target.id) + 1
             }** in weekly rank`,
             true
         )
