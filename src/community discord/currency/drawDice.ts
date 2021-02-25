@@ -1,6 +1,6 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
-import randomstring from 'randomstring';
+import * as randomstring from 'randomstring';
 import chatCoins from './chatCoins';
 import cooldown from '../../helper/cooldown';
 import getBalanced from './balance';
