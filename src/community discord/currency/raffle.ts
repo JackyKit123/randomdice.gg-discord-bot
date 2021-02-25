@@ -71,6 +71,11 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
         }
         let balance = await getBalance(winningMessage, 'silence', target);
         if (balance === false) balance = 10000;
+        const gambleProfile =
+            cache['discord_bot/community/currency'][target.id]?.gamble;
+        await database
+            .ref(`discord_bot/community/currency/${target.id}/gamble/gain`)
+            .set((gambleProfile?.gain || 0) + amount);
         await database
             .ref(`discord_bot/community/currency/${target.id}/balance`)
             .set(balance + amount);
@@ -239,6 +244,16 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                 await database
                     .ref(`discord_bot/community/currency/${member.id}/balance`)
                     .set(balance - currEntry * raffle.ticketCost);
+                const gambleProfile =
+                    cache['discord_bot/community/currency'][author.id]?.gamble;
+                await database
+                    .ref(
+                        `discord_bot/community/currency/${author.id}/gamble/lose`
+                    )
+                    .set(
+                        (gambleProfile?.lose || 0) +
+                            currEntry * raffle.ticketCost
+                    );
                 await channel.send(
                     `You have entered the raffle with ${currEntry} ticket(s), costing you <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
                         currEntry * raffle.ticketCost

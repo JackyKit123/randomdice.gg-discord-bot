@@ -149,6 +149,13 @@ export interface MemberCurrency {
         monthly?: number;
         weeklyChat?: number;
         dailyStreak?: number;
+        diceDrawn?: {
+            [id: string]: number;
+        };
+        gamble?: {
+            lose: number;
+            gain: number;
+        };
     };
 }
 

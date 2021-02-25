@@ -192,6 +192,7 @@ client.on('message', async function messageHandler(message) {
                 case '!rank':
                 case '!profile':
                 case '!stat':
+                case '!p':
                     await profile(message);
                     break;
                 case '!coinflip':

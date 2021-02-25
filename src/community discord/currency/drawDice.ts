@@ -25,6 +25,8 @@ export default async function drawDice(
     }
     const emoji = cache['discord_bot/emoji'];
     const { dice } = cache;
+    const diceDrawn =
+        cache['discord_bot/community/currency'][member.id]?.diceDrawn;
     let weighted = [] as Dice[];
     dice.forEach(die => {
         switch (die.rarity) {
@@ -79,6 +81,11 @@ export default async function drawDice(
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + outcome.reward);
+    await database
+        .ref(
+            `discord_bot/community/currency/${member.id}/diceDrawn/${randomDraw.id}`
+        )
+        .set((diceDrawn?.[randomDraw.id] || 0) + 1);
     await channel.send(
         new Discord.MessageEmbed()
             .setAuthor(
