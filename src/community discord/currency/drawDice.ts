@@ -44,14 +44,20 @@ export default async function drawDice(
                         .join('')}||`
                 )
             );
-            const awaitedMessage = await channel.awaitMessages(
+            const collector = channel.createMessageCollector(
                 awaited => awaited.author.id === member.id,
                 { max: 10 }
             );
-            const pass = awaitedMessage.some(
-                awaited => awaited.content === str
-            );
-            memberChallengeState.set(member.id, pass ? 'none' : 'ban');
+            collector.on('collect', async msg => {
+                if (msg.content === str) {
+                    memberChallengeState.set(member.id, 'none');
+                    await channel.send('You may now continue.');
+                }
+            });
+            collector.on('end', async () => {
+                memberChallengeState.set(member.id, 'ban');
+                await channel.send('You failed the verification.');
+            });
             return;
         }
         if (challenged === 'challenging') {
