@@ -129,9 +129,12 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const profile = currency[target.id];
     const emoji = cache['discord_bot/emoji'];
     const { dice } = cache;
-    const drawnDice = ['Common', 'Rare', 'Unique', 'Legendary']
-        .flatMap(rarity => dice.filter(d => d.rarity === rarity))
-        .flatMap(d => `${emoji[d.id]} x${profile.diceDrawn?.[d.id] || 0}`);
+    const [CommonDice, RareDice, UniqueDice, LegendaryDice] = [
+        'Common',
+        'Rare',
+        'Unique',
+        'Legendary',
+    ].map(rarity => dice.filter(d => d.rarity === rarity));
     const progress = balance / prestigeLevels[profile.prestige + 1].coinsNeeded;
     const embed = new Discord.MessageEmbed()
         .setAuthor(
@@ -250,12 +253,24 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const diceDrawnProfile = embed
         .setTitle('Dice Drawn from dd')
         .addFields(
-            new Array(Math.ceil(drawnDice.length / 8))
-                .fill(' ')
-                .map((_, i) => ({
-                    name: '‎',
-                    value: drawnDice.slice(i * 8, i * 8 + 8).join('  '),
-                }))
+            [CommonDice, RareDice, UniqueDice, LegendaryDice]
+                .map(diceList =>
+                    new Array(Math.ceil(diceList.length / 8))
+                        .fill(' ')
+                        .map((_, i) => ({
+                            name: i === 0 ? `${diceList[0].rarity} Dice` : '‎',
+                            value: diceList
+                                .slice(i * 8, i * 8 + 8)
+                                .map(
+                                    d =>
+                                        `${emoji[d.id]} x${
+                                            profile.diceDrawn?.[d.id] || 0
+                                        }`
+                                )
+                                .join('  '),
+                        }))
+                )
+                .flat()
         )
         .setFooter(
             'Showing page DICE DRAWN of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
