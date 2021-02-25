@@ -91,8 +91,8 @@ export default async function share(message: Discord.Message): Promise<void> {
             target.user.username
         }, they now have <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
             theirBalance + amount
-        )} and you have <:Dice_TierX_Coin:813149167585067008> ${
+        )} and you have <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
             yourBalance - amount
-        }!`
+        )}!`
     );
 }
