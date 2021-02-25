@@ -140,6 +140,8 @@ client.on('message', async function messageHandler(message) {
             welcomeReward(message);
             validateOneWordStory(message);
             voteReward(message);
+            chatRevivePing(message);
+            validateCrewAds(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
@@ -222,8 +224,6 @@ client.on('message', async function messageHandler(message) {
                     await moon(client, message);
                     break;
                 default:
-                    chatRevivePing(message);
-                    validateCrewAds(message);
             }
         }
 
