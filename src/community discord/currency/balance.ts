@@ -96,11 +96,11 @@ export default async function balance(
                 : ''
         );
     if (!profile || !profile.initiated) {
-        if (target.id !== member.id && output === 'emit') {
+        if (target.id !== member.id && output !== 'silence') {
             await channel?.send(
                 'They have not started using currency command yet.'
             );
-            return profile?.balance || 10000;
+            return false;
         }
         await database
             .ref(`discord_bot/community/currency/${target.id}/balance`)

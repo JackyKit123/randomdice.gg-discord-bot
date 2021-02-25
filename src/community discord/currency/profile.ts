@@ -4,11 +4,47 @@ import cache from '../../helper/cache';
 import parseMsIntoReadableText from '../../helper/parseMS';
 
 export default async function Profile(message: Discord.Message): Promise<void> {
-    const { member, channel, author, guild } = message;
+    const { member, channel, guild, content } = message;
     const numberFormat = new Intl.NumberFormat();
 
+    if (!member || !guild) return;
+
+    const memberArg = content.split(' ')[1];
+    let target = member;
+    if (memberArg) {
+        const uid =
+            memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
+            memberArg.match(/^(\d{18})$/)?.[1];
+        target = uid
+            ? await guild.members
+                  .fetch(uid)
+                  .then(u => u)
+                  .catch(err => {
+                      if (err.message === 'Unknown User') {
+                          return member;
+                      }
+                      throw err;
+                  })
+            : guild.members.cache.find(
+                  m =>
+                      typeof memberArg === 'string' &&
+                      memberArg !== '' &&
+                      (m.user.username.toLowerCase() ===
+                          memberArg.toLowerCase() ||
+                          `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
+                              memberArg.toLowerCase() ||
+                          (m.nickname !== null &&
+                              content
+                                  .split(' ')
+                                  .slice(1)
+                                  .join(' ')
+                                  .toLowerCase()
+                                  .startsWith(m.nickname.toLowerCase())))
+              ) || member;
+    }
+
     const balance = await getBalance(message, 'emit new member');
-    if (balance === false || !member || !guild) return;
+    if (balance === false) return;
 
     const prestigeLevels = {
         1: { id: '806312627877838878', coinsNeeded: 196055 },
@@ -89,7 +125,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         return '✅ Ready to Claim';
     }
 
-    const profile = cache['discord_bot/community/currency'][member.id];
+    const profile = cache['discord_bot/community/currency'][target.id];
     const emoji = cache['discord_bot/emoji'];
     const { dice } = cache;
     const drawnDice = ['Common', 'Rare', 'Unique', 'Legendary']
@@ -98,18 +134,19 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const progress = balance / prestigeLevels[profile.prestige + 1].coinsNeeded;
     const embed = new Discord.MessageEmbed()
         .setAuthor(
-            `${member.displayName}'s Profile`,
-            author.avatarURL({ dynamic: true }) ?? author.defaultAvatarURL
+            `${target.displayName}'s Profile`,
+            target.user.avatarURL({ dynamic: true }) ??
+                target.user.defaultAvatarURL
         )
         .setColor(
             // eslint-disable-next-line no-nested-ternary
-            member.displayHexColor
+            target.displayHexColor
                 ? // eslint-disable-next-line no-nested-ternary
-                  member.displayHexColor === '#000000'
+                  target.displayHexColor === '#000000'
                     ? '#010101'
-                    : member.displayHexColor === '#ffffff'
+                    : target.displayHexColor === '#ffffff'
                     ? '#fefefe'
-                    : member.displayHexColor
+                    : target.displayHexColor
                 : '#000000'
         );
 
