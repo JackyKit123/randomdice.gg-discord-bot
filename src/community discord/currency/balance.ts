@@ -24,7 +24,7 @@ export default async function balance(
     const app = firebase.app();
     const database = app.database();
     const numberFormat = new Intl.NumberFormat();
-    const { member, channel, guild } = message;
+    const { member, channel, guild, content } = message;
     if (!guild || !member) return false;
     if (output === 'emit') {
         if (
@@ -37,18 +37,38 @@ export default async function balance(
         }
     }
 
-    const memberArg = message.content.split(' ')[1];
+    const memberArg = content.split(' ')[1];
     let target = optionalTarget || member;
     if (memberArg && !optionalTarget && output === 'emit') {
-        target =
-            guild.members.cache.find(
-                m =>
-                    m.user.id === memberArg ||
-                    m.user.username.toLowerCase() === memberArg.toLowerCase() ||
-                    `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                        memberArg.toLowerCase() ||
-                    m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
-            ) || (await guild.members.fetch(memberArg || ''));
+        const uid =
+            memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
+            memberArg.match(/^(\d{18})$/)?.[1];
+        target = uid
+            ? await guild.members
+                  .fetch(uid)
+                  .then(u => u)
+                  .catch(err => {
+                      if (err.message === 'Unknown User') {
+                          return member;
+                      }
+                      throw err;
+                  })
+            : guild.members.cache.find(
+                  m =>
+                      typeof memberArg === 'string' &&
+                      memberArg !== '' &&
+                      (m.user.username.toLowerCase() ===
+                          memberArg.toLowerCase() ||
+                          `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
+                              memberArg.toLowerCase() ||
+                          (m.nickname !== null &&
+                              content
+                                  .split(' ')
+                                  .slice(1)
+                                  .join(' ')
+                                  .toLowerCase()
+                                  .startsWith(m.nickname.toLowerCase())))
+              ) || member;
     }
 
     if (!Object.keys(cache['discord_bot/community/currency']).length)

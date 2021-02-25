@@ -34,16 +34,34 @@ export default async function coinflip(
         return;
     }
 
-    const target = memberArg
-        ? guild.members.cache.find(
+    const uid =
+        memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
+        memberArg.match(/^(\d{18})$/)?.[1];
+    const target = uid
+        ? await guild.members
+              .fetch(uid)
+              .then(u => u)
+              .catch(err => {
+                  if (err.message === 'Unknown User') {
+                      return undefined;
+                  }
+                  throw err;
+              })
+        : guild.members.cache.find(
               m =>
-                  m.user.id === memberArg ||
-                  m.user.username.toLowerCase() === memberArg?.toLowerCase() ||
-                  `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                      memberArg?.toLowerCase() ||
-                  m.user.id === memberArg?.match(/<@!?(\d{18})>/)?.[1]
-          ) || (await guild.members.fetch(memberArg || ''))
-        : guild.member(member);
+                  typeof memberArg === 'string' &&
+                  memberArg !== '' &&
+                  (m.user.username.toLowerCase() === memberArg.toLowerCase() ||
+                      `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
+                          memberArg.toLowerCase() ||
+                      (m.nickname !== null &&
+                          content
+                              .split(' ')
+                              .slice(2)
+                              .join(' ')
+                              .toLowerCase()
+                              .startsWith(m.nickname.toLowerCase())))
+          );
 
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !target) {
