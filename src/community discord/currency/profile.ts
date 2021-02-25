@@ -43,7 +43,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
               ) || member;
     }
 
-    const balance = await getBalance(message, 'emit new member');
+    const balance = await getBalance(message, 'emit new member', target);
     if (balance === false) return;
 
     const prestigeLevels = {
