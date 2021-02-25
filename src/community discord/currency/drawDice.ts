@@ -1,10 +1,13 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
+import randomstring from 'randomstring';
 import chatCoins from './chatCoins';
 import cooldown from '../../helper/cooldown';
 import getBalanced from './balance';
 import cache, { Dice } from '../../helper/cache';
 
+const ddCasted = new Map<string, number>();
+const memberChallengeState = new Map<string, 'none' | 'challenging' | 'ban'>();
 export default async function drawDice(
     message: Discord.Message
 ): Promise<void> {
@@ -13,6 +16,8 @@ export default async function drawDice(
     const { member, channel, guild, author } = message;
     if (!guild || !member) return;
     const numberFormat = new Intl.NumberFormat();
+    const challenged = memberChallengeState.get(member.id);
+    if (challenged === 'ban') return;
     const balance = await getBalanced(message, 'emit new member');
     if (balance === false) return;
     if (
@@ -22,6 +27,37 @@ export default async function drawDice(
         })
     ) {
         return;
+    }
+    const memberDD = ddCasted.get(member.id) || 0;
+    ddCasted.set(member.id, memberDD + 1);
+    if (memberDD > 50) {
+        const challenge = Math.random() > 0.05;
+        if (challenge && challenged !== 'challenging') {
+            const str = randomstring.generate(10);
+            memberChallengeState.set(member.id, 'challenging');
+            await channel.send(
+                `**Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
+                new Discord.MessageEmbed().setDescription(
+                    `||${str
+                        .split('')
+                        .map(s => `${s}‎`)
+                        .join('')}||`
+                )
+            );
+            const awaitedMessage = await channel.awaitMessages(
+                awaited => awaited.author.id === member.id,
+                { max: 10 }
+            );
+            const pass = awaitedMessage.some(
+                awaited => awaited.content === str
+            );
+            memberChallengeState.set(member.id, pass ? 'none' : 'ban');
+            return;
+        }
+        if (challenged === 'challenging') {
+            await channel.send('Finish the verification before you continue.');
+            return;
+        }
     }
     const emoji = cache['discord_bot/emoji'];
     const { dice } = cache;
