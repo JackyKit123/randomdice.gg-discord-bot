@@ -54,7 +54,7 @@ export default async function share(message: Discord.Message): Promise<void> {
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !target) {
         await channel.send(
-            'Usage of the command `!share <amount> <member>`, example```!currency +5000 @JackyKit#0333```'
+            'Usage of the command `!share <amount> <member>`, example```!share +5000 @JackyKit#0333```'
         );
         return;
     }
