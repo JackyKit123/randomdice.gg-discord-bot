@@ -33,7 +33,7 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
 
         const amount =
             entries.length * raffle.ticketCost +
-            raffle.maxEntries * raffle.ticketCost * 0.1;
+            Math.round(raffle.maxEntries * raffle.ticketCost * 0.1);
         const winningMessage = await (channel as Discord.TextChannel).send(
             '<@&804544088153391124>',
             new Discord.MessageEmbed()
@@ -133,7 +133,9 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         .addField(
                             'Base Pool (10% of max entries)',
                             `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
-                                raffle.ticketCost * raffle.maxEntries * 0.1
+                                Math.round(
+                                    raffle.ticketCost * raffle.maxEntries * 0.1
+                                )
                             )}**`
                         )
                         .addField(
