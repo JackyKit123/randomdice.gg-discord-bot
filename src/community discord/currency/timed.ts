@@ -60,14 +60,22 @@ export default async function timed(message: Discord.Message): Promise<void> {
         if (rolesCache.has('804513079319592980')) multiplier = 1;
         if (rolesCache.has('804513117228367882')) multiplier = 2;
         if (rolesCache.has('805727466219372546')) multiplier = 5;
-        let streak = memberProfile.dailyStreak || 1;
-        if (mode === 'daily')
+        let streak = 1;
+        if (mode === 'daily') {
             streak =
                 (now.valueOf() - (memberProfile.daily || 0)) /
                     (1000 * 60 * 60 * 24) <
                 2
-                    ? streak + 1
+                    ? (memberProfile.dailyStreak || streak) + 1
                     : 1;
+            await database
+                .ref(
+                    `discord_bot/community/currency/${
+                        (member as Discord.GuildMember).id
+                    }/dailyStreak`
+                )
+                .set(streak);
+        }
 
         await database
             .ref(
@@ -79,13 +87,6 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 amount * (1 + multiplier + +0.1 * (streak - 1)) +
                     (balance as number)
             );
-        await database
-            .ref(
-                `discord_bot/community/currency/${
-                    (member as Discord.GuildMember).id
-                }/dailyStreak`
-            )
-            .set(streak);
         await database
             .ref(
                 `discord_bot/community/currency/${
@@ -111,7 +112,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
         await channel.send(
             streak > 1
                 ? embed.addField(
-                      'Daily Steak',
+                      'Daily Streak',
                       `**${streak} streaks *(+${(streak - 1) * 10}% reward)***`
                   )
                 : embed
