@@ -58,6 +58,12 @@ export default async function share(message: Discord.Message): Promise<void> {
         );
         return;
     }
+    if (target.id === member.id) {
+        await channel.send(
+            'You cannot share <:Dice_TierX_Coin:813149167585067008> to yourself.'
+        );
+        return;
+    }
     if (!Number.isInteger(amount) || amount <= 0) {
         await channel.send('The amount shared should be a positive integer.');
         return;
