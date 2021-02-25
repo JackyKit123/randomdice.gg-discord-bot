@@ -111,7 +111,10 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                     ? '#fefefe'
                     : member.displayHexColor
                 : '#000000'
-        )
+        );
+
+    const generalProfile = new Discord.MessageEmbed(embed)
+        .setTitle('General Profile')
         .setDescription(
             profile.prestige > 0
                 ? `**${guild.roles.cache
@@ -128,8 +131,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                         Math.min(10 - Math.floor(progress * 10), 10)
                     ).fill('□')
                 )
-                .join('')} (${Math.floor(progress * 1000) / 10}%)`,
-            true
+                .join('')} (${Math.floor(progress * 1000) / 10}%)`
         )
         .addField(
             'Balance',
@@ -143,8 +145,13 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             `\`${numberFormat.format(profile.weeklyChat || 0)}\``,
             true
         )
-        .addField(
-            'Regular Coins Cooldown',
+        .setFooter(
+            'Showing page GENERAL of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
+        );
+
+    const cooldownProfile = new Discord.MessageEmbed(embed)
+        .setTitle('Cooldown')
+        .setDescription(
             `${
                 profile.dailyStreak && profile.dailyStreak > 1
                     ? `🔥 **${profile.dailyStreak}** Daily Streak\n`
@@ -160,8 +167,13 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 'weekly'
             )}\n**Monthly**\n${cooldown(profile.monthly || 0, 'monthly')}`
         )
-        .addField(
-            'Gamble Info',
+        .setFooter(
+            'Showing page PROFILE of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
+        );
+
+    const gambleProfile = new Discord.MessageEmbed(embed)
+        .setTitle("Gamble's Profile")
+        .setDescription(
             `Total won: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
                 profile.gamble?.gain || 0
             )}\nTotal lose: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
@@ -170,13 +182,72 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 (profile.gamble?.gain || 0) - (profile.gamble?.lose || 0)
             )}\n`
         )
+        .setFooter(
+            'Showing page GAMBLE of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
+        );
+
+    const diceDrawnProfile = embed
+        .setTitle('Dice Drawn from dd')
         .addFields(
-            new Array(Math.ceil(drawnDice.length / 20))
+            new Array(Math.ceil(drawnDice.length / 8))
                 .fill(' ')
                 .map((_, i) => ({
-                    name: i === 0 ? 'Dice Drawn' : '‎',
-                    value: drawnDice.slice(i * 20, i * 20 + 20).join('  '),
+                    name: '‎',
+                    value: drawnDice.slice(i * 8, i * 8 + 8).join('  '),
                 }))
+        )
+        .setFooter(
+            'Showing page DICE DRAWN of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
         );
-    await channel.send(embed);
+
+    const sentMessage = await channel.send(generalProfile);
+    await sentMessage.react('👤');
+    await sentMessage.react('⏲️');
+    await sentMessage.react('🎰');
+    await sentMessage.react('<:Dice_TierX_Null:807019807312183366>');
+
+    const collector = sentMessage.createReactionCollector(
+        (reaction: Discord.MessageReaction, user) =>
+            (['👤', '⏲️', '🎰'].includes(reaction.emoji.name) ||
+                reaction.emoji.id === '807019807312183366') &&
+            user.id === member.id,
+        {
+            time: 60 * 1000,
+        }
+    );
+
+    collector.on('collect', async (reaction, user) => {
+        try {
+            switch (reaction.emoji.name) {
+                case '👤':
+                    await sentMessage.edit(generalProfile);
+                    break;
+                case '⏲️':
+                    await sentMessage.edit(cooldownProfile);
+                    break;
+                case '🎰':
+                    await sentMessage.edit(gambleProfile);
+                    break;
+                default:
+                    if (reaction.emoji.id === '807019807312183366')
+                        await sentMessage.edit(diceDrawnProfile);
+            }
+            await reaction.users.remove(user.id);
+        } catch {
+            // message prob got deleted
+        }
+    });
+
+    collector.on('end', async () => {
+        try {
+            await sentMessage.reactions.removeAll();
+            await sentMessage.edit(
+                generalProfile.setFooter(
+                    'Showing page GENERAL of "general, cooldown, gamble, dice drawn", request a new message to flip page'
+                )
+            );
+        } catch {
+            // message prob got deleted
+        }
+    });
 }
