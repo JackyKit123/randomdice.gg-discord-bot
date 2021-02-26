@@ -4,7 +4,6 @@ import getBalance from './balance';
 import cache from '../../helper/cache';
 
 const cooldown = new Map<string, number>();
-let deadChat = false;
 export default async function chatCoins(
     message: Discord.Message,
     dd?: true
@@ -17,9 +16,19 @@ export default async function chatCoins(
         channel.id === '804222694488932364' &&
         content === '<@&807578981003689984> come and revive this dead chat.'
     ) {
-        deadChat = true;
-        setTimeout(() => {
-            deadChat = false;
+        const { multiplier } = cache['discord_bot/community/currencyConfig'];
+        const generalMulti = multiplier.channels['804222694488932364'] || 0;
+        await database
+            .ref(
+                `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
+            )
+            .set(generalMulti + 10);
+        setTimeout(async () => {
+            await database
+                .ref(
+                    `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
+                )
+                .set(generalMulti);
         }, 10 * 60 * 1000);
         await channel.send(
             `For the next 10 minutes, ${channel} has extra \`x10\` multiplier!`
@@ -58,7 +67,6 @@ export default async function chatCoins(
     });
     if (reward === 0) return;
 
-    reward += channel.id === '804222694488932364' && deadChat ? 10 : 0;
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + reward);
