@@ -140,7 +140,6 @@ export default async function drawDice(
             `discord_bot/community/currency/${member.id}/diceDrawn/${randomDraw.id}`
         )
         .set((diceDrawn?.[randomDraw.id] || 0) + 1);
-    // <a:Dice_TierX_Rolling:814663188972699661>
     let embed = new Discord.MessageEmbed()
         .setAuthor(
             `${member.displayName}'s Dice Draw Game`,
@@ -159,7 +158,9 @@ export default async function drawDice(
     embed.fields = [
         {
             name: 'Your Draw is',
-            value: emoji[randomDraw.id],
+            value: `${emoji[randomDraw.id]}\n*${
+                dice.find(d => d.id === randomDraw.id)?.name
+            }*`,
             inline: false,
         },
         {
