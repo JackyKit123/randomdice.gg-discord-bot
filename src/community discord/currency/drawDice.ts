@@ -33,10 +33,10 @@ export default async function drawDice(
     if (memberDD > 50) {
         const challenge = Math.random() < 0.05;
         if (challenge && challenged !== 'challenging') {
-            const str = randomstring.generate(10);
+            const str = randomstring.generate(5);
             memberChallengeState.set(member.id, 'challenging');
             await channel.send(
-                `**Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
+                `**ANTI-BOT Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
                 new Discord.MessageEmbed().setDescription(
                     `||${str
                         .split('')
@@ -44,18 +44,26 @@ export default async function drawDice(
                         .join('')}||`
                 )
             );
+            let tries = 10;
             const collector = channel.createMessageCollector(
                 awaited => awaited.author.id === member.id,
                 { max: 10, time: 30 * 10000 }
             );
             let completed = false;
             collector.on('collect', async msg => {
+                tries -= 1;
                 if (msg.content === str) {
                     memberChallengeState.set(member.id, 'none');
                     ddCasted.set(member.id, 0);
                     completed = true;
                     await channel.send('You may now continue.');
                     collector.stop();
+                } else {
+                    await channel.send(
+                        `Incorrect Captcha, solve the captcha before you continue. You have **${tries}** ${
+                            tries <= 1 ? 'try' : 'tries'
+                        } left.`
+                    );
                 }
             });
             collector.on('end', async () => {
@@ -64,10 +72,6 @@ export default async function drawDice(
                     await channel.send('You failed the verification.');
                 }
             });
-            return;
-        }
-        if (challenged === 'challenging') {
-            await channel.send('Finish the verification before you continue.');
             return;
         }
     }
