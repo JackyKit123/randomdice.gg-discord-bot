@@ -145,16 +145,17 @@ export default async function drawDice(
             `${member.displayName}'s Dice Draw Game`,
             author.avatarURL({ dynamic: true }) ?? undefined
         )
-        .setColor(outcome.color)
         .setDescription(`You earned <:Dice_TierX_Coin:813149167585067008> ????`)
-        .addField('Your Draw is', '<a:Dice_TierX_Rolling:814663188972699661>');
+        .addField('Your Draw is', '<:Dice_TierX_Null:807019807312183366>');
     const sentMessage = await channel.send(embed);
     await wait(1000);
-    embed = embed.setDescription(
-        `You earned <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
-            outcome.reward
-        )}`
-    );
+    embed = embed
+        .setDescription(
+            `You earned <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                outcome.reward
+            )}`
+        )
+        .setColor(outcome.color);
     embed.fields = [
         {
             name: 'Your Draw is',
