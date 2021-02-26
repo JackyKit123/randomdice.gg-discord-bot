@@ -182,10 +182,12 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             true
         )
         .addField(
-            'You Global Chat Multi',
+            'You Chat Multi',
             `\`x${reward}\` Global\n\`x${
-                multiplier.channels[channel.id]
-            }\` in <#${channel.id}>`,
+                multiplier.channels[channel.id] || 0
+            }\` in <#${channel.id}>\n\`x${
+                reward + (multiplier.channels[channel.id] || 0)
+            }\` in Total`,
             true
         )
         .addField(
