@@ -154,6 +154,12 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 : '#000000'
         );
 
+    const { multiplier } = cache['discord_bot/community/currencyConfig'];
+    let reward = 1;
+    target.roles.cache.forEach(role => {
+        reward += multiplier.roles[role.id] || 0;
+    });
+
     const generalProfile = new Discord.MessageEmbed(embed)
         .setTitle('General Profile')
         .setDescription(
@@ -162,17 +168,6 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                       .get(prestigeLevels[profile.prestige].id)
                       ?.name.toUpperCase()}**`
                 : ''
-        )
-        .addField(
-            'Prestige Progress',
-            `${new Array(Math.max(0, Math.floor(progress * 10)))
-                .fill('■')
-                .concat(
-                    new Array(
-                        Math.min(10 - Math.floor(progress * 10), 10)
-                    ).fill('□')
-                )
-                .join('')} (${Math.floor(progress * 1000) / 10}%)`
         )
         .addField(
             'Balance',
@@ -185,6 +180,23 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             'Weekly Chat Points',
             `\`${numberFormat.format(profile.weeklyChat || 0)}\``,
             true
+        )
+        .addField(
+            'You Global Chat Multi',
+            `\`x${reward}\` Global\n+\`x${
+                multiplier.channels[channel.id]
+            }\` in ${channel.id}`
+        )
+        .addField(
+            'Prestige Progress',
+            `${new Array(Math.max(0, Math.floor(progress * 10)))
+                .fill('■')
+                .concat(
+                    new Array(
+                        Math.min(10 - Math.floor(progress * 10), 10)
+                    ).fill('□')
+                )
+                .join('')} (${Math.floor(progress * 1000) / 10}%)`
         )
         .addField(
             'Your Server Rank',
