@@ -141,7 +141,7 @@ export default async function drawDice(
         )
         .set((diceDrawn?.[randomDraw.id] || 0) + 1);
     // <a:Dice_TierX_Rolling:814663188972699661>
-    const embed = new Discord.MessageEmbed()
+    let embed = new Discord.MessageEmbed()
         .setAuthor(
             `${member.displayName}'s Dice Draw Game`,
             author.avatarURL({ dynamic: true }) ?? undefined
@@ -151,25 +151,25 @@ export default async function drawDice(
         .addField('Your Draw is', '<a:Dice_TierX_Rolling:814663188972699661>');
     const sentMessage = await channel.send(embed);
     await wait(1000);
-    await sentMessage.edit(
-        (embed.setDescription(
-            `You earned <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
-                outcome.reward
-            )}`
-        ).fields = [
-            {
-                name: 'Your Draw is',
-                value: emoji[randomDraw.id],
-                inline: false,
-            },
-            {
-                name: 'Current Balance',
-                value: `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
-                    outcome.reward + balance
-                )}`,
-                inline: false,
-            },
-        ])
+    embed = embed.setDescription(
+        `You earned <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+            outcome.reward
+        )}`
     );
+    embed.fields = [
+        {
+            name: 'Your Draw is',
+            value: emoji[randomDraw.id],
+            inline: false,
+        },
+        {
+            name: 'Current Balance',
+            value: `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                outcome.reward + balance
+            )}`,
+            inline: false,
+        },
+    ];
+    await sentMessage.edit(embed);
     await chatCoins(message, true);
 }
