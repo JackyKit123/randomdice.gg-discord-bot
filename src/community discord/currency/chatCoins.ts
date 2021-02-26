@@ -17,18 +17,19 @@ export default async function chatCoins(
         content === '<@&807578981003689984> come and revive this dead chat.'
     ) {
         const { multiplier } = cache['discord_bot/community/currencyConfig'];
-        const generalMulti = multiplier.channels['804222694488932364'] || 0;
+        let generalMulti = multiplier.channels['804222694488932364'] || 0;
         await database
             .ref(
                 `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
             )
             .set(generalMulti + 10);
         setTimeout(async () => {
+            generalMulti = multiplier.channels['804222694488932364'] || 0;
             await database
                 .ref(
                     `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
                 )
-                .set(generalMulti);
+                .set(generalMulti - 10);
         }, 10 * 60 * 1000);
         await channel.send(
             `For the next 10 minutes, ${channel} has extra \`x10\` multiplier!`
