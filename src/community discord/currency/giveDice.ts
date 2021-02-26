@@ -103,9 +103,9 @@ export default async function giveDice(
         `You have given ${numberFormat.format(Number(amount))} ${
             emoji[die.id]
         } to ${target.user.username}, they now have ${numberFormat.format(
-            invAmount - Number(amount)
-        )} ${emoji[die.id]} and you have ${numberFormat.format(
             targetInvAmount + Number(amount)
+        )} ${emoji[die.id]} and you have ${numberFormat.format(
+            invAmount - Number(amount)
         )} ${emoji[die.id]}!`
     );
 }
