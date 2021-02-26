@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import getBalance from './balance';
+import cache from '../../helper/cache';
 
 export default async function voteReward(
     message: Discord.Message
@@ -22,7 +23,8 @@ export default async function voteReward(
     if (!uid) return;
 
     const member = await guild.members.fetch(uid);
-    if (!member) return;
+    if (!member || !Object.keys(cache['discord_bot/community/currency']).length)
+        return;
     const balance = (await getBalance(message, 'silence', member)) || 10000;
 
     await database

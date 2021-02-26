@@ -2,6 +2,7 @@ import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
 import getBalance from './balance';
 import cooldown from '../../helper/cooldown';
+import cache from '../../helper/cache';
 
 export default async function share(message: Discord.Message): Promise<void> {
     const app = firebase.app();
@@ -76,6 +77,7 @@ export default async function share(message: Discord.Message): Promise<void> {
     }
 
     let theirBalance = await getBalance(message, 'silence', target);
+    if (!Object.keys(cache['discord_bot/community/currency']).length) return;
     if (theirBalance === false) theirBalance = 10000;
 
     await database
