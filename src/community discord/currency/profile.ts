@@ -192,11 +192,14 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .addField(
             'Prestige Progress',
-            `${new Array(Math.max(0, Math.floor(progress * 10)))
+            `${new Array(Math.min(10, Math.max(0, Math.floor(progress * 10))))
                 .fill('■')
                 .concat(
                     new Array(
-                        Math.min(10 - Math.floor(progress * 10), 10)
+                        Math.max(
+                            0,
+                            Math.min(10 - Math.floor(progress * 10), 10)
+                        )
                     ).fill('□')
                 )
                 .join('')} (${Math.floor(progress * 1000) / 10}%)`
