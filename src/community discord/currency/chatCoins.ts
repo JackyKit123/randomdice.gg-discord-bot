@@ -37,6 +37,7 @@ export default async function chatCoins(
     }
 
     const balance = (await getBalance(message, 'silence')) || 10000;
+    if (!Object.keys(cache['discord_bot/community/currency']).length) return;
 
     const now = Date.now().valueOf();
     const userCooldown = cooldown.get(member.id) || 0;
