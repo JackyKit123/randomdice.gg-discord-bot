@@ -1,11 +1,13 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import * as randomstring from 'randomstring';
+import { promisify } from 'util';
 import chatCoins from './chatCoins';
 import cooldown from '../../helper/cooldown';
 import getBalanced from './balance';
 import cache, { Dice } from '../../helper/cache';
 
+const wait = promisify(setTimeout);
 const ddCasted = new Map<string, number>();
 const memberChallengeState = new Map<string, 'none' | 'challenging' | 'ban'>();
 export default async function drawDice(
@@ -138,25 +140,36 @@ export default async function drawDice(
             `discord_bot/community/currency/${member.id}/diceDrawn/${randomDraw.id}`
         )
         .set((diceDrawn?.[randomDraw.id] || 0) + 1);
-    await channel.send(
-        new Discord.MessageEmbed()
-            .setAuthor(
-                `${member.displayName}'s Dice Draw Game`,
-                author.avatarURL({ dynamic: true }) ?? undefined
-            )
-            .setColor(outcome.color)
-            .setDescription(
-                `You earned <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
-                    outcome.reward
-                )}`
-            )
-            .addField('Your Draw is', emoji[randomDraw.id])
-            .addField(
-                'Current Balance',
-                `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+    // <a:Dice_TierX_Rolling:814663188972699661>
+    const embed = new Discord.MessageEmbed()
+        .setAuthor(
+            `${member.displayName}'s Dice Draw Game`,
+            author.avatarURL({ dynamic: true }) ?? undefined
+        )
+        .setColor(outcome.color)
+        .setDescription(`You earned <:Dice_TierX_Coin:813149167585067008> ????`)
+        .addField('Your Draw is', '<a:Dice_TierX_Rolling:814663188972699661>');
+    const sentMessage = await channel.send(embed);
+    await wait(1000);
+    await sentMessage.edit(
+        (embed.setDescription(
+            `You earned <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                outcome.reward
+            )}`
+        ).fields = [
+            {
+                name: 'Your Draw is',
+                value: emoji[randomDraw.id],
+                inline: false,
+            },
+            {
+                name: 'Current Balance',
+                value: `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
                     outcome.reward + balance
-                )}`
-            )
+                )}`,
+                inline: false,
+            },
+        ])
     );
     await chatCoins(message, true);
 }
