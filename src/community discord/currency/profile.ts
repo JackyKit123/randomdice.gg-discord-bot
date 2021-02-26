@@ -183,9 +183,10 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .addField(
             'You Global Chat Multi',
-            `\`x${reward}\` Global\n+\`x${
+            `\`x${reward}\` Global\n\`x${
                 multiplier.channels[channel.id]
-            }\` in ${channel.id}`
+            }\` in <#${channel.id}>`,
+            true
         )
         .addField(
             'Prestige Progress',
