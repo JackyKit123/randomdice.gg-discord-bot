@@ -16,8 +16,10 @@ export default async function chatCoins(
         channel.id === '804222694488932364' &&
         content === '<@&807578981003689984> come and revive this dead chat.'
     ) {
-        const { multiplier } = cache['discord_bot/community/currencyConfig'];
-        let generalMulti = multiplier.channels['804222694488932364'] || 0;
+        let generalMulti =
+            cache['discord_bot/community/currencyConfig'].multiplier.channels[
+                '804222694488932364'
+            ] || 0;
         await database
             .ref(
                 `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
