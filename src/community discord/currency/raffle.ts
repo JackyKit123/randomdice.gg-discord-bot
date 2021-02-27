@@ -31,9 +31,7 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
             Math.ceil(entries.length * Math.random())
         ];
 
-        const amount =
-            entries.length * raffle.ticketCost +
-            Math.round(raffle.maxEntries * raffle.ticketCost * 0.1);
+        const amount = Math.round(entries.length * raffle.ticketCost * 0.9);
         const winningMessage = await (channel as Discord.TextChannel).send(
             '<@&804544088153391124>',
             new Discord.MessageEmbed()
@@ -52,7 +50,7 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
                               entries.length
                           }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
                               amount
-                          )}**. Congratulations!`
+                          )} after 10% tax**. Congratulations!`
                 )
                 .setFooter('A new round of raffle will be hosted very soon')
         );
@@ -131,22 +129,10 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                             `<:Dice_TierX_Coin:813149167585067008> **${raffle.ticketCost} per ticket** (${raffle.maxEntries} ticket(s) max)`
                         )
                         .addField(
-                            'Base Pool (10% of max entries)',
-                            `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
-                                Math.round(
-                                    raffle.ticketCost * raffle.maxEntries * 0.1
-                                )
-                            )}**`
-                        )
-                        .addField(
                             'Current Prize Pool',
                             `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
                                 currentEntries.length * raffle.ticketCost
-                            )}** (${
-                                currentEntries.length
-                            } Tickets) + <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
-                                raffle.ticketCost * raffle.maxEntries * 0.1
-                            )}** (Base Pool)`
+                            )}** (${currentEntries.length} Tickets) (10% Tax)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
@@ -330,12 +316,6 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                     .addField(
                         'Ticket Entries',
                         `<:Dice_TierX_Coin:813149167585067008> **${ticketCost} per ticket** (${maxEntries} max)`
-                    )
-                    .addField(
-                        'Base Pool (10% of max entries)',
-                        `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
-                            ticketCost * maxEntries * 0.1
-                        )}**`
                     )
                     .addField('Hosted by', `${author}`)
                     .setFooter('Raffle ends at')
