@@ -24,7 +24,9 @@ export default async function chatCoins(
             )
             .set(generalMulti + 10);
         setTimeout(async () => {
-            generalMulti = multiplier.channels['804222694488932364'] || 0;
+            generalMulti =
+                cache['discord_bot/community/currencyConfig'].multiplier
+                    .channels['804222694488932364'] || 0;
             await database
                 .ref(
                     `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
