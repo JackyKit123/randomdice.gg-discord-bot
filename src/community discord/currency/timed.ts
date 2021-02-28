@@ -173,7 +173,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                         60 *
                         60 *
                         24 *
-                        new Date(yearNow, monthNow + 1, 0).getDate()
+                        (new Date(yearNow, monthNow + 1, 0).getDate() + 1)
                 )
             )
                 return;
