@@ -115,7 +115,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                     60 *
                     60 *
                     24 *
-                    new Date(yearNow, monthNow + 1, 0).getDate();
+                    (new Date(yearNow, monthNow + 1, 0).getDate() + 1);
                 break;
             default:
         }
