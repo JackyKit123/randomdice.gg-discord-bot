@@ -335,11 +335,6 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     collector.on('end', async () => {
         try {
             await sentMessage.reactions.removeAll();
-            await sentMessage.edit(
-                generalProfile.setFooter(
-                    'Showing page GENERAL of "general, cooldown, gamble, dice drawn", request a new message to flip page'
-                )
-            );
         } catch {
             // message prob got deleted
         }
