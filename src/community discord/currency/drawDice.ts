@@ -37,7 +37,7 @@ export default async function drawDice(
     if (
         memberDD > 50 &&
         challenge &&
-        Date.now() - challenged < 1000 * 60 * 30
+        Date.now() - challenged >= 1000 * 60 * 30
     ) {
         const str = randomstring.generate(5);
         memberChallengeState.set(member.id, 'challenging');
