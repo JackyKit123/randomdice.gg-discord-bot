@@ -9,7 +9,7 @@ import cache, { Dice } from '../../helper/cache';
 
 const wait = promisify(setTimeout);
 const ddCasted = new Map<string, number>();
-const memberChallengeState = new Map<string, 'none' | 'challenging' | 'ban'>();
+const memberChallengeState = new Map<string, number | 'challenging' | 'ban'>();
 export default async function drawDice(
     message: Discord.Message
 ): Promise<void> {
@@ -18,8 +18,8 @@ export default async function drawDice(
     const { member, channel, guild, author } = message;
     if (!guild || !member) return;
     const numberFormat = new Intl.NumberFormat();
-    const challenged = memberChallengeState.get(member.id);
-    if (challenged === 'ban') return;
+    const challenged = memberChallengeState.get(member.id) || 0;
+    if (challenged === 'ban' || challenged === 'challenging') return;
     const balance = await getBalanced(message, 'emit new member');
     if (balance === false) return;
     if (
@@ -32,50 +32,60 @@ export default async function drawDice(
     }
     const memberDD = ddCasted.get(member.id) || 0;
     ddCasted.set(member.id, memberDD + 1);
-    if (memberDD > 50) {
-        const challenge = Math.random() < 0.05;
-        if (challenge && challenged !== 'challenging') {
-            const str = randomstring.generate(5);
-            memberChallengeState.set(member.id, 'challenging');
-            await channel.send(
-                `**ANTI-BOT Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
-                new Discord.MessageEmbed().setDescription(
-                    `||${str
-                        .split('')
-                        .map(s => `${s}‎`)
-                        .join('')}||`
-                )
-            );
-            let tries = 10;
-            const collector = channel.createMessageCollector(
-                awaited => awaited.author.id === member.id,
-                { max: 10, time: 30 * 10000 }
-            );
-            let completed = false;
-            collector.on('collect', async msg => {
-                tries -= 1;
-                if (msg.content === str) {
-                    memberChallengeState.set(member.id, 'none');
-                    ddCasted.set(member.id, 0);
-                    completed = true;
-                    await channel.send('You may now continue.');
-                    collector.stop();
-                } else {
-                    await channel.send(
-                        `Incorrect Captcha, solve the captcha before you continue. You have **${tries}** ${
-                            tries <= 1 ? 'try' : 'tries'
-                        } left.`
-                    );
-                }
-            });
-            collector.on('end', async () => {
-                if (!completed) {
-                    memberChallengeState.set(member.id, 'ban');
-                    await channel.send('You failed the verification.');
-                }
-            });
-            return;
-        }
+    const challenge = Math.random() < 0.05;
+    // only challenge when member DD over 50 times, 5% chance and last challenged is more than 30 minutes ago.
+    if (
+        memberDD > 50 &&
+        challenge &&
+        Date.now() - challenged < 1000 * 60 * 30
+    ) {
+        const str = randomstring.generate(5);
+        memberChallengeState.set(member.id, 'challenging');
+        await channel.send(
+            `**ANTI-BOT Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
+            new Discord.MessageEmbed().setDescription(
+                `||${str
+                    .split('')
+                    .map(s => `${s}‎`)
+                    .join('')}||`
+            )
+        );
+        let tries = 10;
+        const collector = channel.createMessageCollector(
+            awaited =>
+                awaited.author.id === member.id &&
+                /^\w{5}$|dd\b|!drawdice\b|!dicedraw\b/i.test(
+                    awaited.message.content
+                ),
+            { max: 10, time: 30 * 10000 }
+        );
+        let failure = 0;
+        collector.on('collect', async msg => {
+            tries -= 1;
+            if (msg.content === str) {
+                failure = 0;
+                await channel.send('You may now continue.');
+                collector.stop();
+            } else {
+                failure += 1;
+                await channel.send(
+                    `Incorrect Captcha, solve the captcha before you continue. You have **${tries}** ${
+                        tries <= 1 ? 'try' : 'tries'
+                    } left.`
+                );
+            }
+        });
+        collector.on('end', async () => {
+            if (failure > 0) {
+                memberChallengeState.set(member.id, 'ban');
+                await channel.send('You failed the verification.');
+            } else {
+                // no failure captcha detected, prob afk
+                memberChallengeState.set(member.id, Date.now());
+                ddCasted.set(member.id, 0);
+            }
+        });
+        return;
     }
     const emoji = cache['discord_bot/emoji'];
     const { dice } = cache;
