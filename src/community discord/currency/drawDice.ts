@@ -50,7 +50,6 @@ export default async function drawDice(
                     .join('')}||`
             )
         );
-        let tries = 10;
         const collector = channel.createMessageCollector(
             awaited =>
                 awaited.author.id === member.id &&
@@ -61,7 +60,6 @@ export default async function drawDice(
         );
         let failure = 0;
         collector.on('collect', async msg => {
-            tries -= 1;
             if (msg.content === str) {
                 failure = 0;
                 await channel.send('You may now continue.');
@@ -69,9 +67,9 @@ export default async function drawDice(
             } else {
                 failure += 1;
                 await channel.send(
-                    `Incorrect Captcha, solve the captcha before you continue. You have **${tries}** ${
-                        tries <= 1 ? 'try' : 'tries'
-                    } left.`
+                    `Incorrect Captcha, solve the captcha before you continue. You have **${
+                        10 - failure
+                    }** ${10 - failure <= 1 ? 'try' : 'tries'} left.`
                 );
             }
         });
@@ -85,6 +83,18 @@ export default async function drawDice(
                 ddCasted.set(member.id, 0);
             }
         });
+        setTimeout(async () => {
+            if (failure > 0)
+                await message.reply(
+                    'You have 10 seconds left to complete your captcha',
+                    new Discord.MessageEmbed().setDescription(
+                        `||${str
+                            .split('')
+                            .map(s => `${s}‎`)
+                            .join('')}||`
+                    )
+                );
+        }, 1000 * 30);
         return;
     }
     const emoji = cache['discord_bot/emoji'];
