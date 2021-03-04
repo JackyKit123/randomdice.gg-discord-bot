@@ -52,7 +52,7 @@ export default async function leaderboard(
                     .setThumbnail(
                         'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
                     )
-                    .setTitle(`Top 3 Weekly Winners`)
+                    .setTitle(`Top 5 Weekly Winners`)
                     .setAuthor(
                         'Randomdice.gg Server',
                         guild.iconURL({
