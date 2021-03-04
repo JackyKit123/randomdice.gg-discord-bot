@@ -14,6 +14,7 @@
   "author": "JackyKit",
   "license": "ISC",
   "dependencies": {
+    "@types/mathjs": "^6.0.11",
     "@types/node": "^14.11.2",
     "@types/randomstring": "^1.1.6",
     "@types/string-similarity": "^3.0.0",
