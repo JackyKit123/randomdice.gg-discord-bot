@@ -51,12 +51,8 @@ export default async function drawDice(
             )
         );
         const collector = channel.createMessageCollector(
-            awaited =>
-                awaited.author.id === member.id &&
-                /^\w{5}$|dd\b|!drawdice\b|!dicedraw\b/i.test(
-                    awaited.message.content
-                ),
-            { max: 10, time: 30 * 10000 }
+            awaited => awaited.author.id === member.id,
+            { time: 30 * 10000 }
         );
         let failure = 0;
         collector.on('collect', async msg => {
@@ -64,7 +60,13 @@ export default async function drawDice(
                 failure = 0;
                 await channel.send('You may now continue.');
                 collector.stop();
-            } else {
+            } else if (
+                /^\w{5}$|^dd\b|^!drawdice\b|^!dicedraw\b/i.test(msg.content)
+            ) {
+                if (failure === 10) {
+                    collector.stop();
+                    return;
+                }
                 failure += 1;
                 await channel.send(
                     `Incorrect Captcha, solve the captcha before you continue. You have **${
