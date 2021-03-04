@@ -37,7 +37,7 @@ export default async function leaderboard(
 
     if (isReset && isWeekly) {
         if (member.hasPermission('MANAGE_GUILD')) {
-            const [a, b, c] = Object.entries(currencyList).sort(
+            const sortedWeekly = Object.entries(currencyList).sort(
                 ([, profileA], [, profileB]) =>
                     (profileB.weeklyChat || 0) - (profileA.weeklyChat || 0)
             );
@@ -61,7 +61,7 @@ export default async function leaderboard(
                         `https://discord.gg/randomdice`
                     )
                     .addFields(
-                        [a, b, c].map(([uid, profile], i) => ({
+                        sortedWeekly.slice(0, 5).map(([uid, profile], i) => ({
                             name: `#${i + 1}`,
                             value: `<@!${uid}> ${
                                 profile.prestige > 0
