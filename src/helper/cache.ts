@@ -169,6 +169,7 @@ export interface CurrencyConfig {
         };
         blacklisted: string[];
     };
+    weeklyWinners: string[];
 }
 
 interface CacheObject {
@@ -222,6 +223,7 @@ const cacheData = {
             },
             blacklisted: [] as string[],
         },
+        weeklyWinners: [] as string[],
     },
     'wiki/boss': [] as Boss[],
     'wiki/tips': [] as Tip[],

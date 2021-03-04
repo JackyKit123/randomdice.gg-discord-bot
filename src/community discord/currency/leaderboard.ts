@@ -36,6 +36,7 @@ export default async function leaderboard(
     const currencyList = cache['discord_bot/community/currency'];
 
     if (isReset && isWeekly) {
+        const { weeklyWinners } = cache['discord_bot/community/currencyConfig'];
         if (member.hasPermission('MANAGE_GUILD')) {
             const sortedWeekly = Object.entries(currencyList).sort(
                 ([, profileA], [, profileB]) =>
@@ -78,6 +79,36 @@ export default async function leaderboard(
                             )}__**`,
                         }))
                     )
+            );
+            let removed = 0;
+            await Promise.all(
+                weeklyWinners
+                    .concat(
+                        guild.roles.cache
+                            .get('805388604791586826')
+                            ?.members.map(m => m.id) || []
+                    )
+                    .map(async uid => {
+                        const m = await guild.members.fetch(uid);
+                        if (m && m.roles.cache.has('805388604791586826')) {
+                            await m.roles.remove('805388604791586826');
+                            removed += 1;
+                        }
+                    })
+            );
+            await channel.send(
+                `Remove <@&805388604791586826> from ${removed} members`
+            );
+            await Promise.all(
+                sortedWeekly.slice(0, 5).map(async ([uid]) => {
+                    const m = await guild.members.fetch(uid);
+                    if (m) {
+                        await m.roles.add('805388604791586826');
+                        await channel.send(
+                            `Added <@&805388604791586826> to ${m}`
+                        );
+                    }
+                })
             );
             return;
         }
