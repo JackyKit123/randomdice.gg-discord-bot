@@ -99,7 +99,7 @@ export default async function leaderboard(
             await channel.send(
                 `Remove <@&805388604791586826> from ${removed} members`
             );
-            await Promise.all(
+            const weeklyList = await Promise.all(
                 sortedWeekly.slice(0, 5).map(async ([uid]) => {
                     const m = await guild.members.fetch(uid);
                     if (m) {
@@ -108,8 +108,12 @@ export default async function leaderboard(
                             `Added <@&805388604791586826> to ${m}`
                         );
                     }
+                    return uid;
                 })
             );
+            await database
+                .ref('/discord_bot/community/currencyConfig/weeklyWinners')
+                .set(weeklyList);
             return;
         }
         await channel.send('You do not have permission to reset weekly');
