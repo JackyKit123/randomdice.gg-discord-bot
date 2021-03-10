@@ -31,7 +31,7 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
             Math.ceil(entries.length * Math.random())
         ];
 
-        const amount = Math.round(entries.length * raffle.ticketCost * 0.9);
+        const amount = entries.length * raffle.ticketCost;
         const winningMessage = await (channel as Discord.TextChannel).send(
             '<@&804544088153391124>',
             new Discord.MessageEmbed()
@@ -50,7 +50,7 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
                               entries.length
                           }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
                               amount
-                          )} after 10% tax**. Congratulations!`
+                          )}**. Congratulations!`
                 )
                 .setFooter('A new round of raffle will be hosted very soon')
         );
@@ -132,7 +132,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                             'Current Prize Pool',
                             `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
                                 currentEntries.length * raffle.ticketCost
-                            )}** (${currentEntries.length} Tickets) (10% Tax)`
+                            )}** (${currentEntries.length} Tickets)`
                         )
                         .addField('Hosted by', `<@${raffle.hostId}>`)
                         .addField(
