@@ -89,10 +89,14 @@ export default async function leaderboard(
                             ?.members.map(m => m.id) || []
                     )
                     .map(async uid => {
-                        const m = await guild.members.fetch(uid);
-                        if (m && m.roles.cache.has('805388604791586826')) {
-                            await m.roles.remove('805388604791586826');
-                            removed += 1;
+                        try {
+                            const m = await guild.members.fetch(uid);
+                            if (m && m.roles.cache.has('805388604791586826')) {
+                                await m.roles.remove('805388604791586826');
+                                removed += 1;
+                            }
+                        } catch {
+                            // nothing
                         }
                     })
             );
@@ -101,14 +105,18 @@ export default async function leaderboard(
             );
             const weeklyList = await Promise.all(
                 sortedWeekly.slice(0, 5).map(async ([uid]) => {
-                    const m = await guild.members.fetch(uid);
-                    if (m) {
-                        await m.roles.add('805388604791586826');
-                        await channel.send(
-                            `Added <@&805388604791586826> to ${m}`
-                        );
+                    try {
+                        const m = await guild.members.fetch(uid);
+                        if (m) {
+                            await m.roles.add('805388604791586826');
+                            await channel.send(
+                                `Added <@&805388604791586826> to ${m}`
+                            );
+                        }
+                        return uid;
+                    } catch {
+                        return '';
                     }
-                    return uid;
                 })
             );
             await database
