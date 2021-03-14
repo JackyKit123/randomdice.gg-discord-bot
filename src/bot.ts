@@ -59,6 +59,7 @@ import multiplier from './community discord/currency/multiplier';
 import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
+import shush, { pokeballTrap } from './community discord/custom commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
@@ -133,6 +134,8 @@ client.on('message', async function messageHandler(message) {
             }
             return;
         }
+
+        pokeballTrap(message);
 
         if (
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
@@ -234,6 +237,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!moon':
                     await moon(client, message);
+                    break;
+                case '!shush':
+                    await shush(message);
                     break;
                 default:
             }
