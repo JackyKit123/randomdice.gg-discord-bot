@@ -76,7 +76,13 @@ export default async function shush(message: Discord.Message): Promise<void> {
 export async function pokeballTrap(message: Discord.Message): Promise<void> {
     const { member, deletable, channel, content, attachments } = message;
 
-    if (!member || member.id !== shushMember) {
+    if (attachments.size) {
+        await member.user.send(
+            `Your last message contains an attachment, it cannot be posted because you are trapped in a <:pokeball:820533431217815573>.`
+        );
+    }
+
+    if (!member || member.id !== shushMember || !content) {
         return;
     }
 
@@ -88,7 +94,7 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
         }
     }
 
-    const sanitized = content.replace('|', '\\|');
+    const sanitized = content.replace(/\|/g, '\\|');
 
     const randomString = [
         `**${member.displayName}** is trapped in a <:pokeball:820533431217815573>: ||${sanitized}||`,
@@ -102,10 +108,4 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
             disableMentions: 'everyone',
         }
     );
-
-    if (attachments.size) {
-        await member.user.send(
-            `Your last message contains an attachment, it cannot be posted because you are trapped in a <:pokeball:820533431217815573>.`
-        );
-    }
 }
