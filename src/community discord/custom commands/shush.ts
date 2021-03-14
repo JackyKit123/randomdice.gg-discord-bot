@@ -74,10 +74,10 @@ export default async function shush(message: Discord.Message): Promise<void> {
 }
 
 export async function pokeballTrap(message: Discord.Message): Promise<void> {
-    const { member, deletable, channel, content, attachments } = message;
+    const { member, deletable, channel, content, attachments, author } = message;
 
     if (attachments.size) {
-        await member.user.send(
+        await author.send(
             `Your last message contains an attachment, it cannot be posted because you are trapped in a <:pokeball:820533431217815573>.`
         );
     }
