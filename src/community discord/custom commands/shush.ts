@@ -74,7 +74,14 @@ export default async function shush(message: Discord.Message): Promise<void> {
 }
 
 export async function pokeballTrap(message: Discord.Message): Promise<void> {
-    const { member, deletable, channel, content, attachments, author } = message;
+    const {
+        member,
+        deletable,
+        channel,
+        content,
+        attachments,
+        author,
+    } = message;
 
     if (!member || member.id !== shushMember) {
         return;
@@ -98,13 +105,21 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
         }
     }
 
-    const sanitized = content.replace(/\|/g, '\\|');
+    // eslint-disable-next-line prefer-template
+    const sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
+    const displayName =
+        // eslint-disable-next-line prefer-template
+        member.displayName
+            .replace(/\*/g, '*')
+            .replace(/\|/g, '\\|')
+            .replace(/_/g, '\\_')
+            .replace(/`/g, '`') + '‎'; /* invis unicode */
 
     const randomString = [
-        `**${member.displayName}** is trapped in a <:pokeball:820533431217815573>: ||${sanitized}||`,
-        `**${member.displayName}** is yelling from inside the <:pokeball:820533431217815573>: ||${sanitized}||`,
-        `A sound from a distant <:pokeball:820533431217815573>, **${member.displayName}** says: ||${sanitized}||`,
-        `<:pokeball:820533431217815573>**${member.displayName}**<:pokeball:820533431217815573>\n||${sanitized}||`,
+        `**${displayName}** is trapped in a <:pokeball:820533431217815573>: ||${sanitized}||`,
+        `**${displayName}** is yelling from inside the <:pokeball:820533431217815573>: ||${sanitized}||`,
+        `A sound from a distant <:pokeball:820533431217815573>, **${displayName}** says: ||${sanitized}||`,
+        `<:pokeball:820533431217815573>**${displayName}**<:pokeball:820533431217815573>\n||${sanitized}||`,
     ];
     await channel.send(
         randomString[Math.floor(Math.random() * randomString.length)],
