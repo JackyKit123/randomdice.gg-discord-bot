@@ -108,7 +108,7 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
 
     // eslint-disable-next-line prefer-template
     let sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
-    Array.from(content.match(/<@&\d{18}>/g) ?? []).forEach(roleId => {
+    Array.from(content.match(/<@&(\d{18})>/g) ?? []).forEach(roleId => {
         const role = guild.roles.cache.get(roleId);
         if (!role || role.mentionable) {
             return;
