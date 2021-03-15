@@ -145,7 +145,7 @@ client.on('message', async function messageHandler(message) {
             voteReward(message);
             chatRevivePing(message);
             validateCrewAds(message);
-            pokeballTrap(message)
+            pokeballTrap(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
