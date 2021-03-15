@@ -108,7 +108,9 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
     // eslint-disable-next-line prefer-template
     let sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
     while (sanitized.includes('```')) {
-        sanitized = sanitized.replace(/```/g, '\\`\\`\\`');
+        sanitized = sanitized.replace(/`{3,}/g, match =>
+            match.replace(/`/g, '\\`')
+        );
     }
     const displayName =
         // eslint-disable-next-line prefer-template
