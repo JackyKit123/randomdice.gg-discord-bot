@@ -5,7 +5,11 @@ let shushMember: string | undefined;
 export default async function shush(message: Discord.Message): Promise<void> {
     const { content, guild, channel, author } = message;
 
-    if (!guild || author.id !== '285696350702796801') {
+    if (
+        !guild ||
+        (author.id !== '285696350702796801' &&
+            process.env.NODE_ENV !== 'development')
+    ) {
         return;
     }
 
@@ -108,19 +112,26 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
 
     // eslint-disable-next-line prefer-template
     let sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
-    Array.from(content.match(/<@&(\d{18})>/g) ?? []).forEach(roleId => {
-        const role = guild.roles.cache.get(roleId);
-        if (!role || role.mentionable) {
-            return;
-        }
+    Array.from(content.matchAll(/<@&(\d{18})>/g) ?? []).forEach(
+        ([, roleId]) => {
+            const role = guild.roles.cache.get(roleId);
+            if (!role || role.mentionable) {
+                return;
+            }
 
-        if (!role.mentionable && !member.hasPermission('MENTION_EVERYONE')) {
-            sanitized = sanitized.replace(
-                new RegExp(`<@&${role.id}>`, 'g'),
-                `@${role.name}`
-            );
+            if (
+                !role.mentionable &&
+                !(channel as Discord.GuildChannel)
+                    .permissionsFor(member)
+                    ?.has('MENTION_EVERYONE')
+            ) {
+                sanitized = sanitized.replace(
+                    new RegExp(`<@&${role.id}>`, 'g'),
+                    `@${role.name}`
+                );
+            }
         }
-    });
+    );
     while (sanitized.includes('```')) {
         sanitized = sanitized.replace(/`{3,}/g, match =>
             match.replace(/`/g, '\\`')
