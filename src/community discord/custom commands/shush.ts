@@ -154,11 +154,19 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
         try {
             await channel.messages.cache
                 .last(2)
-                .find(m => m.author.id === '235148962103951360')
+                .find(
+                    m =>
+                        m.author.id === '235148962103951360' &&
+                        !m.embeds.length &&
+                        !m.attachments.size
+                )
                 ?.delete();
             channel
                 .createMessageCollector(
-                    m => m.author.id === '235148962103951360',
+                    m =>
+                        m.author.id === '235148962103951360' &&
+                        !m.embeds.length &&
+                        !m.attachments.size,
                     { max: 1, time: 3 * 1000 }
                 )
                 .on('collect', m => m.delete());
