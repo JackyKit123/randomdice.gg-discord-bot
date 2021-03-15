@@ -81,10 +81,10 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
         content,
         attachments,
         author,
-        mentions,
+        guild,
     } = message;
 
-    if (!member || member.id !== shushMember) {
+    if (!guild || !member || member.id !== shushMember) {
         return;
     }
 
@@ -108,8 +108,9 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
 
     // eslint-disable-next-line prefer-template
     let sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
-    mentions.roles.forEach(role => {
-        if (role.mentionable) {
+    Array.from(content.match(/<@&\d{18}>/g) ?? []).forEach(roleId => {
+        const role = guild.roles.cache.get(roleId);
+        if (!role || role.mentionable) {
             return;
         }
 
