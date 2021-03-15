@@ -106,14 +106,17 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
     }
 
     // eslint-disable-next-line prefer-template
-    const sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
+    let sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
+    while (sanitized.includes('```')) {
+        sanitized = sanitized.replace(/```/g, '\\`\\`\\`');
+    }
     const displayName =
         // eslint-disable-next-line prefer-template
         member.displayName
-            .replace(/\*/g, '*')
+            .replace(/\*/g, '\\*')
             .replace(/\|/g, '\\|')
             .replace(/_/g, '\\_')
-            .replace(/`/g, '`') + '‎'; /* invis unicode */
+            .replace(/`/g, '\\`') + '‎'; /* invis unicode */
 
     const randomString = [
         `**${displayName}** is trapped in a <:pokeball:820533431217815573>: ||${sanitized}||`,
