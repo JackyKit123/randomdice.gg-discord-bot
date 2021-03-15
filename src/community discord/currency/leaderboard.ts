@@ -80,7 +80,7 @@ export default async function leaderboard(
                         }))
                     )
             );
-            let removed = 0;
+            const findUniques = new Map<string, true>();
             await Promise.all(
                 weeklyWinners
                     .concat(
@@ -93,7 +93,7 @@ export default async function leaderboard(
                             const m = await guild.members.fetch(uid);
                             if (m && m.roles.cache.has('805388604791586826')) {
                                 await m.roles.remove('805388604791586826');
-                                removed += 1;
+                                findUniques.set(m.id, true);
                             }
                         } catch {
                             // nothing
@@ -101,7 +101,7 @@ export default async function leaderboard(
                     })
             );
             await channel.send(
-                `Remove <@&805388604791586826> from ${removed} members`
+                `Remove <@&805388604791586826> from ${findUniques.size} members`
             );
             const weeklyList = await Promise.all(
                 sortedWeekly.slice(0, 5).map(async ([uid]) => {
