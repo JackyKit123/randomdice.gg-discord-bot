@@ -145,4 +145,25 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
             disableMentions: 'everyone',
         }
     );
+
+    if (
+        /^!(?:poll|echo|aesthetics|ae|boldfancy|bf|boldfraktur|clap|double|ds|emojify|fancy|ff|fraktur|owofy|smallcaps|sc|space)\b/.test(
+            content
+        )
+    ) {
+        try {
+            await channel.messages.cache
+                .last(2)
+                .find(m => m.author.id === '235148962103951360')
+                ?.delete();
+            channel
+                .createMessageCollector(
+                    m => m.author.id === '235148962103951360',
+                    { max: 1, time: 3 * 1000 }
+                )
+                .on('collect', m => m.delete());
+        } catch {
+            //
+        }
+    }
 }
