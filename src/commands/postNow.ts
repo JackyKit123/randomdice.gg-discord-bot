@@ -246,10 +246,11 @@ export async function postGuide(
                             value: `[Click here to jump](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${messageIds[i]?.id})`,
                         }))
                 );
-            if (statusMessage.editable) {
+            try {
                 await statusMessage.edit(guideListEmbed);
-            } else {
-                await channel.send(guideListEmbed);
+            } catch {
+                if (!statusMessage.edits.length)
+                    await channel.send(guideListEmbed);
             }
 
             await channel.send(
@@ -439,18 +440,20 @@ export default async function postNow(
     switch (type) {
         case 'guide':
             await postGuide(client, member);
-            if (statusMessage.editable) {
+            try {
                 await statusMessage.edit(`Finished Posting ${type}`);
-            } else {
-                await channel.send(`Finished Posting ${type}`);
+            } catch {
+                if (!statusMessage.edits.length)
+                    await channel.send(`Finished Posting ${type}`);
             }
             return;
         case 'news':
             await postNews(client, guild);
-            if (statusMessage.editable) {
+            try {
                 await statusMessage.edit(`Finished Posting ${type}`);
-            } else {
-                await channel.send(`Finished Posting ${type}`);
+            } catch {
+                if (!statusMessage.edits.length)
+                    await channel.send(`Finished Posting ${type}`);
             }
             return;
         default:
