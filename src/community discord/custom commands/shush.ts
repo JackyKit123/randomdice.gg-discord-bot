@@ -81,6 +81,7 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
         content,
         attachments,
         author,
+        mentions,
     } = message;
 
     if (!member || member.id !== shushMember) {
@@ -107,6 +108,18 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
 
     // eslint-disable-next-line prefer-template
     let sanitized = content.replace(/\|/g, '\\|') + '‎'; /* invis unicode */
+    mentions.roles.forEach(role => {
+        if (role.mentionable) {
+            return;
+        }
+
+        if (!role.mentionable && !member.hasPermission('MENTION_EVERYONE')) {
+            sanitized = sanitized.replace(
+                new RegExp(`<@&${role.id}>`, 'g'),
+                `@${role.name}`
+            );
+        }
+    });
     while (sanitized.includes('```')) {
         sanitized = sanitized.replace(/`{3,}/g, match =>
             match.replace(/`/g, '\\`')
