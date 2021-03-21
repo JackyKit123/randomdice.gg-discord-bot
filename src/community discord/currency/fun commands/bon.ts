@@ -28,7 +28,7 @@ export default async function bon(message: Discord.Message): Promise<void> {
         return;
     }
 
-    if (!commandCost(message, 100)) return;
+    if (!commandCost(message, 1000)) return;
     const webhook = new Discord.WebhookClient(
         '819762549796241438',
         'fM0NtIFMah--jhB0iK36zQVCdL6pHXx2uoly-kT-bFanbdDGrw3Q80ImW0H_g5NIFJrd'
