@@ -9,8 +9,8 @@ export default async function bon(message: Discord.Message): Promise<void> {
     if (
         !guild ||
         (await cooldown(message, '!bon', {
-            default: 10 * 1000,
-            donator: 1 * 1000,
+            default: 60 * 1000,
+            donator: 30 * 1000,
         }))
     )
         return;
