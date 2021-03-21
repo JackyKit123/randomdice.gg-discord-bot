@@ -38,6 +38,7 @@ import chatRevivePing, {
     fetchGeneralOnBoot,
 } from './community discord/chatrevivePing';
 import lock from './community discord/lock';
+import oneMinute from './community discord/oneMinute';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
@@ -151,6 +152,7 @@ client.on('message', async function messageHandler(message) {
             chatRevivePing(message);
             validateCrewAds(message);
             pokeballTrap(message);
+            oneMinute(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
