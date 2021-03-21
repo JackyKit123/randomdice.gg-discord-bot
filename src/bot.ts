@@ -51,7 +51,9 @@ import currencyUpdate from './community discord/currency/update';
 import prestige from './community discord/currency/prestige';
 import share from './community discord/currency/share';
 import givedice from './community discord/currency/giveDice';
-import leaderboard from './community discord/currency/leaderboard';
+import leaderboard, {
+    weeklyAutoReset,
+} from './community discord/currency/leaderboard';
 import drawDice from './community discord/currency/drawDice';
 import timed from './community discord/currency/timed';
 import chatCoins from './community discord/currency/chatCoins';
@@ -97,13 +99,13 @@ client.on('ready', async () => {
     await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
-    await Promise.all([
-        setTimerOnBoot(client, database),
-        infoVC(client),
-        purgeRolesOnReboot(client),
-        fetchApps(client),
-        fetchGeneralOnBoot(client),
-    ]);
+
+    setTimerOnBoot(client, database);
+    infoVC(client);
+    purgeRolesOnReboot(client);
+    fetchApps(client);
+    fetchGeneralOnBoot(client);
+    weeklyAutoReset(client);
 });
 
 client.on('message', async function messageHandler(message) {
@@ -213,7 +215,7 @@ client.on('message', async function messageHandler(message) {
                 case '!richest':
                 case '!leaderboard':
                 case '!lb':
-                    await leaderboard(message);
+                    await leaderboard(client, message);
                     break;
                 case '!prestige':
                     await prestige(message);
