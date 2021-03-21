@@ -63,6 +63,7 @@ import moon, {
 } from './community discord/custom commands/moon';
 import shush, { pokeballTrap } from './community discord/custom commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
+import bon from './community discord/currency/fun commands/bon';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 
@@ -235,6 +236,9 @@ client.on('message', async function messageHandler(message) {
                 case '!multi':
                 case '!multiplier':
                     await multiplier(message);
+                    break;
+                case '!bon':
+                    await bon(message);
                     break;
                 case '!moon':
                     await moon(client, message);
