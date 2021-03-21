@@ -156,6 +156,7 @@ export interface MemberCurrency {
             lose: number;
             gain: number;
         };
+        ignoreFunCommandPrompt?: string[];
     };
 }
 
