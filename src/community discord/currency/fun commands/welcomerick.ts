@@ -31,6 +31,11 @@ export default async function welcomerick(
     }
 
     if (!commandCost(message, 1000)) return;
+    try {
+        await message.delete();
+    } catch {
+        // nothing
+    }
     const webhook = new Discord.WebhookClient(
         '819762549796241438',
         'fM0NtIFMah--jhB0iK36zQVCdL6pHXx2uoly-kT-bFanbdDGrw3Q80ImW0H_g5NIFJrd'
@@ -47,7 +52,7 @@ export default async function welcomerick(
             .setTitle(`Not A Member!!`)
             .setColor(3669760)
             .setDescription(
-                `Make sure to check out <@!415166565550653442> getting rick rolled for some high quality meme, and check out <#804227456630128640> for the recorded rick rolls.`
+                `Make sure to check out ${target} getting rick rolled for some high quality meme, and check out <#804227456630128640> for the recorded rick rolls.`
             )
             .addField(
                 'Meme Created at',
