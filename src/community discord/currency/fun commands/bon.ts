@@ -48,7 +48,7 @@ export default async function bon(message: Discord.Message): Promise<void> {
             )
             .setColor('#ff0000')
             .setDescription(
-                `Interested in why ${target} got bonned?||${target} got bonned by ${author}||`
+                `Interested in why ${target} got bonned? ||${target} got bonned by ${author}||`
             )
     );
 }
