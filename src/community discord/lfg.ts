@@ -94,7 +94,9 @@ export default async function LFG(message: Discord.Message): Promise<void> {
         await reply('Your message cannot be longer than 1024 characters.');
         return;
     }
-    embed = embed.addField('Message', msg);
+    if (msg) {
+        embed = embed.addField('Message', msg);
+    }
 
     if (deletable) await message.delete();
     await channel.send(rawMessage, embed);
