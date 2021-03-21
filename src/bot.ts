@@ -64,6 +64,7 @@ import moon, {
 import shush, { pokeballTrap } from './community discord/custom commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
 import bon from './community discord/currency/fun commands/bon';
+import welcomerick from './community discord/currency/fun commands/welcomerick';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 
@@ -239,6 +240,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!bon':
                     await bon(message);
+                    break;
+                case '!welcomerick':
+                    await welcomerick(message);
                     break;
                 case '!moon':
                     await moon(client, message);
