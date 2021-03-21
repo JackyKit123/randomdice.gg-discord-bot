@@ -15,7 +15,7 @@ export default async function oneMinute(
     if (/\b(one|1) ?sec(ond)?\b/.test(content)) {
         setTimeout(
             () => channel.send(`${author}, it's been one second.`),
-            1000 * 60
+            1000
         );
     }
 }
