@@ -32,14 +32,7 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
         if (!(await commandCost(message, 500))) return;
         await target.roles.add('804223995025162280');
         setTimeout(() => target.roles.remove('804223995025162280'), 1000);
-        const webhook = new Discord.WebhookClient(
-            '819762574450491434',
-            'gw3ECSC-cnybQgTWh8HXg6UpcwZtf9zAGtMxxhRxwELKRckyhfhC-fqd_vR0lvLtuaps'
-        );
-        await webhook.edit({
-            channel: channel.id,
-        });
-        await webhook.send(
+        await channel.send(
             new Discord.MessageEmbed()
                 .setTitle('Temporary role added')
                 .setColor(5496236)
