@@ -27,26 +27,30 @@ export default async function commandCost(
         .ref(`discord_bot/community/currency/${author.id}/balance`)
         .set(balance - cost);
     if (!ignorePrompt.includes(command.toLowerCase())) {
-        const notification = await author.send(
-            `You used \`${command.toLowerCase()}\` command which costs you <:Dice_TierX_Coin:813149167585067008> ${cost}, react to 🔇 in 60 seconds to stop this notification.`
-        );
-        await notification.react('🔇');
-        notification
-            .createReactionCollector(
-                (reaction: Discord.MessageReaction, user: Discord.User) =>
-                    reaction.emoji.name === '🔇' && user.id === author.id,
-                {
-                    time: 1000 * 60,
-                    max: 1,
-                }
-            )
-            .on('collect', () =>
-                database
-                    .ref(
-                        `discord_bot/community/currency/${author.id}/ignoreFunCommandPrompt`
-                    )
-                    .set([...ignorePrompt, command.toLowerCase()])
+        try {
+            const notification = await author.send(
+                `You used \`${command.toLowerCase()}\` command which costs you <:Dice_TierX_Coin:813149167585067008> ${cost}, react to 🔇 in 60 seconds to stop this notification.`
             );
+            await notification.react('🔇');
+            notification
+                .createReactionCollector(
+                    (reaction: Discord.MessageReaction, user: Discord.User) =>
+                        reaction.emoji.name === '🔇' && user.id === author.id,
+                    {
+                        time: 1000 * 60,
+                        max: 1,
+                    }
+                )
+                .on('collect', () =>
+                    database
+                        .ref(
+                            `discord_bot/community/currency/${author.id}/ignoreFunCommandPrompt`
+                        )
+                        .set([...ignorePrompt, command.toLowerCase()])
+                );
+        } catch {
+            // do nothing
+        }
     }
     return true;
 }
