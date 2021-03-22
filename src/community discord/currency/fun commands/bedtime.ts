@@ -29,7 +29,7 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
     }
 
     if (!target.roles.cache.has('804223995025162280')) {
-        if (!commandCost(message, 500)) return;
+        if (!(await commandCost(message, 500))) return;
         await target.roles.add('804223995025162280');
         setTimeout(() => target.roles.remove('804223995025162280'), 1000);
         const webhook = new Discord.WebhookClient(

@@ -30,7 +30,7 @@ export default async function welcomerick(
         return;
     }
 
-    if (!commandCost(message, 1000)) return;
+    if (!(await commandCost(message, 1000))) return;
     try {
         await message.delete();
     } catch {
