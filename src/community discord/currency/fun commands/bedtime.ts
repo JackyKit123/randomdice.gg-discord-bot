@@ -32,22 +32,24 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
         if (!commandCost(message, 500)) return;
         await target.roles.add('804223995025162280');
         setTimeout(() => target.roles.remove('804223995025162280'), 1000);
+        const webhook = new Discord.WebhookClient(
+            '819762574450491434',
+            'gw3ECSC-cnybQgTWh8HXg6UpcwZtf9zAGtMxxhRxwELKRckyhfhC-fqd_vR0lvLtuaps'
+        );
+        await webhook.edit({
+            channel: channel.id,
+        });
+        await webhook.send(
+            new Discord.MessageEmbed()
+                .setTitle('Temporary role added')
+                .setColor(5496236)
+                .setDescription(
+                    `${target} has been granted the <@&804223995025162280> role for now.`
+                )
+        );
     } else {
         await channel.send(
             'You cannot use `!bedtime` on someone who already has this role.'
         );
     }
-
-    const webhook = new Discord.WebhookClient(
-        '819762549796241438',
-        'fM0NtIFMah--jhB0iK36zQVCdL6pHXx2uoly-kT-bFanbdDGrw3Q80ImW0H_g5NIFJrd'
-    );
-    await webhook.send(
-        new Discord.MessageEmbed()
-            .setTitle('Temporary role added')
-            .setColor(5496236)
-            .setDescription(
-                `${target} has been granted the <@&804223995025162280> role for now.`
-            )
-    );
 }
