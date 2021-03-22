@@ -31,9 +31,15 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
     const bedtimeForReal = /!bedtime\b.* --for-real\b/i.test(content);
     if (!target.roles.cache.has('804223995025162280')) {
         if (bedtimeForReal) {
-            if (!member?.hasPermission('MANAGE_ROLES')) {
+            if (
+                !member?.roles.cache.some(
+                    role =>
+                        role.id === '807219483311603722' ||
+                        role.id === '804223928427216926'
+                )
+            ) {
                 await channel.send(
-                    'You need to have `MANAGE_ROLES` permission to use argument `--for-real`'
+                    "You don't have sufficient permission to use argument `--for-real`"
                 );
                 return;
             }
