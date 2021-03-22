@@ -4,7 +4,7 @@ import commandCost from './commandCost';
 import cooldown from '../../../helper/cooldown';
 
 export default async function bedtime(message: Discord.Message): Promise<void> {
-    const { content, channel, guild } = message;
+    const { content, channel, guild, member } = message;
 
     if (
         !guild ||
@@ -28,16 +28,32 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
         return;
     }
 
+    const bedtimeForReal = /!bedtime\b.* --for-real\b/i.test(content);
     if (!target.roles.cache.has('804223995025162280')) {
-        if (!(await commandCost(message, 500))) return;
+        if (bedtimeForReal) {
+            if (!member?.hasPermission('MANAGE_ROLES')) {
+                await channel.send(
+                    'You need to have `MANAGE_ROLES` permission to use argument `--for-real`'
+                );
+                return;
+            }
+        }
+        if (!(await commandCost(message, 500))) {
+            return;
+        }
         await target.roles.add('804223995025162280');
-        setTimeout(() => target.roles.remove('804223995025162280'), 1000);
+        setTimeout(
+            () => target.roles.remove('804223995025162280'),
+            bedtimeForReal ? 1000 * 60 * 60 * 8 : 1000
+        );
         await channel.send(
             new Discord.MessageEmbed()
                 .setTitle('Temporary role added')
                 .setColor(5496236)
                 .setDescription(
-                    `${target} has been granted the <@&804223995025162280> role for now.`
+                    `${target} has been granted the <@&804223995025162280> role for ${
+                        bedtimeForReal ? '8 hours' : 'now'
+                    }.`
                 )
         );
     } else {
