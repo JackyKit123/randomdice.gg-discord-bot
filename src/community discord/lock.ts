@@ -61,6 +61,15 @@ export default async function lockUnlock(
                 SEND_MESSAGES: false,
             });
         }
+        if (channel.id !== target.id) {
+            await (target as Discord.TextChannel).send(
+                `Locked down ${target}${
+                    timer > 0
+                        ? ` for **${parseMsIntoReadableText(timer)}**`
+                        : ''
+                }.`
+            );
+        }
         await channel.send(
             `Locked down ${target}${
                 timer > 0 ? ` for **${parseMsIntoReadableText(timer)}**` : ''
@@ -88,6 +97,15 @@ export default async function lockUnlock(
             });
         }
 
+        if (channel.id !== target.id) {
+            await (target as Discord.TextChannel).send(
+                `Unlocked channel ${target}${
+                    timer > 0
+                        ? ` for **${parseMsIntoReadableText(timer)}**`
+                        : ''
+                }.`
+            );
+        }
         await channel.send(
             `Unlocked channel ${target}${
                 timer > 0 ? ` for **${parseMsIntoReadableText(timer)}**` : ''
