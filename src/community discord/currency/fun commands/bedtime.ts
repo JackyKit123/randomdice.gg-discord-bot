@@ -43,7 +43,13 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
         }
         await target.roles.add('804223995025162280');
         setTimeout(
-            () => target.roles.remove('804223995025162280'),
+            () => {
+                try {
+                    target.roles.remove('804223995025162280');
+                } catch {
+                    // nothing
+                }
+            },
             bedtimeForReal ? 1000 * 60 * 60 * 8 : 1000
         );
         await channel.send(
