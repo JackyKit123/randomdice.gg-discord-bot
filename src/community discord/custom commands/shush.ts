@@ -6,11 +6,18 @@ let shushMember: string | undefined;
 export default async function shush(message: Discord.Message): Promise<void> {
     const { content, guild, channel, author } = message;
 
-    if (
-        !guild ||
-        (author.id !== '285696350702796801' &&
-            process.env.NODE_ENV !== 'development')
-    ) {
+    if (!guild) {
+        return;
+    }
+
+    if (author.id !== '285696350702796801') {
+        const member = guild.member('285696350702796801');
+        const memberStr = member
+            ? `**${member.user.username}#${member.user.discriminator}**`
+            : '<@285696350702796801>';
+        await channel.send(
+            `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
+        );
         return;
     }
 
