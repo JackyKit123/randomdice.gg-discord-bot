@@ -23,13 +23,13 @@ export default async function yomama(message: Discord.Message): Promise<void> {
 
     let sanitized = text;
     if (
-        (channel as Discord.GuildChannel)
+        !(channel as Discord.GuildChannel)
             .permissionsFor(member)
-            ?.missing('MENTION_EVERYONE')
+            ?.has('MENTION_EVERYONE')
     ) {
         sanitized = sanitized
             .replace(/@everyone/g, '@‎everyone')
-            .replace(/@here/, '@‎here');
+            .replace(/@here/g, '@‎here');
         Array.from(text.matchAll(/<@&(\d{18})>/g) ?? []).forEach(
             ([, roleId]) => {
                 const role = guild.roles.cache.get(roleId);
@@ -38,7 +38,7 @@ export default async function yomama(message: Discord.Message): Promise<void> {
                 }
 
                 sanitized = sanitized.replace(
-                    new RegExp(`<@&${role.id}>`, 'g'),
+                    new RegExp(`<@‎&${role.id}>`, 'g'),
                     `@${role.name}`
                 );
             }
@@ -59,7 +59,7 @@ export default async function yomama(message: Discord.Message): Promise<void> {
         });
     }
 
-    await webhook.send(text);
+    await webhook.send(sanitized);
 
     if (attachments.size) {
         try {
