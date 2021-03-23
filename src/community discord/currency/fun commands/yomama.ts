@@ -38,8 +38,8 @@ export default async function yomama(message: Discord.Message): Promise<void> {
                 }
 
                 sanitized = sanitized.replace(
-                    new RegExp(`<@‎&${role.id}>`, 'g'),
-                    `@${role.name}`
+                    new RegExp(`<@&${role.id}>`, 'g'),
+                    `@‎${role.name}`
                 );
             }
         );
