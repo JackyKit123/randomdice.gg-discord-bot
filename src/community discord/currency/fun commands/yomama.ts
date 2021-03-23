@@ -29,9 +29,11 @@ export default async function yomama(message: Discord.Message): Promise<void> {
         // do nothing
     }
 
-    await webhook.edit({
-        channel: channel.id,
-    });
+    if (webhook.channelID !== channel.id) {
+        await webhook.edit({
+            channel: channel.id,
+        });
+    }
 
     await webhook.send(text);
 
