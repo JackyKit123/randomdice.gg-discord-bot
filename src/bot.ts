@@ -67,6 +67,7 @@ import snipe, { snipeListener } from './community discord/snipe';
 import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
+import yomama from './community discord/currency/fun commands/yomama';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 
@@ -249,6 +250,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!bedtime':
                     await bedtime(message);
+                    break;
+                case '!yomama':
+                    await yomama(message);
                     break;
                 case '!moon':
                     await moon(client, message);
