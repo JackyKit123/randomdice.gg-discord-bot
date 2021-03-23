@@ -61,7 +61,10 @@ export default async function lockUnlock(
                 SEND_MESSAGES: false,
             });
         }
-        if (channel.id !== target.id) {
+        if (
+            channel.id !== target.id &&
+            (target.type === 'text' || target.type === 'news')
+        ) {
             await (target as Discord.TextChannel).send(
                 `Locked down ${target}${
                     timer > 0
@@ -97,7 +100,10 @@ export default async function lockUnlock(
             });
         }
 
-        if (channel.id !== target.id) {
+        if (
+            channel.id !== target.id &&
+            (target.type === 'text' || target.type === 'news')
+        ) {
             await (target as Discord.TextChannel).send(
                 `Unlocked channel ${target}${
                     timer > 0
