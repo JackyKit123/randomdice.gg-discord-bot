@@ -32,5 +32,6 @@ export default async function welcomeReward(
         await database
             .ref(`discord_bot/community/currency/${id}/balance`)
             .set(balance + 100);
+        await collected.react('<:Dice_TierX_Coin:813149167585067008>');
     });
 }
