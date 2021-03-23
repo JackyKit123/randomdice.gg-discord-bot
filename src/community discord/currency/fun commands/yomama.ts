@@ -2,11 +2,11 @@ import * as Discord from 'discord.js';
 import commandCost from './commandCost';
 
 export default async function yomama(message: Discord.Message): Promise<void> {
-    const { content, channel, attachments, guild, author } = message;
+    const { content, channel, attachments, guild, author, member } = message;
 
     const text = content.replace(/^!yomama ?/i, '');
 
-    if (!guild) return;
+    if (!guild || !member) return;
 
     const webhooks = await guild.fetchWebhooks();
     const webhook = webhooks.find(wh => wh.name.toLowerCase() === 'yomama');
@@ -19,6 +19,30 @@ export default async function yomama(message: Discord.Message): Promise<void> {
     if (!text) {
         await channel.send('You need to include the text, `!yomama <text>`');
         return;
+    }
+
+    let sanitized = text;
+    if (
+        (channel as Discord.GuildChannel)
+            .permissionsFor(member)
+            ?.missing('MENTION_EVERYONE')
+    ) {
+        sanitized = sanitized
+            .replace(/@everyone/g, '@‎everyone')
+            .replace(/@here/, '@‎here');
+        Array.from(text.matchAll(/<@&(\d{18})>/g) ?? []).forEach(
+            ([, roleId]) => {
+                const role = guild.roles.cache.get(roleId);
+                if (!role || role.mentionable) {
+                    return;
+                }
+
+                sanitized = sanitized.replace(
+                    new RegExp(`<@&${role.id}>`, 'g'),
+                    `@${role.name}`
+                );
+            }
+        );
     }
 
     if (!(await commandCost(message, 100))) return;
