@@ -32,7 +32,7 @@ export default async function custom(
         });
         if (!target) {
             await channel.send(
-                `Usage of the command: \`\`\`!moon <@mention | user id | username>\`\`\``
+                `Usage of the command: \`\`\`!moon <@mention | user id | username | nickname | #username#discriminator>\`\`\``
             );
             return;
         }
