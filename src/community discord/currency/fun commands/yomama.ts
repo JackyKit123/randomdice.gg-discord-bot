@@ -33,7 +33,7 @@ export default async function yomama(message: Discord.Message): Promise<void> {
         channel: channel.id,
     });
 
-    await webhook.send(content);
+    await webhook.send(text);
 
     if (attachments.size) {
         try {
