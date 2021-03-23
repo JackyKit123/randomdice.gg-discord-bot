@@ -1,5 +1,6 @@
 import * as Discord from 'discord.js';
 import cooldown from '../../helper/cooldown';
+import fetchMention from '../../helper/fetchMention';
 
 let shushMember: string | undefined;
 export default async function shush(message: Discord.Message): Promise<void> {
@@ -23,38 +24,10 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
 
     const memberArg = content.split(' ')[1];
-    let target: Discord.GuildMember | undefined;
-    if (memberArg) {
-        const uid =
-            memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
-            memberArg.match(/^(\d{18})$/)?.[1];
-        target = uid
-            ? await guild.members
-                  .fetch(uid)
-                  .then(u => u)
-                  .catch(err => {
-                      if (err.message === 'Unknown User') {
-                          return undefined;
-                      }
-                      throw err;
-                  })
-            : guild.members.cache.find(
-                  m =>
-                      typeof memberArg === 'string' &&
-                      memberArg !== '' &&
-                      (m.user.username.toLowerCase() ===
-                          memberArg.toLowerCase() ||
-                          `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                              memberArg.toLowerCase() ||
-                          (m.nickname !== null &&
-                              content
-                                  .split(' ')
-                                  .slice(1)
-                                  .join(' ')
-                                  .toLowerCase()
-                                  .startsWith(m.nickname.toLowerCase())))
-              );
-    }
+    const target = await fetchMention(memberArg, guild, {
+        content,
+        mentionIndex: 1,
+    });
     if (!target) {
         await channel.send(
             `Usage of the command: \`\`\`!shush <@mention | user id | username | nickname | #username#discriminator>\`\`\``

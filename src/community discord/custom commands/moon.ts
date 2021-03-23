@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import { promisify } from 'util';
 import cooldown from '../../helper/cooldown';
+import fetchMention from '../../helper/fetchMention';
 
 const wait = promisify(setTimeout);
 
@@ -14,9 +15,9 @@ export default async function custom(
         return;
     }
 
-    const [command, memberArg] = content.split(' ');
+    const memberArg = content.split(' ')?.[1];
 
-    if (command === '!moon' && author.id === '722951439567290458') {
+    if (author.id === '722951439567290458') {
         if (
             await cooldown(message, '!moon', {
                 default: 10 * 1000,
@@ -25,38 +26,13 @@ export default async function custom(
         ) {
             return;
         }
-        const uid =
-            memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
-            memberArg.match(/^(\d{18})$/)?.[1];
-        const target = uid
-            ? await guild.members
-                  .fetch(uid)
-                  .then(u => u)
-                  .catch(err => {
-                      if (err.message === 'Unknown User') {
-                          return undefined;
-                      }
-                      throw err;
-                  })
-            : guild.members.cache.find(
-                  m =>
-                      typeof memberArg === 'string' &&
-                      memberArg !== '' &&
-                      (m.user.username.toLowerCase() ===
-                          memberArg.toLowerCase() ||
-                          `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                              memberArg.toLowerCase() ||
-                          (m.nickname !== null &&
-                              content
-                                  .split(' ')
-                                  .slice(1)
-                                  .join(' ')
-                                  .toLowerCase()
-                                  .startsWith(m.nickname.toLowerCase())))
-              );
+        const target = await fetchMention(memberArg, guild, {
+            content,
+            mentionIndex: 1,
+        });
         if (!target) {
             await channel.send(
-                `Usage of the command: \`\`\`${command} <@mention | user id | username>\`\`\``
+                `Usage of the command: \`\`\`!moon <@mention | user id | username>\`\`\``
             );
             return;
         }
