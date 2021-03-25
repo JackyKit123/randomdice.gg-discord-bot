@@ -3,6 +3,7 @@ import * as Discord from 'discord.js';
 import getBalance from './balance';
 import cooldown from '../../helper/cooldown';
 import cache from '../../helper/cache';
+import fetchMention from '../../helper/fetchMention';
 
 export default async function share(message: Discord.Message): Promise<void> {
     const app = firebase.app();
@@ -23,34 +24,10 @@ export default async function share(message: Discord.Message): Promise<void> {
     const yourBalance = await getBalance(message, 'emit new member');
     if (yourBalance === false) return;
 
-    const uid =
-        memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
-        memberArg.match(/^(\d{18})$/)?.[1];
-    const target = uid
-        ? await guild.members
-              .fetch(uid)
-              .then(u => u)
-              .catch(err => {
-                  if (err.message === 'Unknown User') {
-                      return undefined;
-                  }
-                  throw err;
-              })
-        : guild.members.cache.find(
-              m =>
-                  typeof memberArg === 'string' &&
-                  memberArg !== '' &&
-                  (m.user.username.toLowerCase() === memberArg.toLowerCase() ||
-                      `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                          memberArg.toLowerCase() ||
-                      (m.nickname !== null &&
-                          content
-                              .split(' ')
-                              .slice(2)
-                              .join(' ')
-                              .toLowerCase()
-                              .startsWith(m.nickname.toLowerCase())))
-          );
+    const target = await fetchMention(memberArg, guild, {
+        content,
+        mentionIndex: 2,
+    });
 
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !target) {

@@ -3,6 +3,7 @@ import * as Discord from 'discord.js';
 import getBalance from './balance';
 import cooldown from '../../helper/cooldown';
 import cache from '../../helper/cache';
+import fetchMention from '../../helper/fetchMention';
 
 export default async function giveDice(
     message: Discord.Message
@@ -24,38 +25,8 @@ export default async function giveDice(
     const memberArg = args[args.length - 1];
     if (!guild || !member) return;
 
-    const uid =
-        memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
-        memberArg.match(/^(\d{18})$/)?.[1];
-    const target = uid
-        ? await guild.members
-              .fetch(uid)
-              .then(u => u)
-              .catch(err => {
-                  if (err.message === 'Unknown User') {
-                      return undefined;
-                  }
-                  throw err;
-              })
-        : guild.members.cache.find(
-              m =>
-                  typeof memberArg === 'string' &&
-                  memberArg !== '' &&
-                  (m.user.username.toLowerCase() === memberArg.toLowerCase() ||
-                      `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                          memberArg.toLowerCase() ||
-                      (m.nickname !== null &&
-                          content.endsWith(m.nickname.toLowerCase())))
-          );
-    if (
-        (await getBalance(message, 'emit new member')) === false ||
-        (await getBalance(message, 'emit new member', target)) === false
-    )
-        return;
-
     const { dice } = cache;
     const emoji = cache['discord_bot/emoji'];
-    const profile = cache['discord_bot/community/currency'][member.id];
     const die = dice.find(d =>
         args
             .slice(2, args.length)
@@ -63,6 +34,18 @@ export default async function giveDice(
             .toLowerCase()
             .startsWith(d.name.toLowerCase())
     );
+    const target = await fetchMention(memberArg, guild, {
+        content: content.toLowerCase().replace(`${die?.name || ''} `, ''),
+        mentionIndex: 2,
+    });
+    if (
+        (await getBalance(message, 'emit new member')) === false ||
+        (await getBalance(message, 'emit new member', target)) === false
+    )
+        return;
+
+    const profile = cache['discord_bot/community/currency'][member.id];
+
     if (Number.isNaN(Number(amount)) || !die || !target) {
         await channel.send(
             'Usage of the command `!givedice <amount> <dice> <member>`, example```!givedice 10 mighty wind @JackyKit#0333```'
