@@ -1,6 +1,7 @@
 import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
 import cooldown from '../../helper/cooldown';
+import fetchMention from '../../helper/fetchMention';
 import cache from '../../helper/cache';
 
 const prestigeRoleIds = [
@@ -40,35 +41,11 @@ export default async function balance(
     const memberArg = content.split(' ')[1];
     let target = optionalTarget || member;
     if (memberArg && !optionalTarget && output === 'emit') {
-        const uid =
-            memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
-            memberArg.match(/^(\d{18})$/)?.[1];
-        target = uid
-            ? await guild.members
-                  .fetch(uid)
-                  .then(u => u)
-                  .catch(err => {
-                      if (err.message === 'Unknown User') {
-                          return member;
-                      }
-                      throw err;
-                  })
-            : guild.members.cache.find(
-                  m =>
-                      typeof memberArg === 'string' &&
-                      memberArg !== '' &&
-                      (m.user.username.toLowerCase() ===
-                          memberArg.toLowerCase() ||
-                          `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                              memberArg.toLowerCase() ||
-                          (m.nickname !== null &&
-                              content
-                                  .split(' ')
-                                  .slice(1)
-                                  .join(' ')
-                                  .toLowerCase()
-                                  .startsWith(m.nickname.toLowerCase())))
-              ) || member;
+        target =
+            (await fetchMention(memberArg, guild, {
+                content,
+                mentionIndex: 1,
+            })) || member;
     }
 
     if (!Object.keys(cache['discord_bot/community/currency']).length)

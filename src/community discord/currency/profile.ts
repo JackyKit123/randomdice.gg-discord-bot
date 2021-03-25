@@ -2,6 +2,7 @@ import * as Discord from 'discord.js';
 import getBalance from './balance';
 import cache from '../../helper/cache';
 import parseMsIntoReadableText from '../../helper/parseMS';
+import fetchMention from '../../helper/fetchMention';
 
 export default async function Profile(message: Discord.Message): Promise<void> {
     const { member, channel, guild, content } = message;
@@ -10,38 +11,11 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     if (!member || !guild) return;
 
     const memberArg = content.split(' ')[1];
-    let target = member;
-    if (memberArg) {
-        const uid =
-            memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
-            memberArg.match(/^(\d{18})$/)?.[1];
-        target = uid
-            ? await guild.members
-                  .fetch(uid)
-                  .then(u => u)
-                  .catch(err => {
-                      if (err.message === 'Unknown User') {
-                          return member;
-                      }
-                      throw err;
-                  })
-            : guild.members.cache.find(
-                  m =>
-                      typeof memberArg === 'string' &&
-                      memberArg !== '' &&
-                      (m.user.username.toLowerCase() ===
-                          memberArg.toLowerCase() ||
-                          `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                              memberArg.toLowerCase() ||
-                          (m.nickname !== null &&
-                              content
-                                  .split(' ')
-                                  .slice(1)
-                                  .join(' ')
-                                  .toLowerCase()
-                                  .startsWith(m.nickname.toLowerCase())))
-              ) || member;
-    }
+    const target =
+        (await fetchMention(memberArg, guild, {
+            content,
+            mentionIndex: 1,
+        })) || member;
 
     const balance = await getBalance(message, 'emit new member', target);
     if (balance === false) return;
