@@ -37,7 +37,6 @@ export default async function fetchMentionString(
                           .split(' ')
                           .slice(matchNickName.mentionIndex)
                           .join(' ')
-                          .toLowerCase()
-                          .startsWith(m.nickname.toLowerCase()))
+                          .toLowerCase() === m.nickname.toLowerCase())
           );
 }
