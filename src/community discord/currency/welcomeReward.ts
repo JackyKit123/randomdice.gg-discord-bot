@@ -2,6 +2,8 @@ import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import getBalance from './balance';
 
+const rapidSuccessJoin = new Map<string | undefined, number>();
+
 export default async function welcomeReward(
     message: Discord.Message
 ): Promise<void> {
@@ -12,26 +14,36 @@ export default async function welcomeReward(
     if (!guild || channel.id !== '804235804506324992' /* #join-leave-log */)
         return;
     if (!embeds.some(embed => embed.title === 'Member joined')) return;
+    const joinedMember = embeds[0]?.description
+        ?.split(' ')?.[0]
+        ?.replace(/^<@!?/, '')
+        .replace(/>$/, '');
+    const now = Date.now().valueOf();
+    if (now - (rapidSuccessJoin.get(joinedMember) || 0) <= 1000 * 60 * 60) {
+        return;
+    }
+    rapidSuccessJoin.set(joinedMember, now);
 
     const general = guild.channels.cache.get('804222694488932364') as
         | Discord.TextChannel
         | undefined;
     if (general?.type !== 'text') return;
-    const collector = general.createMessageCollector(
-        (collected: Discord.Message) =>
-            !collected.author.bot && /welcome/i.test(collected.content),
-        { time: 60 * 1000 }
-    );
-    const saidWelcome = [] as string[];
-    collector.on('collect', async (collected: Discord.Message) => {
-        const { id } = collected.member as Discord.GuildMember;
-        if (saidWelcome.includes(id)) return;
-        saidWelcome.push(id);
-        const balance = await getBalance(collected, 'silence');
-        if (balance === false) return;
-        await database
-            .ref(`discord_bot/community/currency/${id}/balance`)
-            .set(balance + 100);
-        await collected.react('<:Dice_TierX_Coin:813149167585067008>');
-    });
+    const saidWelcome = [joinedMember] as (string | undefined)[];
+    general
+        .createMessageCollector(
+            (collected: Discord.Message) =>
+                !collected.author.bot && /welcome/i.test(collected.content),
+            { time: 60 * 1000 }
+        )
+        .on('collect', async (collected: Discord.Message) => {
+            const { id } = collected.member as Discord.GuildMember;
+            if (saidWelcome.includes(id)) return;
+            saidWelcome.push(id);
+            const balance = await getBalance(collected, 'silence');
+            if (balance === false) return;
+            await database
+                .ref(`discord_bot/community/currency/${id}/balance`)
+                .set(balance + 100);
+            await collected.react('<:Dice_TierX_Coin:813149167585067008>');
+        });
 }
