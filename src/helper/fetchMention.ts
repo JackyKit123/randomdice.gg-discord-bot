@@ -18,7 +18,10 @@ export default async function fetchMentionString(
               .fetch(uid)
               .then(u => u)
               .catch(err => {
-                  if (err.message === 'Unknown User') {
+                  if (
+                      err.message === 'Unknown User' ||
+                      err.message === 'Unknown Member'
+                  ) {
                       return undefined;
                   }
                   throw err;
