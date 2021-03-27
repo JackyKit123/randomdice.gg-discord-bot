@@ -50,7 +50,7 @@ export default async function chatCoins(
         return;
     }
 
-    const balance = (await getBalance(message, 'silence')) || 10000;
+    const balance = (await getBalance(message, 'silence')) as number;
     if (!Object.keys(cache['discord_bot/community/currency']).length) return;
 
     const now = Date.now().valueOf();
