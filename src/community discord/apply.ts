@@ -46,7 +46,7 @@ export default async function Apply(message: Discord.Message): Promise<void> {
     }
 
     const application = applications.find(
-        app => args.join(' ').toLowerCase() === app.position.toLowerCase()
+        app => args.join(' ').toLowerCase() === app.position.toLowerCase() && app.isOpen
     );
 
     if (!application) {
