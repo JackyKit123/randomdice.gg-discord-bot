@@ -237,6 +237,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     'You need `ADMINISTRATOR` permission to use this command.'
                 )
         );
+        return;
     }
 
     switch (subcommand?.toLowerCase()) {
