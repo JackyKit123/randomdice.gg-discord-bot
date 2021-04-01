@@ -60,4 +60,21 @@ export default async function welcomerick(
             )
             .setFooter('Get rick rolled')
     );
+    const general = guild.channels.cache.get('804222694488932364') as
+        | Discord.TextChannel
+        | undefined;
+    if (general?.type !== 'text') return;
+    const saidWelcome = [] as string[];
+    general
+        .createMessageCollector(
+            (collected: Discord.Message) =>
+                !collected.author.bot && /welcome/i.test(collected.content),
+            { time: 60 * 1000 }
+        )
+        .on('collect', async (collected: Discord.Message) => {
+            const { id } = collected.member as Discord.GuildMember;
+            if (saidWelcome.includes(id)) return;
+            saidWelcome.push(id);
+            await collected.react('<a:Dice_TierX_RickCoin:827059872810008616>');
+        });
 }
