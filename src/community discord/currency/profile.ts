@@ -269,10 +269,6 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         );
 
     const sentMessage = await channel.send(generalProfile);
-    await sentMessage.react('👤');
-    await sentMessage.react('⏲️');
-    await sentMessage.react('🎰');
-    await sentMessage.react('<:Dice_TierX_Null:807019807312183366>');
 
     const collector = sentMessage.createReactionCollector(
         (reaction: Discord.MessageReaction, user) =>
@@ -283,6 +279,11 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             time: 60 * 1000,
         }
     );
+
+    await sentMessage.react('👤');
+    await sentMessage.react('⏲️');
+    await sentMessage.react('🎰');
+    await sentMessage.react('<:Dice_TierX_Null:807019807312183366>');
 
     collector.on('collect', async (reaction, user) => {
         try {
