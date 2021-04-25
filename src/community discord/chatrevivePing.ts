@@ -4,8 +4,8 @@ let timeout: NodeJS.Timeout;
 export default async function chatRevivePing(
     message: Discord.Message
 ): Promise<void> {
-    const { channel } = message;
-    if (channel.id !== '804222694488932364') {
+    const { channel, author } = message;
+    if (channel.id !== '804222694488932364' || author.bot) {
         return;
     }
 
