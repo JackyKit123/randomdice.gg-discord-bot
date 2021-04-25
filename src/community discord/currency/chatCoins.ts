@@ -34,9 +34,9 @@ export default async function chatCoins(
                     `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
                 )
                 .set(generalMulti - 10);
-        }, 10 * 60 * 1000);
+        }, 60 * 60 * 1000);
         await channel.send(
-            `For the next 10 minutes, ${channel} has extra \`x10\` multiplier!`
+            `For the next 60 minutes, ${channel} has extra \`x10\` multiplier!`
         );
         return;
     }

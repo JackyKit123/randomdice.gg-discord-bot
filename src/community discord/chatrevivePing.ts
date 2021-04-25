@@ -17,7 +17,7 @@ export default async function chatRevivePing(
             channel.send(
                 '<@&807578981003689984> come and revive this dead chat.'
             ),
-        1000 * 60 * 10
+        1000 * 60 * 60
     );
 }
 
@@ -36,7 +36,7 @@ export async function fetchGeneralOnBoot(
             .first();
         if (!lastMessage) return;
         const deadChatTimer = Date.now() - lastMessage.createdTimestamp;
-        const tenMinutes = 1000 * 60 * 10;
+        const tenMinutes = 1000 * 60 * 60;
         if (!timeout) {
             timeout = setTimeout(
                 async () =>
