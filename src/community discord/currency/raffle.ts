@@ -190,10 +190,12 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                     );
                     return;
                 }
-                const currEntry = Number(arg) || 1;
                 const prevEntry =
                     currentEntries.filter(([, uid]) => uid === author.id)
                         ?.length || 0;
+                const currEntry = /max/i.test(arg)
+                    ? raffle.maxEntries - prevEntry
+                    : Number(arg) || 1;
                 if (!Number.isInteger(currEntry) || currEntry < 1) {
                     await channel.send(
                         'Tickets entered should be a positive integer'
