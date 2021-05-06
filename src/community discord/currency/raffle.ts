@@ -195,11 +195,11 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         ?.length || 0;
                 let currEntry = 0;
                 if (/max/i.test(arg)) {
-                    currEntry = raffle.maxEntries;
-                    if (raffle.maxEntries == prevEntry) {
+                    if (prevEntry === raffle.maxEntries) {
                         `You have already entered with max entries (${raffle.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
                         return;
                     }
+                    currEntry = raffle.maxEntries - prevEntry;
                 } else {
                     currEntry = Number(arg) || 1;
                     if (!Number.isInteger(currEntry) || currEntry < 1) {
