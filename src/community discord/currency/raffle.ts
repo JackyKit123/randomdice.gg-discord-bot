@@ -33,7 +33,7 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
 
         const amount = entries.length * raffle.ticketCost;
         const winningMessage = await (channel as Discord.TextChannel).send(
-            '<@&804544088153391124>',
+            '<@&839694796431294485>',
             new Discord.MessageEmbed()
                 .setAuthor(
                     'randomdice.gg Server',
@@ -305,7 +305,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
             });
             announceWinner(guild);
             await channel.send(
-                '<@&804544088153391124>',
+                '<@&839694796431294485>',
                 new Discord.MessageEmbed()
                     .setAuthor(
                         'randomdice.gg Server',
