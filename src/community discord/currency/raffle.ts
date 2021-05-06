@@ -197,6 +197,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                 if (/max/i.test(arg)) {
                     currEntry = raffle.maxEntries;
                     if (raffle.maxEntries == prevEntry) {
+                        `You have already entered with max entries (${raffle.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
                         return;
                     }
                 } else {
@@ -214,7 +215,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                             raffle.maxEntries
                         } ticket(s). You can only join with ${
                             raffle.maxEntries - prevEntry
-                        } more ticket(s).`
+                        } more ticket(s). Use \`!raffle info\` to review your entries.`
                     );
                     return;
                 }
