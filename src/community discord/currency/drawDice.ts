@@ -180,13 +180,13 @@ export default async function drawDice(
             `${member.displayName}'s Dice Draw Game`,
             author.avatarURL({ dynamic: true }) ?? undefined
         )
-        .setDescription(`You earned <:Dice_TierX_Coin:813149167585067008> ????`)
+        .setDescription(`You earned <:dicecoin:839981846419079178> ????`)
         .addField('Your Draw is', '<:Dice_TierX_Null:807019807312183366>');
     const sentMessage = await channel.send(embed);
     await wait(1000);
     embed = embed
         .setDescription(
-            `You earned <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+            `You earned <:dicecoin:839981846419079178> ${numberFormat.format(
                 outcome.reward
             )}`
         )
@@ -201,7 +201,7 @@ export default async function drawDice(
         },
         {
             name: 'Current Balance',
-            value: `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+            value: `<:dicecoin:839981846419079178> ${numberFormat.format(
                 outcome.reward + balance
             )}`,
             inline: false,

@@ -38,7 +38,7 @@ export default async function share(message: Discord.Message): Promise<void> {
     }
     if (target.id === member.id) {
         await channel.send(
-            'You cannot share <:Dice_TierX_Coin:813149167585067008> to yourself.'
+            'You cannot share <:dicecoin:839981846419079178> to yourself.'
         );
         return;
     }
@@ -48,7 +48,7 @@ export default async function share(message: Discord.Message): Promise<void> {
     }
     if (amount > yourBalance) {
         await channel.send(
-            `You only have <:Dice_TierX_Coin:813149167585067008> ${yourBalance}, you can't share that many.`
+            `You only have <:dicecoin:839981846419079178> ${yourBalance}, you can't share that many.`
         );
         return;
     }
@@ -64,13 +64,13 @@ export default async function share(message: Discord.Message): Promise<void> {
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(yourBalance - amount);
     await channel.send(
-        `You have shared <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+        `You have shared <:dicecoin:839981846419079178> ${numberFormat.format(
             amount
         )} to ${
             target.user.username
-        }, they now have <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+        }, they now have <:dicecoin:839981846419079178> ${numberFormat.format(
             theirBalance + amount
-        )} and you have <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+        )} and you have <:dicecoin:839981846419079178> ${numberFormat.format(
             yourBalance - amount
         )}!`
     );

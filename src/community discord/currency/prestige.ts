@@ -79,13 +79,13 @@ export default async function prestige(
                 )
                 .addField(
                     'Prestige Cost',
-                    `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                    `<:dicecoin:839981846419079178> ${numberFormat.format(
                         prestigeLevels[nextPrestigeLevel].coinsNeeded
                     )}`
                 )
                 .addField(
                     'Your Balance',
-                    `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                    `<:dicecoin:839981846419079178> ${numberFormat.format(
                         balance
                     )}`
                 )

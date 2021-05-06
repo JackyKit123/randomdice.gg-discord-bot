@@ -48,7 +48,7 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
                               Object.keys(uniqueEntry).length
                           }** people entered the raffle with a total of **${
                               entries.length
-                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:dicecoin:839981846419079178> **${numberFormat.format(
                               amount
                           )}**. Congratulations!`
                 )
@@ -126,11 +126,11 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         .setTitle('Dice Coins Raffle')
                         .addField(
                             'Ticket Entries',
-                            `<:Dice_TierX_Coin:813149167585067008> **${raffle.ticketCost} per ticket** (${raffle.maxEntries} ticket(s) max)`
+                            `<:dicecoin:839981846419079178> **${raffle.ticketCost} per ticket** (${raffle.maxEntries} ticket(s) max)`
                         )
                         .addField(
                             'Current Prize Pool',
-                            `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                            `<:dicecoin:839981846419079178> **${numberFormat.format(
                                 currentEntries.length * raffle.ticketCost
                             )}** (${currentEntries.length} Tickets)`
                         )
@@ -221,9 +221,9 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                 }
                 if (balance < currEntry * raffle.ticketCost) {
                     await channel.send(
-                        `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                        `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is <:dicecoin:839981846419079178> **${numberFormat.format(
                             currEntry * raffle.ticketCost
-                        )}** but you have only <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                        )}** but you have only <:dicecoin:839981846419079178> **${numberFormat.format(
                             balance
                         )}**.`
                     );
@@ -252,7 +252,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                             currEntry * raffle.ticketCost
                     );
                 await channel.send(
-                    `You have entered the raffle with ${currEntry} ticket(s), costing you <:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+                    `You have entered the raffle with ${currEntry} ticket(s), costing you <:dicecoin:839981846419079178> **${numberFormat.format(
                         currEntry * raffle.ticketCost
                     )}**${
                         prevEntry > 0
@@ -324,7 +324,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                     .setTitle('New Dice Coins Raffle')
                     .addField(
                         'Ticket Entries',
-                        `<:Dice_TierX_Coin:813149167585067008> **${ticketCost} per ticket** (${maxEntries} max)`
+                        `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
                     )
                     .addField('Hosted by', `${author}`)
                     .setFooter('Raffle ends at')

@@ -87,9 +87,9 @@ export default async function balance(
             .set(prestigeLevel);
         if (output === 'emit new member' || output === 'emit') {
             await channel.send(
-                'Looks like you are the first time using server currency command, you have been granted **<:Dice_TierX_Coin:813149167585067008> 10,000** as a starter reward.',
+                'Looks like you are the first time using server currency command, you have been granted **<:dicecoin:839981846419079178> 10,000** as a starter reward.',
                 embed.setDescription(
-                    `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                    `<:dicecoin:839981846419079178> ${numberFormat.format(
                         profile?.balance || 10000
                     )}`
                 )
@@ -105,7 +105,7 @@ export default async function balance(
     }
     await channel.send(
         embed.setDescription(
-            `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+            `<:dicecoin:839981846419079178> ${numberFormat.format(
                 profile?.balance
             )}`
         )

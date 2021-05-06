@@ -19,7 +19,7 @@ export default async function commandCost(
     if (balance === false) return false;
     if (balance < cost) {
         await channel.send(
-            `You need at least <:Dice_TierX_Coin:813149167585067008> ${cost} to use \`${command.toLowerCase()}\``
+            `You need at least <:dicecoin:839981846419079178> ${cost} to use \`${command.toLowerCase()}\``
         );
         return false;
     }
@@ -29,7 +29,7 @@ export default async function commandCost(
     if (!ignorePrompt.includes(command.toLowerCase())) {
         try {
             const notification = await author.send(
-                `You used \`${command.toLowerCase()}\` command which costs you <:Dice_TierX_Coin:813149167585067008> ${cost}, react to 🔇 in 60 seconds to stop this notification.`
+                `You used \`${command.toLowerCase()}\` command which costs you <:dicecoin:839981846419079178> ${cost}, react to 🔇 in 60 seconds to stop this notification.`
             );
             await notification.react('🔇');
             notification

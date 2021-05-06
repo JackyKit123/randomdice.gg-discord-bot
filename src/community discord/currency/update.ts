@@ -84,11 +84,11 @@ export default async function coinflip(
     await channel.send(
         `You have ${
             deduction ? 'taken away' : `given ${target.user.username}`
-        } <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+        } <:dicecoin:839981846419079178> ${numberFormat.format(
             Math.abs(amount)
         )}${
             deduction ? ` from ${target.user.username}` : ''
-        }, they now have  <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+        }, they now have  <:dicecoin:839981846419079178> ${numberFormat.format(
             balance + amount
         )}!`
     );

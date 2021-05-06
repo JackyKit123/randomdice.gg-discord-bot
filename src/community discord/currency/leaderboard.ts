@@ -76,7 +76,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
                                   )?.name
                               }***`
                             : ''
-                    }\n<:Dice_TierX_Coin:813149167585067008> **__${numberFormat.format(
+                    }\n<:dicecoin:839981846419079178> **__${numberFormat.format(
                         profile.weeklyChat || 0
                     )}__**`,
                 }))
@@ -192,7 +192,7 @@ export default async function leaderboard(
                           )?.name
                       }***`
                     : ''
-            }\n<:Dice_TierX_Coin:813149167585067008> **__${numberFormat.format(
+            }\n<:dicecoin:839981846419079178> **__${numberFormat.format(
                 isWeekly ? profile.weeklyChat || 0 : profile.balance
             )}__**`,
         }));

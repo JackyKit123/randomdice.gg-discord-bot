@@ -45,7 +45,7 @@ export default async function coinflip(
 
     if (balance < 100) {
         await channel.send(
-            'You do not even have <:Dice_TierX_Coin:813149167585067008> 100 to bet on a coinflip.'
+            'You do not even have <:dicecoin:839981846419079178> 100 to bet on a coinflip.'
         );
         return;
     }
@@ -95,13 +95,13 @@ export default async function coinflip(
             .setDescription(
                 `You ${
                     won ? 'won' : 'lost'
-                } <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                } <:dicecoin:839981846419079178> ${numberFormat.format(
                     amount
                 )}`
             )
             .addField(
                 'Current Balance',
-                `<:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                `<:dicecoin:839981846419079178> ${numberFormat.format(
                     balance + amount * (won ? 1 : -1)
                 )}`
             )
