@@ -193,14 +193,20 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                 const prevEntry =
                     currentEntries.filter(([, uid]) => uid === author.id)
                         ?.length || 0;
-                const currEntry = /max/i.test(arg)
-                    ? raffle.maxEntries - prevEntry
-                    : Number(arg) || 1;
-                if (!Number.isInteger(currEntry) || currEntry < 1) {
-                    await channel.send(
-                        'Tickets entered should be a positive integer'
-                    );
-                    return;
+                let currEntry = 0;
+                if (/max/i.test(arg)) {
+                    currEntry = raffle.maxEntries;
+                    if (raffle.maxEntries == prevEntry) {
+                        return;
+                    }
+                } else {
+                    currEntry = Number(arg) || 1;
+                    if (!Number.isInteger(currEntry) || currEntry < 1) {
+                        await channel.send(
+                            'Tickets entered should be a positive integer or `max`'
+                        );
+                        return;
+                    }
                 }
                 if (currEntry + prevEntry > raffle.maxEntries) {
                     await channel.send(
