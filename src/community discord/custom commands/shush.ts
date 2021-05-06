@@ -4,7 +4,7 @@ import fetchMention from '../../helper/fetchMention';
 
 let shushMember: string | undefined;
 export default async function shush(message: Discord.Message): Promise<void> {
-    const { content, guild, channel, author } = message;
+    const { content, guild, channel, author, member } = message;
 
     if (!guild) {
         return;
@@ -18,6 +18,11 @@ export default async function shush(message: Discord.Message): Promise<void> {
         await channel.send(
             `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
         );
+        return;
+    }
+
+    if (!member?.roles.cache.has('805727466219372546')) {
+        await channel.send('You are no longer $50 Patreon and you can no longer use this command.');
         return;
     }
 
