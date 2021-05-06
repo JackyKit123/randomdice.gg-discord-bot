@@ -98,7 +98,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
             .setTitle(`You claimed your ${mode} coins!`)
             .setColor('#ffff00')
             .setDescription(
-                `Added <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+                `Added <:dicecoin:839981846419079178> ${numberFormat.format(
                     amount * (1 + multiplier + +0.1 * (streak - 1))
                 )} to your balance!`
             )

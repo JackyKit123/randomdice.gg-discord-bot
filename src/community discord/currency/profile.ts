@@ -145,7 +145,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .addField(
             'Balance',
-            `<:Dice_TierX_Coin:813149167585067008> **${numberFormat.format(
+            `<:dicecoin:839981846419079178> **${numberFormat.format(
                 balance
             )}**`,
             true
@@ -190,7 +190,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                             : profileB.balance - profileA.balance
                     )
                     .findIndex(([uid]) => uid === target.id) + 1
-            }** in <:Dice_TierX_Coin:813149167585067008> wealth\n**#${
+            }** in <:dicecoin:839981846419079178> wealth\n**#${
                 Object.entries(currency)
                     .sort(
                         ([, profileA], [, profileB]) =>
@@ -230,11 +230,11 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const gambleProfile = new Discord.MessageEmbed(embed)
         .setTitle("Gamble's Profile")
         .setDescription(
-            `Total won: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+            `Total won: <:dicecoin:839981846419079178> ${numberFormat.format(
                 profile.gamble?.gain || 0
-            )}\nTotal lose: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+            )}\nTotal lose: <:dicecoin:839981846419079178> ${numberFormat.format(
                 profile.gamble?.lose || 0
-            )}\nTotal earning: <:Dice_TierX_Coin:813149167585067008> ${numberFormat.format(
+            )}\nTotal earning: <:dicecoin:839981846419079178> ${numberFormat.format(
                 (profile.gamble?.gain || 0) - (profile.gamble?.lose || 0)
             )}\n`
         )
