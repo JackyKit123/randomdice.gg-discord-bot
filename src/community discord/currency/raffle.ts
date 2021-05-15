@@ -287,7 +287,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                             .member(user)
                             ?.roles.add('839694796431294485');
                     });
-                    await message.react('✅');
+                    await sentMessage.react('✅');
                 }
             }
             return;
