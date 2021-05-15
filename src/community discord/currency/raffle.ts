@@ -267,6 +267,28 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         .map(([ticketNumber]) => `**${ticketNumber}**`)
                         .join(', ')}`
                 );
+                if (!member.roles.cache.has('839694796431294485')) {
+                    const sentMessage = await channel.send(
+                        new Discord.MessageEmbed()
+                            .setTitle('Tip!')
+                            .setColor('#32cd32')
+                            .setDescription(
+                                'It looks like you are missing the role <@&839694796431294485>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can react to the ✅ to claim this role now.'
+                            )
+                    );
+                    const collector = sentMessage.createReactionCollector(
+                        reaction => reaction.emoji.name === '✅',
+                        {
+                            time: 60000,
+                        }
+                    );
+                    collector.on('collect', async (reaction, user) => {
+                        await guild
+                            .member(user)
+                            ?.roles.add('839694796431294485');
+                    });
+                    await message.react('✅');
+                }
             }
             return;
         case 'host': {
