@@ -9,29 +9,33 @@ export default async function custom(
     client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { content, author, guild, channel, member } = message;
+    const { content, author, guild, channel } = message;
 
     if (!guild) {
         return;
     }
 
     const memberArg = content.split(' ')?.[1];
-
-    if (author.id !== '722951439567290458') {
-        const memberStr = member
-            ? `**${member.user.username}#${member.user.discriminator}**`
-            : '<@722951439567290458>';
-        await channel.send(
-            `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
-        );
+    if (author.id === '722951439567290458') {
+        await channel.send("No you can't use `!moon`, get rekt.");
         return;
     }
-    if (!member?.roles.cache.has('805727466219372546')) {
-        await channel.send(
-            'You are no longer $50 Patreon and you can no longer use this command.'
-        );
-        return;
-    }
+    
+    // if (author.id !== '722951439567290458') {
+    //     const memberStr = member
+    //        ? `**${member.user.username}#${member.user.discriminator}**`
+    //        : '<@722951439567290458>';
+    //     await channel.send(
+    //        `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
+    //     );
+    //     return;
+    // }
+    // if (!member?.roles.cache.has('805727466219372546')) {
+    //     await channel.send(
+    //        'You are no longer $50 Patreon and you can no longer use this command.'
+    //     );
+    //     return;
+    // }
     if (
         await cooldown(message, '!moon', {
             default: 10 * 1000,
@@ -40,6 +44,7 @@ export default async function custom(
     ) {
         return;
     }
+
     const target = await fetchMention(memberArg, guild, {
         content,
         mentionIndex: 1,
@@ -59,16 +64,6 @@ export default async function custom(
     if (target.roles.cache.has('804508975503638558')) {
         await channel.send(
             `${target.toString()} has already been mooned, wait a bit before your moon again.`
-        );
-        return;
-    }
-    const clientRole = (guild.member(
-        (client.user as Discord.ClientUser).id
-    ) as Discord.GuildMember).roles.highest;
-    const targetRole = target.roles.highest;
-    if (clientRole.comparePositionTo(targetRole) <= 0) {
-        await channel.send(
-            `I am not high enough in the role hierarchy to \`moon\` this member.`
         );
         return;
     }
@@ -102,6 +97,7 @@ export default async function custom(
     await wait(500);
     await sentMessage.edit(`${target.toString()}...🌝`);
     await wait(500);
+    try {
     await Promise.all([
         target.setNickname(
             originalName.length >= 30
@@ -110,6 +106,9 @@ export default async function custom(
         ),
         target.roles.add('804508975503638558'),
     ]);
+    } catch(err) {
+       // suppress error
+    } finally {
     await sentMessage.edit(
         `${target.toString()}...You have been mooned! <a:Taxi:780350572212781086>`
     );
@@ -121,7 +120,7 @@ export default async function custom(
         await target.setNickname(originalName);
     } catch (err) {
         // suppress error
-    }
+    }}
 }
 
 export async function purgeRolesOnReboot(
