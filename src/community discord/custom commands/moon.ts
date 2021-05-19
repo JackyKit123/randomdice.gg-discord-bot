@@ -67,16 +67,6 @@ export default async function custom(
         );
         return;
     }
-    const clientRole = (guild.member(
-        (client.user as Discord.ClientUser).id
-    ) as Discord.GuildMember).roles.highest;
-    const targetRole = target.roles.highest;
-    if (clientRole.comparePositionTo(targetRole) <= 0) {
-        await channel.send(
-            `I am not high enough in the role hierarchy to \`moon\` this member.`
-        );
-        return;
-    }
     const originalName = target.displayName;
     const randomMoonEmoji = [
         '🌝',
