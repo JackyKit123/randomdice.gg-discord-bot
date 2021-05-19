@@ -20,22 +20,22 @@ export default async function custom(
         await channel.send('No you can't use `!moon`, get rekt.');
         return;
     }
-    /*
-    if (author.id !== '722951439567290458') {
-        const memberStr = member
-            ? `**${member.user.username}#${member.user.discriminator}**`
-            : '<@722951439567290458>';
-        await channel.send(
-            `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
-        );
-        return;
-    }
-    if (!member?.roles.cache.has('805727466219372546')) {
-        await channel.send(
-            'You are no longer $50 Patreon and you can no longer use this command.'
-        );
-        return;
-    }
+    
+    // if (author.id !== '722951439567290458') {
+    //     const memberStr = member
+    //        ? `**${member.user.username}#${member.user.discriminator}**`
+    //        : '<@722951439567290458>';
+    //     await channel.send(
+    //        `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
+    //     );
+    //     return;
+    // }
+    // if (!member?.roles.cache.has('805727466219372546')) {
+    //     await channel.send(
+    //        'You are no longer $50 Patreon and you can no longer use this command.'
+    //     );
+    //     return;
+    // }
     if (
         await cooldown(message, '!moon', {
             default: 10 * 1000,
