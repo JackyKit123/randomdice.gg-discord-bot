@@ -44,7 +44,7 @@ export default async function custom(
     ) {
         return;
     }
-    */
+
     const target = await fetchMention(memberArg, guild, {
         content,
         mentionIndex: 1,
