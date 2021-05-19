@@ -17,7 +17,7 @@ export default async function custom(
 
     const memberArg = content.split(' ')?.[1];
     if (author.id === '722951439567290458') {
-        await channel.send('No you can't use `!moon`, get rekt.');
+        await channel.send("No you can't use `!moon`, get rekt.");
         return;
     }
     
