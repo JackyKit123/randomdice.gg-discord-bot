@@ -20,26 +20,11 @@ export default async function custom(
         await channel.send("No you can't use `!moon`, get rekt.");
         return;
     }
-    
-    // if (author.id !== '722951439567290458') {
-    //     const memberStr = member
-    //        ? `**${member.user.username}#${member.user.discriminator}**`
-    //        : '<@722951439567290458>';
-    //     await channel.send(
-    //        `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
-    //     );
-    //     return;
-    // }
-    // if (!member?.roles.cache.has('805727466219372546')) {
-    //     await channel.send(
-    //        'You are no longer $50 Patreon and you can no longer use this command.'
-    //     );
-    //     return;
-    // }
+
     if (
         await cooldown(message, '!moon', {
-            default: 10 * 1000,
-            donator: 10 * 1000,
+            default: 60 * 1000 * 5,
+            donator: 60 * 1000 * 5,
         })
     ) {
         return;
@@ -98,29 +83,30 @@ export default async function custom(
     await sentMessage.edit(`${target.toString()}...🌝`);
     await wait(500);
     try {
-    await Promise.all([
-        target.setNickname(
-            originalName.length >= 30
-                ? `${originalName.slice(0, 29)}…${randomMoonEmoji}`
-                : `${originalName}${randomMoonEmoji}`
-        ),
-        target.roles.add('804508975503638558'),
-    ]);
-    } catch(err) {
-       // suppress error
-    } finally {
-    await sentMessage.edit(
-        `${target.toString()}...You have been mooned! <a:Taxi:780350572212781086>`
-    );
-    await wait(1000 * 60 * 5);
-    try {
-        if (target.roles.cache.has('804508975503638558')) {
-            await target.roles.remove('804508975503638558');
-        }
-        await target.setNickname(originalName);
+        await Promise.all([
+            target.setNickname(
+                originalName.length >= 30
+                    ? `${originalName.slice(0, 29)}…${randomMoonEmoji}`
+                    : `${originalName}${randomMoonEmoji}`
+            ),
+            target.roles.add('804508975503638558'),
+        ]);
     } catch (err) {
         // suppress error
-    }}
+    } finally {
+        await sentMessage.edit(
+            `${target.toString()}...You have been mooned! <a:Taxi:780350572212781086>`
+        );
+        await wait(1000 * 60 * 5);
+        try {
+            if (target.roles.cache.has('804508975503638558')) {
+                await target.roles.remove('804508975503638558');
+            }
+            await target.setNickname(originalName);
+        } catch (err) {
+            // suppress error
+        }
+    }
 }
 
 export async function purgeRolesOnReboot(
