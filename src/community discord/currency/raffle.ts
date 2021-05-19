@@ -17,67 +17,68 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
         return;
     }
 
-    setTimeout(async () => {
-        raffle = (await ref.once('value')).val() as Raffle;
+    if (raffle.endTimestamp - Date.now() > 0)
+        setTimeout(async () => {
+            raffle = (await ref.once('value')).val() as Raffle;
 
-        const entries = Object.entries(raffle.tickets ?? {});
-        const uniqueEntry = {} as { [uid: string]: string };
-        entries.forEach(([, uid]) => {
-            if (!uniqueEntry[uid]) {
-                uniqueEntry[uid] = uid;
-            }
-        });
-        const [winningTicket, winner] = entries[
-            Math.ceil(entries.length * Math.random())
-        ];
+            const entries = Object.entries(raffle.tickets || {});
+            const uniqueEntry = {} as { [uid: string]: string };
+            entries.forEach(([, uid]) => {
+                if (!uniqueEntry[uid]) {
+                    uniqueEntry[uid] = uid;
+                }
+            });
+            const [winningTicket, winner] = entries?.[
+                Math.ceil(entries.length * Math.random())
+            ] || [null, null];
 
-        const amount = entries.length * raffle.ticketCost;
-        const winningMessage = await (channel as Discord.TextChannel).send(
-            '<@&839694796431294485>',
-            new Discord.MessageEmbed()
-                .setAuthor(
-                    'randomdice.gg Server',
-                    guild.iconURL({ dynamic: true }) ?? undefined
-                )
-                .setColor('#800080')
-                .setTitle('Dice Coins Raffle')
-                .setDescription(
-                    entries.length === 0
-                        ? 'Raffle ended but no one entered the raffle.'
-                        : `Raffle ended, **${
-                              Object.keys(uniqueEntry).length
-                          }** people entered the raffle with a total of **${
-                              entries.length
-                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:dicecoin:839981846419079178> **${numberFormat.format(
-                              amount
-                          )}**. Congratulations!`
-                )
-                .setFooter('A new round of raffle will be hosted very soon')
-        );
-        await ref.set({
-            endTimestamp: 0,
-            hostId: 0,
-            maxEntries: 0,
-            ticketCost: 0,
-        });
-        const target = await guild.members.fetch(winner);
-        if (!target) {
-            await (channel as Discord.TextChannel).send(
-                `Cannot add currency to ${target}`
+            const amount = entries.length * raffle.ticketCost;
+            const winningMessage = await (channel as Discord.TextChannel).send(
+                '<@&839694796431294485>',
+                new Discord.MessageEmbed()
+                    .setAuthor(
+                        'randomdice.gg Server',
+                        guild.iconURL({ dynamic: true }) ?? undefined
+                    )
+                    .setColor('#800080')
+                    .setTitle('Dice Coins Raffle')
+                    .setDescription(
+                        entries.length === 0
+                            ? 'Raffle ended but no one entered the raffle.'
+                            : `Raffle ended, **${
+                                  Object.keys(uniqueEntry).length
+                              }** people entered the raffle with a total of **${
+                                  entries.length
+                              }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:dicecoin:839981846419079178> **${numberFormat.format(
+                                  amount
+                              )}**. Congratulations!`
+                    )
+                    .setFooter('A new round of raffle will be hosted very soon')
             );
-            return;
-        }
-        let balance = await getBalance(winningMessage, 'silence', target);
-        if (balance === false) balance = 10000;
-        const gambleProfile =
-            cache['discord_bot/community/currency'][target.id]?.gamble;
-        await database
-            .ref(`discord_bot/community/currency/${target.id}/gamble/gain`)
-            .set((gambleProfile?.gain || 0) + amount);
-        await database
-            .ref(`discord_bot/community/currency/${target.id}/balance`)
-            .set(balance + amount);
-    }, Math.max(raffle.endTimestamp - Date.now(), 0));
+            await ref.set({
+                endTimestamp: 0,
+                hostId: 0,
+                maxEntries: 0,
+                ticketCost: 0,
+            });
+            const target = await guild.members.fetch(winner);
+            if (!target) {
+                await (channel as Discord.TextChannel).send(
+                    `Cannot add currency to ${target}`
+                );
+                return;
+            }
+            let balance = await getBalance(winningMessage, 'silence', target);
+            if (balance === false) balance = 10000;
+            const gambleProfile =
+                cache['discord_bot/community/currency'][target.id]?.gamble;
+            await database
+                .ref(`discord_bot/community/currency/${target.id}/gamble/gain`)
+                .set((gambleProfile?.gain || 0) + amount);
+            await database
+                .ref(`discord_bot/community/currency/${target.id}/balance`)
+                .set(balance + amount);
+        }, raffle.endTimestamp - Date.now());
 }
 
 export default async function lotto(message: Discord.Message): Promise<void> {
