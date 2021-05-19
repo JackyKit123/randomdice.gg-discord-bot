@@ -26,6 +26,7 @@ import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
+import banMessage from './community discord/banMessage';
 import raffle, { setTimerOnBoot } from './community discord/currency/raffle';
 import infoVC from './community discord/infoVC';
 import apply, {
@@ -154,6 +155,7 @@ client.on('message', async function messageHandler(message) {
             validateCrewAds(message);
             pokeballTrap(message);
             oneMinute(message);
+            banMessage(client, message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
