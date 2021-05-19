@@ -97,6 +97,7 @@ export default async function custom(
     await wait(500);
     await sentMessage.edit(`${target.toString()}...🌝`);
     await wait(500);
+    try {
     await Promise.all([
         target.setNickname(
             originalName.length >= 30
@@ -105,6 +106,9 @@ export default async function custom(
         ),
         target.roles.add('804508975503638558'),
     ]);
+    } catch(err) {
+       // suppress error
+    } finally {
     await sentMessage.edit(
         `${target.toString()}...You have been mooned! <a:Taxi:780350572212781086>`
     );
@@ -116,7 +120,7 @@ export default async function custom(
         await target.setNickname(originalName);
     } catch (err) {
         // suppress error
-    }
+    }}
 }
 
 export async function purgeRolesOnReboot(
