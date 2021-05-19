@@ -95,9 +95,7 @@ export default async function coinflip(
             .setDescription(
                 `You ${
                     won ? 'won' : 'lost'
-                } <:dicecoin:839981846419079178> ${numberFormat.format(
-                    amount
-                )}`
+                } <:dicecoin:839981846419079178> ${numberFormat.format(amount)}`
             )
             .addField(
                 'Current Balance',
