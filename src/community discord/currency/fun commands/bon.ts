@@ -16,10 +16,8 @@ export default async function bon(message: Discord.Message): Promise<void> {
         return;
 
     const memberArg = content.split(' ')[1];
-    const target = await fetchMentionString(memberArg, guild, {
-        content,
-        mentionIndex: 1,
-    });
+    const target = await fetchMentionString(memberArg, guild);
+    const reason = content.split(' ').slice(2).join(' ') || 'no reason';
 
     if (!target) {
         await channel.send(
@@ -29,26 +27,24 @@ export default async function bon(message: Discord.Message): Promise<void> {
     }
 
     if (!(await commandCost(message, 1000))) return;
-    const webhook = new Discord.WebhookClient(
-        '819762549796241438',
-        'fM0NtIFMah--jhB0iK36zQVCdL6pHXx2uoly-kT-bFanbdDGrw3Q80ImW0H_g5NIFJrd'
-    );
+    const general = guild?.channels.cache.get('804222694488932364');
     await channel.send(`Goodbye ${target}, get fucking bonned!`);
-    await webhook.send(
-        new Discord.MessageEmbed()
-            .setImage(
-                'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
-            )
-            .setThumbnail(
-                target.user.displayAvatarURL({ dynamic: true }) ??
-                    target.user.defaultAvatarURL
-            )
-            .setTitle(
-                `${target.user.username}#${target.user.discriminator} Got bonned`
-            )
-            .setColor('#ff0000')
-            .setDescription(
-                `Interested in why ${target} got bonned? ||${target} got bonned by ${author}||`
-            )
-    );
+    if (general?.type === 'text')
+        await (general as Discord.TextChannel).send(
+            new Discord.MessageEmbed()
+                .setImage(
+                    'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
+                )
+                .setThumbnail(
+                    target.user.displayAvatarURL({ dynamic: true }) ??
+                        target.user.defaultAvatarURL
+                )
+                .setTitle(
+                    `${target.user.username}#${target.user.discriminator} Got bonned`
+                )
+                .setColor('#ff0000')
+                .setDescription(
+                    `${target} got bonned by ${author} for ||${reason}||`
+                )
+        );
 }
