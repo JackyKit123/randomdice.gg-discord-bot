@@ -67,9 +67,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             '811000478414143488',
         ];
         await channel.send(
-            `Which role do you want to ping? respond with the number [1-${
-                otherGameRoleIds.length + 1
-            }].`,
+            `Which role do you want to ping? respond with the number [1-${otherGameRoleIds.length}].`,
             new Discord.MessageEmbed().setDescription(
                 otherGameRoleIds
                     .map((roleId, i) => `${i + 1}: <@&${roleId}>`)
