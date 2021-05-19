@@ -99,7 +99,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
         }
     } else {
         await channel.send(
-            'You can only use this command in dedicated lfg channels.'
+            'You can only use this command in <#804224162364129320> or <#844451218311086120>.'
         );
         return;
     }
