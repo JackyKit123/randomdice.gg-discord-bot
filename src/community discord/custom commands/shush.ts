@@ -11,7 +11,6 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
 
     if (author.id !== '285696350702796801') {
-        const member = guild.member('285696350702796801');
         const memberStr = member
             ? `**${member.user.username}#${member.user.discriminator}**`
             : '<@285696350702796801>';
@@ -22,7 +21,9 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
 
     if (!member?.roles.cache.has('805727466219372546')) {
-        await channel.send('You are no longer $50 Patreon and you can no longer use this command.');
+        await channel.send(
+            'You are no longer $50 Patreon and you can no longer use this command.'
+        );
         return;
     }
 
