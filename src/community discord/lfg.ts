@@ -87,14 +87,14 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             if (
                 Number.isNaN(respond) ||
                 respond < 0 ||
-                respond > otherGameRoleIds.length + 1
+                respond > otherGameRoleIds.length
             ) {
                 await channel.send('Your respond is out of range.');
                 return;
             }
             rawMessage = `${member} is looking for <@&${
                 otherGameRoleIds[respond - 1]
-            }>?`;
+            }>`;
         } catch (err) {
             await channel.send('You did not respond in time, aborting.');
             return;
