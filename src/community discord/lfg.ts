@@ -2,11 +2,11 @@ import * as Discord from 'discord.js';
 import cooldown from '../helper/cooldown';
 
 export default async function LFG(message: Discord.Message): Promise<void> {
-    const { member, channel, content, deletable, reply } = message;
+    const { guild, member, channel, content, deletable, reply } = message;
 
     const msg = content.replace(/!lfg ?/i, '');
 
-    if (!member) {
+    if (!member || !guild) {
         return;
     }
 
@@ -52,42 +52,58 @@ export default async function LFG(message: Discord.Message): Promise<void> {
 
     let rawMessage: string;
 
-    switch (channel.id) {
-        case '804224162364129320': // #lfg
-            embed = embed.setTitle(
-                `${member.displayName} is looking for a Random Dice partner!`
+    if (channel.id === '804224162364129320') {
+        embed = embed.setTitle(
+            `${member.displayName} is looking for a Random Dice partner!`
+        );
+        rawMessage = '<@&805757095232274442>';
+    } else if (channel.id === '844451218311086120') {
+        const otherGameRoleIds = [
+            '842102269624975371',
+            '806589042254807051',
+            '806589112499961877',
+            '806589085195829309',
+            '810878432836714546',
+            '811000478414143488',
+        ];
+        await channel.send(
+            `Which role do you want to ping? respond with the number [1-${
+                otherGameRoleIds.length + 1
+            }].`,
+            new Discord.MessageEmbed().setDescription(
+                otherGameRoleIds
+                    .map((roleId, i) => `${i + 1}: <@&${roleId}>`)
+                    .join('\n')
+            )
+        );
+        try {
+            const awaitedMessage = await channel.awaitMessages(
+                (newMessage: Discord.Message) =>
+                    newMessage.author === message.author &&
+                    !!newMessage.content.match(/^[1-9][0-9]*$/),
+                { time: 60000, max: 1, errors: ['time'] }
             );
-            rawMessage = '<@&805757095232274442>';
-            break;
-        case '806589220000890930': // # bloons-td-6
-            embed = embed.setTitle(
-                `${member.displayName} is organizing a Bloons TD 6 game!`
-            );
-            rawMessage = '@here';
-            break;
-        case '806589343354847302': // #among-us-lfg
-            embed = embed.setTitle(
-                `${member.displayName} is organizing an Among Us game!`
-            );
-            rawMessage = '@here';
-            break;
-        case '806589489068638239': // #catag-lfg
-            embed = embed.setTitle(
-                `${member.displayName} is organizing a Catan game!`
-            );
-            rawMessage = '@here';
-            break;
-        case '810879645196222495': // #skribbl-io-lfg
-            embed = embed.setTitle(
-                `${member.displayName} is organizing a Skribbl.io game!`
-            );
-            rawMessage = '@here';
-            break;
-        default:
-            await channel.send(
-                'You can only use this command in dedicated lfg channels.'
-            );
+            const respond = Number(awaitedMessage.first()?.content);
+            if (
+                Number.isNaN(respond) ||
+                respond < 0 ||
+                respond > otherGameRoleIds.length + 1
+            ) {
+                await channel.send('Your respond is out of range.');
+                return;
+            }
+            rawMessage = `${member} is looking for <@&${
+                otherGameRoleIds[respond - 1]
+            }>?`;
+        } catch (err) {
+            await channel.send('You did not respond in time, aborting.');
             return;
+        }
+    } else {
+        await channel.send(
+            'You can only use this command in dedicated lfg channels.'
+        );
+        return;
     }
 
     if (msg.length > 1024) {
