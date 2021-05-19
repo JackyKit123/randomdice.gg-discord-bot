@@ -2,8 +2,11 @@ import * as Discord from 'discord.js';
 import cache from '../helper/cache';
 import cooldown from '../helper/cooldown';
 
-export default async function help(message: Discord.Message): Promise<void> {
-    const { channel, author } = message;
+export default async function help(
+    message: Discord.Message,
+    communityHelpOnly?: true
+): Promise<void> {
+    const { channel, author, guild } = message;
 
     if (
         await cooldown(message, '.gg help', {
@@ -22,7 +25,7 @@ export default async function help(message: Discord.Message): Promise<void> {
         )
         .setColor('#6ba4a5')
         .setDescription(
-            'Here is a list commands, randomdice.gg bot suffix is `.gg`'
+            'Here is a list of commands, randomdice.gg bot suffix is `.gg`'
         )
         .addFields(
             cache['discord_bot/help'].map(categories => ({
@@ -35,10 +38,41 @@ export default async function help(message: Discord.Message): Promise<void> {
                     .join('\n'),
             }))
         );
+    const communityHelpMessage = new Discord.MessageEmbed()
+        .setTitle('Community Server Specific Commands')
+        .setAuthor(
+            'Random Dice Community Website',
+            'https://randomdice.gg/android-chrome-512x512.png',
+            'https://randomdice.gg/'
+        )
+        .setDescription(
+            'Here is a list of commands, random dice community discord specific commands suffix is `!`'
+        )
+        .addFields(
+            cache['discord_bot/community/help'].map(categories => ({
+                name: categories.category,
+                value: categories.commands
+                    .map(
+                        command =>
+                            `\`${command.command}\`\n*${command.description}*`
+                    )
+                    .join('\n'),
+            }))
+        );
 
-    await author.send(helpMessage);
+    if (communityHelpOnly) {
+        await author.send(communityHelpMessage);
+    } else {
+        await author.send(helpMessage);
+        if (guild?.id === '804222694488932362') {
+            await author.send(
+                'It looks like you are requesting the help message from the community discord. Here is the list of fun commands specific towards the community discord only.',
+                communityHelpMessage
+            );
+        }
+    }
     if (channel.type === 'text')
         await channel.send(
-            '`The list of commands has been sent to your via DM.`'
+            'The list of commands has been sent to your via DM.'
         );
 }

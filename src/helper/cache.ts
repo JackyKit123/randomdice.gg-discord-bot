@@ -205,6 +205,7 @@ const cacheData = {
     'discord_bot/registry': {} as Registry,
     'discord_bot/help': [] as Help[],
     'discord_bot/dev_help': [] as Help[],
+    'discord_bot/community/help': [] as Help[],
     'discord_bot/community/applications': [] as CommunityDiscordApplication[],
     'discord_bot/community/raffle': {
         ticketCost: 0,

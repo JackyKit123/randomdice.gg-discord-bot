@@ -262,6 +262,9 @@ client.on('message', async function messageHandler(message) {
                 case '!shush':
                     await shush(message);
                     break;
+                case '!help':
+                    await help(message, true);
+                    break;
                 default:
             }
         }
