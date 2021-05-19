@@ -9,7 +9,7 @@ export default async function custom(
     client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { content, author, guild, channel, member } = message;
+    const { content, author, guild, channel } = message;
 
     if (!guild) {
         return;
