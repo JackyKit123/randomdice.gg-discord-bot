@@ -16,7 +16,11 @@ export default async function custom(
     }
 
     const memberArg = content.split(' ')?.[1];
-
+    if (author.id === '722951439567290458') {
+        await channel.send('No you can't use `!moon`, get rekt.');
+        return;
+    }
+    /*
     if (author.id !== '722951439567290458') {
         const memberStr = member
             ? `**${member.user.username}#${member.user.discriminator}**`
@@ -40,6 +44,7 @@ export default async function custom(
     ) {
         return;
     }
+    */
     const target = await fetchMention(memberArg, guild, {
         content,
         mentionIndex: 1,
