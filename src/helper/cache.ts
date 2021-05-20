@@ -173,6 +173,15 @@ export interface CurrencyConfig {
     weeklyWinners: string[];
 }
 
+interface TimerData {
+    [key: string]: {
+        guildId: string;
+        channelId: string;
+        messageId: string;
+        endTime: number;
+    };
+}
+
 interface CacheObject {
     decks_guide: DeckGuide[];
     dice: Dice[];
@@ -186,6 +195,7 @@ interface CacheObject {
     'discord_bot/community/raffle': Raffle;
     'discord_bot/community/currency': MemberCurrency;
     'discord_bot/community/currencyConfig': CurrencyConfig;
+    'discord_bot/community/timer': TimerData;
     'wiki/boss': Boss[];
     'wiki/tips': Tip[];
     'wiki/battlefield': Battlefield[];
@@ -227,6 +237,7 @@ const cacheData = {
         },
         weeklyWinners: [] as string[],
     },
+    'discord_bot/community/timer': {} as TimerData,
     'wiki/boss': [] as Boss[],
     'wiki/tips': [] as Tip[],
     'wiki/battlefield': [] as Battlefield[],
@@ -234,15 +245,19 @@ const cacheData = {
 };
 export default cacheData;
 
-export function fetchAll(database: admin.database.Database): void {
-    Object.keys(cacheData).forEach(key => {
-        const ref = database.ref(key);
-        const snapshotHandler = (
-            snapshot: admin.database.DataSnapshot
-        ): void => {
-            cacheData[key as keyof CacheObject] = snapshot.val();
-        };
-        ref.on('value', snapshotHandler);
-        ref.once('value').then(snapshotHandler);
-    });
+export async function fetchAll(
+    database: admin.database.Database
+): Promise<void> {
+    await Promise.all(
+        Object.keys(cacheData).map(async key => {
+            const ref = database.ref(key);
+            const snapshotHandler = (
+                snapshot: admin.database.DataSnapshot
+            ): void => {
+                cacheData[key as keyof CacheObject] = snapshot.val();
+            };
+            ref.on('value', snapshotHandler);
+            await ref.once('value').then(snapshotHandler);
+        })
+    );
 }

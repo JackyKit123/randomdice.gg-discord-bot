@@ -39,6 +39,7 @@ import chatRevivePing, {
     fetchGeneralOnBoot,
 } from './community discord/chatrevivePing';
 import lock from './community discord/lock';
+import timer, { registerTimer } from './community discord/timer';
 import oneMinute from './community discord/oneMinute';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
@@ -101,17 +102,17 @@ client.on('ready', async () => {
     const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
         process.env.NODE_ENV
     }`;
-    fetchAll(database);
     await logMessage(client, bootMessage);
     // eslint-disable-next-line no-console
     console.log(bootMessage);
-
-    setTimerOnBoot(client, database);
     infoVC(client);
     purgeRolesOnReboot(client);
     fetchApps(client);
     fetchGeneralOnBoot(client);
+    await fetchAll(database);
+    setTimerOnBoot(client, database);
     weeklyAutoReset(client);
+    registerTimer(client);
 });
 
 client.on('message', async function messageHandler(message) {
@@ -183,6 +184,9 @@ client.on('message', async function messageHandler(message) {
                 case '!lock':
                 case '!unlock':
                     await lock(message);
+                    break;
+                case '!timer':
+                    await timer(message, database);
                     break;
                 case '!lfg':
                     await lfg(message);
