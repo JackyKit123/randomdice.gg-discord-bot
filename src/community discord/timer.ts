@@ -47,22 +47,30 @@ function tickTimer(
                 const timerReact = message.reactions.cache.find(
                     reaction => reaction.emoji.id === '804524690440847381'
                 );
-                const userList = timerReact?.users.cache
-                    .filter(user => !user.bot)
+                const userList = (await timerReact?.users.fetch())
+                    ?.filter(user => !user.bot)
                     .map(user => user.toString())
                     .join(' ');
-                if (userList && userList.length < 2048) {
-                    await message.channel.send(
-                        userList,
-                        new Discord.MessageEmbed().setDescription(
-                            `The [timer](https://discord.com/channels/${
-                                (message.guild as Discord.Guild).id
-                            }/${message.channel.id}/${message.id}) for **${
-                                embed.title || '"no title"'
-                            }** has ended.`
-                        )
-                    );
-                }
+                await message.channel.send(
+                    `${
+                        // eslint-disable-next-line no-nested-ternary
+                        userList
+                            ? userList.length < 2048
+                                ? userList
+                                : `Too many user reacted to the timer, cannot ping everyone.\n${userList.slice(
+                                      0,
+                                      89
+                                  )}`
+                            : ''
+                    }`,
+                    new Discord.MessageEmbed().setDescription(
+                        `The [timer](https://discord.com/channels/${
+                            (message.guild as Discord.Guild).id
+                        }/${message.channel.id}/${message.id}) for **${
+                            embed.title || '"no title"'
+                        }** has ended.`
+                    )
+                );
             }
         }, 5 * 1000);
     } catch {
