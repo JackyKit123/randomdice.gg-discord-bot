@@ -3,6 +3,18 @@ import * as admin from 'firebase-admin';
 import cache from '../helper/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from '../helper/parseMS';
 
+async function killTimerFromDB(timerKey: string): Promise<void> {
+    try {
+        admin
+            .database()
+            .ref('discord_bot/community/timer')
+            .child(timerKey)
+            .set(null);
+    } catch (err) {
+        // silent
+    }
+}
+
 function parseTimeText(time: number): string {
     return `__${parseMsIntoReadableText(time, true)
         .split(' ')
@@ -10,11 +22,9 @@ function parseTimeText(time: number): string {
         .map(timeString =>
             timeString.replace(
                 /\d{0,2}(?:\.\d)?/,
-                match =>
+                (match, i, arr) =>
                     `**${
-                        timeString.includes('second')
-                            ? Math.round(Number(match))
-                            : match
+                        i === arr.length ? Math.round(Number(match)) : match
                     }** `
             )
         )
@@ -26,7 +36,8 @@ function tickTimer(
     endTime: number,
     key: string
 ): void {
-    const embed = message.embeds?.[0];
+    const { embeds, channel, author, reactions, guild, id, edit } = message;
+    const embed = embeds?.[0];
     try {
         if (!embed) throw new Error();
         const interval = setInterval(async () => {
@@ -34,25 +45,21 @@ function tickTimer(
             if (now <= endTime) {
                 const newText = parseTimeText(endTime - now);
                 if (newText !== embed.description) {
-                    await message.edit(embed.setDescription(newText));
+                    await edit(embed.setDescription(newText));
                 }
             } else {
-                await message.edit(embed.setDescription('**Timer Ended**'));
+                await edit(embed.setDescription('**Timer Ended**'));
                 clearInterval(interval);
-                admin
-                    .database()
-                    .ref('discord_bot/community/timer')
-                    .child(key)
-                    .set(null);
-                const timerReact = message.reactions.cache.find(
+                killTimerFromDB(key);
+                const timerReact = reactions.cache.find(
                     reaction => reaction.emoji.id === '804524690440847381'
                 );
                 const userList = (await timerReact?.users.fetch())
-                    ?.filter(user => !user.bot)
+                    ?.filter(user => !user.bot && user.id !== author.id)
                     .map(user => user.toString())
                     .join(' ');
-                await message.channel.send(
-                    `${
+                await channel.send(
+                    `${author} ${
                         // eslint-disable-next-line no-nested-ternary
                         userList
                             ? userList.length < 2048
@@ -65,8 +72,8 @@ function tickTimer(
                     }`,
                     new Discord.MessageEmbed().setDescription(
                         `The [timer](https://discord.com/channels/${
-                            (message.guild as Discord.Guild).id
-                        }/${message.channel.id}/${message.id}) for **${
+                            (guild as Discord.Guild).id
+                        }/${channel.id}/${id}) for **${
                             embed.title || '"no title"'
                         }** has ended.`
                     )
@@ -74,11 +81,7 @@ function tickTimer(
             }
         }, 5 * 1000);
     } catch {
-        admin
-            .database()
-            .ref('discord_bot/community/timer')
-            .child(key)
-            .set(null);
+        killTimerFromDB(key);
     }
 }
 
@@ -143,21 +146,26 @@ export async function registerTimer(client: Discord.Client): Promise<void> {
     Object.entries(data || {}).forEach(async ([key, timer]) => {
         try {
             const guild = await client.guilds.fetch(timer.guildId);
-            if (!guild) throw new Error();
+            if (!guild) {
+                killTimerFromDB(key);
+                return;
+            }
 
             const channel = guild.channels.cache.get(timer.channelId);
-            if (!channel?.isText()) throw new Error();
+            if (!channel?.isText()) {
+                killTimerFromDB(key);
+                return;
+            }
 
             const message = await channel.messages.fetch(timer.messageId);
-            if (!message) throw new Error();
+            if (!message) {
+                killTimerFromDB(key);
+                return;
+            }
 
             tickTimer(message, timer.endTime, key);
         } catch (err) {
-            admin
-                .database()
-                .ref('discord_bot/community/timer')
-                .child(key)
-                .set(null);
+            killTimerFromDB(key);
         }
     });
 }
