@@ -48,7 +48,7 @@ function tickTimer(
                     reaction => reaction.emoji.id === '804524690440847381'
                 );
                 const userList = timerReact?.users.cache
-                    .filter(user => user.bot)
+                    .filter(user => !user.bot)
                     .map(user => user.toString())
                     .join(' ');
                 if (userList && userList.length < 2048) {
