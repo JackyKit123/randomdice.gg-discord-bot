@@ -357,6 +357,7 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                     .setFooter('Raffle ends at')
                     .setTimestamp(Date.now() + time)
             );
+            announceWinner(guild, database);
             return;
         }
         case 'cancel':
