@@ -27,7 +27,9 @@ import version from './dev-commands/version';
 import cache, { fetchAll } from './helper/cache';
 import validateCrewAds from './community discord/checkCrewAds';
 import banMessage from './community discord/banMessage';
-import raffle, { setTimerOnBoot } from './community discord/currency/raffle';
+import raffle, {
+    setRaffleTimerOnBoot,
+} from './community discord/currency/raffle';
 import infoVC from './community discord/infoVC';
 import apply, {
     closeApplication,
@@ -110,7 +112,7 @@ client.on('ready', async () => {
     fetchApps(client);
     fetchGeneralOnBoot(client);
     await fetchAll(database);
-    setTimerOnBoot(client, database);
+    setRaffleTimerOnBoot(client, database);
     weeklyAutoReset(client);
     registerTimer(client);
 });
