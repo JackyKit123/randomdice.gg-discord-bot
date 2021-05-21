@@ -11,7 +11,7 @@ export default async function welcomeReward(
     const app = firebase.app();
     const database = app.database();
 
-    if (!guild || channel.id !== '804235804506324992' /* #join-leave-log */)
+    if (!guild || channel.id !== '845448948474576946' /* #join-leave-log */)
         return;
     if (!embeds.some(embed => embed.title === 'Member joined')) return;
     const joinedMember = embeds[0]?.description
