@@ -5,7 +5,7 @@ import parseMsIntoReadableText, { parseStringIntoMs } from '../helper/parseMS';
 
 async function killTimerFromDB(timerKey: string): Promise<void> {
     try {
-        admin
+        await admin
             .database()
             .ref('discord_bot/community/timer')
             .child(timerKey)
@@ -33,33 +33,37 @@ function parseTimeText(time: number): string {
 
 function tickTimer(
     message: Discord.Message,
+    hostId: string,
     endTime: number,
     key: string
 ): void {
-    const { embeds, channel, author, reactions, guild, id, edit } = message;
+    const { embeds, channel, reactions, guild, id } = message;
     const embed = embeds?.[0];
     try {
-        if (!embed) throw new Error();
+        if (!embed) {
+            killTimerFromDB(key);
+            return;
+        }
         const interval = setInterval(async () => {
             const now = Date.now();
             if (now <= endTime) {
                 const newText = parseTimeText(endTime - now);
                 if (newText !== embed.description) {
-                    await edit(embed.setDescription(newText));
+                    await message.edit(embed.setDescription(newText));
                 }
             } else {
-                await edit(embed.setDescription('**Timer Ended**'));
+                await message.edit(embed.setDescription('**Timer Ended**'));
                 clearInterval(interval);
                 killTimerFromDB(key);
                 const timerReact = reactions.cache.find(
                     reaction => reaction.emoji.id === '804524690440847381'
                 );
                 const userList = (await timerReact?.users.fetch())
-                    ?.filter(user => !user.bot && user.id !== author.id)
+                    ?.filter(user => !user.bot && user.id !== hostId)
                     .map(user => user.toString())
                     .join(' ');
                 await channel.send(
-                    `${author} ${
+                    `<@${hostId}> ${
                         // eslint-disable-next-line no-nested-ternary
                         userList
                             ? userList.length < 2048
@@ -135,9 +139,10 @@ export default async function setTimer(
         guildId: guild.id,
         channelId: channel.id,
         messageId: timerMessage.id,
+        hostId: member.id,
         endTime,
     });
-    tickTimer(timerMessage, endTime, ref.key as string);
+    tickTimer(timerMessage, member.id, endTime, ref.key as string);
     await timerMessage.react('<:Dice_Tier4_Time:804524690440847381>');
 }
 
@@ -163,7 +168,7 @@ export async function registerTimer(client: Discord.Client): Promise<void> {
                 return;
             }
 
-            tickTimer(message, timer.endTime, key);
+            tickTimer(message, timer.hostId, timer.endTime, key);
         } catch (err) {
             killTimerFromDB(key);
         }

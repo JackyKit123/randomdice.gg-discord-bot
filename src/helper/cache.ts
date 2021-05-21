@@ -178,6 +178,7 @@ interface TimerData {
         guildId: string;
         channelId: string;
         messageId: string;
+        hostId: string;
         endTime: number;
     };
 }
