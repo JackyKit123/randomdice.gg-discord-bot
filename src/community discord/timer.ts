@@ -24,7 +24,7 @@ function parseTimeText(time: number): string {
                 /\d{0,2}(?:\.\d)?/,
                 (match, i, arr) =>
                     `**${
-                        i === arr.length ? Math.round(Number(match)) : match
+                        i + 1 === arr.length ? Math.round(Number(match)) : match
                     }** `
             )
         )
