@@ -2,24 +2,25 @@ import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import getBalance from './balance';
 import { parseStringIntoMs } from '../../helper/parseMS';
-import cache, { Raffle } from '../../helper/cache';
+import cache from '../../helper/cache';
 import cooldown from '../../helper/cooldown';
 
 const numberFormat = new Intl.NumberFormat();
 
-async function announceWinner(guild: Discord.Guild): Promise<void> {
-    const database = firebase.app().database();
+async function announceWinner(
+    guild: Discord.Guild,
+    database: firebase.database.Database
+): Promise<void> {
     const channel = guild.channels.cache.get('807229757049012266');
-    const ref = database.ref('discord_bot/community/raffle');
     if (channel?.type !== 'text') return;
-    let raffle = (await ref.once('value')).val() as Raffle;
+    let raffle = cache['discord_bot/community/raffle'];
     if (!raffle.hostId) {
         return;
     }
 
     if (raffle.endTimestamp - Date.now() > 0)
         setTimeout(async () => {
-            raffle = (await ref.once('value')).val() as Raffle;
+            raffle = cache['discord_bot/community/raffle'];
 
             const entries = Object.entries(raffle.tickets || {});
             const uniqueEntry = {} as { [uid: string]: string };
@@ -55,6 +56,8 @@ async function announceWinner(guild: Discord.Guild): Promise<void> {
                     )
                     .setFooter('A new round of raffle will be hosted very soon')
             );
+
+            const ref = database.ref('discord_bot/community/raffle');
             await ref.set({
                 endTimestamp: 0,
                 hostId: 0,
@@ -337,7 +340,6 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                 maxEntries,
                 ticketCost,
             });
-            announceWinner(guild);
             await channel.send(
                 '<@&839694796431294485>',
                 new Discord.MessageEmbed()
@@ -440,11 +442,11 @@ export default async function lotto(message: Discord.Message): Promise<void> {
     }
 }
 
-export async function setTimerOnBoot(
+export async function setRaffleTimerOnBoot(
     client: Discord.Client,
     database: firebase.database.Database
 ): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
     if (!guild) return;
-    announceWinner(guild);
+    announceWinner(guild, database);
 }
