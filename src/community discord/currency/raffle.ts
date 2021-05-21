@@ -30,7 +30,7 @@ async function announceWinner(
                 }
             });
             const [winningTicket, winner] = entries?.[
-                Math.ceil(entries.length * Math.random())
+                Math.floor(entries.length * Math.random())
             ] || [null, null];
 
             const amount = entries.length * raffle.ticketCost;
