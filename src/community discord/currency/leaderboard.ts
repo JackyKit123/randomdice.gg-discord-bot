@@ -51,7 +51,7 @@ function sortLeaderboard(
     };
     return Object.entries(currencyList)
         .sort(sortFn[type])
-        .filter(([, profile]) => type === 'gamble' ? !!profile.gamble : true)
+        .filter(([, profile]) => (type === 'gamble' ? !!profile.gamble : true))
         .map(([uid, profile], i) => ({
             name: `#${i + 1}`,
             value: `<@!${uid}> ${
