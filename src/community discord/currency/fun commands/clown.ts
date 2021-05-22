@@ -37,6 +37,10 @@ export default async function clown(
         content,
         mentionIndex: 1,
     });
+    const sentMessage = await channel.send(
+        'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
+    );
+    await wait(5000);
     let typedWrongCommand = false;
     if (member.id === '195174308052467712') {
         if (!target) {
@@ -83,10 +87,6 @@ export default async function clown(
     }
     const originalName = target.displayName;
     const howClown = typedWrongCommand ? 10 : Math.ceil(Math.random() * 10);
-    const sentMessage = await channel.send(
-        'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
-    );
-    await wait(5000);
     try {
         await target.roles.add('845530033695096853');
         await target.setNickname('🤡'.repeat(howClown));
