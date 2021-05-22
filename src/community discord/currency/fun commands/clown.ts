@@ -37,34 +37,35 @@ export default async function clown(
         content,
         mentionIndex: 1,
     });
+    if (!target && member.id === '195174308052467712') {
+        await channel.send('Unknown target.');
+        return;
+    }
+    if (
+        target?.id === author.id &&
+        member.roles.cache.has('845530033695096853')
+    ) {
+        await channel.send('Slow Down. You are already a clown, jeez.');
+        return;
+    }
     const sentMessage = await channel.send(
         'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
     );
     await wait(4700);
     let typedWrongCommand = false;
-    if (member.id === '195174308052467712') {
-        if (!target) {
-            await sentMessage.send(
-                'Master, I am unable to finish your request, sorry.'
-            );
-            return;
-        }
-        await sentMessage.edit(
-            `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
-        );
-    } else if (!target) {
+    if (!target) {
         await sentMessage.edit(
             `You are so stupid that you can't even type the command right, I guess you are the real clown then.\nUsage of the command: \`\`\`!clown <@mention | user id | username | nickname | #username#discriminator>\`\`\``
         );
         target = member;
         typedWrongCommand = true;
     } else if (target.id === author.id) {
-        if (member.roles.cache.has('845530033695096853')) {
-            await sentMessage.edit('Slow Down. You are already a clown, jeez.');
-            return;
-        }
         await sentMessage.edit(
             `${author}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
+        );
+    } else if (member.id === '195174308052467712') {
+        await sentMessage.edit(
+            `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
         );
     } else if (target.roles.cache.has('845530033695096853')) {
         await sentMessage.edit(
@@ -86,7 +87,10 @@ export default async function clown(
         );
     }
     const originalName = target.displayName;
-    const howClown = (typedWrongCommand || member.id === '195174308052467712') ? 10 : Math.ceil(Math.random() * 10);
+    const howClown =
+        typedWrongCommand || member.id === '195174308052467712'
+            ? 10
+            : Math.ceil(Math.random() * 10);
     try {
         await target.roles.add('845530033695096853');
         await target.setNickname('🤡'.repeat(howClown));
