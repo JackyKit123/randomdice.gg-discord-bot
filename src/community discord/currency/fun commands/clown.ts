@@ -25,7 +25,7 @@ export default async function clown(
         return;
     }
     if (
-        !(await commandCost(message, Math.round(Math.random() * 2000 - 1000)))
+        !(await commandCost(message, Math.round(Math.random() * 3000 - 2000)))
     ) {
         await channel.send(
             "Usually that's the case, but today I am gonna allow you to use it.<a:clowndance:845532985787940894>"
@@ -69,7 +69,8 @@ export default async function clown(
         target = member;
     } else if (
         (target.id !== member.id && Math.random() < 0.7) ||
-        (member.id === '722951439567290458' && Math.random() < 0.95)
+        (member.id === '722951439567290458' && Math.random() < 0.95) ||
+        target.id === '195174308052467712'
     ) {
         await channel.send(
             `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${author} is now a clown LOL!!!**`
@@ -87,10 +88,8 @@ export default async function clown(
     );
     await wait(5000);
     try {
-        await Promise.all([
-            target.setNickname('🤡'.repeat(howClown)),
-            target.roles.add('845530033695096853'),
-        ]);
+        await target.roles.add('845530033695096853');
+        await target.setNickname('🤡'.repeat(howClown));
     } catch (err) {
         // suppress error
     } finally {
