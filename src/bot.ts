@@ -63,6 +63,7 @@ import drawDice from './community discord/currency/drawDice';
 import timed from './community discord/currency/timed';
 import chatCoins from './community discord/currency/chatCoins';
 import multiplier from './community discord/currency/multiplier';
+import announceLastToLeaveVC from './community discord/lastToLeaveVC';
 import moon, {
     purgeRolesOnReboot,
 } from './community discord/custom commands/moon';
@@ -146,6 +147,7 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
+        announceLastToLeaveVC(message);
         if (
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
