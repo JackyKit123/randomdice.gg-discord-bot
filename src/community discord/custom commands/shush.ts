@@ -11,8 +11,9 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
 
     if (author.id !== '285696350702796801') {
-        const memberStr = member
-            ? `**${member.user.username}#${member.user.discriminator}**`
+        const commandOwner = guild.member('285696350702796801');
+        const memberStr = commandOwner
+            ? `**${commandOwner.user.username}#${commandOwner.user.discriminator}**`
             : '<@285696350702796801>';
         await channel.send(
             `This is a private command dedicated to ${memberStr} as a perk of $50 Patreon Donator.`
