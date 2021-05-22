@@ -147,7 +147,6 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
-        announceLastToLeaveVC(message);
         if (
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
@@ -161,6 +160,7 @@ client.on('message', async function messageHandler(message) {
             pokeballTrap(message);
             oneMinute(message);
             banMessage(client, message);
+            announceLastToLeaveVC(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
