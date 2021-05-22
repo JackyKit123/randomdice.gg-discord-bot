@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import logMessage from '../../dev-commands/logMessage';
-import cache from '../../helper/cache';
+import cache, { MemberCurrency } from '../../helper/cache';
 import cooldown from '../../helper/cooldown';
 
 const prestigeRoleIds = [
@@ -17,6 +17,55 @@ const prestigeRoleIds = [
     '809143588105486346',
 ];
 const numberFormat = new Intl.NumberFormat();
+
+function sortLeaderboard(
+    guild: Discord.Guild,
+    currencyList: MemberCurrency,
+    type: 'default' | 'weekly' | 'gamble' = 'default'
+): { name: string; value: string }[] {
+    const sortFn = {
+        default: ([, profileA], [, profileB]) =>
+            typeof profileA.prestige !== 'undefined' &&
+            profileB.prestige !== profileA.prestige
+                ? (profileB.prestige || 0) - (profileA.prestige || 0)
+                : profileB.balance - profileA.balance,
+        weekly: ([, profileA], [, profileB]) =>
+            (profileB.weeklyChat || 0) - (profileA.weeklyChat || 0),
+        gamble: ([, profileA], [, profileB]) =>
+            (profileB?.gamble?.gain || 0) -
+            (profileB?.gamble?.lose || 0) -
+            ((profileA?.gamble?.gain || 0) - (profileA?.gamble?.lose || 0)),
+    } as {
+        [key in typeof type]: (
+            a: [string, MemberCurrency['key']],
+            b: [string, MemberCurrency['key']]
+        ) => number;
+    };
+    const value = {
+        default: profile => profile.balance || 0,
+        weekly: profile => profile.weeklyChat || 0,
+        gamble: profile =>
+            (profile?.gamble?.gain || 0) - (profile?.gamble?.lose || 0),
+    } as {
+        [key in typeof type]: (profile: MemberCurrency['key']) => number;
+    };
+    return Object.entries(currencyList)
+        .sort(sortFn[type])
+        .map(([uid, profile], i) => ({
+            name: `#${i + 1}`,
+            value: `<@!${uid}> ${
+                profile.prestige > 0
+                    ? `***${
+                          guild.roles.cache.get(
+                              prestigeRoleIds[profile.prestige - 1]
+                          )?.name
+                      }***`
+                    : ''
+            }\n<:dicecoin:839981846419079178> **__${numberFormat.format(
+                value[type](profile)
+            )}__**`,
+        }));
+}
 
 async function resetWeekly(client: Discord.Client): Promise<void> {
     const guild = client.guilds.cache.get(
@@ -43,10 +92,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
     const { weeklyWinners } = cache['discord_bot/community/currencyConfig'];
     const currencyList = cache['discord_bot/community/currency'];
 
-    const sortedWeekly = Object.entries(currencyList).sort(
-        ([, profileA], [, profileB]) =>
-            (profileB.weeklyChat || 0) - (profileA.weeklyChat || 0)
-    );
+    const sortedWeekly = sortLeaderboard(guild, currencyList, 'weekly');
     Object.keys(currencyList).forEach(id =>
         database.ref(`discord_bot/community/currency/${id}/weeklyChat`).set(0)
     );
@@ -65,22 +111,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
                 }) ?? undefined,
                 `https://discord.gg/randomdice`
             )
-            .addFields(
-                sortedWeekly.slice(0, 5).map(([uid, profile], i) => ({
-                    name: `#${i + 1}`,
-                    value: `<@!${uid}> ${
-                        profile.prestige > 0
-                            ? `***${
-                                  guild.roles.cache.get(
-                                      prestigeRoleIds[profile.prestige - 1]
-                                  )?.name
-                              }***`
-                            : ''
-                    }\n<:dicecoin:839981846419079178> **__${numberFormat.format(
-                        profile.weeklyChat || 0
-                    )}__**`,
-                }))
-            )
+            .addFields(sortedWeekly.slice(0, 5))
     );
     const findUniques = new Map<string, true>();
     await Promise.all(
@@ -106,7 +137,8 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
         `Remove <@&805388604791586826> from ${findUniques.size} members`
     );
     const weeklyList = await Promise.all(
-        sortedWeekly.slice(0, 5).map(async ([uid]) => {
+        sortedWeekly.slice(0, 5).map(async ({ value }) => {
+            const uid = (value.match(/^<@!(\d{18})>/) as RegExpMatchArray)[1];
             try {
                 const m = await guild.members.fetch(uid);
                 if (m) {
@@ -159,8 +191,10 @@ export default async function leaderboard(
     )
         return;
 
-    const isWeekly = /^(w|week|weekly)$/i.test(content.split(' ')[1] || '');
-    const isReset = /^reset$/i.test(content.split(' ')[2] || '');
+    const [arg, arg2] = content.split(' ');
+    const isWeekly = /^(w|week|weekly)$/i.test(arg || '');
+    const isGamble = /^(g|gamble)$/i.test(arg || '');
+    const isReset = /^reset$/i.test(arg2 || '');
     const currencyList = cache['discord_bot/community/currency'];
 
     if (isReset && isWeekly) {
@@ -172,30 +206,12 @@ export default async function leaderboard(
         return;
     }
 
-    const fields = Object.entries(currencyList)
-        .sort(([, profileA], [, profileB]) =>
-            // eslint-disable-next-line no-nested-ternary
-            isWeekly
-                ? (profileB.weeklyChat || 0) - (profileA.weeklyChat || 0)
-                : typeof profileA.prestige !== 'undefined' &&
-                  profileB.prestige !== profileA.prestige
-                ? (profileB.prestige || 0) - (profileA.prestige || 0)
-                : profileB.balance - profileA.balance
-        )
-        .map(([uid, profile], i) => ({
-            name: `#${i + 1}`,
-            value: `<@!${uid}> ${
-                profile.prestige > 0
-                    ? `***${
-                          guild.roles.cache.get(
-                              prestigeRoleIds[profile.prestige - 1]
-                          )?.name
-                      }***`
-                    : ''
-            }\n<:dicecoin:839981846419079178> **__${numberFormat.format(
-                isWeekly ? profile.weeklyChat || 0 : profile.balance
-            )}__**`,
-        }));
+    const fields = sortLeaderboard(
+        guild,
+        currencyList,
+        // eslint-disable-next-line no-nested-ternary
+        isWeekly ? 'weekly' : isGamble ? 'gamble' : 'default'
+    );
 
     const pageNumbers = Math.ceil(fields.length / 10);
     let currentPage = 0;
