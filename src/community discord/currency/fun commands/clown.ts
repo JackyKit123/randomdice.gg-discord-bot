@@ -118,13 +118,33 @@ export async function purgeRolesOnReboot(
     const guild = await client.guilds.fetch('804222694488932362');
     const logs = await guild.fetchAuditLogs({
         user: client.user as Discord.ClientUser,
-        type: 'MEMBER_ROLE_UPDATE',
     });
     logs.entries.forEach(async entry => {
         if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 7) {
+            const memberNicknameUpdated: string[] = [];
             const member = guild.member((entry.target as Discord.User).id);
-            if (member?.roles.cache.has('845530033695096853')) {
+            if (!member) return;
+            if (
+                entry.action === 'MEMBER_ROLE_UPDATE' &&
+                member.roles.cache.has('845530033695096853')
+            ) {
                 await member.roles.remove('845530033695096853');
+            } else if (entry.action === 'MEMBER_UPDATE') {
+                entry.changes?.forEach(async change => {
+                    if (change.key === 'nick') {
+                        if (change.new?.match(/\p{U+1F921}{1,10}/u)) {
+                            if (
+                                change.old &&
+                                change.old.match(/\p{U+1F921}{1,10}/u) &&
+                                memberNicknameUpdated.includes(member.id)
+                            ) {
+                                return;
+                            }
+                            await member.setNickname(change.old || '');
+                            memberNicknameUpdated.push(member.id);
+                        }
+                    }
+                });
             }
         }
     });
