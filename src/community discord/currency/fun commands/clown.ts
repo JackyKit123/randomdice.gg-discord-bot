@@ -98,11 +98,15 @@ export default async function clown(
         // suppress error
     } finally {
         await channel.send(
-            typedWrongCommand
-                ? `${target} typed the wrong command. 100% clown!<a:clowndance:845532985787940894>`
-                : `${target} is a ${
-                      howClown * 10
-                  }% clown.<a:clowndance:845532985787940894>`
+            new Discord.MessageEmbed()
+                .setTitle('🤡')
+                .setDescription(
+                    typedWrongCommand
+                        ? `${target} typed the wrong command. 100% clown!<a:clowndance:845532985787940894>`
+                        : `${target} is a ${
+                              howClown * 10
+                          }% clown.<a:clowndance:845532985787940894>`
+                )
         );
         await wait(1000 * 60 * 5);
         try {
