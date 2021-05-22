@@ -72,7 +72,7 @@ export default async function clown(
         (member.id === '722951439567290458' && Math.random() < 0.95)
     ) {
         await channel.send(
-            `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${target} is now a clown LOL!!!**`
+            `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${author} is now a clown LOL!!!**`
         );
         target = member;
     } else {
