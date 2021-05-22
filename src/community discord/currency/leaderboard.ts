@@ -191,7 +191,7 @@ export default async function leaderboard(
     )
         return;
 
-    const [arg, arg2] = content.split(' ');
+    const [, arg, arg2] = content.split(' ');
     const isWeekly = /^(w|week|weekly)$/i.test(arg || '');
     const isGamble = /^(g|gamble)$/i.test(arg || '');
     const isReset = /^reset$/i.test(arg2 || '');
