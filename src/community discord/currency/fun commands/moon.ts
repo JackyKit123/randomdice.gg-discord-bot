@@ -1,7 +1,8 @@
 import * as Discord from 'discord.js';
 import { promisify } from 'util';
-import cooldown from '../../helper/cooldown';
-import fetchMention from '../../helper/fetchMention';
+import cooldown from '../../../helper/cooldown';
+import fetchMention from '../../../helper/fetchMention';
+import commandCost from './commandCost';
 
 const wait = promisify(setTimeout);
 
@@ -18,15 +19,6 @@ export default async function custom(
     const memberArg = content.split(' ')?.[1];
     if (author.id === '722951439567290458') {
         await channel.send("No you can't use `!moon`, get rekt.");
-        return;
-    }
-
-    if (
-        await cooldown(message, '!moon', {
-            default: 60 * 1000 * 5,
-            donator: 60 * 1000 * 5,
-        })
-    ) {
         return;
     }
 
@@ -52,6 +44,15 @@ export default async function custom(
         );
         return;
     }
+    if (
+        await cooldown(message, '!moon', {
+            default: 60 * 1000 * 5,
+            donator: 60 * 1000 * 5,
+        })
+    ) {
+        return;
+    }
+    if (!(await commandCost(message, 100))) return;
     const originalName = target.displayName;
     const randomMoonEmoji = [
         '🌝',

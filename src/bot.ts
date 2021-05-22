@@ -64,15 +64,15 @@ import timed from './community discord/currency/timed';
 import chatCoins from './community discord/currency/chatCoins';
 import multiplier from './community discord/currency/multiplier';
 import announceLastToLeaveVC from './community discord/lastToLeaveVC';
-import moon, {
-    purgeRolesOnReboot,
-} from './community discord/custom commands/moon';
 import shush, { pokeballTrap } from './community discord/custom commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
 import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
 import yomama from './community discord/currency/fun commands/yomama';
+import moon, {
+    purgeRolesOnReboot,
+} from './community discord/currency/fun commands/moon';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 
