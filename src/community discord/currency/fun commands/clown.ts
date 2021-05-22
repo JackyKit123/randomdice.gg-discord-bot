@@ -19,13 +19,13 @@ export default async function clown(
     if (
         await cooldown(message, '!clown', {
             default: 60 * 1000 * 5,
-            donator: 60 * 1000 * 5,
+            donator: 60 * 1000 * 1,
         })
     ) {
         return;
     }
     if (
-        !(await commandCost(message, Math.round(Math.random() * 3000 - 2000)))
+        !(await commandCost(message, Math.round(Math.random() * 3500 - 1500)))
     ) {
         await channel.send(
             "Usually that's the case, but today I am gonna allow you to use it.<a:clowndance:845532985787940894>"
@@ -86,7 +86,7 @@ export default async function clown(
         );
     }
     const originalName = target.displayName;
-    const howClown = typedWrongCommand ? 10 : Math.ceil(Math.random() * 10);
+    const howClown = (typedWrongCommand || member.id === '195174308052467712') ? 10 : Math.ceil(Math.random() * 10);
     try {
         await target.roles.add('845530033695096853');
         await target.setNickname('🤡'.repeat(howClown));
