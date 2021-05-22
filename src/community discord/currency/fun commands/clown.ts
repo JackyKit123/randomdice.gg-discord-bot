@@ -40,48 +40,48 @@ export default async function clown(
     const sentMessage = await channel.send(
         'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
     );
-    await wait(4500);
+    await wait(4700);
     let typedWrongCommand = false;
     if (member.id === '195174308052467712') {
         if (!target) {
-            await channel.send(
+            await sentMessage.send(
                 'Master, I am unable to finish your request, sorry.'
             );
             return;
         }
-        await channel.send(
+        await sentMessage.edit(
             `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
         );
     } else if (!target) {
-        await channel.send(
+        await sentMessage.edit(
             `You are so stupid that you can't even type the command right, I guess you are the real clown then.\nUsage of the command: \`\`\`!clown <@mention | user id | username | nickname | #username#discriminator>\`\`\``
         );
         target = member;
         typedWrongCommand = true;
     } else if (target.id === author.id) {
         if (member.roles.cache.has('845530033695096853')) {
-            await channel.send('Slow Down. You are already a clown, jeez.');
+            await sentMessage.edit('Slow Down. You are already a clown, jeez.');
             return;
         }
-        await channel.send(
+        await sentMessage.edit(
             `${author}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
         );
     } else if (target.roles.cache.has('845530033695096853')) {
-        await channel.send(
+        await sentMessage.edit(
             `${target} has already been clowned. Why are you so desperate? I guess you are the real clown then.`
         );
         target = member;
     } else if (
         (target.id !== member.id && Math.random() < 0.7) ||
         (member.id === '722951439567290458' && Math.random() < 0.95) ||
-        target.id === '195174308052467712'
+        (target.id === '195174308052467712' && Math.random() > 0.95)
     ) {
-        await channel.send(
+        await sentMessage.edit(
             `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${author} is now a clown LOL!!!**`
         );
         target = member;
     } else {
-        await channel.send(
+        await sentMessage.edit(
             `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
         );
     }
@@ -93,7 +93,7 @@ export default async function clown(
     } catch (err) {
         // suppress error
     } finally {
-        await sentMessage.edit(
+        await channel.send(
             typedWrongCommand
                 ? `${target} typed the wrong command. 100% clown!<a:clowndance:845532985787940894>`
                 : `${target} is a ${
