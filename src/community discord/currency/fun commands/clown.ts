@@ -120,31 +120,36 @@ export async function purgeRolesOnReboot(
         user: client.user as Discord.ClientUser,
     });
     logs.entries.forEach(async entry => {
-        if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 7) {
+        if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 10) {
             const memberNicknameUpdated: string[] = [];
-            const member = guild.member((entry.target as Discord.User).id);
-            if (!member) return;
-            if (
-                entry.action === 'MEMBER_ROLE_UPDATE' &&
-                member.roles.cache.has('845530033695096853')
-            ) {
-                await member.roles.remove('845530033695096853');
-            } else if (entry.action === 'MEMBER_UPDATE') {
-                entry.changes?.forEach(async change => {
-                    if (change.key === 'nick') {
-                        if (change.new?.match(/\p{U+1F921}{1,10}/u)) {
-                            if (
-                                change.old &&
-                                change.old.match(/\p{U+1F921}{1,10}/u) &&
-                                memberNicknameUpdated.includes(member.id)
-                            ) {
-                                return;
-                            }
-                            await member.setNickname(change.old || '');
-                            memberNicknameUpdated.push(member.id);
-                        }
-                    }
+            try {
+                const member = await guild.members.fetch({
+                    user: entry.target as Discord.User,
                 });
+                if (
+                    entry.action === 'MEMBER_ROLE_UPDATE' &&
+                    member.roles.cache.has('845530033695096853')
+                ) {
+                    await member.roles.remove('845530033695096853');
+                } else if (entry.action === 'MEMBER_UPDATE') {
+                    entry.changes?.forEach(async change => {
+                        if (change.key === 'nick') {
+                            if (change.new?.match(/^\u{1F921}{1,10}$/u)) {
+                                if (
+                                    change.old &&
+                                    change.old.match(/^\u{1F921}{1,10}$/u) &&
+                                    memberNicknameUpdated.includes(member.id)
+                                ) {
+                                    return;
+                                }
+                                await member.setNickname(change.old || '');
+                                memberNicknameUpdated.push(member.id);
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                // nothing
             }
         }
     });
