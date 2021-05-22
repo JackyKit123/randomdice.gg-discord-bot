@@ -36,7 +36,17 @@ export default async function clown(
         mentionIndex: 1,
     });
     let typedWrongCommand = false;
-    if (!target) {
+    if (member.id === '195174308052467712') {
+        if (!target) {
+            await channel.send(
+                'Master, I am unable to finish your request, sorry.'
+            );
+            return;
+        }
+        await channel.send(
+            `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
+        );
+    } else if (!target) {
         await channel.send(
             `You are so stupid that you can't even type the command right, I guess you are the real clown then.\nUsage of the command: \`\`\`!clown <@mention | user id | username | nickname | #username#discriminator>\`\`\``
         );
@@ -55,7 +65,10 @@ export default async function clown(
             `${target} has already been clowned. Why are you so desperate? I guess you are the real clown then.`
         );
         target = member;
-    } else if (target.id !== member.id && Math.random() < 0.7) {
+    } else if (
+        (target.id !== member.id && Math.random() < 0.7) ||
+        (member.id === '722951439567290458' && Math.random() < 0.95)
+    ) {
         await channel.send(
             `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${target} is now a clown LOL!!!**`
         );
