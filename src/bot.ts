@@ -71,8 +71,11 @@ import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
 import yomama from './community discord/currency/fun commands/yomama';
 import moon, {
-    purgeRolesOnReboot,
+    purgeRolesOnReboot as purgeMoonedRoles,
 } from './community discord/currency/fun commands/moon';
+import clown, {
+    purgeRolesOnReboot as purgeClownRoles,
+} from './community discord/currency/fun commands/clown';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 
@@ -109,7 +112,8 @@ client.on('ready', async () => {
     // eslint-disable-next-line no-console
     console.log(bootMessage);
     infoVC(client);
-    purgeRolesOnReboot(client);
+    purgeMoonedRoles(client);
+    purgeClownRoles(client);
     fetchApps(client);
     fetchGeneralOnBoot(client);
     await fetchAll(database);
@@ -266,6 +270,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!moon':
                     await moon(client, message);
+                    break;
+                case '!clown':
+                    await clown(client, message);
                     break;
                 case '!shush':
                     await shush(message);
