@@ -228,8 +228,11 @@ export default async function leaderboard(
                     'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
                 )
                 .setTitle(
+                    // eslint-disable-next-line no-nested-ternary
                     isWeekly
                         ? 'Most Active People this week'
+                        : isGamble
+                        ? 'Biggest Gambler of all time'
                         : `Richest People in the Server`
                 )
                 .setAuthor(
