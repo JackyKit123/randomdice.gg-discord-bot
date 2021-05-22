@@ -24,7 +24,9 @@ export default async function clown(
     ) {
         return;
     }
-    if (!(await commandCost(message, Math.random() * 2000 - 1000))) {
+    if (
+        !(await commandCost(message, Math.round(Math.random() * 2000 - 1000)))
+    ) {
         await channel.send(
             "Usually that's the case, but today I am gonna allow you to use it.<a:clowndance:845532985787940894>"
         );
