@@ -86,12 +86,7 @@ export default async function chatCoins(
         return;
     }
 
-    if (
-        author.bot ||
-        !member ||
-        content.startsWith('!') ||
-        (/^dd/i.test(content) && !dd)
-    ) {
+    if (author.bot || !member) {
         return;
     }
 
