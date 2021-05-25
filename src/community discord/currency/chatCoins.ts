@@ -3,6 +3,51 @@ import * as firebase from 'firebase-admin';
 import getBalance from './balance';
 import cache from '../../helper/cache';
 
+export function duplicatedRoleMulti(member: Discord.GuildMember): number {
+    const tier1roles = [
+        '804512584375599154',
+        '805817350241779712',
+        '806312627877838878',
+        '804231753535193119',
+    ];
+    const tier2roles = [
+        '804513079319592980',
+        '805817742081916988',
+        '806896328255733780',
+        '804496339794264085',
+        '805388604791586826',
+    ];
+    const tier3roles = [
+        '804513117228367882',
+        '805817760353091606',
+        '809142956715671572',
+    ];
+    const tier4roles = [
+        '805727466219372546',
+        '805817776232202318',
+        '809143588105486346',
+    ];
+
+    const duplicatedTierMulti = (
+        tierRoles: string[],
+        multiplier: number
+    ): number =>
+        Math.max(
+            (member.roles.cache.filter(role => tierRoles.includes(role.id))
+                .size -
+                1) *
+                multiplier,
+            0
+        );
+
+    return (
+        duplicatedTierMulti(tier1roles, 2) +
+        duplicatedTierMulti(tier2roles, 5) +
+        duplicatedTierMulti(tier3roles, 10) +
+        duplicatedTierMulti(tier4roles, 20)
+    );
+}
+
 const cooldown = new Map<string, number>();
 export default async function chatCoins(
     message: Discord.Message,
@@ -65,6 +110,7 @@ export default async function chatCoins(
     member.roles.cache.forEach(role => {
         reward += multiplier.roles[role.id] || 0;
     });
+    reward += duplicatedRoleMulti(member);
     multiplier.blacklisted.forEach(blacklisted => {
         if (blacklisted === channel.id || member.roles.cache.has(blacklisted)) {
             reward = 0;

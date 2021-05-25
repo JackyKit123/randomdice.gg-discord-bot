@@ -3,6 +3,7 @@ import getBalance from './balance';
 import cache from '../../helper/cache';
 import parseMsIntoReadableText from '../../helper/parseMS';
 import fetchMention from '../../helper/fetchMention';
+import { duplicatedRoleMulti } from './chatCoins';
 
 export default async function Profile(message: Discord.Message): Promise<void> {
     const { member, channel, guild, content } = message;
@@ -129,10 +130,12 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         );
 
     const { multiplier } = cache['discord_bot/community/currencyConfig'];
-    let reward = 1;
+    const channelMulti = multiplier.channels[channel.id] || 0;
+    let roleMulti = 0;
     target.roles.cache.forEach(role => {
-        reward += multiplier.roles[role.id] || 0;
+        roleMulti += multiplier.roles[role.id] || 0;
     });
+    const dupedMulti = duplicatedRoleMulti(member);
 
     const generalProfile = new Discord.MessageEmbed(embed)
         .setTitle('General Profile')
@@ -157,11 +160,9 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .addField(
             'Your Chat Multi',
-            `\`x${reward}\` Global\n\`x${
-                multiplier.channels[channel.id] || 0
-            }\` in <#${channel.id}>\n\`x${
-                reward + (multiplier.channels[channel.id] || 0)
-            }\` in Total`,
+            `\`x${roleMulti}\` from your Roles\n\`x${dupedMulti}\` from duplicated perks\n\`x${channelMulti}\` in <#${
+                channel.id
+            }>\n\`x${channelMulti + roleMulti + dupedMulti}\` in Total`,
             true
         )
         .addField(
