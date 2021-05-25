@@ -135,7 +135,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     target.roles.cache.forEach(role => {
         roleMulti += multiplier.roles[role.id] || 0;
     });
-    const dupedMulti = duplicatedRoleMulti(member);
+    const dupedMulti = duplicatedRoleMulti(target);
 
     const generalProfile = new Discord.MessageEmbed(embed)
         .setTitle('General Profile')
