@@ -162,7 +162,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             'Your Chat Multi',
             `\`x${roleMulti}\` from your Roles\n\`x${dupedMulti}\` from duplicated perks\n\`x${channelMulti}\` in <#${
                 channel.id
-            }>\n\`x${channelMulti + roleMulti + dupedMulti}\` in Total`,
+            }>\n\`x${channelMulti + roleMulti + dupedMulti + 1}\` in Total`,
             true
         )
         .addField(
