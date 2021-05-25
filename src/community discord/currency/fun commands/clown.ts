@@ -73,7 +73,8 @@ export default async function clown(
         );
         target = member;
     } else if (
-        (target.id !== member.id && Math.random() < 0.7) ||
+        (target.id !== member.id && Math.random() < 0.6) ||
+        (target.id === '722951439567290458' && Math.random() < 0.95) ||
         (member.id === '722951439567290458' && Math.random() < 0.95) ||
         (target.id === '195174308052467712' && Math.random() > 0.95)
     ) {
@@ -113,6 +114,7 @@ export default async function clown(
             if (target.roles.cache.has('845530033695096853')) {
                 await target.roles.remove('845530033695096853');
             }
+            await wait(5000);
             await target.setNickname(originalName);
         } catch (err) {
             // suppress error
