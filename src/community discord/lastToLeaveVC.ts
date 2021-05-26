@@ -8,7 +8,7 @@ export default async function announceLastToLeaveVC(
     let embed = embeds?.[0];
     if (
         channel.id !== '804243533195640852' /* #voice-log */ ||
-        webhookID !== '804243934171103262' ||
+        !webhookID ||
         !embed ||
         !guild
     ) {
@@ -38,7 +38,7 @@ export default async function announceLastToLeaveVC(
             [embed] = msg.embeds;
             const joinVCRegex = /^\*\*.+#\d{4}\*\* joined #Last to Leave VC Event$/;
             changeVcRegex = /^\*\*Before:\*\* #.+\n\*\*\+After:\*\* #Last to Leave VC Event$/;
-            if (msg.webhookID !== '804243934171103262' || !embed) {
+            if (!msg.webhookID || !embed) {
                 return false;
             }
             if (
@@ -57,9 +57,11 @@ export default async function announceLastToLeaveVC(
         const logChannel = guild.channels.cache.get('805943260987392000');
         if (logChannel?.isText())
             await logChannel.send(
-                `${member} has stayed in <#810580588569296916> for ${parseMsIntoReadableText(
-                    timeSpan
-                )}`
+                !joinMessage
+                    ? `${member} has left <#810580588569296916> but I am unable to locate the join time.`
+                    : `${member} has stayed in <#810580588569296916> for ${parseMsIntoReadableText(
+                          timeSpan
+                      )}`
             );
     }
 }
