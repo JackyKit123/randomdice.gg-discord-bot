@@ -53,6 +53,7 @@ export default async function clown(
     );
     await wait(4700);
     let typedWrongCommand = false;
+    let clownedABot = false;
     if (!target) {
         await sentMessage.edit(
             `You are so stupid that you can't even type the command right, I guess you are the real clown then.\nUsage of the command: \`\`\`!clown <@mention | user id | username | nickname | #username#discriminator>\`\`\``
@@ -72,6 +73,12 @@ export default async function clown(
             `${target} has already been clowned. Why are you so desperate? I guess you are the real clown then.`
         );
         target = member;
+    } else if (target.user.bot) {
+        await sentMessage.edit(
+            `What's wrong in your mind to clown a bot? Good Try tho, you clown.`
+        );
+        clownedABot = true;
+        target = member;
     } else if (
         (target.id !== member.id && Math.random() < 0.6) ||
         (target.id === '722951439567290458' && Math.random() < 0.95) ||
@@ -89,7 +96,7 @@ export default async function clown(
     }
     const originalName = target.displayName;
     const howClown =
-        typedWrongCommand || member.id === '195174308052467712'
+        typedWrongCommand || clownedABot || member.id === '195174308052467712'
             ? 10
             : Math.ceil(Math.random() * 10);
     try {
@@ -100,10 +107,16 @@ export default async function clown(
     } finally {
         await channel.send(
             new Discord.MessageEmbed()
-                .setTitle('🤡')
+                .setTitle('🤡'.repeat(howClown))
                 .setDescription(
-                    typedWrongCommand
-                        ? `${target} typed the wrong command. 100% clown!<a:clowndance:845532985787940894>`
+                    typedWrongCommand || clownedABot
+                        ? `${target} ${
+                              clownedABot ? 'tried to clown a bot.' : ''
+                          }${
+                              typedWrongCommand
+                                  ? 'typed the wrong command.'
+                                  : ''
+                          } 100% clown!<a:clowndance:845532985787940894>`
                         : `${target} is a ${
                               howClown * 10
                           }% clown.<a:clowndance:845532985787940894>`

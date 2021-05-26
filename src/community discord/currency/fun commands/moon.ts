@@ -32,6 +32,10 @@ export default async function custom(
         );
         return;
     }
+    if (target.user.bot) {
+        await channel.send('Cannot use this command on a bot.');
+        return;
+    }
     if (target.id === author.id) {
         await channel.send(
             `${author.toString()}, why are your mooning yourself? <:what:770517830852542475>`
