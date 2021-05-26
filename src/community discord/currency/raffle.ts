@@ -205,7 +205,10 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         );
                         return;
                     }
-                    currEntry = raffle.maxEntries - prevEntry;
+                    currEntry = Math.min(
+                        raffle.maxEntries - prevEntry,
+                        Math.floor(balance / raffle.ticketCost)
+                    );
                 } else {
                     currEntry = Number(arg) || 1;
                     if (!Number.isInteger(currEntry) || currEntry < 1) {
