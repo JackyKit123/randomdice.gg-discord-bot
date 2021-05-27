@@ -4,8 +4,8 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon  --ext 'ts' --exec 'npm run lint && ts-node --require=dotenv/config src/bot.ts'",
-    "start": "ts-node --require=dotenv/config src/bot.ts",
+    "dev": "NODE_ENV=development nodemon  --ext 'ts' --exec 'npm run lint && ts-node --require=dotenv/config src/bot.ts --project tsconfig.json'",
+    "start": "ts-node --require=dotenv/config src/bot.ts --project tsconfig.json",
     "lint": "eslint src --ext .ts"
   },
   "engines": {
@@ -20,6 +20,7 @@
     "@types/string-similarity": "^3.0.0",
     "@types/textversionjs": "^1.1.0",
     "axios": "^0.21.1",
+    "color-parser": "^0.1.0",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
     "firebase-admin": "^9.2.0",

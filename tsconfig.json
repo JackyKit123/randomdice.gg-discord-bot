@@ -18,6 +18,10 @@
         "isolatedModules": true,
         "typeRoots": ["../node_modules/@types"]
     },
-    "include": ["src"],
+    "ts-node": {
+        "files": true
+    },
+    "files": ["src/color-parser.d.ts"],
+    "include": ["src", "src/color-parser.d.ts"],
     "compileOnSave": true
 }
