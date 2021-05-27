@@ -101,12 +101,13 @@ export default async function customRole(
 export async function deleteCustomRole(
     guild: Discord.Guild,
     database: firebase.database.Database,
-    memberId: string
+    memberId: string,
+    reason?: string
 ): Promise<void> {
     const memberCustomRoleId =
         cache['discord_bot/community/customroles'][memberId];
     if (!memberCustomRoleId) return;
-    await guild.roles.cache.get(memberCustomRoleId)?.delete();
+    await guild.roles.cache.get(memberCustomRoleId)?.delete(reason);
     await database
         .ref('discord_bot/community/customroles')
         .child(memberId)
@@ -131,5 +132,10 @@ export async function manageLeave(
     if (title !== 'Member left') return;
     const id = footer?.text?.match(/^ID: (\d{18})$/)?.[1];
     if (!id) return;
-    await deleteCustomRole(guild, database, id);
+    await deleteCustomRole(
+        guild,
+        database,
+        id,
+        'custom role owner left the server'
+    );
 }
