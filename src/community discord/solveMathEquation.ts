@@ -8,7 +8,12 @@ export default async function solveMathEquation(
     if (author.bot) return;
     try {
         const evaluated = math.evaluate(content);
-        if (typeof evaluated === 'string' || typeof evaluated === 'number')
+        if (
+            typeof evaluated === 'string' ||
+            typeof evaluated === 'number' ||
+            typeof evaluated === 'bigint' ||
+            typeof evaluated === 'boolean'
+        )
             await channel.send(evaluated);
     } catch {
         // do nothing
