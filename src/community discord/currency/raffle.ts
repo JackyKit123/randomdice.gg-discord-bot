@@ -209,6 +209,36 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         raffle.maxEntries - prevEntry,
                         Math.floor(balance / raffle.ticketCost)
                     );
+                    await channel.send(
+                        `You are entering the raffle with \`max\` entries, which will cost you <:dicecoin:839981846419079178> ${
+                            currEntry * raffle.ticketCost
+                        }, answer \`yes\` if you wish to continue.`
+                    );
+                    const awaitedMessage = (
+                        await channel.awaitMessages(
+                            m =>
+                                m.author.id === member.id &&
+                                /^(ok(ay)?|y(es)?|no?|!raffle join)/i.test(
+                                    m.content
+                                ),
+                            {
+                                time: 1000 * 10,
+                                max: 1,
+                            }
+                        )
+                    )?.first();
+                    if (
+                        !awaitedMessage ||
+                        /no?/i.test(awaitedMessage.content)
+                    ) {
+                        await channel.send(
+                            'Ok looks like you are not joining the raffle yet.'
+                        );
+                        return;
+                    }
+                    if (/!raffle join/i.test(awaitedMessage.content)) {
+                        return;
+                    }
                 } else {
                     currEntry = Number(arg) || 1;
                     if (!Number.isInteger(currEntry) || currEntry < 1) {
