@@ -4,7 +4,8 @@ import * as math from 'mathjs';
 export default async function solveMathEquation(
     message: Discord.Message
 ): Promise<void> {
-    const { content, channel } = message;
+    const { content, channel, author } = message;
+    if (author.bot) return;
     try {
         const evaluated = math.evaluate(content);
         if (typeof evaluated === 'string' || typeof evaluated === 'number')
