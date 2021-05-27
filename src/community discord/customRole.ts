@@ -2,6 +2,7 @@ import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
 import * as colorParser from 'color-parser';
 import cache from '../helper/cache';
+import cooldown from '../helper/cooldown';
 
 export default async function customRole(
     message: Discord.Message,
@@ -55,6 +56,15 @@ export default async function customRole(
         );
         return;
     }
+    if (
+        await cooldown(message, '!customrole', {
+            default: 1000 * 60 * 60,
+            donator: 1000 * 60 * 10,
+        })
+    ) {
+        return;
+    }
+
     const customRoleId = cache['discord_bot/community/customroles'][member.id];
     const manageRoleOptions: Discord.RoleData = {
         name: `${roleName}‎‎‎`,
