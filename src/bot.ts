@@ -49,6 +49,7 @@ import validateOneWordStory from './community discord/oneworldstoryValidate';
 import gtn from './community discord/gtn';
 import tournament from './community discord/tournament';
 import customRole from './community discord/customRole';
+import solveMathEquation from './community discord/solveMathEquation';
 import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
 import profile from './community discord/currency/profile';
@@ -167,6 +168,7 @@ client.on('message', async function messageHandler(message) {
             oneMinute(message);
             banMessage(client, message);
             announceLastToLeaveVC(message);
+            solveMathEquation(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
