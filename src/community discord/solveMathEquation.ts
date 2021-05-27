@@ -14,7 +14,9 @@ export default async function solveMathEquation(
             typeof evaluated === 'bigint' ||
             typeof evaluated === 'boolean'
         )
-            await channel.send(evaluated);
+            await channel.send(evaluated, {
+                disableMentions: 'all',
+            });
     } catch {
         // do nothing
     }
