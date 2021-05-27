@@ -3,6 +3,7 @@ import * as firebase from 'firebase-admin';
 import logMessage from '../../dev-commands/logMessage';
 import cache, { MemberCurrency } from '../../helper/cache';
 import cooldown from '../../helper/cooldown';
+import { deleteCustomRole } from '../customRole';
 
 const prestigeRoleIds = [
     '806312627877838878',
@@ -154,9 +155,37 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
             }
         })
     );
+
     await database
         .ref('/discord_bot/community/currencyConfig/weeklyWinners')
         .set(weeklyList);
+    // remove customRoles if no tier2 perks
+    await Promise.all(
+        weeklyWinners
+            .concat(
+                guild.roles.cache
+                    .get('805388604791586826')
+                    ?.members.map(m => m.id) || []
+            )
+            .map(async uid => {
+                try {
+                    const m = await guild.members.fetch(uid);
+                    if (
+                        !(
+                            m.roles.cache.has('804513079319592980') ||
+                            m.roles.cache.has('804496339794264085') ||
+                            m.roles.cache.has('805817742081916988') ||
+                            m.roles.cache.has('806896328255733780') ||
+                            m.roles.cache.has('805388604791586826')
+                        )
+                    ) {
+                        await deleteCustomRole(guild, database, m.id);
+                    }
+                } catch {
+                    // nothing
+                }
+            })
+    );
 }
 
 export function weeklyAutoReset(client: Discord.Client): void {

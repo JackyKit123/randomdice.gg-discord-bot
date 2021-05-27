@@ -47,6 +47,8 @@ import report from './community discord/report';
 import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
 import gtn from './community discord/gtn';
+import tournament from './community discord/tournament';
+import customRole from './community discord/customRole';
 import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
 import profile from './community discord/currency/profile';
@@ -204,6 +206,12 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!eventping':
                     await eventPing(message);
+                    break;
+                case '!tournament':
+                    await tournament(message, database);
+                    break;
+                case '!customrole':
+                    await customRole(message, database);
                     break;
                 case 'dd':
                 case '!drawdice':
