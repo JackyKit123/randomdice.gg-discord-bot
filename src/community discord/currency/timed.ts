@@ -84,7 +84,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 }/balance`
             )
             .set(
-                amount * (1 + multiplier + +0.1 * (streak - 1)) +
+                amount * (1 + multiplier + 0.1 * Math.min(streak - 1, 100)) +
                     (balance as number)
             );
         await database
@@ -99,7 +99,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
             .setColor('#ffff00')
             .setDescription(
                 `Added <:dicecoin:839981846419079178> ${numberFormat.format(
-                    amount * (1 + multiplier + +0.1 * (streak - 1))
+                    amount * (1 + multiplier + +0.1 * Math.min(streak - 1, 100))
                 )} to your balance!`
             )
             .setFooter(
@@ -113,10 +113,34 @@ export default async function timed(message: Discord.Message): Promise<void> {
             streak > 1
                 ? embed.addField(
                       'Daily Streak',
-                      `**${streak} streaks *(+${(streak - 1) * 10}% reward)***`
+                      `**${streak} streaks *(+${
+                          Math.min(streak - 1, 100) * 10
+                      }% reward)***`
                   )
                 : embed
         );
+        if (mode === 'daily') {
+            if (streak === 100) {
+                await member?.roles.add(
+                    '847777372745105438',
+                    '100 daily streaks'
+                );
+                await channel.send(
+                    'Congratulation on achieving 100 daily streaks.',
+                    new Discord.MessageEmbed()
+                        .setDescription(`Added <@&847777372745105438> to you.`)
+                        .setColor('#FFD700')
+                );
+            } else if (
+                streak < 100 &&
+                member?.roles.cache.has('847777372745105438')
+            ) {
+                await member?.roles.remove(
+                    '847777372745105438',
+                    'less than 100 daily streak'
+                );
+            }
+        }
     }
 
     switch (mode) {
