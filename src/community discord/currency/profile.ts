@@ -1,8 +1,8 @@
 import * as Discord from 'discord.js';
 import getBalance from './balance';
-import cache from '../../helper/cache';
-import parseMsIntoReadableText from '../../helper/parseMS';
-import fetchMention from '../../helper/fetchMention';
+import cache from '../../util/cache';
+import parseMsIntoReadableText from '../../util/parseMS';
+import fetchMention from '../../util/fetchMention';
 import { duplicatedRoleMulti } from './chatCoins';
 
 export default async function Profile(message: Discord.Message): Promise<void> {

@@ -1,9 +1,9 @@
 import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
 import getBalance from './balance';
-import cooldown from '../../helper/cooldown';
-import cache from '../../helper/cache';
-import fetchMention from '../../helper/fetchMention';
+import cooldown from '../../util/cooldown';
+import cache from '../../util/cache';
+import fetchMention from '../../util/fetchMention';
 
 export default async function giveDice(
     message: Discord.Message

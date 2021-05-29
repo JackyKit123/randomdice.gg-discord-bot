@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
-import fetchMentionString from '../../../helper/fetchMention';
+import fetchMentionString from '../../../util/fetchMention';
 import commandCost from './commandCost';
-import cooldown from '../../../helper/cooldown';
+import cooldown from '../../../util/cooldown';
 
 export default async function bedtime(message: Discord.Message): Promise<void> {
     const { content, channel, guild, member } = message;

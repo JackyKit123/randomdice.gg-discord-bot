@@ -1,8 +1,8 @@
 import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
-import cooldown from '../../helper/cooldown';
-import fetchMention from '../../helper/fetchMention';
-import cache from '../../helper/cache';
+import cooldown from '../../util/cooldown';
+import fetchMention from '../../util/fetchMention';
+import cache from '../../util/cache';
 
 const prestigeRoleIds = [
     '806312627877838878',

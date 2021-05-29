@@ -1,9 +1,9 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import cache from '../helper/cache';
-import parsedText from '../helper/parseText';
+import cache from '../util/cache';
+import parsedText from '../util/parseText';
 import logMessage from '../dev-commands/logMessage';
-import cooldown from '../helper/cooldown';
+import cooldown from '../util/cooldown';
 
 export async function postGuide(
     client: Discord.Client,

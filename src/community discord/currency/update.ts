@@ -1,7 +1,7 @@
 import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
 import getBalance from './balance';
-import cooldown from '../../helper/cooldown';
+import cooldown from '../../util/cooldown';
 
 export default async function coinflip(
     message: Discord.Message

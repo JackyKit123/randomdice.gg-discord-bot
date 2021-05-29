@@ -1,6 +1,6 @@
 import * as firebase from 'firebase-admin';
 import * as Discord from 'discord.js';
-import cache from '../helper/cache';
+import cache from '../util/cache';
 
 // interface Brackets {
 //     left: Brackets | null;

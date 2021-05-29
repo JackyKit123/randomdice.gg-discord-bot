@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
 import postNow from './postNow';
-import cooldown from '../helper/cooldown';
+import cooldown from '../util/cooldown';
 
 async function checkRegistered(
     guild: Discord.Guild,

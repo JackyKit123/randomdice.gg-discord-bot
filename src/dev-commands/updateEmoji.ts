@@ -1,6 +1,6 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import cache from '../helper/cache';
+import cache from '../util/cache';
 
 export default async function updateEmoji(
     client: Discord.Client,

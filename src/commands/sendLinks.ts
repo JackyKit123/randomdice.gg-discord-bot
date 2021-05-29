@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js';
-import cooldown from '../helper/cooldown';
+import cooldown from '../util/cooldown';
 
 export default async function sendLinks(
     client: Discord.Client,

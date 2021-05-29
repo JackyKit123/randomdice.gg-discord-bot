@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js';
-import cache from '../helper/cache';
+import cache from '../util/cache';
 
 export default async function help(message: Discord.Message): Promise<void> {
     const { author } = message;

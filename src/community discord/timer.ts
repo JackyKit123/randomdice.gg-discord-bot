@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import * as admin from 'firebase-admin';
-import cache from '../helper/cache';
-import parseMsIntoReadableText, { parseStringIntoMs } from '../helper/parseMS';
+import cache from '../util/cache';
+import parseMsIntoReadableText, { parseStringIntoMs } from '../util/parseMS';
 
 async function killTimerFromDB(timerKey: string): Promise<void> {
     try {

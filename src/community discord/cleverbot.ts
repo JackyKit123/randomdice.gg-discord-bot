@@ -1,8 +1,8 @@
 import * as Discord from 'discord.js';
 import axios from 'axios';
-import cache from '../helper/cache';
-import cooldown from '../helper/cooldown';
-import { replaceAllMentionToText } from '../helper/fetchMention';
+import cache from '../util/cache';
+import cooldown from '../util/cooldown';
+import { replaceAllMentionToText } from '../util/fetchMention';
 
 const conversationIds = new Map<string, string>();
 export default async function cleverBot(

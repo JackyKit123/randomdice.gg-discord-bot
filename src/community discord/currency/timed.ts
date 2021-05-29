@@ -1,8 +1,8 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
-import cache from '../../helper/cache';
+import cache from '../../util/cache';
 import getBalance from './balance';
-import parseMsIntoReadableText from '../../helper/parseMS';
+import parseMsIntoReadableText from '../../util/parseMS';
 
 export default async function timed(message: Discord.Message): Promise<void> {
     const { content, member, channel } = message;

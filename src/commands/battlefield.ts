@@ -1,8 +1,8 @@
 import * as Discord from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
-import cache, { Battlefield } from '../helper/cache';
-import parsedText from '../helper/parseText';
-import cooldown from '../helper/cooldown';
+import cache, { Battlefield } from '../util/cache';
+import parsedText from '../util/parseText';
+import cooldown from '../util/cooldown';
 
 export default async function dice(message: Discord.Message): Promise<void> {
     const { channel, content } = message;

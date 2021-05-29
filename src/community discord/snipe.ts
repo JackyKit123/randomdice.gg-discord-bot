@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js';
-import cooldown from '../helper/cooldown';
+import cooldown from '../util/cooldown';
 
 const snipeStore = {
     snipe: new Map<string, Discord.Message>(),

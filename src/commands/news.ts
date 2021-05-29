@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
-import cache from '../helper/cache';
-import parsedText from '../helper/parseText';
-import cooldown from '../helper/cooldown';
+import cache from '../util/cache';
+import parsedText from '../util/parseText';
+import cooldown from '../util/cooldown';
 
 export default async function sendNews(
     message: Discord.Message

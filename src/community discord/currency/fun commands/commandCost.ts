@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import firebase from 'firebase-admin';
 import getBalance from '../balance';
-import cache from '../../../helper/cache';
+import cache from '../../../util/cache';
 
 export default async function commandCost(
     message: Discord.Message,

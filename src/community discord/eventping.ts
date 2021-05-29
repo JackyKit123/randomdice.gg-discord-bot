@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js';
-import cooldown from '../helper/cooldown';
+import cooldown from '../util/cooldown';
 
 export default async function eventPing(
     message: Discord.Message

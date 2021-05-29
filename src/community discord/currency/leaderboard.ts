@@ -1,8 +1,8 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import logMessage from '../../dev-commands/logMessage';
-import cache, { MemberCurrency } from '../../helper/cache';
-import cooldown from '../../helper/cooldown';
+import cache, { MemberCurrency } from '../../util/cache';
+import cooldown from '../../util/cooldown';
 import { deleteCustomRole } from '../customRole';
 
 const prestigeRoleIds = [

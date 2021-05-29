@@ -1,6 +1,6 @@
 import * as Discord from 'discord.js';
-import cache, { Deck } from '../helper/cache';
-import cooldown from '../helper/cooldown';
+import cache, { Deck } from '../util/cache';
+import cooldown from '../util/cooldown';
 
 export default async function decklist(
     message: Discord.Message

@@ -4,9 +4,9 @@ import * as randomstring from 'randomstring';
 import * as math from 'mathjs';
 import { promisify } from 'util';
 import chatCoins from './chatCoins';
-import cooldown from '../../helper/cooldown';
+import cooldown from '../../util/cooldown';
 import getBalanced from './balance';
-import cache, { Dice } from '../../helper/cache';
+import cache, { Dice } from '../../util/cache';
 
 const wait = promisify(setTimeout);
 const ddIntervals = new Map<string, number[]>();

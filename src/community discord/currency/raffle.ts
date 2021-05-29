@@ -1,9 +1,9 @@
 import * as Discord from 'discord.js';
 import * as firebase from 'firebase-admin';
 import getBalance from './balance';
-import { parseStringIntoMs } from '../../helper/parseMS';
-import cache from '../../helper/cache';
-import cooldown from '../../helper/cooldown';
+import { parseStringIntoMs } from '../../util/parseMS';
+import cache from '../../util/cache';
+import cooldown from '../../util/cooldown';
 
 const numberFormat = new Intl.NumberFormat();
 

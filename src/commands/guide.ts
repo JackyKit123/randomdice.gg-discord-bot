@@ -1,8 +1,8 @@
 import * as Discord from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
-import cache, { DeckGuide } from '../helper/cache';
-import parseText from '../helper/parseText';
-import cooldown from '../helper/cooldown';
+import cache, { DeckGuide } from '../util/cache';
+import parseText from '../util/parseText';
+import cooldown from '../util/cooldown';
 
 export default async function deckGuide(
     message: Discord.Message
