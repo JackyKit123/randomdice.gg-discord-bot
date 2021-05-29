@@ -39,7 +39,7 @@ export default async function cleverBot(
                 .setTitle('I cannot respond here.')
                 .setColor('#ff0000')
                 .setDescription(
-                    `Responding in ${channel} is only allowed for Patreon donators. However, you can still interact with me in <#804227071765118976>`
+                    `Responding in ${channel} is only allowed for [Patreon donators](https://www.patreon.com/RandomDiceCommunityWebsite), a $5 donation would enable you to talk with me here. However, you can still interact with me in <#804227071765118976>.`
                 )
         );
         return;
