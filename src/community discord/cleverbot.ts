@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import axios from 'axios';
 import cache from '../helper/cache';
+import cooldown from '../helper/cooldown';
 
 const conversationIds = new Map<string, string>();
 export default async function cleverBot(
@@ -19,6 +20,14 @@ export default async function cleverBot(
         new RegExp(`<@!?${client.user.id}> ?(.*)`)
     )?.[1];
     if (!input) return;
+    if (
+        !(await cooldown(message, 'cleverbot', {
+            default: 10 * 1000,
+            donator: 0,
+        }))
+    ) {
+        return;
+    }
     if (
         !userIsDonator &&
         author.id !== '195174308052467712' &&
