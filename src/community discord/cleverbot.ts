@@ -2,7 +2,7 @@ import * as Discord from 'discord.js';
 import axios from 'axios';
 import cache from '../helper/cache';
 
-let cs: string;
+const conversationIds = new Map<string, string>();
 export default async function cleverBot(
     message: Discord.Message
 ): Promise<void> {
@@ -35,12 +35,12 @@ export default async function cleverBot(
         return;
     }
 
+    const cs = conversationIds.get(channel.id);
     const res = await axios.get(
         `http://www.cleverbot.com/getreply?key=${
             process.env.CLEVER_BOT_API_KEY
         }&input=${input}${cs ? `&cs=${cs}` : ''}`
     );
-
-    cs = res.data.cs;
+    conversationIds.set(channel.id, res.data.cs);
     await channel.send(res.data.output);
 }
