@@ -7,8 +7,6 @@ export default async function cleverBot(
     message: Discord.Message
 ): Promise<void> {
     const { content, channel, client, author, guild } = message;
-    const apiKey = '***REMOVED***'; // FIXME: dangerous
-
     if (!client.user || !guild) return;
 
     const { users } = cache;
@@ -38,9 +36,9 @@ export default async function cleverBot(
     }
 
     const res = await axios.get(
-        `http://www.cleverbot.com/getreply?key=${apiKey}&input=${input}${
-            cs ? `&cs=${cs}` : ''
-        }`
+        `http://www.cleverbot.com/getreply?key=${
+            process.env.CLEVER_BOT_API_KEY
+        }&input=${input}${cs ? `&cs=${cs}` : ''}`
     );
 
     cs = res.data.cs;
