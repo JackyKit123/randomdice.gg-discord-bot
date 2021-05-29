@@ -2,6 +2,7 @@ import * as Discord from 'discord.js';
 import axios from 'axios';
 import cache from '../helper/cache';
 import cooldown from '../helper/cooldown';
+import { replaceAllMentionToText } from '../helper/fetchMention';
 
 const conversationIds = new Map<string, string>();
 export default async function cleverBot(
@@ -16,10 +17,9 @@ export default async function cleverBot(
             user['linked-account'].discord === author.id &&
             Boolean(user['patreon-tier'])
     );
-    const input = content.match(
-        new RegExp(`<@!?${client.user.id}> ?(.*)`)
-    )?.[1];
+    let input = content.match(new RegExp(`<@!?${client.user.id}> ?(.*)`))?.[1];
     if (!input) return;
+    input = replaceAllMentionToText(input, guild);
     if (
         await cooldown(message, 'cleverbot', {
             default: 10 * 1000,
