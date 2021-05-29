@@ -81,6 +81,7 @@ import clown, {
 } from './community discord/currency/fun commands/clown';
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
+import cleverBot from './community discord/cleverbot';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -286,6 +287,7 @@ client.on('message', async function messageHandler(message) {
                     await help(message, true);
                     break;
                 default:
+                    cleverBot(message);
                     solveMathEquation(message);
                     pokeballTrap(message);
                     oneMinute(message);
