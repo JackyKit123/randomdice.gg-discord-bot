@@ -162,13 +162,8 @@ client.on('message', async function messageHandler(message) {
             welcomeReward(message);
             validateOneWordStory(message);
             voteReward(message);
-            chatRevivePing(message);
-            validateCrewAds(message);
-            pokeballTrap(message);
-            oneMinute(message);
             banMessage(client, message);
             announceLastToLeaveVC(message);
-            solveMathEquation(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
@@ -291,6 +286,11 @@ client.on('message', async function messageHandler(message) {
                     await help(message, true);
                     break;
                 default:
+                    solveMathEquation(message);
+                    pokeballTrap(message);
+                    oneMinute(message);
+                    validateCrewAds(message);
+                    chatRevivePing(message);
             }
         }
 

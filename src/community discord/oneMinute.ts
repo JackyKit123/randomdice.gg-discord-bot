@@ -4,7 +4,6 @@ export default async function oneMinute(
     message: Discord.Message
 ): Promise<void> {
     const { content, author, channel } = message;
-    if (author.bot) return;
 
     if (/\b(a|one|1) ?min(ute)?\b/i.test(content)) {
         setTimeout(
