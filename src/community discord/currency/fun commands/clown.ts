@@ -80,10 +80,10 @@ export default async function clown(
         clownedABot = true;
         target = member;
     } else if (
-        (target.id !== member.id && Math.random() < 0.6) ||
         (target.id === '722951439567290458' && Math.random() < 0.95) ||
-        (member.id === '722951439567290458' && Math.random() < 0.95) ||
-        (target.id === '195174308052467712' && Math.random() > 0.95)
+        (target.id === '195174308052467712' && Math.random() > 0.95) ||
+        (target.id !== member.id && Math.random() < 0.6) ||
+        (member.id === '722951439567290458' && Math.random() < 0.95)
     ) {
         await sentMessage.edit(
             `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${author} is now a clown LOL!!!**`
