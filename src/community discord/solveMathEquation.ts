@@ -6,7 +6,7 @@ export default async function solveMathEquation(
 ): Promise<void> {
     const { content, channel, author } = message;
     if (author.bot) return;
-    if (/^(".+"|[\d\w]+)$/) return;
+    if (/^(".+"|[\d\w]+)$/.test(content)) return;
     try {
         const evaluated = math.evaluate(content);
         if (
