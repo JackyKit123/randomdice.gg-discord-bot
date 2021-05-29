@@ -21,10 +21,10 @@ export default async function cleverBot(
     )?.[1];
     if (!input) return;
     if (
-        !(await cooldown(message, 'cleverbot', {
+        await cooldown(message, 'cleverbot', {
             default: 10 * 1000,
             donator: 0,
-        }))
+        })
     ) {
         return;
     }
