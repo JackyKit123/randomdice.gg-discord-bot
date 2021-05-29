@@ -4,7 +4,8 @@ import cache from '../util/cache';
 import cooldown from '../util/cooldown';
 import { replaceAllMentionToText } from '../util/fetchMention';
 
-const conversationIds = new Map<string, string>();
+const conversationTimeout = new Map<string, NodeJS.Timeout>();
+const conversationIds = new Map<string, string | null>();
 export default async function cleverBot(
     message: Discord.Message
 ): Promise<void> {
@@ -52,4 +53,15 @@ export default async function cleverBot(
     );
     conversationIds.set(channel.id, res.data.cs);
     await channel.send(res.data.output);
+    // reset conversation id after 10 minutes
+    const timeout = conversationTimeout.get(channel.id);
+    if (timeout) {
+        clearTimeout(timeout);
+    }
+    conversationTimeout.set(
+        channel.id,
+        setTimeout(() => {
+            conversationIds.set(channel.id, null);
+        }, 10 * 60 * 1000)
+    );
 }
