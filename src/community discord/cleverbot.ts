@@ -1,6 +1,5 @@
 import * as Discord from 'discord.js';
 import axios from 'axios';
-import cache from '../util/cache';
 import cooldown from '../util/cooldown';
 import { replaceAllMentionToText } from '../util/fetchMention';
 
