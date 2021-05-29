@@ -5,6 +5,7 @@ export default async function solveMathEquation(
     message: Discord.Message
 ): Promise<void> {
     const { content, channel } = message;
+    if (/^(".+"|[\d\w]+)$/.test(content)) return;
     try {
         const evaluated = math.evaluate(content);
         if (
