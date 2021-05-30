@@ -8,7 +8,7 @@ const conversationIds = new Map<string, string | null>();
 export default async function cleverBot(
     message: Discord.Message
 ): Promise<void> {
-    const { content, channel, client, author, guild } = message;
+    const { content, channel, client, guild } = message;
     if (!client.user || !guild) return;
 
     let input = content.match(new RegExp(`<@!?${client.user.id}> ?(.*)`))?.[1];
