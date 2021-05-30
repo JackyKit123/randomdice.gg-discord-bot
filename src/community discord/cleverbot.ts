@@ -23,23 +23,23 @@ export default async function cleverBot(
         return;
     }
 
-    const cs = conversationIds.get(`${channel.id}${author.id}`);
+    const cs = conversationIds.get(channel.id);
     const res = await axios.get(
         `http://www.cleverbot.com/getreply?key=${
             process.env.CLEVER_BOT_API_KEY
         }&input=${input}${cs ? `&cs=${cs}` : ''}`
     );
-    conversationIds.set(`${channel.id}${author.id}`, res.data.cs);
+    conversationIds.set(channel.id, res.data.cs);
     await channel.send(res.data.output);
     // reset conversation id after 10 minutes
-    const timeout = conversationTimeout.get(`${channel.id}${author.id}`);
+    const timeout = conversationTimeout.get(channel.id);
     if (timeout) {
         clearTimeout(timeout);
     }
     conversationTimeout.set(
-        `${channel.id}${author.id}`,
+        channel.id,
         setTimeout(() => {
-            conversationIds.set(`${channel.id}${author.id}`, null);
+            conversationIds.set(channel.id, null);
         }, 30 * 1000)
     );
 }
