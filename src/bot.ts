@@ -165,6 +165,7 @@ client.on('message', async function messageHandler(message) {
             voteReward(message);
             banMessage(client, message);
             announceLastToLeaveVC(message);
+            cleverBot(message);
         }
         if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
             if (
@@ -287,7 +288,6 @@ client.on('message', async function messageHandler(message) {
                     await help(message, true);
                     break;
                 default:
-                    cleverBot(message);
                     solveMathEquation(message);
                     pokeballTrap(message);
                     oneMinute(message);
