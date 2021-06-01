@@ -64,7 +64,7 @@ export default async function clown(
         await sentMessage.edit(
             `${author}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
         );
-    } else if (member.id === '195174308052467712') {
+    } else if (member.id === '195174308052467712' || (target.id === '722951439567290458' && Math.random() > 0.95)) {
         await sentMessage.edit(
             `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
         );
@@ -80,10 +80,9 @@ export default async function clown(
         clownedABot = true;
         target = member;
     } else if (
-        (target.id === '722951439567290458' && Math.random() > 0.95) ||
         (target.id === '195174308052467712') ||
         (member.id === '722951439567290458' && Math.random() < 0.95) ||
-        (target.id !== member.id && Math.random() < 0.55)
+        (target.id !== member.id && Math.random() < 0.6)
     ) {
         await sentMessage.edit(
             `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${author} is now a clown LOL!!!**`
