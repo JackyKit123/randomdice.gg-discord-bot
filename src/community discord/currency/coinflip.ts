@@ -81,7 +81,7 @@ export default async function coinflip(
                 won ? 'gain' : 'lose'
             }`
         )
-        .set((gambleProfile?.[won ? 'gain' : 'lose'] || 0) + amount);
+        .set(Number(gambleProfile?.[won ? 'gain' : 'lose'] || 0) + amount);
     await channel.send(
         new Discord.MessageEmbed()
             .setAuthor(
@@ -100,7 +100,7 @@ export default async function coinflip(
             .addField(
                 'Current Balance',
                 `<:dicecoin:839981846419079178> ${numberFormat.format(
-                    balance + amount * (won ? 1 : -1)
+                    Number(balance) + amount * (won ? 1 : -1)
                 )}`
             )
     );

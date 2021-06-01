@@ -52,9 +52,9 @@ export default async function giveDice(
         );
         return;
     }
-    const invAmount = profile?.diceDrawn?.[die.id] || 0;
+    const invAmount = Number(profile?.diceDrawn?.[die.id]) || 0;
     const targetProfile = cache['discord_bot/community/currency'][target.id];
-    const targetInvAmount = targetProfile?.diceDrawn?.[die.id] || 0;
+    const targetInvAmount = Number(targetProfile?.diceDrawn?.[die.id]) || 0;
     if (target.id === member.id) {
         await channel.send('You cannot trade with yourself.');
         return;

@@ -174,7 +174,7 @@ export default async function drawDice(
         .ref(
             `discord_bot/community/currency/${member.id}/diceDrawn/${randomDraw.id}`
         )
-        .set((diceDrawn?.[randomDraw.id] || 0) + 1);
+        .set(Number(diceDrawn?.[randomDraw.id] || 0) + 1);
     let embed = new Discord.MessageEmbed()
         .setAuthor(
             `${member.displayName}'s Dice Draw Game`,

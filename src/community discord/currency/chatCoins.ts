@@ -122,7 +122,8 @@ export default async function chatCoins(
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + reward);
     const weekly =
-        cache['discord_bot/community/currency'][member.id].weeklyChat || 0;
+        Number(cache['discord_bot/community/currency'][member.id].weeklyChat) ||
+        0;
     await database
         .ref(`discord_bot/community/currency/${member.id}/weeklyChat`)
         .set(weekly + 1);

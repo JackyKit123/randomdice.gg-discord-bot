@@ -68,14 +68,11 @@ export default async function prestige(
                 .setColor(member.displayHexColor)
                 .setTitle('Prestige Progress')
                 .setDescription(
-                    `${new Array(Math.max(0, Math.floor(progress * 10)))
-                        .fill('■')
-                        .concat(
-                            new Array(
-                                Math.min(10 - Math.floor(progress * 10), 10)
-                            ).fill('□')
-                        )
-                        .join('')} (${Math.floor(progress * 1000) / 10}%)`
+                    `${'■'.repeat(
+                        Math.max(0, Math.floor(progress * 10))
+                    )}${'□'.repeat(
+                        Math.min(10 - Math.floor(progress * 10), 10)
+                    )}(${Math.floor(progress * 1000) / 10}%)`
                 )
                 .addField(
                     'Prestige Cost',

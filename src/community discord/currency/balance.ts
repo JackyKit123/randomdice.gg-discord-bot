@@ -81,7 +81,7 @@ export default async function balance(
         }
         await database
             .ref(`discord_bot/community/currency/${target.id}/balance`)
-            .set(profile?.balance || 10000);
+            .set(Number(profile?.balance) || 10000);
         await database
             .ref(`discord_bot/community/currency/${target.id}/prestige`)
             .set(prestigeLevel);
@@ -90,7 +90,7 @@ export default async function balance(
                 'Looks like you are the first time using server currency command, you have been granted **<:dicecoin:839981846419079178> 10,000** as a starter reward.',
                 embed.setDescription(
                     `<:dicecoin:839981846419079178> ${numberFormat.format(
-                        profile?.balance || 10000
+                        Number(profile?.balance) || 10000
                     )}`
                 )
             );
@@ -98,15 +98,15 @@ export default async function balance(
                 .ref(`discord_bot/community/currency/${target.id}/initiated`)
                 .set(true);
         }
-        return output === 'silence' ? profile?.balance || 10000 : false;
+        return output === 'silence' ? Number(profile?.balance) || 10000 : false;
     }
     if (output !== 'emit') {
-        return profile.balance;
+        return Number(profile.balance);
     }
     await channel.send(
         embed.setDescription(
             `<:dicecoin:839981846419079178> ${numberFormat.format(
-                profile?.balance
+                Number(profile?.balance)
             )}`
         )
     );
