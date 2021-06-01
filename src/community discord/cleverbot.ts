@@ -11,7 +11,7 @@ export default async function cleverBot(
     const { content, channel, client, guild } = message;
     if (!client.user || !guild) return;
 
-    let input = content.match(new RegExp(`<@!?${client.user.id}> ?(.*)`))?.[1];
+    let input = content.match(new RegExp(`^<@!?${client.user.id}> ?(.*)`))?.[1];
     if (!input) return;
     input = replaceAllMentionToText(input, guild);
     if (
