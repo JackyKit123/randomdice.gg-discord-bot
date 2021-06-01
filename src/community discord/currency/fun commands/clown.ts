@@ -64,7 +64,7 @@ export default async function clown(
         await sentMessage.edit(
             `${author}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
         );
-    } else if (member.id === '195174308052467712' || (target.id === '722951439567290458' && Math.random() > 0.95)) {
+    } else if (member.id === '195174308052467712' || (target.id === '722951439567290458' && Math.random() < 0.95)) {
         await sentMessage.edit(
             `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
         );
