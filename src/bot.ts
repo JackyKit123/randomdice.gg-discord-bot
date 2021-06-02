@@ -139,14 +139,7 @@ client.on('message', async function messageHandler(message) {
             process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            if (
-                !author.bot &&
-                channel.id ===
-                    process.env.COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID
-            ) {
-                await setChannel(message);
-                return;
-            }
+            await setChannel(message);
             if (content.startsWith('!')) {
                 await closeAppeal(message);
                 return;
