@@ -12,12 +12,13 @@ export default async function timed(message: Discord.Message): Promise<void> {
 
     const mode = content
         .toLowerCase()
-        .match(/!(hourly|daily|weekly|monthly)/i)?.[1] as
+        .match(/!(hourly|daily|weekly|monthly|yearly)/i)?.[1] as
         | undefined
         | 'hourly'
         | 'daily'
         | 'weekly'
-        | 'monthly';
+        | 'monthly'
+        | 'yearly';
     const balance = await getBalance(message, 'emit new member');
     if (balance === false || !member) return;
     const memberProfile = cache['discord_bot/community/currency'][member.id];
@@ -100,7 +101,11 @@ export default async function timed(message: Discord.Message): Promise<void> {
             .setDescription(
                 `Added <:dicecoin:839981846419079178> ${numberFormat.format(
                     amount * (1 + multiplier + +0.1 * Math.min(streak - 1, 100))
-                )} to your balance!`
+                )} to your balance!${
+                    mode === 'yearly'
+                        ? 'What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.'
+                        : ''
+                }`
             )
             .setFooter(
                 multiplier > 0
@@ -202,6 +207,28 @@ export default async function timed(message: Discord.Message): Promise<void> {
             )
                 return;
             await reward(10000);
+            break;
+        case 'yearly':
+            if (
+                await cooldown(
+                    memberProfile.yearly,
+                    msNow +
+                        secondsNow * 1000 +
+                        minutesNow * 1000 * 60 +
+                        hoursNow * 1000 * 60 * 60 +
+                        dateNow * 1000 * 60 * 60 * 24,
+                    1000 *
+                        60 *
+                        60 *
+                        24 *
+                        ((yearNow % 4 === 0 && yearNow % 100 !== 0) ||
+                        yearNow % 400 === 0
+                            ? 366
+                            : 365)
+                )
+            )
+                return;
+            await reward(1);
             break;
         default:
     }

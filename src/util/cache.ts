@@ -147,6 +147,7 @@ export interface MemberCurrency {
         daily?: number;
         weekly?: number;
         monthly?: number;
+        yearly?: number;
         weeklyChat?: number;
         dailyStreak?: number;
         diceDrawn?: {
