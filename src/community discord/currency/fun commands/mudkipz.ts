@@ -4,6 +4,12 @@ export default async function mudkipz(message: Discord.Message): Promise<void> {
     const { channel, author, member } = message;
     const numberFormat = new Intl.NumberFormat();
 
+    try {
+        await message.delete();
+    } catch {
+        // do nothing
+    }
+
     const randomCoins = Math.floor(Math.random() * 1000000);
 
     await channel.send(
