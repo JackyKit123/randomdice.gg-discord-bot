@@ -76,7 +76,7 @@ import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
 import yomama from './community discord/currency/fun commands/yomama';
-import mudkipz from './community discord/currency/fun commands/mudkipz';
+import givemoney from './community discord/currency/fun commands/mudkipz';
 import moon, {
     purgeRolesOnReboot as purgeMoonedRoles,
 } from './community discord/currency/fun commands/moon';
@@ -277,8 +277,8 @@ client.on('message', async function messageHandler(message) {
                 case '!shush':
                     await shush(message);
                     break;
-                case '!mudkipz':
-                    await mudkipz(message);
+                case '!givemoney':
+                    await givemoney(message);
                     break;
                 case '!help':
                     await help(message, true);

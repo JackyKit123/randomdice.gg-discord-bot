@@ -1,22 +1,27 @@
 import * as Discord from 'discord.js';
+import cooldown from '../../../util/cooldown';
 
-export default async function mudkipz(message: Discord.Message): Promise<void> {
+export default async function givemoney(
+    message: Discord.Message
+): Promise<void> {
     const { channel, author, member } = message;
     const numberFormat = new Intl.NumberFormat();
 
-    try {
-        await message.delete();
-    } catch {
-        // do nothing
+    if (
+        await cooldown(message, '!givemoney', {
+            default: 60 * 1000,
+            donator: 10 * 1000,
+        })
+    ) {
+        return;
     }
-
-    const randomCoins = Math.floor(Math.random() * 1000000);
+    const randomCoins = Math.ceil(Math.random() * 1000);
 
     await channel.send(
         `Congratulations! You have ${
             author.id === '285696350702796801' &&
             member?.roles.cache.has('805727466219372546')
-                ? 'received'
+                ? 'earned'
                 : 'lost'
         } <a:Dice_TierX_RickCoin:827059872810008616> ${numberFormat.format(
             randomCoins
