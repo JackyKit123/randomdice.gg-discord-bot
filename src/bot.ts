@@ -139,16 +139,11 @@ client.on('message', async function messageHandler(message) {
             process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            await setChannel(message);
             if (content.startsWith('!')) {
                 await closeAppeal(message);
                 return;
             }
-            if (suffix === '.gg') {
-                await author.send(
-                    'Normal randomdice.gg command cannot be executed in the ban appeal discord.'
-                );
-            }
+            await setChannel(message);
             return;
         }
 
