@@ -1,22 +1,18 @@
 import * as Discord from 'discord.js';
 import logMessage from '../dev-commands/logMessage';
 
-export default async function handler(
-    client: Discord.Client,
-    guild: Discord.Guild
-): Promise<void> {
+export default async function handler(guild: Discord.Guild): Promise<void> {
+    const { client, systemChannel, channels, name } = guild;
     const msgChannel =
-        guild.systemChannel ||
-        guild.channels.cache.find(
+        systemChannel ||
+        channels.cache.find(
             channel => !!channel.name?.match(/(general|welcome)/i)
         ) ||
-        guild.channels.cache.first();
+        channels.cache.first();
 
     logMessage(
         client,
-        `Timestamp: ${new Date().toTimeString()}, bot is invited to ${
-            guild.name
-        }`
+        `Timestamp: ${new Date().toTimeString()}, bot is invited to ${name}`
     );
 
     if (msgChannel) {

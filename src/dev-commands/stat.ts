@@ -1,9 +1,9 @@
 import * as Discord from 'discord.js';
 
 export default async function statistic(
-    client: Discord.Client,
-    channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel
+    message: Discord.Message
 ): Promise<void> {
+    const { client, channel } = message;
     const guildCount = client.guilds.cache.size;
     const guildData = client.guilds.cache.map(guild => {
         let memberCountString = guild.memberCount.toString();

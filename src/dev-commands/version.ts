@@ -1,10 +1,9 @@
 import * as Discord from 'discord.js';
 
 export default async function statistic(
-    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { channel } = message;
+    const { channel, client } = message;
     await channel.send(
         `Hi! I am version **\`${
             process.env.NODE_ENV === 'development'

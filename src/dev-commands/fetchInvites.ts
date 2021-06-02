@@ -1,10 +1,9 @@
 import * as Discord from 'discord.js';
 
 export default async function createInvites(
-    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { content, channel } = message;
+    const { client, content, channel } = message;
 
     const guildId = content.split(' ')[2]?.match(/^\d{18}$/)?.[0];
 

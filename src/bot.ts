@@ -144,11 +144,11 @@ client.on('message', async function messageHandler(message) {
                 channel.id ===
                     process.env.COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID
             ) {
-                await setChannel(client, message);
+                await setChannel(message);
                 return;
             }
             if (content.startsWith('!')) {
-                await closeAppeal(client, message);
+                await closeAppeal(message);
                 return;
             }
             if (suffix === '.gg') {
@@ -167,7 +167,7 @@ client.on('message', async function messageHandler(message) {
             welcomeReward(message);
             validateOneWordStory(message);
             voteReward(message);
-            banMessage(client, message);
+            banMessage(message);
             announceLastToLeaveVC(message);
             cleverBot(message);
         }
@@ -246,7 +246,7 @@ client.on('message', async function messageHandler(message) {
                 case '!richest':
                 case '!leaderboard':
                 case '!lb':
-                    await leaderboard(client, message);
+                    await leaderboard(message);
                     break;
                 case '!prestige':
                     await prestige(message);
@@ -281,10 +281,10 @@ client.on('message', async function messageHandler(message) {
                     await yomama(message);
                     break;
                 case '!moon':
-                    await moon(client, message);
+                    await moon(message);
                     break;
                 case '!clown':
-                    await clown(client, message);
+                    await clown(message);
                     break;
                 case '!shush':
                     await shush(message);
@@ -327,19 +327,19 @@ client.on('message', async function messageHandler(message) {
         if (process.env.DEV_USERS_ID?.includes(author.id)) {
             switch (command?.toLowerCase()) {
                 case 'createinvites':
-                    await fetchInvites(client, message);
+                    await fetchInvites(message);
                     return;
                 case 'setemoji':
-                    await setEmoji(client, database, message);
+                    await setEmoji(message, database);
                     return;
                 case 'stat':
-                    await statistic(client, channel);
+                    await statistic(message);
                     return;
                 case 'reboot':
                     await reboot(message);
                     return;
                 case 'version':
-                    await version(client, message);
+                    await version(message);
                     return;
                 case 'help':
                     await devHelp(message);
@@ -353,7 +353,7 @@ client.on('message', async function messageHandler(message) {
                 break;
             }
             case 'register': {
-                await register(client, message, database);
+                await register(message, database);
                 break;
             }
             case 'unregister': {
@@ -404,7 +404,7 @@ client.on('message', async function messageHandler(message) {
             case 'app':
             case 'invite':
             case 'support':
-                await sendLink(client, message);
+                await sendLink(message);
                 break;
             case 'contact':
                 await sendContact(message);
@@ -500,7 +500,7 @@ client.on('message', async function messageHandler(message) {
     }
 });
 
-client.on('guildCreate', guild => guildCreateHandler(client, guild));
+client.on('guildCreate', guild => guildCreateHandler(guild));
 
 client.on('messageReactionAdd', async (reaction, user) => {
     const { guild } = reaction.message;

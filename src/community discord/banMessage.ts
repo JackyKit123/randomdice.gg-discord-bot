@@ -2,10 +2,9 @@ import * as Discord from 'discord.js';
 import fetchMention from '../util/fetchMention';
 
 export default async function banMessage(
-    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { author, embeds, channel, guild } = message;
+    const { client, author, embeds, channel, guild } = message;
     const general = guild?.channels.cache.get('804222694488932364');
 
     if (

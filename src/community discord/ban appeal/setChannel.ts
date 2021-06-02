@@ -1,10 +1,17 @@
 import * as Discord from 'discord.js';
 
 export default async function setChannel(
-    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { content, author, channel, guild, member, deletable } = message;
+    const {
+        client,
+        content,
+        author,
+        channel,
+        guild,
+        member,
+        deletable,
+    } = message;
     const {
         COMMUNITY_SERVER_ID,
         COMMUNITY_APPEAL_SERVER_WELCOME_CHANNEL_ID,

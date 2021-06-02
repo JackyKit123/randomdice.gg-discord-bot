@@ -212,10 +212,9 @@ export function weeklyAutoReset(client: Discord.Client): void {
 }
 
 export default async function leaderboard(
-    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { channel, guild, content, member } = message;
+    const { client, channel, guild, content, member } = message;
 
     if (!guild || !member) return;
     if (

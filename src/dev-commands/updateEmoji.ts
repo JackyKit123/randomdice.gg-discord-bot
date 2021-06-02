@@ -3,12 +3,11 @@ import * as admin from 'firebase-admin';
 import cache from '../util/cache';
 
 export default async function updateEmoji(
-    client: Discord.Client,
-    database: admin.database.Database,
-    message: Discord.Message
+    message: Discord.Message,
+    database: admin.database.Database
 ): Promise<void> {
     const { dice } = cache;
-    const { content, channel } = message;
+    const { client, content, channel } = message;
     const [, , emoji, ...splitDiceName] = content.split(' ');
     const diceName = splitDiceName.join(' ');
     if (!emoji) {

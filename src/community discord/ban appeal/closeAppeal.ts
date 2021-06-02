@@ -2,10 +2,9 @@ import * as Discord from 'discord.js';
 import cooldown from '../../util/cooldown';
 
 export default async function closeAppeal(
-    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { content, member, guild, channel } = message;
+    const { client, content, member, guild, channel } = message;
     const [command, arg] = content.split(' ');
     const { COMMUNITY_SERVER_ID } = process.env;
 

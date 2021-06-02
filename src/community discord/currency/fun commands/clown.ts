@@ -6,10 +6,7 @@ import commandCost from './commandCost';
 
 const wait = promisify(setTimeout);
 
-export default async function clown(
-    client: Discord.Client,
-    message: Discord.Message
-): Promise<void> {
+export default async function clown(message: Discord.Message): Promise<void> {
     const { content, author, guild, channel, member } = message;
 
     if (!guild || !member) {

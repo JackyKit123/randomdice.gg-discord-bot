@@ -2,10 +2,9 @@ import * as Discord from 'discord.js';
 import cooldown from '../util/cooldown';
 
 export default async function sendLinks(
-    client: Discord.Client,
     message: Discord.Message
 ): Promise<void> {
-    const { channel, content } = message;
+    const { channel, content, client } = message;
     const [, command, ...args] = content.split(' ');
 
     if (

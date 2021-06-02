@@ -31,11 +31,10 @@ async function checkRegistered(
 }
 
 export async function register(
-    client: Discord.Client,
     message: Discord.Message,
     database: admin.database.Database
 ): Promise<void> {
-    const { member, guild, content, mentions, channel } = message;
+    const { client, member, guild, content, mentions, channel } = message;
 
     if (
         await cooldown(message, '.gg register', {
