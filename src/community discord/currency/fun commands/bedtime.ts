@@ -56,7 +56,7 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
                     // nothing
                 }
             },
-            bedtimeForReal ? 1000 * 60 * 60 * 8 : 1000
+            bedtimeForReal ? 1000 * 60 * 60 * 8 : 1000 * 10
         );
         await channel.send(
             new Discord.MessageEmbed()
