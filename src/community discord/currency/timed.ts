@@ -113,7 +113,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                           streak >= 101
                               ? '__(MAX EXTRA 1000% REWARD)__'
                               : `*(+${(streak - 1) * 10}% reward)*`
-                      }}`
+                      }**`
                   )
                 : embed
         );
