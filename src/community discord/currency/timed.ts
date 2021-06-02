@@ -103,7 +103,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                     amount * (1 + multiplier + +0.1 * Math.min(streak - 1, 100))
                 )} to your balance!${
                     mode === 'yearly'
-                        ? 'What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.'
+                        ? '\n||What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.||'
                         : ''
                 }`
             )
