@@ -68,7 +68,9 @@ import timed from './community discord/currency/timed';
 import chatCoins from './community discord/currency/chatCoins';
 import multiplier from './community discord/currency/multiplier';
 import announceLastToLeaveVC from './community discord/lastToLeaveVC';
-import shush, { pokeballTrap } from './community discord/custom commands/shush';
+import shush, {
+    pokeballTrap,
+} from './community discord/currency/fun commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
 import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
