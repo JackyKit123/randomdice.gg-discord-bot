@@ -14,11 +14,11 @@ export default async function voteAutoResponder(
                     'I heard someone said `vote`. Do you know you can vote for the server on [discord server list](https://top.gg/servers/804222694488932362/vote) and get you <@&804642685095772181> role.'
                 )
                 .addField(
-                    'Special Perks for <@&804642685095772181> Role',
+                    'Special Perks for @Voted Role',
                     '+ <:Dice_TierX_Coin:813149167585067008> 1000 everytime you vote!\n+ `x5` chat coins multi guild-wise\n+ access to premium bot channels with have `x2` chat coins multi'
                 )
         );
         isInCooldown.set(channel.id, true);
-        setTimeout(() => isInCooldown.set(channel.id, false), 60 * 1000);
+        setTimeout(() => isInCooldown.set(channel.id, false), 5 * 60 * 1000);
     }
 }
