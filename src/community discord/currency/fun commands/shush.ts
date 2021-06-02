@@ -44,7 +44,7 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
     shushMember = [...shushMember, target.id];
     await channel.send(
-        `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 5 minutes.`
+        `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 1 minute.`
     );
     setTimeout(async () => {
         shushMember = shushMember.filter(ids => ids !== target.id);
