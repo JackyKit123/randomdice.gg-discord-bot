@@ -41,7 +41,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
 
     function cooldown(
         timestamp = 0,
-        mode: 'hourly' | 'daily' | 'weekly' | 'monthly'
+        mode: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly'
     ): string {
         const now = new Date();
         const msNow = now.getMilliseconds();
@@ -91,6 +91,23 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                     60 *
                     24 *
                     (new Date(yearNow, monthNow + 1, 0).getDate() + 1);
+                break;
+            case 'yearly':
+                excess =
+                    msNow +
+                    secondsNow * 1000 +
+                    minutesNow * 1000 * 60 +
+                    hoursNow * 1000 * 60 * 60 +
+                    dateNow * 1000 * 60 * 60 * 24;
+                cd =
+                    1000 *
+                    60 *
+                    60 *
+                    24 *
+                    ((yearNow % 4 === 0 && yearNow % 100 !== 0) ||
+                    yearNow % 400 === 0
+                        ? 366
+                        : 365);
                 break;
             default:
         }
@@ -222,7 +239,10 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             )}\n**Weekly**\n${cooldown(
                 profile.weekly || 0,
                 'weekly'
-            )}\n**Monthly**\n${cooldown(profile.monthly || 0, 'monthly')}`
+            )}\n**Monthly**\n${cooldown(
+                profile.monthly || 0,
+                'monthly'
+            )}\n**Yearly**\n${cooldown(profile.yearly || 0, 'yearly')}`
         )
         .setFooter(
             'Showing page PROFILE of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
