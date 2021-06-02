@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import * as moment from 'moment';
 import getBalance from './balance';
 import cache from '../../util/cache';
 import parseMsIntoReadableText from '../../util/parseMS';
@@ -43,78 +44,35 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         timestamp = 0,
         mode: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly'
     ): string {
-        const now = new Date();
-        const msNow = now.getMilliseconds();
-        const secondsNow = now.getSeconds();
-        const minutesNow = now.getMinutes();
-        const hoursNow = now.getUTCHours();
-        const dayNow = now.getUTCDay();
-        const dateNow = now.getUTCDate();
-        const monthNow = now.getMonth();
-        const yearNow = now.getFullYear();
-        let excess = 0;
-        let cd = 0;
+        let period = 1000 * 60;
+        let endOf: moment.Moment = moment();
         switch (mode) {
             case 'hourly':
-                excess = msNow + secondsNow * 1000 + minutesNow * 1000 * 60;
-                cd = 1000 * 60 * 60;
+                period *= 60;
+                endOf = moment().endOf('hour');
                 break;
             case 'daily':
-                excess =
-                    msNow +
-                    secondsNow * 1000 +
-                    minutesNow * 1000 * 60 +
-                    hoursNow * 1000 * 60 * 60;
-                cd = 1000 * 60 * 60 * 24;
-
+                period *= 60 * 24;
+                endOf = moment().endOf('day');
                 break;
             case 'weekly':
-                excess =
-                    msNow +
-                    secondsNow * 1000 +
-                    minutesNow * 1000 * 60 +
-                    hoursNow * 1000 * 60 * 60 +
-                    dayNow * 1000 * 60 * 60 * 24;
-                cd = 1000 * 60 * 60 * 24 * 7;
-
+                period *= 60 * 24 * 7;
+                endOf = moment().endOf('week');
                 break;
             case 'monthly':
-                excess =
-                    msNow +
-                    secondsNow * 1000 +
-                    minutesNow * 1000 * 60 +
-                    hoursNow * 1000 * 60 * 60 +
-                    dateNow * 1000 * 60 * 60 * 24;
-                cd =
-                    1000 *
-                    60 *
-                    60 *
-                    24 *
-                    (new Date(yearNow, monthNow + 1, 0).getDate() + 1);
+                period *= 60 * 24 * moment().daysInMonth();
+                endOf = moment().endOf('month');
                 break;
             case 'yearly':
-                excess =
-                    msNow +
-                    secondsNow * 1000 +
-                    minutesNow * 1000 * 60 +
-                    hoursNow * 1000 * 60 * 60 +
-                    dateNow * 1000 * 60 * 60 * 24;
-                cd =
-                    1000 *
-                    60 *
-                    60 *
-                    24 *
-                    ((yearNow % 4 === 0 && yearNow % 100 !== 0) ||
-                    yearNow % 400 === 0
-                        ? 366
-                        : 365);
+                period *= 60 * 24 * (moment().isLeapYear() ? 366 : 365);
+                endOf = moment().endOf('year');
                 break;
             default:
         }
-        if (now.valueOf() - excess < timestamp) {
-            return `⏲️ \`${parseMsIntoReadableText(cd - excess)}\` Cooldown`;
-        }
-        return '✅ Ready to Claim';
+
+        return endOf.diff(timestamp) < period
+            ? `⏲️ \`${parseMsIntoReadableText(endOf.diff(moment()))}\` Cooldown`
+            : '✅ Ready to Claim';
     }
 
     const currency = cache['discord_bot/community/currency'];

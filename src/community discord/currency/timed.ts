@@ -1,4 +1,5 @@
 import * as Discord from 'discord.js';
+import * as moment from 'moment';
 import * as firebase from 'firebase-admin';
 import cache from '../../util/cache';
 import getBalance from './balance';
@@ -23,29 +24,19 @@ export default async function timed(message: Discord.Message): Promise<void> {
     if (balance === false || !member) return;
     const memberProfile = cache['discord_bot/community/currency'][member.id];
 
-    const now = new Date();
-    const msNow = now.getMilliseconds();
-    const secondsNow = now.getSeconds();
-    const minutesNow = now.getMinutes();
-    const hoursNow = now.getUTCHours();
-    const dayNow = now.getUTCDay();
-    const dateNow = now.getUTCDate();
-    const monthNow = now.getMonth();
-    const yearNow = now.getFullYear();
-
     async function cooldown(
         timestamp = 0,
-        excess: number,
-        cd: number
+        endOf: moment.Moment,
+        period: number
     ): Promise<boolean> {
-        if (now.valueOf() - excess < timestamp) {
+        if (endOf.diff(timestamp) < period) {
             await channel.send(
                 new Discord.MessageEmbed()
                     .setTitle('Slow Down!')
                     .setColor('#6ba4a5')
                     .setDescription(
                         `Your command is still on \`${parseMsIntoReadableText(
-                            cd - excess
+                            endOf.diff(moment())
                         )}\` cooldown.`
                     )
             );
@@ -64,7 +55,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
         let streak = 1;
         if (mode === 'daily') {
             streak =
-                (now.valueOf() - (memberProfile.daily || 0)) /
+                (moment().valueOf() - (memberProfile.daily || 0)) /
                     (1000 * 60 * 60 * 24) <
                 2
                     ? (memberProfile.dailyStreak || streak) + 1
@@ -153,7 +144,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
             if (
                 await cooldown(
                     memberProfile.hourly,
-                    msNow + secondsNow * 1000 + minutesNow * 1000 * 60,
+                    moment().endOf('hour'),
                     1000 * 60 * 60
                 )
             )
@@ -164,10 +155,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
             if (
                 await cooldown(
                     memberProfile.daily,
-                    msNow +
-                        secondsNow * 1000 +
-                        minutesNow * 1000 * 60 +
-                        hoursNow * 1000 * 60 * 60,
+                    moment().endOf('day'),
                     1000 * 60 * 60 * 24
                 )
             )
@@ -178,11 +166,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
             if (
                 await cooldown(
                     memberProfile.weekly,
-                    msNow +
-                        secondsNow * 1000 +
-                        minutesNow * 1000 * 60 +
-                        hoursNow * 1000 * 60 * 60 +
-                        dayNow * 1000 * 60 * 60 * 24,
+                    moment().endOf('week'),
                     1000 * 60 * 60 * 24 * 7
                 )
             )
@@ -193,16 +177,8 @@ export default async function timed(message: Discord.Message): Promise<void> {
             if (
                 await cooldown(
                     memberProfile.monthly,
-                    msNow +
-                        secondsNow * 1000 +
-                        minutesNow * 1000 * 60 +
-                        hoursNow * 1000 * 60 * 60 +
-                        dateNow * 1000 * 60 * 60 * 24,
-                    1000 *
-                        60 *
-                        60 *
-                        24 *
-                        (new Date(yearNow, monthNow + 1, 0).getDate() + 1)
+                    moment().endOf('month'),
+                    1000 * 60 * 60 * 24 * moment().daysInMonth()
                 )
             )
                 return;
@@ -212,19 +188,8 @@ export default async function timed(message: Discord.Message): Promise<void> {
             if (
                 await cooldown(
                     memberProfile.yearly,
-                    msNow +
-                        secondsNow * 1000 +
-                        minutesNow * 1000 * 60 +
-                        hoursNow * 1000 * 60 * 60 +
-                        dateNow * 1000 * 60 * 60 * 24,
-                    1000 *
-                        60 *
-                        60 *
-                        24 *
-                        ((yearNow % 4 === 0 && yearNow % 100 !== 0) ||
-                        yearNow % 400 === 0
-                            ? 366
-                            : 365)
+                    moment().endOf('year'),
+                    1000 * 60 * 60 * 24 * (moment().isLeapYear() ? 366 : 365)
                 )
             )
                 return;
