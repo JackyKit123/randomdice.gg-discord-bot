@@ -258,6 +258,7 @@ client.on('message', async function messageHandler(message) {
                 case '!daily':
                 case '!weekly':
                 case '!monthly':
+                case '!yearly':
                     await timed(message);
                     break;
                 case '!currency':
