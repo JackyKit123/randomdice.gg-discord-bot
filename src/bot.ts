@@ -46,6 +46,7 @@ import oneMinute from './community discord/oneMinute';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
+import voteAutoResponder from './community discord/voteAutoResponder';
 import gtn from './community discord/gtn';
 import tournament from './community discord/tournament';
 import customRole from './community discord/customRole';
@@ -293,6 +294,7 @@ client.on('message', async function messageHandler(message) {
                     oneMinute(message);
                     validateCrewAds(message);
                     chatRevivePing(message);
+                    voteAutoResponder(message);
             }
         }
 
