@@ -361,7 +361,7 @@ client.on('message', async function messageHandler(message) {
                 break;
             }
             case 'postnow': {
-                await postNow(message, client);
+                await postNow(message, database);
                 break;
             }
             case 'dice': {

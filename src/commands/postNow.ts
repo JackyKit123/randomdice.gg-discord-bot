@@ -7,6 +7,7 @@ import cooldown from '../util/cooldown';
 
 export async function postGuide(
     client: Discord.Client,
+    database: admin.database.Database,
     member?: Discord.GuildMember,
     updateListener?: {
         snapshot: admin.database.DataSnapshot;
@@ -154,6 +155,11 @@ export async function postGuide(
                         `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
                     );
                 }
+                await database
+                    .ref('discord_bot/registry')
+                    .child(channel.guild.id)
+                    .child('guide')
+                    .set(null);
                 return;
             }
             const fetched = (
@@ -298,6 +304,7 @@ export async function postGuide(
 
 export async function postNews(
     client: Discord.Client,
+    database: admin.database.Database,
     guild?: Discord.Guild
 ): Promise<void> {
     const registeredGuilds = cache['discord_bot/registry'];
@@ -384,6 +391,11 @@ export async function postNews(
                         `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
                     );
                 }
+                await database
+                    .ref('discord_bot/registry')
+                    .child(channel.guild.id)
+                    .child('news')
+                    .set(null);
                 return;
             }
             const fetched = (
@@ -405,10 +417,10 @@ export async function postNews(
 
 export default async function postNow(
     message: Discord.Message,
-    client: Discord.Client
+    database: admin.database.Database
 ): Promise<void> {
     const type = message.content.split(' ')[2];
-    const { member, guild, channel } = message;
+    const { member, guild, channel, client } = message;
     if (!member || !guild) {
         return;
     }
@@ -439,7 +451,7 @@ export default async function postNow(
     const statusMessage = await channel.send(`Now posting ${type}...`);
     switch (type) {
         case 'guide':
-            await postGuide(client, member);
+            await postGuide(client, database, member);
             try {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } catch {
@@ -448,7 +460,7 @@ export default async function postNow(
             }
             return;
         case 'news':
-            await postNews(client, guild);
+            await postNews(client, database, guild);
             try {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } catch {
