@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
 import { promisify } from 'util';
 

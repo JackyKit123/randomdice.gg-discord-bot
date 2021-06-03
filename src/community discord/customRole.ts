@@ -1,6 +1,6 @@
-import * as firebase from 'firebase-admin';
-import * as Discord from 'discord.js';
-import * as colorParser from 'color-parser';
+import firebase from 'firebase-admin';
+import Discord from 'discord.js';
+import colorParser from 'color-parser';
 import cache from '../util/cache';
 import cooldown from '../util/cooldown';
 

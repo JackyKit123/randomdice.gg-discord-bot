@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 
 export default async function setChannel(
     message: Discord.Message
@@ -23,7 +23,7 @@ export default async function setChannel(
 
     if (!COMMUNITY_SERVER_ID) {
         await channel.send(
-            'Error: Missing `COMMUNITY_SERVER_ID` env in bot code, please contact an admin.'
+            'Error: Missing `COMMUNITY_SERVER_ID` env in bot code, please contact an firebase.'
         );
         return;
     }

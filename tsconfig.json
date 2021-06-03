@@ -8,6 +8,7 @@
         "strict": true,
         "target": "es2020",
         "noEmit": false,
+        "esModuleInterop": true,
         "moduleResolution": "node",
         "lib": ["esnext.array", "ES2020"],
         "declaration": true,

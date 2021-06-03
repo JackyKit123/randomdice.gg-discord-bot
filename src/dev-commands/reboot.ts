@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import axios from 'axios';
 
 export default async function reboot(message: Discord.Message): Promise<void> {

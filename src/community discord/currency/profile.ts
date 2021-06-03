@@ -1,5 +1,5 @@
-import * as Discord from 'discord.js';
-import * as moment from 'moment';
+import Discord from 'discord.js';
+import moment from 'moment';
 import getBalance from './balance';
 import cache from '../../util/cache';
 import parseMsIntoReadableText from '../../util/parseMS';

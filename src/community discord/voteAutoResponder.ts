@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 
 const isInCooldown = new Map<string, boolean>();
 export default async function voteAutoResponder(

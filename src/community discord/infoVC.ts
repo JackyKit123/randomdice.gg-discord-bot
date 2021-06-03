@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import { promisify } from 'util';
 
 const wait = promisify(setTimeout);

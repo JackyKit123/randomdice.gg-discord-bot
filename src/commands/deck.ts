@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import cache, { Deck } from '../util/cache';
 import cooldown from '../util/cooldown';
 

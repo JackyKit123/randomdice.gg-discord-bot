@@ -1,11 +1,11 @@
-import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
+import Discord from 'discord.js';
+import firebase from 'firebase-admin';
 import cache from '../util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from '../util/parseMS';
 
 async function killTimerFromDB(timerKey: string): Promise<void> {
     try {
-        await admin
+        await firebase
             .database()
             .ref('discord_bot/community/timer')
             .child(timerKey)
@@ -91,7 +91,7 @@ function tickTimer(
 
 export default async function setTimer(
     message: Discord.Message,
-    database: admin.database.Database
+    database: firebase.database.Database
 ): Promise<void> {
     const { guild, content, member, channel } = message;
     const [, timeArg, ...messageArr] = content.split(' ');

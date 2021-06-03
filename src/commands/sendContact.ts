@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import cooldown from '../util/cooldown';
 
 export default async function contact(message: Discord.Message): Promise<void> {

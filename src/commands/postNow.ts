@@ -1,5 +1,5 @@
-import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
+import Discord from 'discord.js';
+import firebase from 'firebase-admin';
 import cache from '../util/cache';
 import parsedText from '../util/parseText';
 import logMessage from '../dev-commands/logMessage';
@@ -7,10 +7,10 @@ import cooldown from '../util/cooldown';
 
 export async function postGuide(
     client: Discord.Client,
-    database: admin.database.Database,
+    database: firebase.database.Database,
     member?: Discord.GuildMember,
     updateListener?: {
-        snapshot: admin.database.DataSnapshot;
+        snapshot: firebase.database.DataSnapshot;
         event: 'added' | 'updated' | 'removed';
     }
 ): Promise<void> {
@@ -304,7 +304,7 @@ export async function postGuide(
 
 export async function postNews(
     client: Discord.Client,
-    database: admin.database.Database,
+    database: firebase.database.Database,
     guild?: Discord.Guild
 ): Promise<void> {
     const registeredGuilds = cache['discord_bot/registry'];
@@ -417,7 +417,7 @@ export async function postNews(
 
 export default async function postNow(
     message: Discord.Message,
-    database: admin.database.Database
+    database: firebase.database.Database
 ): Promise<void> {
     const type = message.content.split(' ')[2];
     const { member, guild, channel, client } = message;

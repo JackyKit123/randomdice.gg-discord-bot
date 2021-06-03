@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import cache from '../util/cache';
 
 export default async function help(message: Discord.Message): Promise<void> {

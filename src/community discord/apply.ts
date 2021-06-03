@@ -1,5 +1,5 @@
-import * as Discord from 'discord.js';
-import * as firebase from 'firebase-admin';
+import Discord from 'discord.js';
+import firebase from 'firebase-admin';
 import cache from '../util/cache';
 import cooldown from '../util/cooldown';
 

@@ -1,6 +1,6 @@
-import * as Discord from 'discord.js';
-import * as moment from 'moment';
-import * as firebase from 'firebase-admin';
+import Discord from 'discord.js';
+import moment from 'moment';
+import firebase from 'firebase-admin';
 import cache from '../../util/cache';
 import getBalance from './balance';
 import parseMsIntoReadableText from '../../util/parseMS';

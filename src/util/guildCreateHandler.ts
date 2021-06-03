@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import logMessage from '../dev-commands/logMessage';
 
 export default async function handler(guild: Discord.Guild): Promise<void> {

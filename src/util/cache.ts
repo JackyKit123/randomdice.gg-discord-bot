@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import firebase from 'firebase-admin';
 
 export interface News {
     game: string;
@@ -262,13 +262,13 @@ const cacheData = {
 export default cacheData;
 
 export async function fetchAll(
-    database: admin.database.Database
+    database: firebase.database.Database
 ): Promise<void> {
     await Promise.all(
         Object.keys(cacheData).map(async key => {
             const ref = database.ref(key);
             const snapshotHandler = (
-                snapshot: admin.database.DataSnapshot
+                snapshot: firebase.database.DataSnapshot
             ): void => {
                 cacheData[key as keyof CacheObject] = snapshot.val();
             };

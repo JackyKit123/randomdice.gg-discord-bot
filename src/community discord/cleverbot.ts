@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import axios from 'axios';
 import cooldown from '../util/cooldown';
 import { replaceAllMentionToText } from '../util/fetchMention';

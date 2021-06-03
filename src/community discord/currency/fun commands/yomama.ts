@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import commandCost from './commandCost';
 
 export default async function yomama(message: Discord.Message): Promise<void> {

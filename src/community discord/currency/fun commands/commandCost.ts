@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import firebase from 'firebase-admin';
 import getBalance from '../balance';
 import cache from '../../../util/cache';

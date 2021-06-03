@@ -1,6 +1,6 @@
-import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
-import * as stringSimilarity from 'string-similarity';
+import Discord from 'discord.js';
+import firebase from 'firebase-admin';
+import stringSimilarity from 'string-similarity';
 import help from './commands/help';
 import postNow from './commands/postNow';
 import { register, unregister } from './commands/register';
@@ -90,8 +90,8 @@ import cleverBot from './community discord/cleverbot';
 // eslint-disable-next-line no-console
 console.log('Starting client...');
 const client = new Discord.Client({ partials: ['MESSAGE'] });
-admin.initializeApp({
-    credential: admin.credential.cert({
+firebase.initializeApp({
+    credential: firebase.credential.cert({
         projectId: 'random-dice-web',
         privateKey: (process.env.FIREBASE_ADMIN_PRIVATE_KEY || '').replace(
             /\\n/g,
@@ -105,7 +105,7 @@ admin.initializeApp({
     },
 });
 
-const database = admin.database();
+const database = firebase.database();
 updateListener(client, database);
 
 client.on('ready', async () => {

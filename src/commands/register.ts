@@ -1,11 +1,11 @@
-import * as Discord from 'discord.js';
-import * as admin from 'firebase-admin';
+import Discord from 'discord.js';
+import firebase from 'firebase-admin';
 import postNow from './postNow';
 import cooldown from '../util/cooldown';
 
 async function checkRegistered(
     guild: Discord.Guild,
-    database: admin.database.Database
+    database: firebase.database.Database
 ): Promise<Discord.MessageEmbed | string> {
     const registeredChannel = (
         await database.ref(`/discord_bot/registry/${guild.id}`).once('value')
@@ -32,7 +32,7 @@ async function checkRegistered(
 
 export async function register(
     message: Discord.Message,
-    database: admin.database.Database
+    database: firebase.database.Database
 ): Promise<void> {
     const { client, member, guild, content, mentions, channel } = message;
 
@@ -159,7 +159,7 @@ export async function register(
 
 export async function unregister(
     message: Discord.Message,
-    database: admin.database.Database
+    database: firebase.database.Database
 ): Promise<void> {
     const { member, guild, content, channel } = message;
     if (!member || !guild) {

@@ -2,7 +2,7 @@
   "name": "randomdice.gg-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "bot.js",
+  "main": "bot.ts",
   "scripts": {
     "dev": "NODE_ENV=development nodemon  --ext 'ts' --exec 'npm run lint && ts-node --require=dotenv/config src/bot.ts --project tsconfig.json'",
     "start": "ts-node --require=dotenv/config src/bot.ts --project tsconfig.json",

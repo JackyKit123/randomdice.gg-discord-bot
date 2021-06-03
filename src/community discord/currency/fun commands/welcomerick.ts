@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import fetchMentionString from '../../../util/fetchMention';
 import commandCost from './commandCost';
 import cooldown from '../../../util/cooldown';

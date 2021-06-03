@@ -1,4 +1,4 @@
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 import * as math from 'mathjs';
 
 export default async function solveMathEquation(

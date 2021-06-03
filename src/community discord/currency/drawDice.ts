@@ -1,5 +1,5 @@
-import * as Discord from 'discord.js';
-import * as firebase from 'firebase-admin';
+import Discord from 'discord.js';
+import firebase from 'firebase-admin';
 import * as randomstring from 'randomstring';
 import * as math from 'mathjs';
 import { promisify } from 'util';

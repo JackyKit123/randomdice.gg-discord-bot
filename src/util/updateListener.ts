@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
-import * as admin from 'firebase-admin';
-import * as Discord from 'discord.js';
+import firebase from 'firebase-admin';
+import Discord from 'discord.js';
 import * as post from '../commands/postNow';
 
 export default function listener(
     client: Discord.Client,
-    database: admin.database.Database
+    database: firebase.database.Database
 ): void {
     const posting = {
         guide: false,
@@ -21,7 +21,7 @@ export default function listener(
             ? guild?.members.cache.get((client.user as Discord.ClientUser).id)
             : undefined;
     const postGuideListener = async (
-        snapshot: admin.database.DataSnapshot,
+        snapshot: firebase.database.DataSnapshot,
         event: 'added' | 'updated' | 'removed'
     ): Promise<void> => {
         if (!posting.guide) {

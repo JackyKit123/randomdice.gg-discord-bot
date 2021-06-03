@@ -1,4 +1,4 @@
-import * as textVersion from 'textversionjs';
+import textVersion from 'textversionjs';
 import { XmlEntities } from 'html-entities';
 
 export default function replace(originalText: string): string {
