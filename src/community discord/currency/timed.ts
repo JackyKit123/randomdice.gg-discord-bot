@@ -76,7 +76,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 }/balance`
             )
             .set(
-                amount * (1 + multiplier + 0.1 * Math.min(streak, 101)) +
+                amount * (1 + multiplier + 0.1 * Math.min(streak - 1, 101)) +
                     (balance as number)
             );
         await database
@@ -91,7 +91,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
             .setColor('#ffff00')
             .setDescription(
                 `Added <:dicecoin:839981846419079178> ${numberFormat.format(
-                    amount * (1 + multiplier + +0.1 * Math.min(streak, 101))
+                    amount * (1 + multiplier + +0.1 * Math.min(streak - 1, 101))
                 )} to your balance!${
                     mode === 'yearly'
                         ? '\n||What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.||'
