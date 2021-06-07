@@ -94,9 +94,28 @@ export default async function setTimer(
     database: firebase.database.Database
 ): Promise<void> {
     const { guild, content, member, channel } = message;
-    const [, timeArg, ...messageArr] = content.split(' ');
-    const time = parseStringIntoMs(timeArg);
-    const msg = messageArr.join(' ');
+    const [, arg1, ...args] = content.split(' ');
+    if (arg1?.toLowerCase() === 'cancel') {
+        const timerId = args[0];
+        const existingTimerKey = Object.entries(
+            cache['discord_bot/community/timer']
+        ).find(([, timer]) => timer.messageId === timerId)?.[0];
+        try {
+            const existingTimerMessage = await channel.messages.fetch(args[0]);
+            await existingTimerMessage.delete({
+                reason: `${member?.displayName} deleted timer.`,
+            });
+        } catch (err) {
+            if (!existingTimerKey) {
+                await channel.send('No active timer found.');
+                return;
+            }
+            killTimerFromDB(existingTimerKey);
+        }
+    }
+
+    const time = parseStringIntoMs(arg1);
+    const msg = args.join(' ');
 
     if (!member || !guild) {
         return;
