@@ -23,29 +23,24 @@ export default async function prestige(
     if (balance === false) return;
 
     const prestigeLevels = {
-        1: { id: '806312627877838878', coinsNeeded: 250000 },
-        2: { id: '806896328255733780', coinsNeeded: 500000 },
-        3: { id: '806896441947324416', coinsNeeded: 750000 },
-        4: { id: '809142950117245029', coinsNeeded: 1000000 },
-        5: { id: '809142956715671572', coinsNeeded: 1250000 },
-        6: { id: '809142968434950201', coinsNeeded: 1500000 },
-        7: { id: '809143362938339338', coinsNeeded: 1750000 },
-        8: { id: '809143374555774997', coinsNeeded: 2000000 },
-        9: { id: '809143390791925780', coinsNeeded: 2250000 },
-        10: { id: '809143588105486346', coinsNeeded: 2500000 },
+        1: '806312627877838878',
+        2: '806896328255733780',
+        3: '806896441947324416',
+        4: '809142950117245029',
+        5: '809142956715671572',
+        6: '809142968434950201',
+        7: '809143362938339338',
+        8: '809143374555774997',
+        9: '809143390791925780',
+        10: '809143588105486346',
     } as {
-        [level: number]: {
-            id: string;
-            coinsNeeded: number;
-        };
+        [level: number]: string;
     };
 
     const currentPrestigeLevel = Number(
         Object.entries(prestigeLevels)
             .sort(([a], [b]) => Number(b) - Number(a))
-            .find(([, prestigeInfo]) =>
-                member.roles.cache.has(prestigeInfo.id)
-            )?.[0] || 0
+            .find(([, roleId]) => member.roles.cache.has(roleId))?.[0] || 0
     );
 
     if (currentPrestigeLevel === 10) {
@@ -56,8 +51,8 @@ export default async function prestige(
     }
 
     const nextPrestigeLevel = currentPrestigeLevel + 1;
-    const progress = balance / prestigeLevels[nextPrestigeLevel].coinsNeeded;
-    if (balance < prestigeLevels[nextPrestigeLevel].coinsNeeded) {
+    const progress = balance / (nextPrestigeLevel * 250000);
+    if (progress < 1) {
         await channel.send(
             new Discord.MessageEmbed()
                 .setAuthor(
@@ -78,7 +73,7 @@ export default async function prestige(
                 .addField(
                     'Prestige Cost',
                     `<:dicecoin:839981846419079178> ${numberFormat.format(
-                        prestigeLevels[nextPrestigeLevel].coinsNeeded
+                        nextPrestigeLevel * 250000
                     )}`
                 )
                 .addField(
@@ -91,7 +86,7 @@ export default async function prestige(
         return;
     }
 
-    if (balance >= prestigeLevels[nextPrestigeLevel].coinsNeeded) {
+    if (progress >= 1) {
         const userIsDonator = Object.values(cache.users).find(
             user =>
                 user['linked-account'].discord === member.id &&
@@ -116,8 +111,8 @@ export default async function prestige(
         }
         await channel.send(
             `You can prestige now.\n⚠️ Warning, if you choose to prestige now, your balance and dice drawn will be reset in exchange for the **${
-                guild.roles.cache.get(prestigeLevels[nextPrestigeLevel].id)
-                    ?.name || prestigeLevels[nextPrestigeLevel].id
+                guild.roles.cache.get(prestigeLevels[nextPrestigeLevel])
+                    ?.name || prestigeLevels[nextPrestigeLevel]
             }** role. Type \`prestige me\` if you want to prestige now.${
                 donation
                     ? `\n⭐Since you are a patreon donator, when you prestige, you can keep ${donation}% of your current balance!`
@@ -132,7 +127,7 @@ export default async function prestige(
         );
         if (awaitedMessage.first()?.content.toLowerCase() === 'prestige me') {
             await member.roles.add(
-                prestigeLevels[nextPrestigeLevel].id,
+                prestigeLevels[nextPrestigeLevel],
                 'Member Prestige'
             );
             await database
@@ -146,8 +141,8 @@ export default async function prestige(
                 .set(0);
             await channel.send(
                 `Congratulations on achieving **${
-                    guild.roles.cache.get(prestigeLevels[nextPrestigeLevel].id)
-                        ?.name || prestigeLevels[nextPrestigeLevel].id
+                    guild.roles.cache.get(prestigeLevels[nextPrestigeLevel])
+                        ?.name || prestigeLevels[nextPrestigeLevel]
                 }**`
             );
         }
