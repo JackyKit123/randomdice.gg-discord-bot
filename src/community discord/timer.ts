@@ -40,7 +40,7 @@ function tickTimer(
     const { embeds, channel, reactions, guild, id } = message;
     const embed = embeds?.[0];
     try {
-        if (!embed) {
+        if (!embed || !cache['discord_bot/community/timer'][key]) {
             killTimerFromDB(key);
             return;
         }
@@ -95,31 +95,54 @@ export default async function setTimer(
 ): Promise<void> {
     const { guild, content, member, channel } = message;
     const [, arg1, ...args] = content.split(' ');
+    if (!member || !guild) {
+        return;
+    }
     if (arg1?.toLowerCase() === 'cancel') {
         const timerId = args[0];
-        const existingTimerKey = Object.entries(
+        const existingTimer = Object.entries(
             cache['discord_bot/community/timer']
-        ).find(([, timer]) => timer.messageId === timerId)?.[0];
+        ).find(([, timer]) => timer.messageId === timerId);
+        if (!existingTimer) {
+            await channel.send('No active timer found.');
+            return;
+        }
+        const [key, timer] = existingTimer;
+        const timerChannel = guild.channels.cache.get(timer.channelId);
+        if (!timerChannel?.isText()) {
+            await channel.send('No active timer found.');
+            return;
+        }
+        if (
+            (timerChannel as Discord.TextChannel)
+                .permissionsFor(member)
+                ?.missing('MANAGE_MESSAGES') &&
+            existingTimer?.[1].hostId !== member.id
+        ) {
+            await channel.send(
+                `You do not have permission to end that timer. You need to either be the one started that timer or have \`MANAGE_MESSAGE\` permission in <#${timer.channelId}>`
+            );
+            return;
+        }
+        killTimerFromDB(key);
         try {
-            const existingTimerMessage = await channel.messages.fetch(args[0]);
+            const existingTimerMessage = await timerChannel.messages.fetch(
+                timerId
+            );
             await existingTimerMessage.delete({
-                reason: `${member?.displayName} deleted timer.`,
+                reason: `${member.user.username}#${member.user.discriminator} deleted timer.`,
             });
         } catch (err) {
-            if (!existingTimerKey) {
-                await channel.send('No active timer found.');
-                return;
+            if (err.message !== 'Unknown Message') {
+                throw err;
             }
-            killTimerFromDB(existingTimerKey);
         }
+        await channel.send('Killed timer.');
+        return;
     }
 
     const time = parseStringIntoMs(arg1);
     const msg = args.join(' ');
-
-    if (!member || !guild) {
-        return;
-    }
 
     if (!time) {
         await channel.send(
