@@ -114,7 +114,6 @@ export default async function prestige(
                 break;
             default:
         }
-        donation = 50;
         await channel.send(
             `You can prestige now.\n⚠️ Warning, if you choose to prestige now, your balance and dice drawn will be reset in exchange for the **${
                 guild.roles.cache.get(prestigeLevels[nextPrestigeLevel].id)
