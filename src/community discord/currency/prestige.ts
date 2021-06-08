@@ -2,6 +2,7 @@ import Discord from 'discord.js';
 import firebase from 'firebase-admin';
 import getBalance from './balance';
 import cooldown from '../../util/cooldown';
+import cache from '../../util/cache';
 
 export default async function prestige(
     message: Discord.Message
@@ -22,16 +23,16 @@ export default async function prestige(
     if (balance === false) return;
 
     const prestigeLevels = {
-        1: { id: '806312627877838878', coinsNeeded: 196055 },
-        2: { id: '806896328255733780', coinsNeeded: 444055 },
-        3: { id: '806896441947324416', coinsNeeded: 792055 },
-        4: { id: '809142950117245029', coinsNeeded: 1240055 },
-        5: { id: '809142956715671572', coinsNeeded: 1788055 },
-        6: { id: '809142968434950201', coinsNeeded: 2436055 },
-        7: { id: '809143362938339338', coinsNeeded: 3184055 },
-        8: { id: '809143374555774997', coinsNeeded: 4032055 },
-        9: { id: '809143390791925780', coinsNeeded: 4980055 },
-        10: { id: '809143588105486346', coinsNeeded: 6028055 },
+        1: { id: '806312627877838878', coinsNeeded: 250000 },
+        2: { id: '806896328255733780', coinsNeeded: 500000 },
+        3: { id: '806896441947324416', coinsNeeded: 750000 },
+        4: { id: '809142950117245029', coinsNeeded: 100000 },
+        5: { id: '809142956715671572', coinsNeeded: 125000 },
+        6: { id: '809142968434950201', coinsNeeded: 150000 },
+        7: { id: '809143362938339338', coinsNeeded: 175000 },
+        8: { id: '809143374555774997', coinsNeeded: 200000 },
+        9: { id: '809143390791925780', coinsNeeded: 225000 },
+        10: { id: '809143588105486346', coinsNeeded: 250000 },
     } as {
         [level: number]: {
             id: string;
@@ -91,11 +92,38 @@ export default async function prestige(
     }
 
     if (balance >= prestigeLevels[nextPrestigeLevel].coinsNeeded) {
+        const userIsDonator = Object.values(cache.users).find(
+            user =>
+                user['linked-account'].discord === member.id &&
+                Boolean(user['patreon-tier'])
+        );
+        const tier = userIsDonator?.['patreon-tier'];
+        let donation = 0;
+        switch (tier) {
+            case 1:
+                donation = 5;
+                break;
+            case 2:
+                donation = 10;
+                break;
+            case 3:
+                donation = 20;
+                break;
+            case 4:
+                donation = 50;
+                break;
+            default:
+        }
+        donation = 50;
         await channel.send(
-            `You can prestige now.\n⚠️ Warning, if you choose to prestige now, your balance will be reset in exchange for the **${
+            `You can prestige now.\n⚠️ Warning, if you choose to prestige now, your balance and dice drawn will be reset in exchange for the **${
                 guild.roles.cache.get(prestigeLevels[nextPrestigeLevel].id)
                     ?.name || prestigeLevels[nextPrestigeLevel].id
-            }** role. Type \`prestige me\` if you want to prestige now.`
+            }** role. Type \`prestige me\` if you want to prestige now.${
+                donation
+                    ? `\n⭐Since you are a patreon donator, when you prestige, you can keep ${donation}% of your current balance!`
+                    : ''
+            }`
         );
         const awaitedMessage = await channel.awaitMessages(
             (newMessage: Discord.Message) =>
@@ -113,6 +141,9 @@ export default async function prestige(
                 .set(nextPrestigeLevel);
             await database
                 .ref(`discord_bot/community/currency/${member.id}/balance`)
+                .set(Math.round((balance * donation) / 100));
+            await database
+                .ref(`discord_bot/community/currency/${member.id}/diceDrawn`)
                 .set(0);
             await channel.send(
                 `Congratulations on achieving **${

@@ -113,75 +113,65 @@ export default async function drawDice(
         }
     }
     const emoji = cache['discord_bot/emoji'];
-    const { dice } = cache;
-    const diceDrawn =
-        cache['discord_bot/community/currency'][member.id]?.diceDrawn;
-    let weighted = [] as Dice[];
-    dice.forEach(die => {
-        switch (die.rarity) {
-            case 'Common':
-                weighted = weighted.concat(new Array(100).fill(die));
-                break;
-            case 'Rare':
-                weighted = weighted.concat(new Array(40).fill(die));
-                break;
-            case 'Unique':
-                weighted = weighted.concat(new Array(10).fill(die));
-                break;
-            case 'Legendary':
-                weighted = weighted.concat([die]);
-                break;
-            default:
-        }
-    });
-    const randomDraw = weighted[Math.floor(Math.random() * weighted.length)];
-    let outcome = {
+    let dice = [...cache.dice];
+    let { diceDrawn, prestige } = cache['discord_bot/community/currency'][
+        member.id
+    ];
+    const outcome = {
         reward: 0,
-        color: '',
+        color: '#999999',
+        tier: 'Common' as Dice['rarity'],
     };
-    switch (randomDraw.rarity) {
-        case 'Common':
-            outcome = {
-                reward: 1,
-                color: '#999999',
-            };
-            break;
-        case 'Rare':
-            outcome = {
-                reward: 10,
-                color: '#006eff',
-            };
-            break;
-        case 'Unique':
-            outcome = {
-                reward: 40,
-                color: '#cc00ff',
-            };
-            break;
-        case 'Legendary':
-            outcome = {
-                reward: 100,
-                color: '#ffdd00',
-            };
-            break;
-        default:
-    }
-
+    diceDrawn = diceDrawn || {};
+    prestige = prestige || 1;
+    const drawnDice = new Array(prestige).fill('').map(() => {
+        const tierRng = Math.floor(Math.random() * 100);
+        if (tierRng < 60) {
+            outcome.reward += 1;
+            outcome.tier = 'Common';
+        } else if (tierRng < 90) {
+            outcome.reward += 10;
+            outcome.tier = 'Rare';
+            if (outcome.color === '#999999') {
+                outcome.color = '006eff';
+            }
+        } else if (tierRng < 99) {
+            outcome.reward += 40;
+            outcome.tier = 'Unique';
+            if (outcome.color !== '#ffdd00') {
+                outcome.color = '#cc00ff';
+            }
+        } else {
+            outcome.reward += 100;
+            outcome.color = '#ffdd00';
+            outcome.tier = 'Legendary';
+        }
+        const tierToDraw = dice.filter(die => die.rarity === outcome.tier);
+        const randomDraw =
+            tierToDraw[Math.floor(tierToDraw.length * Math.random())];
+        dice = dice.filter(die => die.id !== randomDraw.id);
+        if (diceDrawn) {
+            diceDrawn[randomDraw.id] =
+                Number(diceDrawn?.[randomDraw.id] || 0) + 1;
+        }
+        return randomDraw;
+    });
+    await database
+        .ref(`discord_bot/community/currency/${member.id}/diceDrawn`)
+        .set(diceDrawn);
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + outcome.reward);
-    await database
-        .ref(
-            `discord_bot/community/currency/${member.id}/diceDrawn/${randomDraw.id}`
-        )
-        .set(Number(diceDrawn?.[randomDraw.id] || 0) + 1);
     let embed = new Discord.MessageEmbed()
         .setAuthor(
             `${member.displayName}'s Dice Draw Game`,
             author.avatarURL({ dynamic: true }) ?? undefined
         )
         .setDescription(`You earned <:dicecoin:839981846419079178> ????`)
-        .addField('Your Draw is', '<:Dice_TierX_Null:807019807312183366>');
+        .addField(
+            `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
+            '<:Dice_TierX_Null:807019807312183366> '.repeat(prestige)
+        );
     const sentMessage = await channel.send(embed);
     await wait(1000);
     embed = embed
@@ -193,10 +183,8 @@ export default async function drawDice(
         .setColor(outcome.color);
     embed.fields = [
         {
-            name: 'Your Draw is',
-            value: `${emoji[randomDraw.id]}\n*${
-                dice.find(d => d.id === randomDraw.id)?.name
-            }*`,
+            name: `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
+            value: drawnDice.map(randomDraw => emoji[randomDraw.id]).join(' '),
             inline: false,
         },
         {
