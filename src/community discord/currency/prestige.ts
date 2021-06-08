@@ -26,13 +26,13 @@ export default async function prestige(
         1: { id: '806312627877838878', coinsNeeded: 250000 },
         2: { id: '806896328255733780', coinsNeeded: 500000 },
         3: { id: '806896441947324416', coinsNeeded: 750000 },
-        4: { id: '809142950117245029', coinsNeeded: 100000 },
-        5: { id: '809142956715671572', coinsNeeded: 125000 },
-        6: { id: '809142968434950201', coinsNeeded: 150000 },
-        7: { id: '809143362938339338', coinsNeeded: 175000 },
-        8: { id: '809143374555774997', coinsNeeded: 200000 },
-        9: { id: '809143390791925780', coinsNeeded: 225000 },
-        10: { id: '809143588105486346', coinsNeeded: 250000 },
+        4: { id: '809142950117245029', coinsNeeded: 1000000 },
+        5: { id: '809142956715671572', coinsNeeded: 1250000 },
+        6: { id: '809142968434950201', coinsNeeded: 1500000 },
+        7: { id: '809143362938339338', coinsNeeded: 1750000 },
+        8: { id: '809143374555774997', coinsNeeded: 2000000 },
+        9: { id: '809143390791925780', coinsNeeded: 2250000 },
+        10: { id: '809143588105486346', coinsNeeded: 2500000 },
     } as {
         [level: number]: {
             id: string;
