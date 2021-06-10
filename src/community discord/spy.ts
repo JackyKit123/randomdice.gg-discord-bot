@@ -62,7 +62,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
             ? false
             : await fetchMember(guild, author);
         if (!spyLog?.isText()) return;
-        const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)\b/gi;
+        const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(\$)\b/gi;
         const triggered = Array.from(content.matchAll(sensitiveWords));
         const [sliced1, sliced2] = [
             content.slice(0, 1024),
