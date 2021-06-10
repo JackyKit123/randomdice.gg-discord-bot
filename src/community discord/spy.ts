@@ -1,6 +1,37 @@
 import * as Discord from 'discord.js';
 import logMessage from '../dev-commands/logMessage';
 
+const bannedCache: string[] = [];
+
+async function fetchIsBanned(
+    guild: Discord.Guild,
+    user: Discord.User
+): Promise<boolean> {
+    try {
+        if (!bannedCache.includes(user.id)) {
+            const banUser = await guild.fetchBan(user);
+            bannedCache.push(banUser.user.id);
+        }
+        return true;
+    } catch (err) {
+        if (err.message === 'Unknown Ban') return false;
+        throw err;
+    }
+}
+
+async function fetchMember(
+    guild: Discord.Guild,
+    user: Discord.User
+): Promise<boolean> {
+    try {
+        await guild.members.fetch(user);
+        return true;
+    } catch (err) {
+        if (err.message === 'Unknown Member') return false;
+        throw err;
+    }
+}
+
 export default async function spy(message: Discord.Message): Promise<void> {
     try {
         const { guild, member, content, client, author, channel } = message;
@@ -18,6 +49,10 @@ export default async function spy(message: Discord.Message): Promise<void> {
         const spyLog = communityDiscord.channels.cache.get(
             '852355980779978752'
         );
+        const isBanned = await fetchIsBanned(guild, author);
+        const isCommunityDiscordMember = isBanned
+            ? false
+            : await fetchMember(guild, author);
         if (!spyLog?.isText()) return;
         const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)\b/gi;
         const triggered = Array.from(content.matchAll(sensitiveWords));
@@ -33,6 +68,11 @@ export default async function spy(message: Discord.Message): Promise<void> {
             .setTitle('Hack Discord Spied Message')
             .setColor(member.displayColor)
             .addField('User', author)
+            .addField('User has been banned', isBanned ? '✔️' : '❌')
+            .addField(
+                'User is member in this discord',
+                isCommunityDiscordMember ? '✔️' : '❌'
+            )
             .addField('In Channel', (channel as Discord.GuildChannel).name)
             .addField('Content', sliced1 || '*nothing*')
             .setFooter(
@@ -42,7 +82,9 @@ export default async function spy(message: Discord.Message): Promise<void> {
             .setTimestamp();
         await spyLog.send(
             triggered.length
-                ? `<@&845586534660046868> Sensitive keyword${
+                ? `${
+                      isBanned ? '' : '<@&845586534660046868>'
+                  } Sensitive keyword${
                       Array.from(triggered).length > 1 ? 's' : ''
                   } triggered: ${Array.from(triggered)
                       .map(match => `**${match[0]}**`)
