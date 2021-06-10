@@ -1,10 +1,16 @@
 import * as Discord from 'discord.js';
+import logMessage from '../dev-commands/logMessage';
 
 export default async function spy(message: Discord.Message): Promise<void> {
     try {
         const { guild, member, content, client, author, channel } = message;
-
-        if (!guild || !member || guild.id !== '818961659086766111') return;
+        if (
+            !guild ||
+            !member ||
+            guild.id !== '818961659086766111' ||
+            !channel.isText()
+        )
+            return;
 
         const communityDiscord = await client.guilds.fetch(
             '804222694488932362'
@@ -18,26 +24,27 @@ export default async function spy(message: Discord.Message): Promise<void> {
             content.slice(0, 1024),
             content.slice(1024),
         ];
-
-        await spyLog.send(
-            new Discord.MessageEmbed()
-                .setAuthor(
-                    `${author.username}#${author.discriminator}`,
-                    author.displayAvatarURL({ dynamic: true })
-                )
-                .setTitle('Hack Discord Spied Message')
-                .setColor(member.displayColor)
-                .addField('User', author)
-                .addField('In Channel', channel)
-                .addField('Content', sliced1)
-                .addField('‎', sliced2)
-                .setFooter(
-                    guild.name,
-                    guild.iconURL({ dynamic: true }) ?? undefined
-                )
-                .setTimestamp()
-        );
+        const embed = new Discord.MessageEmbed()
+            .setAuthor(
+                `${author.username}#${author.discriminator}`,
+                author.displayAvatarURL({ dynamic: true })
+            )
+            .setTitle('Hack Discord Spied Message')
+            .setColor(member.displayColor)
+            .addField('User', author)
+            .addField('In Channel', (channel as Discord.GuildChannel).name)
+            .addField('Content', sliced1 || '*nothing*')
+            .setFooter(
+                guild.name,
+                guild.iconURL({ dynamic: true }) ?? undefined
+            )
+            .setTimestamp();
+        await spyLog.send(sliced2 ? embed.addField('‎', sliced2) : embed);
     } catch (err) {
-        // no action
+        try {
+            await logMessage(message.client, err.stack);
+        } catch (e) {
+            // no action
+        }
     }
 }

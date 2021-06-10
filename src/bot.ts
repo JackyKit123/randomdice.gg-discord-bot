@@ -136,6 +136,7 @@ client.on('message', async function messageHandler(message) {
     const [suffix, command] = content.split(' ');
 
     try {
+        spy(message);
         if (process.env.NODE_ENV === 'production') {
             spy(message);
         }
