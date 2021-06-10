@@ -34,7 +34,15 @@ async function fetchMember(
 
 export default async function spy(message: Discord.Message): Promise<void> {
     try {
-        const { guild, member, content, client, author, channel } = message;
+        const {
+            guild,
+            member,
+            content,
+            client,
+            author,
+            channel,
+            attachments,
+        } = message;
         if (
             !guild ||
             !member ||
@@ -60,26 +68,42 @@ export default async function spy(message: Discord.Message): Promise<void> {
             content.slice(0, 1024),
             content.slice(1024),
         ];
-        const embed = new Discord.MessageEmbed()
+        let embed = new Discord.MessageEmbed()
             .setAuthor(
                 `${author.username}#${author.discriminator}`,
                 author.displayAvatarURL({ dynamic: true })
             )
             .setTitle('Hack Discord Spied Message')
-            .setColor(member.displayColor)
-            .addField('User', author)
+            .addField('User', `${author}\nID: ${author.id}`)
             .addField('User has been banned', isBanned ? '✔️' : '❌')
             .addField(
                 'User is member in this discord',
                 isCommunityDiscordMember ? '✔️' : '❌'
             )
-            .addField('In Channel', (channel as Discord.GuildChannel).name)
-            .addField('Content', sliced1 || '*nothing*')
+            .addField(
+                'In Channel',
+                `#${(channel as Discord.GuildChannel).name}`
+            )
             .setFooter(
                 guild.name,
                 guild.iconURL({ dynamic: true }) ?? undefined
             )
             .setTimestamp();
+        if (member.displayColor) {
+            embed = embed.setColor(member.displayColor);
+        }
+        if (sliced1) {
+            embed = embed.addField('Content', sliced1);
+            if (sliced2) {
+                embed = embed.addField('‎', sliced2);
+            }
+        }
+        if (attachments.size) {
+            embed = embed.addField(
+                `Attachment${attachments.size > 1 ? 's' : ''}`,
+                attachments.map(attachment => attachment.url).join('\n')
+            );
+        }
         await spyLog.send(
             triggered.length
                 ? `${
@@ -90,7 +114,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
                       .map(match => `**${match[0]}**`)
                       .join(' ')}`
                 : '',
-            sliced2 ? embed.addField('‎', sliced2) : embed
+            embed
         );
     } catch (err) {
         try {
