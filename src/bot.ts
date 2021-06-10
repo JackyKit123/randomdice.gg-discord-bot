@@ -51,6 +51,7 @@ import gtn from './community discord/gtn';
 import tournament from './community discord/tournament';
 import customRole from './community discord/customRole';
 import solveMathEquation from './community discord/solveMathEquation';
+import spy from './community discord/spy';
 import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
 import profile from './community discord/currency/profile';
@@ -135,6 +136,10 @@ client.on('message', async function messageHandler(message) {
     const [suffix, command] = content.split(' ');
 
     try {
+        if (process.env.NODE_ENV === 'production') {
+            spy(message);
+        }
+
         if (
             process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
