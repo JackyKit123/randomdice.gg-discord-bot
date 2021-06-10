@@ -19,7 +19,8 @@ export default async function spy(message: Discord.Message): Promise<void> {
             '852355980779978752'
         );
         if (!spyLog?.isText()) return;
-        const sensitiveWords = /(?<hack>hack\w*)|(?<buy>buy\w*)|(?<sell>sell\w*)|(?<boost>boost\w*)|(?<account>account\w*)|(?<price>price\w*)/gi;
+        const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)\b/gi;
+        const triggered = content.matchAll(sensitiveWords);
         const [sliced1, sliced2] = [
             content.slice(0, 1024),
             content.slice(1024),
@@ -40,10 +41,10 @@ export default async function spy(message: Discord.Message): Promise<void> {
             )
             .setTimestamp();
         await spyLog.send(
-            sensitiveWords.test(content)
-                ? `<@&845586534660046868> Sensitive keyword(s) triggered: ${Array.from(
-                      content.matchAll(sensitiveWords) || []
-                  )
+            triggered
+                ? `<@&845586534660046868> Sensitive keyword${
+                      Array.from(triggered).length > 1 ? 's' : ''
+                  } triggered: ${Array.from(triggered)
                       .map(match => `**${match[0]}**`)
                       .join(' ')}`
                 : '',
