@@ -57,10 +57,10 @@ export default async function spy(message: Discord.Message): Promise<void> {
         const spyLog = communityDiscord.channels.cache.get(
             '852355980779978752'
         );
-        const isBanned = await fetchIsBanned(guild, author);
+        const isBanned = await fetchIsBanned(communityDiscord, author);
         const isCommunityDiscordMember = isBanned
             ? false
-            : await fetchMember(guild, author);
+            : await fetchMember(communityDiscord, author);
         if (!spyLog?.isText()) return;
         const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(\$)\b/gi;
         const triggered = Array.from(content.matchAll(sensitiveWords));
