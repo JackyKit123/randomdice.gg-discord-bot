@@ -205,6 +205,12 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         );
                         return;
                     }
+                    if (balance < raffle.ticketCost) {
+                        await channel.send(
+                            `The cost per ticket in this raffle is <:dicecoin:839981846419079178> ${raffle.ticketCost} but you only have <:dicecoin:839981846419079178> ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
+                        );
+                        return;
+                    }
                     currEntry = Math.min(
                         raffle.maxEntries - prevEntry,
                         Math.floor(balance / raffle.ticketCost)
