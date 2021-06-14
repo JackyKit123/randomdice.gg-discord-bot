@@ -117,7 +117,12 @@ export default async function pickCoins(
     );
     collector.on('collect', async (message: Discord.Message) => {
         const { member } = message;
-        if (!member || collected.includes(member.id)) return;
+        if (
+            !member ||
+            collected.includes(member.id) ||
+            collected.length >= maxCollectorAllowed
+        )
+            return;
         collected.push(member.id);
         const balance = await getBalance(message, 'silence', member);
         if (balance === false) return;
@@ -133,8 +138,7 @@ export default async function pickCoins(
                 )}. Congratulations!`
             );
         }
-        maxCollectorAllowed -= 1;
-        if (maxCollectorAllowed <= 0) {
+        if (collected.length >= maxCollectorAllowed) {
             collector.stop();
         }
     });
