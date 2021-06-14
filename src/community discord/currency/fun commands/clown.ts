@@ -107,6 +107,7 @@ export default async function clown(message: Discord.Message): Promise<void> {
         await channel.send(
             new Discord.MessageEmbed()
                 .setTitle('🤡'.repeat(howClown))
+                .setColor('#ffffff')
                 .setDescription(
                     typedWrongCommand || clownedABot
                         ? `${target} ${
