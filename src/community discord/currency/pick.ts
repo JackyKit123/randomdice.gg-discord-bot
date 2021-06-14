@@ -148,25 +148,26 @@ export default async function pickCoins(
             );
         }
 
-        await channel.awaitMessages(
-            (newMessage: Discord.Message) =>
-                !newMessage.author.bot &&
-                !channel.messages.cache.find(
-                    oldMessage =>
-                        oldMessage.author.id === newMessage.author.id &&
-                        oldMessage.createdTimestamp -
-                            newMessage.createdTimestamp <
-                            1000 * 10
-                ),
+        const waitTime =
+            process.env.NODE_ENV === 'production' ? 1000 * 60 * 30 : 10 * 1000; // only wait 10 seconds on dev
+        await Promise.race([
+            wait(waitTime),
+            channel.awaitMessages(
+                (newMessage: Discord.Message) =>
+                    !newMessage.author.bot &&
+                    !channel.messages.cache.find(
+                        oldMessage =>
+                            oldMessage.author.id === newMessage.author.id &&
+                            oldMessage.createdTimestamp -
+                                newMessage.createdTimestamp <
+                                1000 * 10
+                    ),
 
-            {
-                time:
-                    process.env.NODE_ENV === 'production'
-                        ? 1000 * 60 * 30
-                        : 10 * 1000, // only wait 10 seconds on dev
-                max: 30,
-            }
-        );
+                {
+                    max: 30,
+                }
+            ),
+        ]);
         await pickCoins(client, database);
     });
 }
