@@ -23,22 +23,24 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     if (balance === false) return;
 
     const prestigeLevels = {
-        1: { id: '806312627877838878', coinsNeeded: 196055 },
-        2: { id: '806896328255733780', coinsNeeded: 444055 },
-        3: { id: '806896441947324416', coinsNeeded: 792055 },
-        4: { id: '809142950117245029', coinsNeeded: 1240055 },
-        5: { id: '809142956715671572', coinsNeeded: 1788055 },
-        6: { id: '809142968434950201', coinsNeeded: 2436055 },
-        7: { id: '809143362938339338', coinsNeeded: 3184055 },
-        8: { id: '809143374555774997', coinsNeeded: 4032055 },
-        9: { id: '809143390791925780', coinsNeeded: 4980055 },
-        10: { id: '809143588105486346', coinsNeeded: 6028055 },
+        1: '806312627877838878',
+        2: '806896328255733780',
+        3: '806896441947324416',
+        4: '809142950117245029',
+        5: '809142956715671572',
+        6: '809142968434950201',
+        7: '809143362938339338',
+        8: '809143374555774997',
+        9: '809143390791925780',
+        10: '809143588105486346',
     } as {
-        [level: number]: {
-            id: string;
-            coinsNeeded: number;
-        };
+        [level: number]: string;
     };
+    const currentPrestigeLevel = Number(
+        Object.entries(prestigeLevels)
+            .sort(([a], [b]) => Number(b) - Number(a))
+            .find(([, roleId]) => member.roles.cache.has(roleId))?.[0] || 0
+    );
 
     function cooldown(
         timestamp = 0,
@@ -85,7 +87,8 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         'Unique',
         'Legendary',
     ].map(rarity => dice.filter(d => d.rarity === rarity));
-    const progress = balance / prestigeLevels[profile.prestige + 1].coinsNeeded;
+    const nextPrestigeLevel = currentPrestigeLevel + 1;
+    const progress = balance / (nextPrestigeLevel * 250000);
     const embed = new Discord.MessageEmbed()
         .setAuthor(
             `${target.displayName}'s Profile`,
@@ -117,7 +120,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         .setDescription(
             profile.prestige > 0
                 ? `**${guild.roles.cache
-                      .get(prestigeLevels[profile.prestige].id)
+                      .get(prestigeLevels[profile.prestige])
                       ?.name.toUpperCase()}**`
                 : ''
         )
@@ -142,17 +145,9 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .addField(
             'Prestige Progress',
-            `${new Array(Math.min(10, Math.max(0, Math.floor(progress * 10))))
-                .fill('■')
-                .concat(
-                    new Array(
-                        Math.max(
-                            0,
-                            Math.min(10 - Math.floor(progress * 10), 10)
-                        )
-                    ).fill('□')
-                )
-                .join('')} (${Math.floor(progress * 1000) / 10}%)`
+            `${'■'.repeat(Math.max(0, Math.floor(progress * 10)))}${'□'.repeat(
+                Math.min(10 - Math.floor(progress * 10), 10)
+            )}(${Math.floor(progress * 1000) / 10}%)`
         )
         .addField(
             'Your Server Rank',
