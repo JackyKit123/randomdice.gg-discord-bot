@@ -73,9 +73,9 @@ export default async function pickCoins(
     if (rngReward < 100) {
         content = `A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
-        )} has shown up, type \`.\` to earn it.`;
+        )} has shown up, react to \`⛏️\` to earn it`;
         maxCollectorAllowed = Infinity;
-        collectionTrigger = '.';
+        collectionTrigger = 'reaction';
     } else if (rngReward < 1000) {
         collectionTrigger =
             basicCollectionTriggers[
@@ -112,42 +112,88 @@ export default async function pickCoins(
     }
 
     const collected: string[] = [];
-    const collector = channel.createMessageCollector(
-        (message: Discord.Message) =>
-            !message.author.bot &&
-            message.content.toLowerCase() === collectionTrigger.toLowerCase(),
-        {
-            time: 10 * 1000,
+    const sentMessage = await channel.send(content);
+    const collector: Discord.Collector<
+        Discord.Snowflake,
+        Discord.Message | Discord.MessageReaction
+    > =
+        collectionTrigger === 'react'
+            ? sentMessage.createReactionCollector(
+                  (reaction: Discord.MessageReaction, user: Discord.User) =>
+                      reaction.emoji.name === '⛏️' && !user.bot,
+                  {
+                      time: 20 * 1000,
+                  }
+              )
+            : channel.createMessageCollector(
+                  (message: Discord.Message) =>
+                      !message.author.bot &&
+                      message.content.toLowerCase() ===
+                          collectionTrigger.toLowerCase(),
+                  {
+                      time: 20 * 1000,
+                  }
+              );
+    collector.on(
+        'collect',
+        async (
+            collect: Discord.Message | Discord.MessageReaction,
+            user: Discord.User
+        ) => {
+            let member: Discord.GuildMember | null;
+            let message: Discord.Message;
+            if (collect instanceof Discord.Message) {
+                ({ member } = collect);
+                message = collect;
+            } else {
+                member = guild.member(user.id);
+                message = sentMessage;
+            }
+            if (
+                !member ||
+                collected.includes(member.id) ||
+                collected.length >= maxCollectorAllowed
+            )
+                return;
+            if (
+                !channel.messages.cache.find(
+                    msg =>
+                        sentMessage.createdTimestamp - msg.createdTimestamp <
+                        1000 * 60
+                )
+            ) {
+                if (collect instanceof Discord.Message) {
+                    await channel.send(
+                        `${member}, no sniping. You must be talking in ${channel} for the last 1 minute to pick the reward.`
+                    );
+                } else {
+                    await collect.users.remove(member.id);
+                }
+                return;
+            }
+            collected.push(member.id);
+            const balance = await getBalance(message, 'silence', member);
+            if (balance === false) return;
+            await database
+                .ref(`discord_bot/community/currency/${member.id}/balance`)
+                .set(balance + rngReward);
+            if (rngReward < 1000) {
+                await message.react('<:dicecoin:839981846419079178>');
+            } else {
+                await channel.send(
+                    `${member} has collected the prize of <:dicecoin:839981846419079178> ${numberFormat.format(
+                        rngReward
+                    )}. Congratulations!`
+                );
+            }
+            if (collected.length >= maxCollectorAllowed) {
+                collector.stop();
+            }
         }
     );
-    collector.on('collect', async (message: Discord.Message) => {
-        const { member } = message;
-        if (
-            !member ||
-            collected.includes(member.id) ||
-            collected.length >= maxCollectorAllowed
-        )
-            return;
-        collected.push(member.id);
-        const balance = await getBalance(message, 'silence', member);
-        if (balance === false) return;
-        await database
-            .ref(`discord_bot/community/currency/${member.id}/balance`)
-            .set(balance + rngReward);
-        if (rngMultiplier === 10 || rngMultiplier === 100) {
-            await message.react('<:dicecoin:839981846419079178>');
-        } else {
-            await channel.send(
-                `${member} has collected the prize of <:dicecoin:839981846419079178> ${numberFormat.format(
-                    rngReward
-                )}. Congratulations!`
-            );
-        }
-        if (collected.length >= maxCollectorAllowed) {
-            collector.stop();
-        }
-    });
-    await channel.send(content);
+    if (collector instanceof Discord.ReactionCollector) {
+        await sentMessage.react('⛏️');
+    }
     collector.on('end', async () => {
         if (collected.length === 0) {
             await channel.send(
