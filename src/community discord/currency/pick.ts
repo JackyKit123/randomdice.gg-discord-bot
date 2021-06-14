@@ -150,18 +150,23 @@ export default async function pickCoins(
 
         const waitTime =
             process.env.NODE_ENV === 'production' ? 1000 * 60 * 30 : 10 * 1000; // only wait 10 seconds on dev
+        const messageTimeout = new Map<string, boolean>();
         await Promise.race([
             wait(waitTime),
             channel.awaitMessages(
-                (newMessage: Discord.Message) =>
-                    !newMessage.author.bot &&
-                    !channel.messages.cache.find(
-                        oldMessage =>
-                            oldMessage.author.id === newMessage.author.id &&
-                            oldMessage.createdTimestamp -
-                                newMessage.createdTimestamp <
-                                1000 * 10
-                    ),
+                (newMessage: Discord.Message) => {
+                    if (
+                        messageTimeout.get(newMessage.author.id) ||
+                        newMessage.author.bot
+                    )
+                        return false;
+                    messageTimeout.set(newMessage.author.id, true);
+                    setTimeout(
+                        () => messageTimeout.set(newMessage.author.id, false),
+                        10 * 1000
+                    );
+                    return true;
+                },
 
                 {
                     max: 30,
