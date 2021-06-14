@@ -32,7 +32,7 @@ export default async function pickCoins(
         Math.ceil(
             Math.max(Math.min(5, -Math.log(Math.random()) / Math.log(2.6)), 1)
         );
-    const rngReward = Math.ceil(Math.random() * rngMultiplier * 100);
+    const rngReward = Math.ceil(Math.random() * rngMultiplier * 10);
 
     let content: string;
     let maxCollectorAllowed = 1;
@@ -138,23 +138,14 @@ export default async function pickCoins(
             collector.stop();
         }
     });
-    const rewardMessage = await channel.send(content);
+    await channel.send(content);
     collector.on('end', async () => {
         if (collected.length === 0) {
-            const noClaimedMessage = await channel.send(
+            await channel.send(
                 `🙁 Looks like no one has claimed the reward of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} this time.`
             );
-            await wait(1000 * 5);
-            try {
-                await Promise.all([
-                    noClaimedMessage.delete(),
-                    rewardMessage.delete(),
-                ]);
-            } catch {
-                // nothing
-            }
         }
         await wait(
             process.env.NODE_ENV === 'production'
