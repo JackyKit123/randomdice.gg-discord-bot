@@ -193,7 +193,7 @@ export default async function pickCoins(
             }
         }
     );
-    if (collector instanceof Discord.ReactionCollector) {
+    if (collectionTrigger === 'react') {
         await sentMessage.react('⛏️');
     }
     collector.on('end', async () => {
