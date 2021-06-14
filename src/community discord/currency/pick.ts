@@ -133,7 +133,8 @@ export default async function pickCoins(
                 )}. Congratulations!`
             );
         }
-        if (collected.length >= maxCollectorAllowed) {
+        maxCollectorAllowed -= 1;
+        if (maxCollectorAllowed <= 0) {
             collector.stop();
         }
     });
@@ -146,11 +147,26 @@ export default async function pickCoins(
                 )} this time.`
             );
         }
-        await wait(
-            process.env.NODE_ENV === 'production'
-                ? 1000 * (Math.random() * 150 + 150)
-                : 10 * 1000 // only wait 10 seconds on dev
-        ); // random between 2.5 mins to 5 mins
-        pickCoins(client, database);
+
+        await channel.awaitMessages(
+            (newMessage: Discord.Message) =>
+                !newMessage.author.bot &&
+                !channel.messages.cache.find(
+                    oldMessage =>
+                        oldMessage.author.id === newMessage.author.id &&
+                        oldMessage.createdTimestamp -
+                            newMessage.createdTimestamp <
+                            1000 * 10
+                ),
+
+            {
+                time:
+                    process.env.NODE_ENV === 'production'
+                        ? 1000 * 60 * 30
+                        : 10 * 1000, // only wait 10 seconds on dev
+                max: 30,
+            }
+        );
+        await pickCoins(client, database);
     });
 }
