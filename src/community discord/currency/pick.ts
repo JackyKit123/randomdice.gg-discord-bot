@@ -134,7 +134,7 @@ export default async function pickCoins(
         await database
             .ref(`discord_bot/community/currency/${member.id}/balance`)
             .set(balance + rngReward);
-        if (rngMultiplier === 10 || rngMultiplier === 100) {
+        if (rngReward < 1000) {
             await message.react('<:dicecoin:839981846419079178>');
         } else {
             await channel.send(
