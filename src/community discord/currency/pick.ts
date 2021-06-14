@@ -42,7 +42,7 @@ export default async function pickCoins(
         Math.ceil(
             Math.max(Math.min(5, -Math.log(Math.random()) / Math.log(2.6)), 1)
         );
-    const rngReward = Math.ceil(Math.min(Math.random(), 0.1) * rngMultiplier * 10);
+    const rngReward = Math.ceil(Math.max(Math.random(), 0.1) * rngMultiplier * 10);
 
     let content: string;
     let maxCollectorAllowed: number;
