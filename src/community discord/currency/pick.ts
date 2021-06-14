@@ -4,23 +4,33 @@ import { promisify } from 'util';
 import getBalance from './balance';
 
 let guild: Discord.Guild;
+let channel: Discord.TextChannel;
 const wait = promisify(setTimeout);
 export default async function pickCoins(
     client: Discord.Client,
     database: firebase.database.Database
 ): Promise<void> {
-    if (!guild && process.env.NODE_ENV === 'production') {
-        // skip waiting on dev
-        await wait(1000 * 60 * 2.5); // initial wait time for boot up
+    if (!guild || !channel) {
+        guild =
+            guild ||
+            (await client.guilds.fetch(process.env.COMMUNITY_SERVER_ID || ''));
+        channel =
+            channel ||
+            guild.channels.cache.get(
+                process.env.NODE_ENV === 'production'
+                    ? '804222694488932364' // #general
+                    : '804640084007321600' // #jackykit-playground
+            );
+        if (process.env.NODE_ENV === 'production') {
+            await wait(
+                (await channel.messages.fetch({ limit: 50 })).filter(
+                    msg => Date.now() - msg.createdTimestamp > 1000 * 60 * 5
+                ).size *
+                    1000 *
+                    3
+            );
+        }
     }
-    guild =
-        guild ||
-        (await client.guilds.fetch(process.env.COMMUNITY_SERVER_ID || ''));
-    const channel = guild.channels.cache.get(
-        process.env.NODE_ENV === 'production'
-            ? '804222694488932364' // #general
-            : '804640084007321600' // #jackykit-playground
-    );
     const numberFormat = new Intl.NumberFormat();
 
     if (!channel?.isText()) {
@@ -167,13 +177,12 @@ export default async function pickCoins(
                     messageTimeout.set(newMessage.author.id, true);
                     setTimeout(
                         () => messageTimeout.set(newMessage.author.id, false),
-                        10 * 1000
+                        15 * 1000
                     );
                     return true;
                 },
-
                 {
-                    max: 30,
+                    max: 20,
                 }
             ),
         ]);
