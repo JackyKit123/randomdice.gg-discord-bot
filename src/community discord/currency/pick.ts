@@ -50,11 +50,12 @@ export default async function pickCoins(
     const basicCollectionTriggers = [
         'GIMME',
         'COINS',
-        'COIN',
+        'COINS',
         'PICK',
         'COLLECT',
         'ROB',
         'GRAB',
+        'YOINK',
     ];
     const advancedCollectionTriggers = [
         'OMG Gimme all those money',
@@ -63,6 +64,7 @@ export default async function pickCoins(
         'I am poor pls donate',
         'Gotta grab the coins this time',
         'Those are my money',
+        'I am gonna yoink them all',
         'MONEY MONEY MONEY',
     ];
     const addInvisibleCharToString = (str: string): string =>
