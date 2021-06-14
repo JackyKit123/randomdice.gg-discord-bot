@@ -158,11 +158,11 @@ export default async function pickCoins(
             )
                 return;
             if (
-                !channel.messages.cache.find(
+                channel.messages.cache.filter(
                     msg =>
                         sentMessage.createdTimestamp - msg.createdTimestamp <
                         1000 * 60
-                )
+                ).size > (collect instanceof Discord.Message ? 1 : 0)
             ) {
                 if (collect instanceof Discord.Message) {
                     await channel.send(
