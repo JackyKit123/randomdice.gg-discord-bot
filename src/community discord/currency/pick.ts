@@ -119,7 +119,7 @@ export default async function pickCoins(
         Discord.Snowflake,
         Discord.Message | Discord.MessageReaction
     > =
-        collectionTrigger === 'react'
+        collectionTrigger === 'reaction'
             ? sentMessage.createReactionCollector(
                   (reaction: Discord.MessageReaction, user: Discord.User) =>
                       reaction.emoji.name === '⛏️' && !user.bot,
@@ -193,7 +193,7 @@ export default async function pickCoins(
             }
         }
     );
-    if (collectionTrigger === 'react') {
+    if (collector instanceof Discord.ReactionCollector) {
         await sentMessage.react('⛏️');
     }
     collector.on('end', async () => {
