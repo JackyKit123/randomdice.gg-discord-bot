@@ -73,10 +73,10 @@ export default async function pickCoins(
                 ];
             content = `💵💵 A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
                 rngReward
-            )} has shown up, the first 3 people to type \`${addInvisibleCharToString(
+            )} has shown up, the first 5 people to type \`${addInvisibleCharToString(
                 collectionTrigger
             )}\` can earn the reward. 💵💵`;
-            maxCollectorAllowed = 3;
+            maxCollectorAllowed = 5;
             break;
         case 1000:
             collectionTrigger =
