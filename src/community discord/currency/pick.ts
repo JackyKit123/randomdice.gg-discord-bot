@@ -45,8 +45,8 @@ export default async function pickCoins(
     const rngReward = Math.ceil(Math.random() * rngMultiplier * 10);
 
     let content: string;
-    let maxCollectorAllowed = 1;
-    let collectionTrigger = '';
+    let maxCollectorAllowed: number;
+    let collectionTrigger: string;
     const basicCollectionTriggers = [
         'GIMME',
         'COINS',
@@ -70,52 +70,45 @@ export default async function pickCoins(
     const addInvisibleCharToString = (str: string): string =>
         str.replace(/\w/g, match => `‎${match}‎`);
 
-    switch (rngMultiplier) {
-        case 10:
-            content = `A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
-                rngReward
-            )} has shown up, type \`.\` to earn it.`;
-            maxCollectorAllowed = Infinity;
-            collectionTrigger = '.';
-            break;
-        case 100:
-            collectionTrigger =
-                basicCollectionTriggers[
-                    Math.floor(basicCollectionTriggers.length * Math.random())
-                ];
-            content = `💵💵 A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
-                rngReward
-            )} has shown up, the first 5 people to type \`${addInvisibleCharToString(
-                collectionTrigger
-            )}\` can earn the reward. 💵💵`;
-            maxCollectorAllowed = 5;
-            break;
-        case 1000:
-            collectionTrigger =
-                basicCollectionTriggers[
-                    Math.floor(basicCollectionTriggers.length * Math.random())
-                ];
-            content = `💰💰💰💰 A big reward of <:dicecoin:839981846419079178> ${numberFormat.format(
-                rngReward
-            )} has shown up. The first one to type \`${addInvisibleCharToString(
-                collectionTrigger
-            )}\` can earn the reward. 💰💰💰💰`;
-            break;
-        case 10000:
-            collectionTrigger =
-                advancedCollectionTriggers[
-                    Math.floor(
-                        advancedCollectionTriggers.length * Math.random()
-                    )
-                ];
-            content = `💎💎💎💎💎💎**BIG MONEY TIME**💎💎💎💎💎💎\n<:dicecoin:839981846419079178> ${numberFormat.format(
-                rngReward
-            )} has shown up.  The first one to type \`${addInvisibleCharToString(
-                collectionTrigger
-            )}\` can earn the reward.`;
-            break;
-        default:
-            return;
+    if (rngReward < 100) {
+        content = `A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
+            rngReward
+        )} has shown up, type \`.\` to earn it.`;
+        maxCollectorAllowed = Infinity;
+        collectionTrigger = '.';
+    } else if (rngReward < 1000) {
+        collectionTrigger =
+            basicCollectionTriggers[
+                Math.floor(basicCollectionTriggers.length * Math.random())
+            ];
+        content = `💵💵 A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
+            rngReward
+        )} has shown up, the first 5 people to type \`${addInvisibleCharToString(
+            collectionTrigger
+        )}\` can earn the reward. 💵💵`;
+        maxCollectorAllowed = 5;
+    } else if (rngReward < 10000) {
+        collectionTrigger =
+            basicCollectionTriggers[
+                Math.floor(basicCollectionTriggers.length * Math.random())
+            ];
+        content = `💰💰💰💰 A big reward of <:dicecoin:839981846419079178> ${numberFormat.format(
+            rngReward
+        )} has shown up. The first one to type \`${addInvisibleCharToString(
+            collectionTrigger
+        )}\` can earn the reward. 💰💰💰💰`;
+        maxCollectorAllowed = 1;
+    } else {
+        collectionTrigger =
+            advancedCollectionTriggers[
+                Math.floor(advancedCollectionTriggers.length * Math.random())
+            ];
+        content = `💎💎💎💎💎💎**BIG MONEY TIME**💎💎💎💎💎💎\n<:dicecoin:839981846419079178> ${numberFormat.format(
+            rngReward
+        )} has shown up.  The first one to type \`${addInvisibleCharToString(
+            collectionTrigger
+        )}\` can earn the reward.`;
+        maxCollectorAllowed = 1;
     }
 
     const collected: string[] = [];
