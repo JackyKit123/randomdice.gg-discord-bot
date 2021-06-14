@@ -73,9 +73,9 @@ export default async function pickCoins(
         str.replace(/\w/g, match => `‎${match}‎`);
 
     if (rngReward < 100) {
-        content = `A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
+        content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
-        )} has shown up, react to \`⛏️\` to earn it`;
+        )} has shown up, react to \`⛏️\` to pick it`;
         maxCollectorAllowed = Infinity;
         collectionTrigger = 'reaction';
     } else if (rngReward < 1000) {
@@ -83,22 +83,22 @@ export default async function pickCoins(
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
-        content = `💵💵 A reward of <:dicecoin:839981846419079178> ${numberFormat.format(
+        content = `💵💵 A batch of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
         )} has shown up, the first 5 people to type \`${addInvisibleCharToString(
             collectionTrigger
-        )}\` can earn the reward. 💵💵`;
+        )}\` can earn the coins. 💵💵`;
         maxCollectorAllowed = 5;
     } else if (rngReward < 10000) {
         collectionTrigger =
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
-        content = `💰💰💰💰 A big reward of <:dicecoin:839981846419079178> ${numberFormat.format(
+        content = `💰💰💰💰 A huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
         )} has shown up. The first one to type \`${addInvisibleCharToString(
             collectionTrigger
-        )}\` can earn the reward. 💰💰💰💰`;
+        )}\` can earn the coins. 💰💰💰💰`;
         maxCollectorAllowed = 1;
     } else {
         collectionTrigger =
@@ -109,7 +109,7 @@ export default async function pickCoins(
             rngReward
         )} has shown up.  The first one to type \`${addInvisibleCharToString(
             collectionTrigger
-        )}\` can earn the reward.`;
+        )}\` can earn the coins.`;
         maxCollectorAllowed = 1;
     }
 
@@ -158,16 +158,17 @@ export default async function pickCoins(
             )
                 return;
             if (
-                channel.messages.cache.filter(
+                !channel.messages.cache.filter(
                     msg =>
                         msg.author.id === member?.id &&
                         sentMessage.createdTimestamp - msg.createdTimestamp <
-                            1000 * 60
-                ).size < (collect instanceof Discord.Message ? 1 : 0)
+                            1000 * 60 &&
+                        msg.createdTimestamp < sentMessage.createdTimestamp
+                ).size
             ) {
                 if (collect instanceof Discord.Message) {
                     await channel.send(
-                        `${member}, no sniping. You must be talking in ${channel} for the last 1 minute to pick the reward.`
+                        `${member}, no sniping. You must be talking in ${channel} for the last 1 minute to earn the reward.`
                     );
                 } else {
                     await collect.users.remove(member.id);
@@ -180,9 +181,9 @@ export default async function pickCoins(
             await database
                 .ref(`discord_bot/community/currency/${member.id}/balance`)
                 .set(balance + rngReward);
-            if (rngReward < 1000) {
+            if (rngReward < 1000 && rngReward >= 100) {
                 await message.react('<:dicecoin:839981846419079178>');
-            } else {
+            } else if (rngReward > 1000) {
                 await channel.send(
                     `${member} has collected the prize of <:dicecoin:839981846419079178> ${numberFormat.format(
                         rngReward
@@ -200,10 +201,22 @@ export default async function pickCoins(
     collector.on('end', async () => {
         if (collected.length === 0) {
             await channel.send(
-                `🙁 Looks like no one has claimed the reward of <:dicecoin:839981846419079178> ${numberFormat.format(
+                `🙁 Looks like no one has claimed the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} this time.`
             );
+        } else if (collector instanceof Discord.ReactionCollector) {
+            try {
+                await sentMessage.edit(
+                    `${collected.map(id => `<@${id}>`).join(' ')} ${
+                        collected.length > 1 ? 'have' : 'has'
+                    } \`⛏️\` up the tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
+                        rngReward
+                    )}.`
+                );
+            } catch {
+                // nothing
+            }
         }
 
         const waitTime =
