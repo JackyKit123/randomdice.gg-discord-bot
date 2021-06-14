@@ -61,6 +61,7 @@ import currencyUpdate from './community discord/currency/update';
 import prestige from './community discord/currency/prestige';
 import share from './community discord/currency/share';
 import givedice from './community discord/currency/giveDice';
+import pickCoins from './community discord/currency/pick';
 import leaderboard, {
     weeklyAutoReset,
 } from './community discord/currency/leaderboard';
@@ -125,6 +126,7 @@ client.on('ready', async () => {
     purgeClownRoles(client);
     fetchApps(client);
     fetchGeneralOnBoot(client);
+    pickCoins(client, database);
     await fetchAll(database);
     setRaffleTimerOnBoot(client, database);
     weeklyAutoReset(client);
