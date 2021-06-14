@@ -48,7 +48,8 @@ export function duplicatedRoleMulti(member: Discord.GuildMember): number {
     );
 }
 
-const cooldown = new Map<string, number>();
+const cooldown = new Map<string, boolean>();
+const weeklyCooldown = new Map<string, boolean>();
 export default async function chatCoins(
     message: Discord.Message,
     dd?: true
@@ -98,11 +99,9 @@ export default async function chatCoins(
     const balance = (await getBalance(message, 'silence')) as number;
     if (!Object.keys(cache['discord_bot/community/currency']).length) return;
 
-    const now = Date.now().valueOf();
-    const userCooldown = cooldown.get(member.id) || 0;
-
-    if (now - userCooldown <= 10 * 1000) return;
-    cooldown.set(member.id, now);
+    if (cooldown.get(member.id)) return;
+    cooldown.set(member.id, true);
+    setTimeout(() => cooldown.set(member.id, false), 10 * 1000);
     let reward = 1;
 
     const { multiplier } = cache['discord_bot/community/currencyConfig'];
@@ -121,10 +120,17 @@ export default async function chatCoins(
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + reward);
+    if (weeklyCooldown.get(member.id)) return;
     const weekly =
         Number(cache['discord_bot/community/currency'][member.id].weeklyChat) ||
         0;
     await database
         .ref(`discord_bot/community/currency/${member.id}/weeklyChat`)
         .set(weekly + 1);
+    setTimeout(
+        () => weeklyCooldown.set(member.id, false),
+        ((channel as Discord.GuildChannel).parentID === '804227071765118976'
+            ? 30
+            : 10) * 1000
+    );
 }
