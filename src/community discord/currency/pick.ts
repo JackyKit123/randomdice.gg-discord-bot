@@ -118,12 +118,12 @@ export default async function pickCoins(
     collector.on('collect', async (message: Discord.Message) => {
         const { member } = message;
         if (!member || collected.includes(member.id)) return;
+        collected.push(member.id);
         const balance = await getBalance(message, 'silence', member);
         if (balance === false) return;
         await database
             .ref(`discord_bot/community/currency/${member.id}/balance`)
             .set(balance + rngReward);
-        collected.push(member.id);
         if (rngMultiplier === 10 || rngMultiplier === 100) {
             await message.react('<:dicecoin:839981846419079178>');
         } else {
@@ -133,8 +133,7 @@ export default async function pickCoins(
                 )}. Congratulations!`
             );
         }
-        maxCollectorAllowed -= 1;
-        if (maxCollectorAllowed <= 0) {
+        if (collected.length >= maxCollectorAllowed) {
             collector.stop();
         }
     });
