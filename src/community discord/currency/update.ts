@@ -90,6 +90,9 @@ export default async function coinflip(
             deduction ? ` from ${target.user.username}` : ''
         }, they now have  <:dicecoin:839981846419079178> ${numberFormat.format(
             balance + amount
-        )}!`
+        )}!`,
+        {
+            disableMentions: 'all',
+        }
     );
 }
