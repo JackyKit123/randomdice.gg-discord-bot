@@ -222,7 +222,7 @@ export default async function pickCoins(
                 }
             ),
         ]);
-        await pickCoins(channel);
+        pickCoins(channel, true);
     });
 }
 
@@ -252,7 +252,7 @@ export async function pickCoinsInit(
                 3
         );
     }
-    pickCoins(channel);
+    pickCoins(channel, true);
 }
 
 export async function spawnCoinbomb(message: Discord.Message): Promise<void> {
