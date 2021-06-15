@@ -145,6 +145,11 @@ export default async function pickCoins(
                             msg.createdTimestamp < sentMessage.createdTimestamp
                     ) ||
                     channel.messages.cache
+                        .filter(
+                            msg =>
+                                msg.createdTimestamp <
+                                sentMessage.createdTimestamp
+                        )
                         .last(10)
                         .some(msg => msg.author.id === member?.id)
                 )
