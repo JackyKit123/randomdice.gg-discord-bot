@@ -3,40 +3,17 @@ import firebase from 'firebase-admin';
 import { promisify } from 'util';
 import getBalance from './balance';
 
-let guild: Discord.Guild;
-let channel: Discord.TextChannel;
 const wait = promisify(setTimeout);
+const numberFormat = new Intl.NumberFormat();
+const activeCoinbombInChannel = new Map<string, boolean>();
+let database: firebase.database.Database;
+
 export default async function pickCoins(
-    client: Discord.Client,
-    database: firebase.database.Database
+    channel: Discord.TextChannel | Discord.NewsChannel,
+    recursive = false
 ): Promise<void> {
-    if (!guild || !channel) {
-        guild =
-            guild ||
-            (await client.guilds.fetch(process.env.COMMUNITY_SERVER_ID || ''));
-        channel =
-            channel ||
-            guild.channels.cache.get(
-                process.env.NODE_ENV === 'production'
-                    ? '804222694488932364' // #general
-                    : '804640084007321600' // #jackykit-playground
-            );
-        if (process.env.NODE_ENV === 'production') {
-            await wait(
-                (await channel.messages.fetch({ limit: 50 })).filter(
-                    msg => Date.now() - msg.createdTimestamp > 1000 * 60 * 5
-                ).size *
-                    1000 *
-                    3
-            );
-        }
-    }
-    const numberFormat = new Intl.NumberFormat();
-
-    if (!channel?.isText()) {
-        return;
-    }
-
+    activeCoinbombInChannel.set(channel.id, true);
+    const { guild } = channel;
     const rngMultiplier =
         10 **
         Math.ceil(
@@ -199,6 +176,7 @@ export default async function pickCoins(
         await sentMessage.react('⛏️');
     }
     collector.on('end', async () => {
+        activeCoinbombInChannel.set(channel.id, false);
         if (collected.length === 0) {
             await channel.send(
                 `🙁 Looks like no one has claimed the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
@@ -219,6 +197,7 @@ export default async function pickCoins(
             }
         }
 
+        if (!recursive) return;
         const waitTime =
             process.env.NODE_ENV === 'production' ? 1000 * 60 * 30 : 10 * 1000; // only wait 10 seconds on dev
         const messageTimeout = new Map<string, boolean>();
@@ -243,6 +222,61 @@ export default async function pickCoins(
                 }
             ),
         ]);
-        await pickCoins(client, database);
+        await pickCoins(channel);
     });
+}
+
+export async function pickCoinsInit(
+    client: Discord.Client,
+    db: firebase.database.Database
+): Promise<void> {
+    database = db;
+    const guild = await client.guilds.fetch(
+        process.env.COMMUNITY_SERVER_ID || ''
+    );
+    const channel = guild.channels.cache.get(
+        process.env.NODE_ENV === 'production'
+            ? '804222694488932364' // #general
+            : '804640084007321600' // #jackykit-playground
+    );
+
+    if (!channel?.isText()) {
+        return;
+    }
+    if (process.env.NODE_ENV === 'production') {
+        await wait(
+            (await channel.messages.fetch({ limit: 50 })).filter(
+                msg => Date.now() - msg.createdTimestamp > 1000 * 60 * 5
+            ).size *
+                1000 *
+                3
+        );
+    }
+    pickCoins(channel);
+}
+
+export async function spawnCoinbomb(message: Discord.Message): Promise<void> {
+    const { member, channel } = message;
+    if (
+        !member ||
+        !(
+            member.hasPermission('ADMINISTRATOR') ||
+            member.roles.cache.has('805000661133295616') ||
+            member.roles.cache.has('805772165394858015')
+        ) ||
+        channel instanceof Discord.DMChannel
+    ) {
+        await channel.send('You do not have permission to spawn a coinbomb');
+        return;
+    }
+    if (!database) {
+        throw new Error('Database is not ready');
+    }
+    if (activeCoinbombInChannel.get(channel.id)) {
+        await channel.send(
+            'There is an active coinbomb in this channel, you cannot spawn a new one before the last one has ended.'
+        );
+        return;
+    }
+    pickCoins(channel);
 }
