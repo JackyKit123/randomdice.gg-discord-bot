@@ -145,9 +145,13 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .addField(
             'Prestige Progress',
-            `${'■'.repeat(Math.max(0, Math.floor(progress * 10)))}${'□'.repeat(
-                Math.min(10 - Math.floor(progress * 10), 10)
-            )}(${Math.floor(progress * 1000) / 10}%)`
+            currentPrestigeLevel === 10
+                ? '**Max Prestige**'
+                : `${'■'.repeat(
+                      Math.max(0, Math.floor(progress * 10))
+                  )}${'□'.repeat(
+                      Math.min(10 - Math.floor(progress * 10), 10)
+                  )}(${Math.floor(progress * 1000) / 10}%)`
         )
         .addField(
             'Your Server Rank',
