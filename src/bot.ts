@@ -48,7 +48,6 @@ import lfg from './community discord/lfg';
 import validateOneWordStory from './community discord/oneworldstoryValidate';
 import voteAutoResponder from './community discord/voteAutoResponder';
 import gtn from './community discord/gtn';
-import tournament from './community discord/tournament';
 import customRole from './community discord/customRole';
 import solveMathEquation from './community discord/solveMathEquation';
 import spy from './community discord/spy';
@@ -204,9 +203,6 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!eventping':
                     await eventPing(message);
-                    break;
-                case '!tournament':
-                    await tournament(message, database);
                     break;
                 case '!customrole':
                     await customRole(message, database);
