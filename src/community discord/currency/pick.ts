@@ -206,6 +206,7 @@ export default async function pickCoins(
             channel.awaitMessages(
                 (newMessage: Discord.Message) => {
                     if (
+                        activeCoinbombInChannel.get(channel.id) ||
                         messageTimeout.get(newMessage.author.id) ||
                         newMessage.author.bot
                     )
