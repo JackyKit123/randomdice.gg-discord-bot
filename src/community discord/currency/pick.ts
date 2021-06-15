@@ -147,8 +147,9 @@ export default async function pickCoins(
                     channel.messages.cache
                         .filter(
                             msg =>
+                                !msg.author.bot &&
                                 msg.createdTimestamp <
-                                sentMessage.createdTimestamp
+                                    sentMessage.createdTimestamp
                         )
                         .last(10)
                         .some(msg => msg.author.id === member?.id)
@@ -156,7 +157,7 @@ export default async function pickCoins(
             ) {
                 if (collect instanceof Discord.Message) {
                     await channel.send(
-                        `${member}, no sniping. You must be talking in ${channel} for the last 1 minute to earn the reward.`
+                        `${member}, no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`
                     );
                 } else {
                     await collect.users.remove(member.id);
