@@ -150,7 +150,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 : `${'■'.repeat(
                       Math.max(0, Math.floor(progress * 10))
                   )}${'□'.repeat(
-                      Math.min(10 - Math.floor(progress * 10), 10)
+                      Math.min(Math.max(10 - Math.floor(progress * 10), 0), 10)
                   )}(${Math.floor(progress * 1000) / 10}%)`
         )
         .addField(
