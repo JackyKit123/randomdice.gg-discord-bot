@@ -57,10 +57,13 @@ export default async function pickCoins(
         str.replace(/\w/g, match => `‎${match}‎`);
 
     const uniqueChatters: string[] = [];
-    channel.messages.cache.last(20).forEach(msg => {
-        if (!uniqueChatters.includes(msg.author.id))
-            uniqueChatters.push(msg.author.id);
-    });
+    channel.messages.cache
+        .filter(msg => !msg.author.bot)
+        .last(20)
+        .forEach(msg => {
+            if (!uniqueChatters.includes(msg.author.id))
+                uniqueChatters.push(msg.author.id);
+        });
 
     if (rngReward < 100) {
         content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
