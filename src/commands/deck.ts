@@ -5,7 +5,7 @@ import cooldown from '../util/cooldown';
 export default async function decklist(
     message: Discord.Message
 ): Promise<void> {
-    const { content, channel } = message;
+    const { content, channel, author } = message;
 
     if (
         await cooldown(message, '.gg deck', {
@@ -185,8 +185,9 @@ export default async function decklist(
     }
 
     const collector = sentMessage.createReactionCollector(
-        reaction =>
-            ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name),
+        (reaction, user) =>
+            ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name) &&
+            user.id === author.id,
         {
             time: 180000,
         }
@@ -210,6 +211,7 @@ export default async function decklist(
                 collector.stop();
                 break;
             default:
+                return;
         }
         if (sentMessage.editable) await sentMessage.edit(embeds[currentPage]);
         await reaction.users.remove(user.id);

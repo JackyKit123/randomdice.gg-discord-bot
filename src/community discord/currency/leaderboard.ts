@@ -290,8 +290,9 @@ export default async function leaderboard(
     }
 
     const collector = sentMessage.createReactionCollector(
-        reaction =>
-            ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name),
+        (reaction, user) =>
+            ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name) &&
+            user.id === member.id,
         {
             time: 180000,
         }
