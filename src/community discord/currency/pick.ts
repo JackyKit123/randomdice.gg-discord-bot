@@ -32,6 +32,7 @@ export default async function pickCoins(
     let content: string;
     let maxCollectorAllowed: number;
     let collectionTrigger: string;
+    let endMessage: (members: Discord.GuildMember[]) => string;
     const basicCollectionTriggers = [
         'GIMME',
         'COINS',
@@ -58,9 +59,15 @@ export default async function pickCoins(
     if (rngReward < 100) {
         content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
-        )} has shown up, react to \`⛏️\` to pick it`;
+        )} has shown up, react to ⛏️ to pick it`;
         maxCollectorAllowed = Infinity;
         collectionTrigger = 'reaction';
+        endMessage = (members): string =>
+            `${members.join(' ')} ${
+                members.length > 1 ? 'have' : 'has'
+            } ⛏️ up the tiny batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                rngReward
+            )}`;
     } else if (rngReward < 1000) {
         collectionTrigger =
             basicCollectionTriggers[
@@ -72,6 +79,12 @@ export default async function pickCoins(
             collectionTrigger
         )}\` can earn the coins. 💵💵`;
         maxCollectorAllowed = 5;
+        endMessage = (members): string =>
+            `💵💵 ${members.join(' ')} ${
+                members.length > 1 ? 'have' : 'has'
+            } ⛏️ up the batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                rngReward
+            )} 💵💵`;
     } else if (rngReward < 10000) {
         collectionTrigger =
             basicCollectionTriggers[
@@ -83,6 +96,12 @@ export default async function pickCoins(
             collectionTrigger
         )}\` can earn the coins. 💰💰💰💰`;
         maxCollectorAllowed = 1;
+        endMessage = (members): string =>
+            `💰💰💰💰 ${members.join(' ')} ${
+                members.length > 1 ? 'have' : 'has'
+            } ⛏️ up the huge batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                rngReward
+            )} 💰💰💰💰`;
     } else {
         collectionTrigger =
             advancedCollectionTriggers[
@@ -94,9 +113,15 @@ export default async function pickCoins(
             collectionTrigger
         )}\` can earn the coins.`;
         maxCollectorAllowed = 1;
+        endMessage = (members): string =>
+            `💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎\n ${members.join(' ')} ${
+                members.length > 1 ? 'have' : 'has'
+            } ⛏️ up the huge batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                rngReward
+            )} `;
     }
 
-    const collected: string[] = [];
+    const collected: Discord.GuildMember[] = [];
     const sentMessage = await channel.send(content);
     const collector: Discord.Collector<
         Discord.Snowflake,
@@ -136,7 +161,7 @@ export default async function pickCoins(
             }
             if (
                 !member ||
-                collected.includes(member.id) ||
+                collected.some(m => member?.id === m.id) ||
                 collected.length >= maxCollectorAllowed
             )
                 return;
@@ -170,7 +195,7 @@ export default async function pickCoins(
                 }
                 return;
             }
-            collected.push(member.id);
+            collected.push(member);
             const balance = await getBalance(message, 'silence', member);
             if (balance === false) return;
             await database
@@ -203,13 +228,7 @@ export default async function pickCoins(
             );
         } else if (collector instanceof Discord.ReactionCollector) {
             try {
-                await sentMessage.edit(
-                    `${collected.map(id => `<@${id}>`).join(' ')} ${
-                        collected.length > 1 ? 'have' : 'has'
-                    } \`⛏️\` up the tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
-                        rngReward
-                    )}.`
-                );
+                await sentMessage.edit(endMessage(collected));
             } catch {
                 // nothing
             }
