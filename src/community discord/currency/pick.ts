@@ -14,13 +14,19 @@ export default async function pickCoins(
 ): Promise<void> {
     activeCoinbombInChannel.set(channel.id, true);
     const { guild } = channel;
-    const rngMultiplier =
-        10 **
-        Math.ceil(
-            Math.max(Math.min(4, -Math.log(Math.random()) / Math.log(2.6)), 1)
-        );
+    const rand = Math.random();
+    let rngMultiplier;
+    if (rand < 0.01) {
+        rngMultiplier = 5;
+    } else if (rand < 0.11) {
+        rngMultiplier = 4;
+    } else if (rand < 0.5) {
+        rngMultiplier = 3;
+    } else {
+        rngMultiplier = 2;
+    }
     const rngReward = Math.ceil(
-        Math.max(Math.random() * 0.9 + 0.1) * rngMultiplier * 10
+        (Math.random() * 0.9 + 0.1) * 10 ** rngMultiplier
     );
 
     let content: string;
