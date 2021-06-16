@@ -250,18 +250,13 @@ export default async function Profile(message: Discord.Message): Promise<void> {
 
     const collector = sentMessage.createReactionCollector(
         (reaction: Discord.MessageReaction, user) =>
-            (['👤', '⏲️', '🎰'].includes(reaction.emoji.name) ||
+            (['👤', '⏲️', '🎰', '❌'].includes(reaction.emoji.name) ||
                 reaction.emoji.id === '807019807312183366') &&
             user.id === member.id,
         {
             time: 60 * 1000,
         }
     );
-
-    await sentMessage.react('👤');
-    await sentMessage.react('⏲️');
-    await sentMessage.react('🎰');
-    await sentMessage.react('<:Dice_TierX_Null:807019807312183366>');
 
     collector.on('collect', async (reaction, user) => {
         try {
@@ -275,6 +270,9 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 case '🎰':
                     await sentMessage.edit(gambleProfile);
                     break;
+                case '❌':
+                    collector.stop();
+                    break;
                 default:
                     if (reaction.emoji.id === '807019807312183366')
                         await sentMessage.edit(diceDrawnProfile);
@@ -287,9 +285,15 @@ export default async function Profile(message: Discord.Message): Promise<void> {
 
     collector.on('end', async () => {
         try {
-            await sentMessage.reactions.removeAll();
+            await sentMessage.delete();
         } catch {
             // message prob got deleted
         }
     });
+
+    await sentMessage.react('👤');
+    await sentMessage.react('⏲️');
+    await sentMessage.react('🎰');
+    await sentMessage.react('<:Dice_TierX_Null:807019807312183366>');
+    await sentMessage.react('❌');
 }

@@ -183,46 +183,49 @@ export default async function decklist(
     if (pageNumbers <= 1) {
         return;
     }
-    await sentMessage.react('⏪');
-    await sentMessage.react('◀️');
-    await sentMessage.react('▶️');
-    await sentMessage.react('⏩');
+
     const collector = sentMessage.createReactionCollector(
-        reaction => ['⏪', '◀️', '▶️', '⏩'].includes(reaction.emoji.name),
+        reaction =>
+            ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name),
         {
             time: 180000,
         }
     );
 
     collector.on('collect', async (reaction, user) => {
-        if (reaction.emoji.name === '⏪') {
-            currentPage = 0;
-        }
-        if (reaction.emoji.name === '◀️' && currentPage > 0) {
-            currentPage -= 1;
-        }
-        if (reaction.emoji.name === '▶️' && currentPage < pageNumbers - 1) {
-            currentPage += 1;
-        }
-        if (reaction.emoji.name === '⏩') {
-            currentPage = pageNumbers - 1;
+        switch (reaction.emoji.name) {
+            case '⏪':
+                currentPage = 0;
+                break;
+            case '◀️':
+                currentPage -= 1;
+                break;
+            case '▶️':
+                currentPage += 1;
+                break;
+            case '⏩':
+                currentPage = pageNumbers - 1;
+                break;
+            case '❌':
+                collector.stop();
+                break;
+            default:
         }
         if (sentMessage.editable) await sentMessage.edit(embeds[currentPage]);
         await reaction.users.remove(user.id);
     });
 
     collector.on('end', async () => {
-        await Promise.all(
-            [await sentMessage.reactions.removeAll()].concat(
-                sentMessage.editable
-                    ? [
-                          await sentMessage.edit(
-                              `The reaction commands has expired, please do \`.gg deck ${deckType}\` again to interact with the message.`,
-                              embeds[currentPage]
-                          ),
-                      ]
-                    : []
-            )
-        );
+        try {
+            await sentMessage.delete();
+        } catch {
+            // message prob got deleted
+        }
     });
+
+    await sentMessage.react('⏪');
+    await sentMessage.react('◀️');
+    await sentMessage.react('▶️');
+    await sentMessage.react('⏩');
+    await sentMessage.react('❌');
 }
