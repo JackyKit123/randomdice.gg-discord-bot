@@ -56,6 +56,12 @@ export default async function pickCoins(
     const addInvisibleCharToString = (str: string): string =>
         str.replace(/\w/g, match => `‎${match}‎`);
 
+    const uniqueChatters: string[] = [];
+    channel.messages.cache.last(20).forEach(msg => {
+        if (!uniqueChatters.includes(msg.author.id))
+            uniqueChatters.push(msg.author.id);
+    });
+
     if (rngReward < 100) {
         content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
@@ -69,16 +75,18 @@ export default async function pickCoins(
                 rngReward
             )}`;
     } else if (rngReward < 1000) {
+        maxCollectorAllowed = Math.min(5, Math.ceil(uniqueChatters.length % 2));
         collectionTrigger =
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
         content = `💵💵 A batch of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
-        )} has shown up, the first 5 people to type \`${addInvisibleCharToString(
+        )} has shown up, the first ${
+            maxCollectorAllowed > 1 ? `${maxCollectorAllowed} people` : 'person'
+        } to type \`${addInvisibleCharToString(
             collectionTrigger
         )}\` can earn the coins. 💵💵`;
-        maxCollectorAllowed = 5;
         endMessage = (members): string =>
             `💵💵 ${members.join(' ')} ${
                 members.length > 1 ? 'have' : 'has'
@@ -86,16 +94,21 @@ export default async function pickCoins(
                 rngReward
             )} 💵💵`;
     } else if (rngReward < 10000) {
+        maxCollectorAllowed = Math.min(
+            5,
+            Math.ceil(uniqueChatters.length % 10)
+        );
         collectionTrigger =
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
         content = `💰💰💰💰 A huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
             rngReward
-        )} has shown up. The first one to type \`${addInvisibleCharToString(
+        )} has shown up. The first ${
+            maxCollectorAllowed > 1 ? `${maxCollectorAllowed} people` : 'person'
+        } to type \`${addInvisibleCharToString(
             collectionTrigger
         )}\` can earn the coins. 💰💰💰💰`;
-        maxCollectorAllowed = 1;
         endMessage = (members): string =>
             `💰💰💰💰 ${members.join(' ')} ${
                 members.length > 1 ? 'have' : 'has'
@@ -226,7 +239,7 @@ export default async function pickCoins(
                     rngReward
                 )} this time.`
             );
-        } else if (collector instanceof Discord.ReactionCollector) {
+        } else {
             try {
                 await sentMessage.edit(endMessage(collected));
             } catch {
