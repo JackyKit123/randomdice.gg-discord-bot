@@ -58,8 +58,12 @@ export default async function pickCoins(
 
     const uniqueChatters: string[] = [];
     channel.messages.cache
-        .filter(msg => !msg.author.bot)
-        .last(20)
+        .filter(
+            msg =>
+                !msg.author.bot && Date.now() - msg.createdTimestamp < 60 * 1000
+        )
+        .array()
+        .concat(channel.messages.cache.filter(msg => !msg.author.bot).last(10))
         .forEach(msg => {
             if (!uniqueChatters.includes(msg.author.id))
                 uniqueChatters.push(msg.author.id);
@@ -78,7 +82,7 @@ export default async function pickCoins(
                 rngReward
             )}`;
     } else if (rngReward < 1000) {
-        maxCollectorAllowed = Math.ceil(uniqueChatters.length / 4);
+        maxCollectorAllowed = Math.ceil(uniqueChatters.length / 2);
         collectionTrigger =
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
