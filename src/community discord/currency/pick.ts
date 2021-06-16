@@ -75,7 +75,7 @@ export default async function pickCoins(
                 rngReward
             )}`;
     } else if (rngReward < 1000) {
-        maxCollectorAllowed = Math.min(5, Math.ceil(uniqueChatters.length % 2));
+        maxCollectorAllowed = Math.min(5, Math.ceil(uniqueChatters.length / 2));
         collectionTrigger =
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
@@ -95,8 +95,8 @@ export default async function pickCoins(
             )} 💵💵`;
     } else if (rngReward < 10000) {
         maxCollectorAllowed = Math.min(
-            5,
-            Math.ceil(uniqueChatters.length % 10)
+            2,
+            Math.ceil(uniqueChatters.length / 10)
         );
         collectionTrigger =
             basicCollectionTriggers[
