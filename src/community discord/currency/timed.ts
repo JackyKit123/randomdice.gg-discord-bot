@@ -112,7 +112,7 @@ export default async function timed(message: Discord.Message): Promise<void> {
                 ? embed.addField(
                       'Daily Streak',
                       `**${streak} streaks ${
-                          streak >= 11.111
+                          streak > 111
                               ? '__(MAX 1111% REWARD)__'
                               : `*(+${(streak - 1) * 10}% reward)*`
                       }**`
