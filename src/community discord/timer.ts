@@ -39,13 +39,13 @@ function tickTimer(
 ): void {
     const { embeds, channel, reactions, guild, id } = message;
     const embed = embeds?.[0];
-    try {
-        if (!embed || !cache['discord_bot/community/timer'][key]) {
-            killTimerFromDB(key);
-            return;
-        }
-        const interval = setInterval(async () => {
-            const now = Date.now();
+    if (!embed || !cache['discord_bot/community/timer'][key]) {
+        killTimerFromDB(key);
+        return;
+    }
+    const interval = setInterval(async () => {
+        const now = Date.now();
+        try {
             if (now <= endTime) {
                 const newText = parseTimeText(endTime - now);
                 if (newText !== embed.description) {
@@ -83,10 +83,11 @@ function tickTimer(
                     )
                 );
             }
-        }, 5 * 1000);
-    } catch {
-        killTimerFromDB(key);
-    }
+        } catch (err) {
+            killTimerFromDB(key);
+            if (err.message === 'Unknown Message') throw new Error(err);
+        }
+    }, 5 * 1000);
 }
 
 export default async function setTimer(
@@ -114,9 +115,9 @@ export default async function setTimer(
             return;
         }
         if (
-            (timerChannel as Discord.TextChannel)
+            !(timerChannel as Discord.TextChannel)
                 .permissionsFor(member)
-                ?.missing('MANAGE_MESSAGES') &&
+                ?.has('MANAGE_MESSAGES') &&
             existingTimer?.[1].hostId !== member.id
         ) {
             await channel.send(
