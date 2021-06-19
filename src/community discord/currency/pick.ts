@@ -12,7 +12,6 @@ export default async function pickCoins(
     channel: Discord.TextChannel | Discord.NewsChannel,
     recursive = false
 ): Promise<void> {
-    activeCoinbombInChannel.set(channel.id, true);
     const { guild } = channel;
     const rand = Math.random();
     let rngMultiplier;
@@ -140,6 +139,7 @@ export default async function pickCoins(
 
     const collected: Discord.GuildMember[] = [];
     const sentMessage = await channel.send(content);
+    activeCoinbombInChannel.set(channel.id, true);
     const collector: Discord.Collector<
         Discord.Snowflake,
         Discord.Message | Discord.MessageReaction
