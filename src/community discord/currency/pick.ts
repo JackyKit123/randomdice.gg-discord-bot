@@ -1,7 +1,7 @@
-import logMessage from 'dev-commands/logMessage';
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
 import { promisify } from 'util';
+import logMessage from '../../dev-commands/logMessage';
 import getBalance from './balance';
 
 const wait = promisify(setTimeout);
