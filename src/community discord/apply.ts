@@ -573,6 +573,41 @@ export async function configApps(message: Discord.Message): Promise<void> {
                 }
             }
             break;
+        case 'export':
+        case 'exports':
+            {
+                const target = existingApplications.find(
+                    app => app.position.toLowerCase() === position.toLowerCase()
+                );
+                if (!target) {
+                    await channel.send(
+                        new Discord.MessageEmbed()
+                            .setTitle(`All Applications`)
+                            .setColor(member.displayHexColor)
+                            .setAuthor(
+                                `${member.user.username}#${member.user.discriminator}`,
+                                member.user.displayAvatarURL({ dynamic: true })
+                            )
+                            .setDescription(
+                                existingApplications
+                                    .map(
+                                        app =>
+                                            `${
+                                                app.isOpen ? 'opened' : 'closed'
+                                            } \`${app.position}\``
+                                    )
+                                    .join('\n')
+                            )
+                    );
+                } else {
+                    await channel.send(
+                        `\`\`\`${target.position} | ${target.questions.join(
+                            '\n'
+                        )}\`\`\``
+                    );
+                }
+            }
+            break;
         default:
             await channel.send(
                 new Discord.MessageEmbed()
