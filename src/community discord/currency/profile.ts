@@ -39,7 +39,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const currentPrestigeLevel = Number(
         Object.entries(prestigeLevels)
             .sort(([a], [b]) => Number(b) - Number(a))
-            .find(([, roleId]) => member.roles.cache.has(roleId))?.[0] || 0
+            .find(([, roleId]) => target.roles.cache.has(roleId))?.[0] || 0
     );
 
     function cooldown(
