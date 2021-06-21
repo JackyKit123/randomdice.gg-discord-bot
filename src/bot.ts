@@ -49,6 +49,7 @@ import validateOneWordStory from './community discord/oneworldstoryValidate';
 import voteAutoResponder from './community discord/voteAutoResponder';
 import gtn from './community discord/gtn';
 import customRole from './community discord/customRole';
+import eightBall from './community discord/8ball';
 import solveMathEquation from './community discord/solveMathEquation';
 import spy from './community discord/spy';
 import welcomeReward from './community discord/currency/welcomeReward';
@@ -299,6 +300,7 @@ client.on('message', async function messageHandler(message) {
                     validateCrewAds(message);
                     chatRevivePing(message);
                     voteAutoResponder(message);
+                    eightBall(message);
             }
         }
 
