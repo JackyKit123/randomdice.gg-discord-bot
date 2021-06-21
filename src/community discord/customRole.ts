@@ -73,6 +73,7 @@ export default async function customRole(
             : [color.r, color.g, color.b],
         mentionable: false,
         hoist: false,
+        permissions: [],
     };
 
     if (customRoleId) {
