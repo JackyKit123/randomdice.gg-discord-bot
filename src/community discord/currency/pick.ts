@@ -68,7 +68,9 @@ export default async function pickCoins(
             )
             .array()
             .concat(
-                channel.messages.cache.filter(msg => !msg.author.bot).last(10)
+                channel.messages.cache
+                    .filter(msg => msg.author && !msg.author.bot)
+                    .last(10)
             )
             .forEach(msg => {
                 if (!uniqueChatters.includes(msg.author.id))
