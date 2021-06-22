@@ -54,6 +54,30 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }, 1000 * 60 * 1);
 }
 
+export async function unShush(message: Discord.Message): Promise<void> {
+    const { content, guild, channel, author } = message;
+
+    if (!guild || author.id !== '195174308052467712') {
+        return;
+    }
+
+    const memberArg = content.split(' ')[1];
+    const target = await fetchMention(memberArg, guild, {
+        content,
+        mentionIndex: 1,
+    });
+    if (!target) {
+        await channel.send(`Unknown Target`);
+        return;
+    }
+    if (!shushMember.includes(target.id)) {
+        await channel.send(`${target} is not shushed.`);
+        return;
+    }
+    shushMember = shushMember.filter(ids => ids !== target.id);
+    await channel.send(`Untrapped ${target}`);
+}
+
 export async function pokeballTrap(message: Discord.Message): Promise<void> {
     const {
         member,

@@ -74,6 +74,7 @@ import chatCoins from './community discord/currency/chatCoins';
 import multiplier from './community discord/currency/multiplier';
 import announceLastToLeaveVC from './community discord/lastToLeaveVC';
 import shush, {
+    unShush,
     pokeballTrap,
 } from './community discord/currency/fun commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
@@ -286,6 +287,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!shush':
                     await shush(message);
+                    break;
+                case '!unshush':
+                    await unShush(message);
                     break;
                 case '!givemoney':
                     await givemoney(message);
