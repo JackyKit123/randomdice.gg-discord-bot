@@ -62,7 +62,7 @@ export default async function pickCoins(
         channel.messages.cache
             .filter(
                 msg =>
-                    !msg.partial &&
+                    msg.author &&
                     !msg.author.bot &&
                     Date.now() - msg.createdTimestamp < 60 * 1000
             )
