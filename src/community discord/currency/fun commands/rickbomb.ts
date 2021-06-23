@@ -52,7 +52,7 @@ export default async function rickBomb(
     let messageToSend: string;
     let maxCollectorAllowed: number;
     let collectionTrigger: string;
-    let endMessage: (members: Discord.GuildMember[]) => string;
+    let endMessage: (members: Discord.User[]) => string;
     const basicCollectionTriggers = [
         'GIMME',
         'MINE',
@@ -135,7 +135,7 @@ export default async function rickBomb(
             )} ${members.length > 1 ? 'have' : 'has'} earned the rick roll`;
     }
 
-    const collected: Discord.GuildMember[] = [];
+    const collected: Discord.User[] = [];
     const sentMessage = await channel.send(messageToSend);
     activeCoinbombInChannel.set(channel.id, true);
     const collector: Discord.Collector<
@@ -150,14 +150,9 @@ export default async function rickBomb(
         }
     );
     collector.on('collect', async (collect: Discord.Message) => {
-        const { member: collectedMember } = collect;
-        if (
-            !collectedMember ||
-            collected.some(m => m?.id === collectedMember.id) ||
-            collected.length >= maxCollectorAllowed
-        )
-            return;
-        collected.push(collectedMember);
+        const { author } = collect;
+        if (!author || collected.some(m => m?.id === author.id)) return;
+        collected.push(author);
         await message.react('<a:Dice_TierX_RickCoin:827059872810008616>');
     });
     collector.on('end', async () => {
