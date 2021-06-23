@@ -6,7 +6,7 @@ import getBalance from './balance';
 
 const wait = promisify(setTimeout);
 const numberFormat = new Intl.NumberFormat();
-const activeCoinbombInChannel = new Map<string, boolean>();
+export const activeCoinbombInChannel = new Map<string, boolean>();
 let database: firebase.database.Database;
 
 export default async function pickCoins(

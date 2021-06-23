@@ -81,6 +81,7 @@ import snipe, { snipeListener } from './community discord/snipe';
 import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
+import rickbomb from './community discord/currency/fun commands/rickbomb';
 import yomama from './community discord/currency/fun commands/yomama';
 import givemoney from './community discord/currency/fun commands/mudkipz';
 import moon, {
@@ -290,6 +291,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!unshush':
                     await unShush(message);
+                    break;
+                case '!rickbomb':
+                    await rickbomb(message);
                     break;
                 case '!givemoney':
                     await givemoney(message);
