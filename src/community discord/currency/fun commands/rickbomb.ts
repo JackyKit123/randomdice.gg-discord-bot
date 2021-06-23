@@ -150,9 +150,9 @@ export default async function rickBomb(
         }
     );
     collector.on('collect', async (collect: Discord.Message) => {
-        const { author } = collect;
-        if (!author || collected.some(m => m?.id === author.id)) return;
-        collected.push(author);
+        const { id } = collect.author;
+        if (collected.some(user => user.id === id)) return;
+        collected.push(collect.author);
         await collect.react('<a:Dice_TierX_RickCoin:827059872810008616>');
     });
     collector.on('end', async () => {
