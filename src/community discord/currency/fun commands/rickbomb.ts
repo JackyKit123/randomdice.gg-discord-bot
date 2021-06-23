@@ -6,8 +6,8 @@ import cooldown from '../../../util/cooldown';
 export default async function rickBomb(
     message: Discord.Message
 ): Promise<void> {
-    const { guild, member, content } = message;
-    let { channel } = message;
+    const { guild, member, content, channel: originalChannel } = message;
+    let channel = originalChannel;
     if (!guild || !member) {
         return;
     }
@@ -28,7 +28,7 @@ export default async function rickBomb(
         return;
     }
     if (activeCoinbombInChannel.get(channel.id)) {
-        await channel.send(
+        await originalChannel.send(
             `There is an active coinbomb in ${channel}, you cannot spawn a new one before the last one has ended.`
         );
         return;
