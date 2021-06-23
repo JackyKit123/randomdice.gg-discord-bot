@@ -100,7 +100,7 @@ export default async function rickBomb(
             ];
         messageToSend = `💵💵 A batch of <a:Dice_TierX_RickCoin:827059872810008616> Rick Roll videos has shown up, the first ${
             maxCollectorAllowed > 1 ? `${maxCollectorAllowed} people` : 'person'
-        } to type \`${collectionTrigger}\` can earn the watch them all. 💵💵`;
+        } to type \`${collectionTrigger}\` can watch them all. 💵💵`;
         endMessage = (members): string =>
             `<a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616> ${members.join(
                 ' '
