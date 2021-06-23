@@ -293,6 +293,7 @@ client.on('message', async function messageHandler(message) {
                     await unShush(message);
                     break;
                 case '!rickbomb':
+                case '!rickcoin':
                     await rickbomb(message);
                     break;
                 case '!givemoney':
