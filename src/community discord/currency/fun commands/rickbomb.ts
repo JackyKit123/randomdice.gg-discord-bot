@@ -162,12 +162,14 @@ export default async function rickBomb(
     });
     collector.on('end', async () => {
         activeCoinbombInChannel.set(channel.id, false);
-        if (collected.length > 0) {
-            try {
+        try {
+            if (collected.length > 0) {
                 await sentMessage.edit(endMessage(collected));
-            } catch {
-                // nothing
+            } else {
+                await sentMessage.delete();
             }
+        } catch {
+            // nothing
         }
     });
 }
