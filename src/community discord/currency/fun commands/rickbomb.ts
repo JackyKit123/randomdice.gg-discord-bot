@@ -67,7 +67,7 @@ export default async function rickBomb(
         'OMG Gimme It',
         'It can only be mine',
         'PLZ RICK PLZ',
-        'Gotta grab the it this time',
+        'Gotta grab it this time',
         'THIS IS MINE',
         'I am gonna yoink it',
         'OMG I WANT',
