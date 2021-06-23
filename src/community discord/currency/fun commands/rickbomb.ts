@@ -106,7 +106,7 @@ export default async function rickBomb(
                 ' '
             )} ${
                 members.length > 1 ? 'have' : 'has'
-            } watched all those <a:Dice_TierX_RickCoin:827059872810008616> rick roll videos <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
+            } watched all those rick roll videos <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
     } else if (rngMultiplier === 2) {
         maxCollectorAllowed = Math.ceil(uniqueChatters.length / 10);
         collectionTrigger =
@@ -153,7 +153,7 @@ export default async function rickBomb(
         const { author } = collect;
         if (!author || collected.some(m => m?.id === author.id)) return;
         collected.push(author);
-        await message.react('<a:Dice_TierX_RickCoin:827059872810008616>');
+        await collect.react('<a:Dice_TierX_RickCoin:827059872810008616>');
     });
     collector.on('end', async () => {
         activeCoinbombInChannel.set(channel.id, false);
