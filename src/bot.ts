@@ -59,8 +59,6 @@ import coinflip from './community discord/currency/coinflip';
 import voteReward from './community discord/currency/voteReward';
 import currencyUpdate from './community discord/currency/update';
 import prestige from './community discord/currency/prestige';
-import share from './community discord/currency/share';
-import givedice from './community discord/currency/giveDice';
 import {
     pickCoinsInit,
     spawnCoinbomb,
@@ -234,14 +232,6 @@ client.on('message', async function messageHandler(message) {
                 case '!coinflip':
                 case '!cf':
                     await coinflip(message);
-                    break;
-                case '!share':
-                case '!give':
-                    await share(message);
-                    break;
-                case '!dicegive':
-                case '!givedice':
-                    await givedice(message);
                     break;
                 case '!richest':
                 case '!leaderboard':
