@@ -78,8 +78,9 @@ export default async function currency(
     }
     if (amount > 50000 && !member.hasPermission('ADMINISTRATOR')) {
         await channel.send(
-            'The audit amount is too large (> <:dicecoin:839981846419079178> 50000), you need `ADMINISTRATOR` permission to enter that large amount.'
+            'The audit amount is too large (> <:dicecoin:839981846419079178> 50,000), you need `ADMINISTRATOR` permission to enter that large amount.'
         );
+        return;
     }
 
     await Promise.all(
