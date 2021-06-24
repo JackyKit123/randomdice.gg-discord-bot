@@ -193,10 +193,10 @@ export async function voiceChatCoins(
 export async function joinVC(message: Discord.Message): Promise<void> {
     const { member, guild, channel } = message;
     if (!member || !guild) return;
-    if (!member.voice.connection) {
+    if (member.voice.channel === null) {
         await channel.send('You are not in a voice channel');
         return;
     }
-    await member.voice.connection.channel.join();
-    await channel.send(`Joined ${member.voice.connection.channel}`);
+    await member.voice.channel.join();
+    await channel.send(`Joined ${member.voice.channel}`);
 }
