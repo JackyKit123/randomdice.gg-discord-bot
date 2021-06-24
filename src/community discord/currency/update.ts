@@ -2,8 +2,9 @@ import firebase from 'firebase-admin';
 import Discord from 'discord.js';
 import getBalance from './balance';
 import cooldown from '../../util/cooldown';
+import fetchMentionString from '../../util/fetchMention';
 
-export default async function coinflip(
+export default async function currency(
     message: Discord.Message
 ): Promise<void> {
     const app = firebase.app();
@@ -11,62 +12,63 @@ export default async function coinflip(
     const numberFormat = new Intl.NumberFormat();
     if (
         await cooldown(message, `!currency update`, {
-            default: 2 * 1000,
-            donator: 2 * 1000,
+            default: 60 * 1000,
+            donator: 60 * 1000,
         })
     )
         return;
 
     const { channel, content, guild, member } = message;
-    const [, amountArg, memberArg] = content.split(' ');
+    const [, amountArg, ...memberArgs] = content.split(' ');
 
     if (
         !guild ||
         !(
-            member?.roles.cache.has('804223928427216926') ||
-            member?.roles.cache.has('807219483311603722') ||
             member?.roles.cache.has('805000661133295616') ||
             member?.roles.cache.has('805772165394858015') ||
             member?.hasPermission('ADMINISTRATOR')
         )
     ) {
-        await channel.send('You are not eligible to use this command');
+        await channel.send(
+            new Discord.MessageEmbed()
+                .setTitle(`You cannot use currency audit command.`)
+                .setColor('#ff0000')
+                .setDescription(
+                    'You need one of the following roles to use this command.\n' +
+                        '<@&805000661133295616> <@&805772165394858015>\n'
+                )
+        );
         return;
     }
 
-    const uid =
-        memberArg.match(/^<@!?(\d{18})>$/)?.[1] ||
-        memberArg.match(/^(\d{18})$/)?.[1];
-    const target = uid
-        ? await guild.members
-              .fetch(uid)
-              .then(u => u)
-              .catch(err => {
-                  if (err.message === 'Unknown User') {
-                      return undefined;
-                  }
-                  throw err;
-              })
-        : guild.members.cache.find(
-              m =>
-                  typeof memberArg === 'string' &&
-                  memberArg !== '' &&
-                  (m.user.username.toLowerCase() === memberArg.toLowerCase() ||
-                      `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                          memberArg.toLowerCase() ||
-                      (m.nickname !== null &&
-                          content
-                              .split(' ')
-                              .slice(2)
-                              .join(' ')
-                              .toLowerCase()
-                              .startsWith(m.nickname.toLowerCase())))
-          );
+    const targetInList: string[] = [];
+    const targets = (
+        await Promise.all(
+            memberArgs.every(
+                arg =>
+                    /^<@!?(\d{18})>$/.test(arg) ||
+                    /^.+#(\d{4})/.test(arg) ||
+                    /^\d{18}$/.test(arg)
+            )
+                ? memberArgs.map(arg => fetchMentionString(arg, guild))
+                : [
+                      fetchMentionString(memberArgs.join(' '), guild, {
+                          content,
+                          mentionIndex: 2,
+                      }),
+                  ]
+        )
+    ).filter(m => {
+        if (typeof m === 'undefined' || targetInList.includes(m.id))
+            return false;
+        targetInList.push(m.id);
+        return true;
+    }) as Discord.GuildMember[];
 
     const amount = Number(amountArg);
-    if (Number.isNaN(amount) || !target) {
+    if (Number.isNaN(amount) || !targets.length) {
         await channel.send(
-            'Usage of the command `!currency <amount> <member>`, example```!currency +5000 @JackyKit#0333```'
+            'Usage of the command `!currency <amount> <member | member member member...>`, example```!currency +5000 @JackyKit#0333 @fun guy#0069 @MoonGirl#0135\n!currency -5000 I am a weird nickname```'
         );
         return;
     }
@@ -74,25 +76,55 @@ export default async function coinflip(
         await channel.send('The amount entered should be a non-zero integer.');
         return;
     }
-    const balance = (await getBalance(message, 'silence', target)) as number;
+    if (amount > 50000 && !member.hasPermission('ADMINISTRATOR')) {
+        await channel.send(
+            'The audit amount is too large (> <:dicecoin:839981846419079178> 50000), you need `ADMINISTRATOR` permission to enter that large amount.'
+        );
+    }
+
+    await Promise.all(
+        targets.map(async target => {
+            const balance = (await getBalance(
+                message,
+                'silence',
+                target
+            )) as number;
+            await database
+                .ref(`discord_bot/community/currency/${target.id}/balance`)
+                .set(balance + amount);
+        })
+    );
 
     const deduction = amount < 0;
-
-    await database
-        .ref(`discord_bot/community/currency/${target.id}/balance`)
-        .set(balance + amount);
     await channel.send(
         `You have ${
-            deduction ? 'taken away' : `given ${target.user.username}`
+            deduction ? 'taken away' : 'given'
         } <:dicecoin:839981846419079178> ${numberFormat.format(
             Math.abs(amount)
-        )}${
-            deduction ? ` from ${target.user.username}` : ''
-        }, they now have  <:dicecoin:839981846419079178> ${numberFormat.format(
-            balance + amount
-        )}!`,
+        )} ${deduction ? 'from' : 'to'} ${targets.join(' ')}`,
         {
-            disableMentions: 'all',
+            allowedMentions: {
+                parse: [],
+                users: [],
+                roles: [],
+            },
         }
     );
+    const logChannel = guild.channels.cache.get('804640084007321600');
+    if (logChannel?.isText()) {
+        await logChannel.send(
+            `${member} have ${
+                deduction ? 'taken away' : 'given'
+            } <:dicecoin:839981846419079178> ${numberFormat.format(
+                Math.abs(amount)
+            )} ${deduction ? 'from' : 'to'} ${targets.join(' ')}`,
+            {
+                allowedMentions: {
+                    parse: [],
+                    users: [],
+                    roles: [],
+                },
+            }
+        );
+    }
 }
