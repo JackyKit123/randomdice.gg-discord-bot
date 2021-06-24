@@ -2,8 +2,8 @@ import Discord from 'discord.js';
 import cooldown from '../util/cooldown';
 
 const snipeStore = {
-    snipe: new Map<string, Discord.Message>(),
-    editsnipe: new Map<string, Discord.Message>(),
+    snipe: new Map<string, Discord.Message[]>(),
+    editsnipe: new Map<string, Discord.Message[]>(),
 };
 
 export async function snipeListener(
@@ -26,13 +26,17 @@ export async function snipeListener(
 
     snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].set(
         channel.id,
-        message
+        (
+            snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].get(
+                channel.id
+            ) || []
+        ).concat(message)
     );
 }
 
 export default async function snipe(message: Discord.Message): Promise<void> {
     const { member, channel, content, author } = message;
-    const [command] = content.split(' ');
+    const [command, arg] = content.split(' ');
 
     if (
         !member ||
@@ -65,14 +69,44 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         return;
     }
 
-    const sniped = snipeStore[
+    let snipeIndex = 0;
+    if (Number.isInteger(arg) && Number(arg) > 0) {
+        snipeIndex = Number(arg) - 1;
+    }
+
+    if (
+        snipeIndex &&
+        !(
+            member.roles.cache.has('804513117228367882') ||
+            member.roles.cache.has('805817760353091606') ||
+            member.roles.cache.has('809142956715671572')
+        )
+    ) {
+        await channel.send(
+            new Discord.MessageEmbed()
+                .setTitle(
+                    `You cannot use enhanced ${command?.toLowerCase()} with snipe index.`
+                )
+                .setColor('#ff0000')
+                .setDescription(
+                    'To use enhanced snipe to snipe with index\n' +
+                        'You need one of the following roles to use this command.\n' +
+                        '<@&804513117228367882> <@&805817760353091606> <@&809142956715671572>\n'
+                )
+        );
+        return;
+    }
+
+    const snipedList = snipeStore[
         command?.toLowerCase().replace('!', '') as 'snipe' | 'editsnipe'
     ].get(channel.id);
 
-    if (!sniped) {
+    if (!snipedList?.length) {
         await channel.send("There's nothing to snipe here");
         return;
     }
+    const snipeIndexTooBig = typeof snipedList[snipeIndex] === 'undefined';
+    const sniped = snipeIndexTooBig ? snipedList[0] : snipedList[snipeIndex];
 
     let embed = new Discord.MessageEmbed()
         .setAuthor(
@@ -89,5 +123,12 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         embed = embed.setColor(sniped.member?.displayHexColor);
     }
 
-    await channel.send(embed);
+    await channel.send(
+        snipeIndexTooBig
+            ? `The snipe index ${snipeIndex + 1} is too big, there are only ${
+                  snipedList.length
+              } of messages to be sniped, sniping the most recent message instead.`
+            : '',
+        embed
+    );
 }
