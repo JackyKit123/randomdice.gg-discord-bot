@@ -70,7 +70,10 @@ import leaderboard, {
 } from './community discord/currency/leaderboard';
 import drawDice from './community discord/currency/drawDice';
 import timed from './community discord/currency/timed';
-import chatCoins from './community discord/currency/chatCoins';
+import chatCoins, {
+    voiceChatCoins,
+    joinVC,
+} from './community discord/currency/chatCoins';
 import multiplier from './community discord/currency/multiplier';
 import announceLastToLeaveVC from './community discord/lastToLeaveVC';
 import shush, {
@@ -96,7 +99,7 @@ import cleverBot from './community discord/cleverbot';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
-const client = new Discord.Client({ partials: ['MESSAGE'] });
+const client = new Discord.Client({ partials: ['MESSAGE', 'GUILD_MEMBER'] });
 firebase.initializeApp({
     credential: firebase.credential.cert({
         projectId: 'random-dice-web',
@@ -260,6 +263,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!currency':
                     await currencyUpdate(message);
+                    break;
+                case '!joinvc':
+                    await joinVC(message);
                     break;
                 case '!coinbomb':
                     await spawnCoinbomb(message);
@@ -602,6 +608,13 @@ client.on('messageUpdate', async message => {
             console.error(criticalError);
         }
     }
+});
+
+client.on('guildMemberSpeaking', async (possiblePartialMember, speaking) => {
+    const member = possiblePartialMember.partial
+        ? await possiblePartialMember.fetch()
+        : possiblePartialMember;
+    voiceChatCoins(member, speaking);
 });
 
 client.login(process.env.BOT_TOKEN);
