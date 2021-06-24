@@ -68,7 +68,11 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     }
 
     let snipeIndex = 0;
-    if (Number.isInteger(arg) && Number(arg) > 0) {
+    if (
+        !Number.isNaN(arg) &&
+        Number.isInteger(Number(arg)) &&
+        Number(arg) > 0
+    ) {
         snipeIndex = Number(arg) - 1;
     }
 
