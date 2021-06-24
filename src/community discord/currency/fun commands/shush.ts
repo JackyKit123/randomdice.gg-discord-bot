@@ -155,7 +155,9 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
     await channel.send(
         randomString[Math.floor(Math.random() * randomString.length)],
         {
-            disableMentions: 'everyone',
+            allowedMentions: {
+                parse: ['users'],
+            },
         }
     );
 

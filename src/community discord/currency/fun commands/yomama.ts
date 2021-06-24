@@ -21,30 +21,6 @@ export default async function yomama(message: Discord.Message): Promise<void> {
         return;
     }
 
-    let sanitized = text;
-    if (
-        !(channel as Discord.GuildChannel)
-            .permissionsFor(member)
-            ?.has('MENTION_EVERYONE')
-    ) {
-        sanitized = sanitized
-            .replace(/@everyone/g, '@‎everyone')
-            .replace(/@here/g, '@‎here');
-        Array.from(text.matchAll(/<@&(\d{18})>/g) ?? []).forEach(
-            ([, roleId]) => {
-                const role = guild.roles.cache.get(roleId);
-                if (!role || role.mentionable) {
-                    return;
-                }
-
-                sanitized = sanitized.replace(
-                    new RegExp(`<@&${role.id}>`, 'g'),
-                    `@‎${role.name}`
-                );
-            }
-        );
-    }
-
     if (!(await commandCost(message, 100))) return;
 
     try {
@@ -59,7 +35,11 @@ export default async function yomama(message: Discord.Message): Promise<void> {
         });
     }
 
-    await webhook.send(sanitized);
+    await webhook.send(text, {
+        allowedMentions: {
+            parse: ['users'],
+        },
+    });
 
     if (attachments.size) {
         try {

@@ -5,7 +5,7 @@ export default async function solveMathEquation(
     message: Discord.Message
 ): Promise<void> {
     const { content, channel } = message;
-    if (/^(".+"|[\d\w]+)$/.test(content)) return;
+    if (/^(".+"|'.+'|[\d\w]+)$/.test(content)) return;
     try {
         const evaluated = math.evaluate(content);
         if (
@@ -15,7 +15,11 @@ export default async function solveMathEquation(
             typeof evaluated === 'boolean'
         )
             await channel.send(evaluated, {
-                disableMentions: 'all',
+                allowedMentions: {
+                    parse: [],
+                    users: [],
+                    roles: [],
+                },
             });
     } catch {
         // do nothing

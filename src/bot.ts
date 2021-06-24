@@ -433,7 +433,11 @@ client.on('message', async function messageHandler(message) {
                     const sentMessage = await channel.send(
                         `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`? You may answer \`Yes\` to execute the new command.`,
                         {
-                            disableMentions: 'all',
+                            allowedMentions: {
+                                parse: [],
+                                users: [],
+                                roles: [],
+                            },
                         }
                     );
                     let answeredYes = false;
@@ -479,7 +483,11 @@ client.on('message', async function messageHandler(message) {
                     await channel.send(
                         `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``,
                         {
-                            disableMentions: 'all',
+                            allowedMentions: {
+                                parse: [],
+                                users: [],
+                                roles: [],
+                            },
                         }
                     );
                 }
