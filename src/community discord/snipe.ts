@@ -24,14 +24,12 @@ export async function snipeListener(
         return;
     }
 
-    snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].set(
-        channel.id,
-        (
-            snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].get(
-                channel.id
-            ) || []
-        ).concat(message)
-    );
+    snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].set(channel.id, [
+        message,
+        ...(snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].get(
+            channel.id
+        ) || []),
+    ]);
 }
 
 export default async function snipe(message: Discord.Message): Promise<void> {
