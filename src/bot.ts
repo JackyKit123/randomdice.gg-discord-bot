@@ -57,7 +57,7 @@ import balance from './community discord/currency/balance';
 import profile from './community discord/currency/profile';
 import coinflip from './community discord/currency/coinflip';
 import voteReward from './community discord/currency/voteReward';
-import currencyUpdate from './community discord/currency/update';
+import currencyUpdate from './community discord/currency/currency';
 import prestige from './community discord/currency/prestige';
 import {
     pickCoinsInit,
