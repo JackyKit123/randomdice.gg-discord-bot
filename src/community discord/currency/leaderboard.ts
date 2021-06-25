@@ -52,7 +52,16 @@ function sortLeaderboard(
     };
     return Object.entries(currencyList)
         .sort(sortFn[type])
-        .filter(([, profile]) => (type === 'gamble' ? !!profile.gamble : true))
+        .filter(([id, profile]) => {
+            switch (type) {
+                case 'gamble':
+                    return !!profile.gamble;
+                case 'default':
+                    return id !== '195174308052467712';
+                default:
+                    return true;
+            }
+        })
         .map(([uid, profile], i) => ({
             name: `#${i + 1}`,
             value: `<@!${uid}> ${
