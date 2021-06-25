@@ -157,12 +157,9 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             'Your Server Rank',
             `**#${
                 Object.entries(currency)
-                    .sort(([, profileA], [, profileB]) =>
-                        typeof profileA.prestige !== 'undefined' &&
-                        profileB.prestige !== profileA.prestige
-                            ? (profileB.prestige || 0) -
-                              (profileA.prestige || 0)
-                            : profileB.balance - profileA.balance
+                    .sort(
+                        ([, profileA], [, profileB]) =>
+                            profileB.balance - profileA.balance
                     )
                     .findIndex(([uid]) => uid === target.id) + 1
             }** in <:dicecoin:839981846419079178> wealth\n**#${
