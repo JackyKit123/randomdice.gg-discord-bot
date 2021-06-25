@@ -56,22 +56,21 @@ export default async function rickBomb(
     const basicCollectionTriggers = [
         'GIMME',
         'MINE',
-        'OMG',
-        'PICK',
+        'RICK',
         'COLLECT',
         'ROB',
         'GRAB',
         'YOINK',
     ];
     const advancedCollectionTriggers = [
-        'OMG Gimme It',
-        'It can only be mine',
-        'PLZ RICK PLZ',
-        'Gotta grab it this time',
-        'THIS IS MINE',
-        'I am gonna yoink it',
-        'OMG I WANT',
-        'I LOVE U',
+        'OMG Gimme all those',
+        'I need all those',
+        'PLZ COINS PLZ',
+        'I am poor pls donate',
+        'Gotta grab them this time',
+        'Those are mine',
+        'I am gonna yoink them all',
+        'I am fan pls give',
     ];
     const uniqueChatters: string[] = [];
     channel.messages.cache
@@ -98,24 +97,24 @@ export default async function rickBomb(
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
-        messageToSend = `💵💵 A batch of <a:Dice_TierX_RickCoin:827059872810008616> Rick Roll videos has shown up, the first ${
+        messageToSend = `💵💵 A batch of <a:Dice_TierX_RickCoin:827059872810008616> rick has shown up, the first ${
             maxCollectorAllowed > 1 ? `${maxCollectorAllowed} people` : 'person'
-        } to type \`${collectionTrigger}\` can watch them all. 💵💵`;
+        } to type \`${collectionTrigger}\` can watch rick roll. 💵💵`;
         endMessage = (members): string =>
             `<a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616> ${members.join(
                 ' '
             )} ${
                 members.length > 1 ? 'have' : 'has'
-            } watched all those rick roll videos <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
+            } gone to watch rick roll videos <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
     } else if (rngMultiplier === 2) {
         maxCollectorAllowed = Math.ceil(uniqueChatters.length / 10);
         collectionTrigger =
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
-        messageToSend = `💰💰💰💰 A huge batch of <a:Dice_TierX_RickCoin:827059872810008616> Rick Astley selfies has shown up. The first ${
+        messageToSend = `💰💰💰💰 A huge batch of <a:Dice_TierX_RickCoin:827059872810008616> rick has shown up. The first ${
             maxCollectorAllowed > 1 ? `${maxCollectorAllowed} people` : 'person'
-        } to type \`${collectionTrigger}\` can earn the selfies. 💰💰💰💰`;
+        } to type \`${collectionTrigger}\` can selfie with rick. 💰💰💰💰`;
         endMessage = (members): string =>
             `<a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616> ${members.join(
                 ' '
@@ -127,12 +126,12 @@ export default async function rickBomb(
             advancedCollectionTriggers[
                 Math.floor(advancedCollectionTriggers.length * Math.random())
             ];
-        messageToSend = `💎💎💎💎💎💎**BIG MONEY TIME**💎💎💎💎💎💎\n<a:Dice_TierX_RickCoin:827059872810008616> Rick Astley himself has shown up. The first one to type \`${collectionTrigger}\` can earn the rick roll.`;
+        messageToSend = `💎💎💎💎💎💎**BIG MONEY TIME**💎💎💎💎💎💎\n<a:Dice_TierX_RickCoin:827059872810008616> Rick has shown up. The first one to type \`${collectionTrigger}\` can get rick rolled.`;
         maxCollectorAllowed = 1;
         endMessage = (members): string =>
             `<a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>\n ${members.join(
                 ' '
-            )} ${members.length > 1 ? 'have' : 'has'} earned the rick roll`;
+            )} ${members.length > 1 ? 'have' : 'has'} got rick roll`;
     }
 
     const collected: Discord.User[] = [];

@@ -37,7 +37,7 @@ export default async function pickCoins(
         let endMessage: (members: Discord.GuildMember[]) => string;
         const basicCollectionTriggers = [
             'GIMME',
-            'COINS',
+            'MINE',
             'COINS',
             'PICK',
             'COLLECT',
