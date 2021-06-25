@@ -40,7 +40,6 @@ export default async function setChannel(
                 !memberOfMain.roles.cache.find(role =>
                     [
                         '804223328709115944',
-                        '845586534660046868',
                         '804223928427216926',
                         '807219483311603722',
                     ].includes(role.id)
