@@ -62,7 +62,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
             ? false
             : await fetchMember(communityDiscord, author);
         if (!spyLog?.isText()) return;
-        const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(\$)\b/gi;
+        const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(carry\w*)|(carried)|(c(?:lass)? ?15)|(\$)\b/gi;
         const triggered = Array.from(content.matchAll(sensitiveWords));
         const [sliced1, sliced2] = [
             content.slice(0, 1024),
@@ -107,7 +107,9 @@ export default async function spy(message: Discord.Message): Promise<void> {
         await spyLog.send(
             triggered.length
                 ? `${
-                      isBanned ? '' : '<@&845586534660046868>'
+                      isBanned
+                          ? ''
+                          : '<@&804223928427216926> <@&807219483311603722>'
                   } Sensitive keyword${
                       Array.from(triggered).length > 1 ? 's' : ''
                   } triggered: ${Array.from(triggered)
