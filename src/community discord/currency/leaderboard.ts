@@ -26,10 +26,7 @@ function sortLeaderboard(
 ): { name: string; value: string }[] {
     const sortFn = {
         default: ([, profileA], [, profileB]) =>
-            typeof profileA.prestige !== 'undefined' &&
-            profileB.prestige !== profileA.prestige
-                ? (profileB.prestige || 0) - (profileA.prestige || 0)
-                : profileB.balance - profileA.balance,
+            profileB.balance - profileA.balance,
         weekly: ([, profileA], [, profileB]) =>
             (profileB.weeklyChat || 0) - (profileA.weeklyChat || 0),
         gamble: ([, profileA], [, profileB]) =>
