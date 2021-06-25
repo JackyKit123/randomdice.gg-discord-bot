@@ -62,7 +62,7 @@ import prestige from './community discord/currency/prestige';
 import {
     pickCoinsInit,
     spawnCoinbomb,
-} from './community discord/currency/pick';
+} from './community discord/currency/coinbomb';
 import leaderboard, {
     weeklyAutoReset,
 } from './community discord/currency/leaderboard';

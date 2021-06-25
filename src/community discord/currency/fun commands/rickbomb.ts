@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import { activeCoinbombInChannel } from '../pick';
+import { activeCoinbombInChannel } from '../coinbomb';
 import commandCost from './commandCost';
 import cooldown from '../../../util/cooldown';
 
