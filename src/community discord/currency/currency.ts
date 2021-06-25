@@ -76,6 +76,15 @@ export default async function currency(
         await channel.send('The amount entered should be a non-zero integer.');
         return;
     }
+    const botTargets = targets.filter(target => target.user.bot);
+    if (botTargets.length) {
+        await channel.send(
+            `${botTargets} ${
+                botTargets.length > 1 ? 'are' : 'is'
+            } bot user. You cannot audit the currency of bot users`
+        );
+        return;
+    }
     if (amount > 50000 && !member.hasPermission('ADMINISTRATOR')) {
         await channel.send(
             'The audit amount is too large (> <:dicecoin:839981846419079178> 50,000), you need `ADMINISTRATOR` permission to enter that large amount.'
