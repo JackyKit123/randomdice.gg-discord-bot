@@ -3,8 +3,26 @@ import Discord from 'discord.js';
 import cooldown from '../util/cooldown';
 
 const snipeStore = {
-    snipe: new Map<string, Discord.Message[]>(),
-    editsnipe: new Map<string, Discord.Message[]>(),
+    snipe: new Map<
+        string,
+        {
+            message: Discord.Message;
+            attachments: {
+                attachment: Discord.BufferResolvable;
+                name?: string;
+            }[];
+        }[]
+    >(),
+    editsnipe: new Map<
+        string,
+        {
+            message: Discord.Message;
+            attachments: {
+                attachment: Discord.BufferResolvable;
+                name?: string;
+            }[];
+        }[]
+    >(),
 };
 
 export async function snipeListener(
@@ -25,12 +43,32 @@ export async function snipeListener(
         return;
     }
 
-    snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].set(channel.id, [
-        message,
-        ...(snipeStore[type === 'delete' ? 'snipe' : 'editsnipe'].get(
-            channel.id
-        ) || []),
-    ]);
+    const attachments: {
+        attachment: Discord.BufferResolvable;
+        name?: string;
+    }[] = [];
+    if (type === 'delete') {
+        await Promise.all(
+            message.attachments.map(async attachment => {
+                const response = await axios.get(attachment.url, {
+                    responseType: 'arraybuffer',
+                });
+                attachments.push({
+                    attachment: response.data,
+                    name: attachment.name || undefined,
+                });
+            })
+        );
+        snipeStore.snipe.set(channel.id, [
+            { message, attachments },
+            ...(snipeStore.snipe.get(channel.id) || []),
+        ]);
+    } else {
+        snipeStore.editsnipe.set(channel.id, [
+            { message, attachments: [] },
+            ...(snipeStore.editsnipe.get(channel.id) || []),
+        ]);
+    }
 }
 
 export default async function snipe(message: Discord.Message): Promise<void> {
@@ -110,41 +148,35 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     }
     const snipeIndexTooBig = typeof snipedList[snipeIndex] === 'undefined';
     const sniped = snipeIndexTooBig ? snipedList[0] : snipedList[snipeIndex];
+    const [snipedMessage, snipedAttachments] = [
+        sniped.message,
+        sniped.attachments,
+    ];
 
     let embed = new Discord.MessageEmbed()
         .setAuthor(
-            `${sniped.author.username}#${sniped.author.discriminator}`,
-            sniped.author.displayAvatarURL({
+            `${snipedMessage.author.username}#${snipedMessage.author.discriminator}`,
+            snipedMessage.author.displayAvatarURL({
                 dynamic: true,
             })
         )
-        .setDescription(sniped.content)
-        .setFooter(`Sniped by: ${author.username}#${author.discriminator}`)
+        .setDescription(snipedMessage.content)
+        .setFooter(
+            `snipedMessage by: ${author.username}#${author.discriminator}`
+        )
         .setTimestamp();
 
-    if (sniped.member && sniped.member.displayHexColor !== '#000000') {
-        embed = embed.setColor(sniped.member?.displayHexColor);
+    if (
+        snipedMessage.member &&
+        snipedMessage.member.displayHexColor !== '#000000'
+    ) {
+        embed = embed.setColor(snipedMessage.member?.displayHexColor);
     }
 
-    const snipedFiles: {
-        attachment: Discord.BufferResolvable;
-        name?: string;
-    }[] = [];
-    if (sniped.attachments.size) {
-        await Promise.all(
-            sniped.attachments.map(async attachment => {
-                const response = await axios.get(attachment.url, {
-                    responseType: 'arraybuffer',
-                });
-                snipedFiles.push({
-                    attachment: response.data,
-                    name: attachment.name || undefined,
-                });
-            })
-        );
+    if (snipedAttachments.length) {
         embed.addField(
-            `With Attachment${sniped.attachments.size > 1 ? 's' : ''}`,
-            sniped.attachments.map(attachment => attachment.name).join('\n')
+            `With Attachment${snipedAttachments.length > 1 ? 's' : ''}`,
+            snipedAttachments.map(attachment => attachment.name).join('\n')
         );
     }
 
@@ -154,6 +186,6 @@ export default async function snipe(message: Discord.Message): Promise<void> {
                   snipedList.length
               } of messages to be sniped, sniping the most recent message instead.`
             : '',
-        { embed, files: snipedFiles }
+        { embed, files: snipedAttachments }
     );
 }
