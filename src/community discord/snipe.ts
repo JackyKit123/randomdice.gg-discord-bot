@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Discord from 'discord.js';
 import cooldown from '../util/cooldown';
 
@@ -125,12 +126,34 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         embed = embed.setColor(sniped.member?.displayHexColor);
     }
 
+    const snipedFiles: {
+        attachment: Discord.BufferResolvable;
+        name?: string;
+    }[] = [];
+    if (sniped.attachments.size) {
+        await Promise.all(
+            sniped.attachments.map(async attachment => {
+                const response = await axios.get(attachment.url, {
+                    responseType: 'arraybuffer',
+                });
+                snipedFiles.push({
+                    attachment: response.data,
+                    name: attachment.name || undefined,
+                });
+            })
+        );
+        embed.addField(
+            `With Attachment${sniped.attachments.size > 1 ? 's' : ''}`,
+            sniped.attachments.map(attachment => attachment.name).join('\n')
+        );
+    }
+
     await channel.send(
         snipeIndexTooBig
             ? `The snipe index ${snipeIndex + 1} is too big, there are only ${
                   snipedList.length
               } of messages to be sniped, sniping the most recent message instead.`
             : '',
-        embed
+        { embed, files: snipedFiles }
     );
 }
