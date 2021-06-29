@@ -299,14 +299,14 @@ client.on('message', async function messageHandler(message) {
                     await help(message, true);
                     break;
                 default:
-                    solveMathEquation(message);
-                    pokeballTrap(message);
-                    oneMinute(message);
-                    validateCrewAds(message);
-                    chatRevivePing(message);
-                    voteAutoResponder(message);
-                    eightBall(message);
             }
+            solveMathEquation(message);
+            pokeballTrap(message);
+            oneMinute(message);
+            validateCrewAds(message);
+            chatRevivePing(message);
+            voteAutoResponder(message);
+            eightBall(message);
         }
 
         if (
