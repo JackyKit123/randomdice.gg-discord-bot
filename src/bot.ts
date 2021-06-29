@@ -76,7 +76,6 @@ import multiplier from './community discord/currency/multiplier';
 import announceLastToLeaveVC from './community discord/lastToLeaveVC';
 import shush, {
     unShush,
-    pokeballTrap,
 } from './community discord/currency/fun commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
 import bon from './community discord/currency/fun commands/bon';
@@ -300,7 +299,6 @@ client.on('message', async function messageHandler(message) {
                     break;
                 default:
                     solveMathEquation(message);
-                    pokeballTrap(message);
                     oneMinute(message);
                     validateCrewAds(message);
                     chatRevivePing(message);
