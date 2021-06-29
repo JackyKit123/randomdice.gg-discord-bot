@@ -162,14 +162,14 @@ export default async function pickCoins(
             collectionTrigger === 'reaction'
                 ? sentMessage.createReactionCollector(
                       (reaction: Discord.MessageReaction, user: Discord.User) =>
-                          reaction.emoji.name === '⛏️' && !user.bot,
+                          reaction.emoji.name === '⛏️' && !user?.bot,
                       {
                           time: 20 * 1000,
                       }
                   )
                 : channel.createMessageCollector(
                       (message: Discord.Message) =>
-                          !message.author.bot &&
+                          !message.author?.bot &&
                           message.content.toLowerCase() ===
                               collectionTrigger.toLowerCase(),
                       {
