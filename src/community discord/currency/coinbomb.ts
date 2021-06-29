@@ -155,6 +155,7 @@ export default async function pickCoins(
         const collected: Discord.GuildMember[] = [];
         const sentMessage = await channel.send(content);
         activeCoinbombInChannel.set(channel.id, true);
+        await logMessage(client, `a coinbomb is spawned, ${sentMessage.url}`);
         const collector: Discord.Collector<
             Discord.Snowflake,
             Discord.Message | Discord.MessageReaction
@@ -162,13 +163,22 @@ export default async function pickCoins(
             collectionTrigger === 'reaction'
                 ? sentMessage.createReactionCollector(
                       (reaction: Discord.MessageReaction, user: Discord.User) =>
-                          reaction.emoji.name === '⛏️' && !user?.bot,
+                          !!logMessage(
+                              client,
+                              `collecting ${reaction.emoji.name} from ${user}`
+                          ) &&
+                          reaction.emoji.name === '⛏️' &&
+                          !user?.bot,
                       {
                           time: 20 * 1000,
                       }
                   )
                 : channel.createMessageCollector(
                       (message: Discord.Message) =>
+                          !!logMessage(
+                              client,
+                              `collecting ${message.content} from ${message.author}`
+                          ) &&
                           !message.author?.bot &&
                           message.content.toLowerCase() ===
                               collectionTrigger.toLowerCase(),
