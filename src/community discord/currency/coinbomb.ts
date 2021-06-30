@@ -62,7 +62,7 @@ export default async function pickCoins(
         channel.messages.cache
             .filter(msg =>
                 msg.partial
-                    ? !!logMessage(client, JSON.stringify(msg.toJSON()))
+                    ? !!logMessage(client, JSON.stringify(msg, null, 2))
                     : true &&
                       !msg.partial &&
                       !msg.author.bot &&
