@@ -61,7 +61,7 @@ export default async function pickCoins(
         const uniqueChatters: string[] = [];
         channel.messages.cache
             .filter(msg =>
-                msg.partial
+                msg.partial || !msg.author
                     ? !!logMessage(client, JSON.stringify(msg, null, 2))
                     : true &&
                       !msg.partial &&
