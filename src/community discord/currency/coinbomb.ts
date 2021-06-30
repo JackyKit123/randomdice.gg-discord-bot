@@ -165,7 +165,9 @@ export default async function pickCoins(
                       (reaction: Discord.MessageReaction, user: Discord.User) =>
                           !!logMessage(
                               client,
-                              `collecting ${reaction.emoji.name} from ${user}`
+                              `collecting ${reaction.emoji.name} from ${
+                                  user.username
+                              }\n!user?.bot is ${!user?.bot}`
                           ) &&
                           reaction.emoji.name === '⛏️' &&
                           !user?.bot,
@@ -177,7 +179,10 @@ export default async function pickCoins(
                       (message: Discord.Message) =>
                           !!logMessage(
                               client,
-                              `collecting ${message.content} from ${message.author}`
+                              `collecting ${message.content} from ${
+                                  message.author.username
+                              }\n!message.author?.bot is \`${!message.author
+                                  ?.bot}\``
                           ) &&
                           !message.author?.bot &&
                           message.content.toLowerCase() ===
@@ -192,6 +197,7 @@ export default async function pickCoins(
                 collect: Discord.Message | Discord.MessageReaction,
                 user: Discord.User
             ) => {
+                await logMessage(client, 'collector triggered');
                 let member: Discord.GuildMember | null;
                 let message: Discord.Message;
                 if (collect instanceof Discord.Message) {
@@ -205,8 +211,19 @@ export default async function pickCoins(
                     !member ||
                     collected.some(m => member?.id === m.id) ||
                     collected.length >= maxCollectorAllowed
-                )
+                ) {
+                    if (!member) {
+                        await logMessage(
+                            client,
+                            `member is ${member}, from ${
+                                collect instanceof Discord.Message
+                                    ? 'message'
+                                    : 'reaction'
+                            } collector`
+                        );
+                    }
                     return;
+                }
                 if (
                     !(
                         channel.messages.cache.some(
