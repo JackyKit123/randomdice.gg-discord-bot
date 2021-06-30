@@ -60,12 +60,13 @@ export default async function pickCoins(
 
         const uniqueChatters: string[] = [];
         channel.messages.cache
-            .filter(
-                msg =>
-                    !!logMessage(client, JSON.stringify(msg.toJSON())) &&
-                    !msg.partial &&
-                    !msg.author.bot &&
-                    Date.now() - msg.createdTimestamp < 60 * 1000
+            .filter(msg =>
+                msg.partial
+                    ? !!logMessage(client, JSON.stringify(msg.toJSON()))
+                    : true &&
+                      !msg.partial &&
+                      !msg.author.bot &&
+                      Date.now() - msg.createdTimestamp < 60 * 1000
             )
             .array()
             .concat(
@@ -158,7 +159,6 @@ export default async function pickCoins(
         const collected: Discord.GuildMember[] = [];
         const sentMessage = await channel.send(content);
         activeCoinbombInChannel.set(channel.id, true);
-        await logMessage(client, `a coinbomb is spawned, ${sentMessage.url}`);
         const collector: Discord.Collector<
             Discord.Snowflake,
             Discord.Message | Discord.MessageReaction
