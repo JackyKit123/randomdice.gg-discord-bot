@@ -62,14 +62,17 @@ export default async function pickCoins(
         channel.messages.cache
             .filter(
                 msg =>
-                    msg.author &&
+                    !!logMessage(client, JSON.stringify(msg.toJSON())) &&
+                    !msg.partial &&
                     !msg.author.bot &&
                     Date.now() - msg.createdTimestamp < 60 * 1000
             )
             .array()
             .concat(
                 channel.messages.cache
-                    .filter(msg => msg.author && !msg.author.bot)
+                    .filter(
+                        msg => !msg.partial && msg.author && !msg.author.bot
+                    )
                     .last(10)
             )
             .forEach(msg => {
@@ -163,27 +166,13 @@ export default async function pickCoins(
             collectionTrigger === 'reaction'
                 ? sentMessage.createReactionCollector(
                       (reaction: Discord.MessageReaction, user: Discord.User) =>
-                          !!logMessage(
-                              client,
-                              `collecting ${reaction.emoji.name} from ${
-                                  user.username
-                              }\n!user?.bot is ${!user?.bot}`
-                          ) &&
-                          reaction.emoji.name === '⛏️' &&
-                          !user?.bot,
+                          reaction.emoji.name === '⛏️' && !user?.bot,
                       {
                           time: 20 * 1000,
                       }
                   )
                 : channel.createMessageCollector(
                       (message: Discord.Message) =>
-                          !!logMessage(
-                              client,
-                              `collecting ${message.content} from ${
-                                  message.author.username
-                              }\n!message.author?.bot is \`${!message.author
-                                  ?.bot}\``
-                          ) &&
                           !message.author?.bot &&
                           message.content.toLowerCase() ===
                               collectionTrigger.toLowerCase(),
@@ -197,7 +186,6 @@ export default async function pickCoins(
                 collect: Discord.Message | Discord.MessageReaction,
                 user: Discord.User
             ) => {
-                await logMessage(client, 'collector triggered');
                 let member: Discord.GuildMember | null;
                 let message: Discord.Message;
                 if (collect instanceof Discord.Message) {
@@ -212,16 +200,6 @@ export default async function pickCoins(
                     collected.some(m => member?.id === m.id) ||
                     collected.length >= maxCollectorAllowed
                 ) {
-                    if (!member) {
-                        await logMessage(
-                            client,
-                            `member is ${member}, from ${
-                                collect instanceof Discord.Message
-                                    ? 'message'
-                                    : 'reaction'
-                            } collector`
-                        );
-                    }
                     return;
                 }
                 if (
@@ -300,29 +278,27 @@ export default async function pickCoins(
                     ? 1000 * 60 * 30
                     : 10 * 1000; // only wait 10 seconds on dev
             const messageTimeout = new Map<string, boolean>();
-            await Promise.race([
-                wait(waitTime),
-                channel.awaitMessages(
-                    (newMessage: Discord.Message) => {
-                        if (
-                            activeCoinbombInChannel.get(channel.id) ||
-                            messageTimeout.get(newMessage.author.id) ||
-                            newMessage.author.bot
-                        )
-                            return false;
-                        messageTimeout.set(newMessage.author.id, true);
-                        setTimeout(
-                            () =>
-                                messageTimeout.set(newMessage.author.id, false),
-                            15 * 1000
-                        );
-                        return true;
-                    },
-                    {
-                        max: 20,
-                    }
-                ),
-            ]);
+
+            await channel.awaitMessages(
+                (newMessage: Discord.Message) => {
+                    if (
+                        activeCoinbombInChannel.get(channel.id) ||
+                        messageTimeout.get(newMessage.author.id) ||
+                        newMessage.author.bot
+                    )
+                        return false;
+                    messageTimeout.set(newMessage.author.id, true);
+                    setTimeout(
+                        () => messageTimeout.set(newMessage.author.id, false),
+                        15 * 1000
+                    );
+                    return true;
+                },
+                {
+                    max: 20,
+                    time: waitTime,
+                }
+            );
             pickCoins(client, channel, true);
         });
     } catch (err) {
