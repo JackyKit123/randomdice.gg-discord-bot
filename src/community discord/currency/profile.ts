@@ -230,7 +230,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                                 .slice(i * 8, i * 8 + 8)
                                 .map(
                                     d =>
-                                        `${emoji[d.id]} +${
+                                        `${emoji[d.id]} x${
                                             profile.diceDrawn?.[d.id] || 0
                                         }`
                                 )
