@@ -170,25 +170,19 @@ export default async function promote(message: Discord.Message): Promise<void> {
                 { max: 1 }
             ),
         ]);
-        if (
-            !item ||
-            (item as Discord.Collection<
-                string,
-                Discord.Message
-            >).first() instanceof Discord.Message
-        ) {
+        const isEmbed = (arg: typeof item): arg is Discord.MessageEmbed =>
+            arg instanceof Discord.MessageEmbed;
+        if (!isEmbed(item)) {
             activePromotionCreation.set(author.id, false);
             return;
         }
         if (existingUserPromotion) {
-            await existingUserPromotion.edit(item as Discord.MessageEmbed);
+            await existingUserPromotion.edit(item);
             await author.send(
                 `Your promotion has been edited\n${existingUserPromotion.url}`
             );
         } else {
-            const sent = await promotionChannel.send(
-                item as Discord.MessageEmbed
-            );
+            const sent = await promotionChannel.send(item);
             await author.send(`Your promotion has been sent\n${sent.url}`);
         }
     } catch (err) {
