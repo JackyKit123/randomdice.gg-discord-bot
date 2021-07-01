@@ -64,16 +64,14 @@ export default async function pickCoins(
                 msg.partial || !msg.author
                     ? !!logMessage(client, JSON.stringify(msg, null, 2))
                     : true &&
-                      !msg.partial &&
+                      msg.author &&
                       !msg.author.bot &&
                       Date.now() - msg.createdTimestamp < 60 * 1000
             )
             .array()
             .concat(
                 channel.messages.cache
-                    .filter(
-                        msg => !msg.partial && msg.author && !msg.author.bot
-                    )
+                    .filter(msg => msg.author && msg.author && !msg.author.bot)
                     .last(10)
             )
             .forEach(msg => {
