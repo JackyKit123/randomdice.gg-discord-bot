@@ -8,19 +8,14 @@ export default async function solveMathEquation(
     if (/^(".+"|'.+'|[\d\w]+)$/.test(content)) return;
     try {
         const evaluated = math.evaluate(content);
-        if (
-            typeof evaluated === 'string' ||
-            typeof evaluated === 'number' ||
-            typeof evaluated === 'bigint' ||
-            typeof evaluated === 'boolean'
-        )
-            await channel.send(evaluated, {
-                allowedMentions: {
-                    parse: [],
-                    users: [],
-                    roles: [],
-                },
-            });
+        const formatted = math.format(evaluated, 14);
+        await channel.send(formatted, {
+            allowedMentions: {
+                parse: [],
+                users: [],
+                roles: [],
+            },
+        });
     } catch {
         // do nothing
     }
