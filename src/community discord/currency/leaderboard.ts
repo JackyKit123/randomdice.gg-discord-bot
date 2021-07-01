@@ -180,7 +180,6 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
                         !(
                             m.roles.cache.has('804513079319592980') ||
                             m.roles.cache.has('804496339794264085') ||
-                            m.roles.cache.has('805817742081916988') ||
                             m.roles.cache.has('806896328255733780') ||
                             m.roles.cache.has('805388604791586826')
                         )
