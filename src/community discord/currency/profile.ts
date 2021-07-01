@@ -157,6 +157,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             'Your Server Rank',
             `**#${
                 Object.entries(currency)
+                    .filter(([uid]) => uid !== '195174308052467712')
                     .sort(
                         ([, profileA], [, profileB]) =>
                             profileB.balance - profileA.balance
