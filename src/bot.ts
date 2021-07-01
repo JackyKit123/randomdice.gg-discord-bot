@@ -42,6 +42,7 @@ import chatRevivePing, {
 } from './community discord/chatrevivePing';
 import lock from './community discord/lock';
 import timer, { registerTimer } from './community discord/timer';
+import promote from './community discord/promote';
 import oneMinute from './community discord/oneMinute';
 import report from './community discord/report';
 import lfg from './community discord/lfg';
@@ -213,6 +214,10 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!customrole':
                     await customRole(message, database);
+                    break;
+                case '!promote':
+                case '!advertise':
+                    await promote(message);
                     break;
                 case 'dd':
                 case '!drawdice':
