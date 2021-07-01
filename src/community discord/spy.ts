@@ -75,11 +75,14 @@ export default async function spy(message: Discord.Message): Promise<void> {
             )
             .setTitle('Hack Discord Spied Message')
             .addField('User', `${author}\nID: ${author.id}`)
-            .addField('User has been banned', isBanned ? '✔️' : '❌')
-            .addField(
+            .addField('User has been banned', isBanned ? '✔️' : '❌');
+        if (!isBanned) {
+            embed = embed.addField(
                 'User is member in this discord',
                 isCommunityDiscordMember ? '✔️' : '❌'
-            )
+            );
+        }
+        embed = embed
             .addField(
                 'In Channel',
                 `#${(channel as Discord.GuildChannel).name}`
@@ -89,8 +92,18 @@ export default async function spy(message: Discord.Message): Promise<void> {
                 guild.iconURL({ dynamic: true }) ?? undefined
             )
             .setTimestamp();
-        if (member.displayColor) {
-            embed = embed.setColor(member.displayColor);
+        if (!isBanned) {
+            if (triggered.length) {
+                if (isCommunityDiscordMember) {
+                    embed = embed.setColor('#ff0000');
+                } else {
+                    embed = embed.setColor('#ffff00');
+                }
+            } else if (isCommunityDiscordMember) {
+                embed = embed.setColor('#ffff00');
+            } else {
+                embed = embed.setColor('#00ff00');
+            }
         }
         if (sliced1) {
             embed = embed.addField('Content', sliced1);
