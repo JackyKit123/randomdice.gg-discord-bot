@@ -185,6 +185,7 @@ export default async function promote(message: Discord.Message): Promise<void> {
             const sent = await promotionChannel.send(item);
             await author.send(`Your promotion has been sent\n${sent.url}`);
         }
+        activePromotionCreation.set(author.id, false);
     } catch (err) {
         activePromotionCreation.set(author.id, false);
         throw new Error(err);
