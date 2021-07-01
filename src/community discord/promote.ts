@@ -64,7 +64,9 @@ async function createPromotion(
             `${user.username}#${user.discriminator}`,
             user.displayAvatarURL()
         )
-        .setTitle(`Promotion of ${promotionType}`);
+        .setTitle(`Promotion of ${promotionType}`)
+        .setFooter(user.id)
+        .setTimestamp();
 
     if (member.displayColor) {
         embed = embed.setColor(member.displayColor);
@@ -123,6 +125,16 @@ export default async function promote(message: Discord.Message): Promise<void> {
         return;
     }
 
+    const promotionChannel = guild.channels.cache.get('860114325007237120');
+    if (!promotionChannel?.isText()) {
+        throw new Error('Promotion Channel not found');
+    }
+    const promotions = await promotionChannel.messages.fetch();
+    const existingUserPromotion = promotions.find(
+        promotion =>
+            promotion.embeds?.[0]?.footer?.text === author.id &&
+            promotion.createdTimestamp + 1000 * 60 * 60 * 24 > Date.now()
+    );
     if (activePromotionCreation.get(author.id)) {
         await channel.send(
             'Please first finish previous the promotion creation or exit it.'
@@ -134,7 +146,11 @@ export default async function promote(message: Discord.Message): Promise<void> {
         try {
             activePromotionCreation.set(author.id, true);
             await author.send(
-                'Hi, please answer a few questions for me to post a promotion advertisement. You can type `exit` at anytime to quit this campaign maker.'
+                `Hi, please answer a few questions for me to post a promotion advertisement. You can type \`exit\` at anytime to quit this campaign maker.\n${
+                    existingUserPromotion
+                        ? 'I found a promotion in the last 24 hours from you, your last promotion will be edited instead of sending a new one.'
+                        : ''
+                }`
             );
             await channel.send('Please proceed in DM channel.');
         } catch (err) {
@@ -164,14 +180,17 @@ export default async function promote(message: Discord.Message): Promise<void> {
             activePromotionCreation.set(author.id, false);
             return;
         }
-        const promotionChannel = guild.channels.cache.get('860114325007237120');
-        if (!promotionChannel?.isText()) {
-            throw new Error('Promotion Channel not found');
+        if (existingUserPromotion) {
+            await existingUserPromotion.edit(item as Discord.MessageEmbed);
+            await author.send(
+                `Your promotion has been edited\n${existingUserPromotion.url}`
+            );
+        } else {
+            const sent = await promotionChannel.send(
+                item as Discord.MessageEmbed
+            );
+            await author.send(`Your promotion has been sent\n${sent.url}`);
         }
-        await promotionChannel.send(item as Discord.MessageEmbed);
-        await author.send(
-            'Your promotion has been sent to <#860114325007237120>'
-        );
     } catch (err) {
         activePromotionCreation.set(author.id, false);
         throw new Error(err);
