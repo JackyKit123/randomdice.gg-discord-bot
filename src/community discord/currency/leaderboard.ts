@@ -178,7 +178,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
                     const m = await guild.members.fetch(uid);
                     if (
                         !(
-                            m.roles.cache.has('804513079319592980') ||
+                            m.roles.cache.has('805388604791586826') ||
                             m.roles.cache.has('804496339794264085') ||
                             m.roles.cache.has('806896328255733780') ||
                             m.roles.cache.has('805388604791586826')
