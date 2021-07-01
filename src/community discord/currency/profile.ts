@@ -138,9 +138,9 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         )
         .addField(
             'Your Chat Multi',
-            `\`x${roleMulti}\` from your Roles\n\`x${dupedMulti}\` from duplicated perks\n\`x${channelMulti}\` in <#${
+            `\`+${roleMulti}\` from your Roles\n\`+${dupedMulti}\` from duplicated perks\n\`+${channelMulti}\` in <#${
                 channel.id
-            }>\n\`x${channelMulti + roleMulti + dupedMulti + 1}\` in Total`,
+            }>\n\`+${channelMulti + roleMulti + dupedMulti + 1}\` in Total`,
             true
         )
         .addField(
@@ -230,7 +230,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                                 .slice(i * 8, i * 8 + 8)
                                 .map(
                                     d =>
-                                        `${emoji[d.id]} x${
+                                        `${emoji[d.id]} +${
                                             profile.diceDrawn?.[d.id] || 0
                                         }`
                                 )
