@@ -62,12 +62,15 @@ export default async function pickCoins(
         channel.messages.cache
             .filter(
                 msg =>
-                    !msg.author?.bot &&
+                    msg.author &&
+                    !msg.author.bot &&
                     Date.now() - msg.createdTimestamp < 60 * 1000
             )
             .array()
             .concat(
-                channel.messages.cache.filter(msg => !msg.author?.bot).last(10)
+                channel.messages.cache
+                    .filter(msg => msg.author && !msg.author.bot)
+                    .last(10)
             )
             .forEach(msg => {
                 if (!uniqueChatters.includes(msg.author.id))
@@ -199,6 +202,7 @@ export default async function pickCoins(
                     !(
                         channel.messages.cache.some(
                             msg =>
+                                msg.author &&
                                 msg.author.id === member?.id &&
                                 sentMessage.createdTimestamp -
                                     msg.createdTimestamp <
@@ -209,6 +213,7 @@ export default async function pickCoins(
                         channel.messages.cache
                             .filter(
                                 msg =>
+                                    msg.author &&
                                     !msg.author.bot &&
                                     msg.createdTimestamp <
                                         sentMessage.createdTimestamp
