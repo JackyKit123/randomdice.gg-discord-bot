@@ -60,19 +60,14 @@ export default async function pickCoins(
 
         const uniqueChatters: string[] = [];
         channel.messages.cache
-            .filter(msg =>
-                msg.partial || !msg.author
-                    ? !!logMessage(client, JSON.stringify(msg, null, 2))
-                    : true &&
-                      msg.author &&
-                      !msg.author.bot &&
-                      Date.now() - msg.createdTimestamp < 60 * 1000
+            .filter(
+                msg =>
+                    !msg.author?.bot &&
+                    Date.now() - msg.createdTimestamp < 60 * 1000
             )
             .array()
             .concat(
-                channel.messages.cache
-                    .filter(msg => msg.author && msg.author && !msg.author.bot)
-                    .last(10)
+                channel.messages.cache.filter(msg => !msg.author?.bot).last(10)
             )
             .forEach(msg => {
                 if (!uniqueChatters.includes(msg.author.id))
