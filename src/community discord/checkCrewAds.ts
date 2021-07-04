@@ -13,16 +13,14 @@ export default async function validateCrewAds(
         return;
     }
 
-    const messages = await channel.messages.fetch({
-        limit: 6,
-    });
+    const messages = channel.messages.cache.last(11);
 
-    if (messages.filter(msg => msg.author.id === author.id).size > 1) {
+    if (messages.filter(msg => msg.author.id === author.id).length > 1) {
         await message.delete({
-            reason: 'Spam Detection: Member has not waited 5 messages',
+            reason: 'Spam Detection: Member has not waited 10 messages',
         });
         const warningMessage = await channel.send(
-            `${author.toString()} I have delete your message. Reason: **Spam Detection: You have posted a crew ad in the last 5 messages**`
+            `${author.toString()} I have delete your message. Reason: **Spam Detection: You have posted a crew ad in the last 10 messages**`
         );
         await wait(5000);
         await warningMessage.delete();
@@ -33,16 +31,30 @@ export default async function validateCrewAds(
         messages.filter(
             msg =>
                 stringSimilarity.compareTwoStrings(content, msg.content) > 0.6
-        ).size > 1
+        ).length > 1
     ) {
         await message.delete({
             reason:
-                'Spam Detection: Duplicated or Similar Crew Ads in the last 5 messages',
+                'Spam Detection: Duplicated or Similar Crew Ads in the last 10 messages',
         });
         const warningMessage = await channel.send(
-            `${author.toString()} I have delete your message. Reason: **Spam Detection: Duplicated or Similar Crew Ads in the last 5 messages**`
+            `${author.toString()} I have delete your message. Reason: **Spam Detection: Duplicated or Similar Crew Ads in the last 10 messages**`
         );
         await wait(5000);
         await warningMessage.delete();
     }
+}
+
+export async function fetchExistingCrewAds(
+    client: Discord.Client
+): Promise<void> {
+    const guild = await client.guilds.fetch('804222694488932362');
+    const channel = guild.channels.cache.get('804366933989654589');
+    if (!channel?.isText()) {
+        return;
+    }
+
+    await channel.messages.fetch({
+        limit: 11,
+    });
 }

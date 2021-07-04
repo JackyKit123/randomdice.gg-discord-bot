@@ -25,7 +25,9 @@ import randomdeck from './commands/randomdeck';
 import drawUntil from './commands/drawUntil';
 import version from './dev-commands/version';
 import cache, { fetchAll } from './util/cache';
-import validateCrewAds from './community discord/checkCrewAds';
+import validateCrewAds, {
+    fetchExistingCrewAds,
+} from './community discord/checkCrewAds';
 import banMessage from './community discord/banMessage';
 import raffle, {
     setRaffleTimerOnBoot,
@@ -134,6 +136,7 @@ client.on('ready', async () => {
     fetchApps(client);
     fetchGeneralOnBoot(client);
     pickCoinsInit(client, database);
+    fetchExistingCrewAds(client);
     await fetchAll(database);
     setRaffleTimerOnBoot(client, database);
     weeklyAutoReset(client);
