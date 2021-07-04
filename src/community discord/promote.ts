@@ -119,7 +119,7 @@ export default async function promote(message: Discord.Message): Promise<void> {
                 .setColor('#ff0000')
                 .setDescription(
                     'You need one of the following roles to use this command.\n' +
-                        '<@&805388604791586826> <@&804496339794264085> <@&806896328255733780> <@&805388604791586826>'
+                        '<@&804513117228367882> <@&809143588105486346>'
                 )
         );
         return;
