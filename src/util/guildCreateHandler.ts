@@ -27,7 +27,7 @@ export default async function handler(guild: Discord.Guild): Promise<void> {
             msgChannel.type === 'text'
         ) {
             msgChannel.send(
-                'Thank you for the invitation, you may do `.gg help` to view a list of commands'
+                'Thank you for the invitation, you may do `.gg help` to view a list of commands. You may also join the community discord here at https://discord.gg/ZrXRpZq2mq'
             );
         }
     }
