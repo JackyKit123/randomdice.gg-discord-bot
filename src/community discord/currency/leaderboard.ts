@@ -5,18 +5,6 @@ import cache, { MemberCurrency } from '../../util/cache';
 import cooldown from '../../util/cooldown';
 import { deleteCustomRole } from '../customRole';
 
-const prestigeRoleIds = [
-    '806312627877838878',
-    '806896328255733780',
-    '806896441947324416',
-    '809142950117245029',
-    '809142956715671572',
-    '809142968434950201',
-    '809143362938339338',
-    '809143374555774997',
-    '809143390791925780',
-    '809143588105486346',
-];
 const numberFormat = new Intl.NumberFormat();
 
 function sortLeaderboard(
@@ -61,15 +49,7 @@ function sortLeaderboard(
         })
         .map(([uid, profile], i) => ({
             name: `#${i + 1}`,
-            value: `<@!${uid}> ${
-                profile.prestige > 0
-                    ? `***${
-                          guild.roles.cache.get(
-                              prestigeRoleIds[profile.prestige - 1]
-                          )?.name
-                      }***`
-                    : ''
-            }\n<:dicecoin:839981846419079178> **__${numberFormat.format(
+            value: `<@!${uid}> \n<:dicecoin:839981846419079178> **__${numberFormat.format(
                 value[type](profile)
             )}__**`,
         }));
