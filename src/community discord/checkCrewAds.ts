@@ -15,7 +15,10 @@ export default async function validateCrewAds(
 
     const messages = channel.messages.cache.last(11);
 
-    if (messages.filter(msg => msg.author.id === author.id).length > 1) {
+    if (
+        messages.filter(msg => msg.author && msg.author.id === author.id)
+            .length > 1
+    ) {
         await message.delete({
             reason: 'Spam Detection: Member has not waited 10 messages',
         });
