@@ -37,31 +37,13 @@ export default async function timed(
             timestamp = memberProfile.hourly ?? 0;
             endOf = moment().endOf('hour');
             period = 1000 * 60 * 60;
-            streak =
-                ((moment().valueOf() - (memberProfile.hourly || 0)) / 1000) *
-                    60 <
-                2
-                    ? (memberProfile.hourlyStreak || streak) + 1
-                    : 1;
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/hourlyStreak`)
-                .set(streak);
-            reward = 100 * multiplier * streak;
+            reward = 100 * multiplier;
             break;
         case 'daily':
             timestamp = memberProfile.daily ?? 0;
             endOf = moment().endOf('day');
             period = 1000 * 60 * 60 * 24;
-            reward = 1000 * (multiplier + Math.min(0.1 * (streak - 1), 11.111));
-            streak =
-                (moment().valueOf() - (memberProfile.daily || 0)) /
-                    (1000 * 60 * 60 * 24) <
-                2
-                    ? (memberProfile.dailyStreak || streak) + 1
-                    : 1;
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/dailyStreak`)
-                .set(streak);
+            reward = 1000 * multiplier;
             break;
         case 'weekly':
             timestamp = memberProfile.weekly ?? 0;
@@ -102,9 +84,6 @@ export default async function timed(
     }
 
     await database
-        .ref(`discord_bot/community/currency/${member.id}/balance`)
-        .set(reward + balance);
-    await database
         .ref(`discord_bot/community/currency/${member.id}/${mode}`)
         .set(Date.now().valueOf());
     let embed = new Discord.MessageEmbed()
@@ -124,12 +103,32 @@ export default async function timed(
     }
     if (streak > 1) {
         if (mode === 'hourly') {
+            streak =
+                ((moment().valueOf() - (memberProfile.hourly || 0)) / 1000) *
+                    60 <
+                2
+                    ? (memberProfile.hourlyStreak || streak) + 1
+                    : 1;
+            await database
+                .ref(`discord_bot/community/currency/${member.id}/hourlyStreak`)
+                .set(streak);
+            reward *= streak;
             embed = embed.addField(
                 'Hourly Streak',
                 `**${streak} streaks *(x${streak}00% reward)***`
             );
         }
         if (mode === 'daily') {
+            streak =
+                (moment().valueOf() - (memberProfile.daily || 0)) /
+                    (1000 * 60 * 60 * 24) <
+                2
+                    ? (memberProfile.dailyStreak || streak) + 1
+                    : 1;
+            await database
+                .ref(`discord_bot/community/currency/${member.id}/dailyStreak`)
+                .set(streak);
+            reward += Math.min(1000 * (streak - 1), 11111);
             embed = embed.addField(
                 'Daily Streak',
                 `**${streak} streaks ${
@@ -147,6 +146,10 @@ export default async function timed(
             )
             .setFooter('');
     }
+
+    await database
+        .ref(`discord_bot/community/currency/${member.id}/balance`)
+        .set(reward + balance);
     await channel.send(embed);
     if (mode === 'daily') {
         if (streak === 100) {
