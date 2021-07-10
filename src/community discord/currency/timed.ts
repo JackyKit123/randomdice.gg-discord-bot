@@ -94,7 +94,8 @@ export default async function timed(
                 reward
             )} to your balance!`
         );
-    if (multiplier > 0) {
+    if (multiplier > 1) {
+        multiplier -= 1;
         embed = embed.setFooter(
             `+extra ${multiplier * 100}% for being $${
                 multiplier * 10
