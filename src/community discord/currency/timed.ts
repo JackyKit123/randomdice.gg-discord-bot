@@ -45,7 +45,7 @@ export default async function timed(
             await database
                 .ref(`discord_bot/community/currency/${member.id}/hourlyStreak`)
                 .set(streak);
-            reward = 100 * multiplier * streak;
+            reward = 100 * (1 + multiplier) * streak;
             break;
         case 'daily':
             timestamp = memberProfile.daily ?? 0;
@@ -113,7 +113,7 @@ export default async function timed(
         .setDescription(
             `Added <:dicecoin:839981846419079178> ${numberFormat.format(
                 reward
-            )}`
+            )} to your balance!`
         );
     if (multiplier > 0) {
         embed = embed.setFooter(
