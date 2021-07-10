@@ -30,6 +30,7 @@ export default async function timed(
     if (rolesCache.has('804513079319592980')) multiplier = 1;
     if (rolesCache.has('804513117228367882')) multiplier = 2;
     if (rolesCache.has('805727466219372546')) multiplier = 5;
+    multiplier += 1;
 
     switch (mode) {
         case 'hourly':
@@ -45,14 +46,13 @@ export default async function timed(
             await database
                 .ref(`discord_bot/community/currency/${member.id}/hourlyStreak`)
                 .set(streak);
-            reward = 100 * (1 + multiplier) * streak;
+            reward = 100 * multiplier * streak;
             break;
         case 'daily':
             timestamp = memberProfile.daily ?? 0;
             endOf = moment().endOf('day');
             period = 1000 * 60 * 60 * 24;
-            reward =
-                1000 * (multiplier + Math.min(1 + 0.1 * (streak - 1), 11.111));
+            reward = 1000 * (multiplier + Math.min(0.1 * (streak - 1), 11.111));
             streak =
                 (moment().valueOf() - (memberProfile.daily || 0)) /
                     (1000 * 60 * 60 * 24) <
