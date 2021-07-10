@@ -150,6 +150,7 @@ export interface MemberCurrency {
         yearly?: number;
         weeklyChat?: number;
         dailyStreak?: number;
+        hourlyStreak?: number;
         diceDrawn?: {
             [id: string]: number;
         };
