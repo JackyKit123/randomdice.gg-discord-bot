@@ -88,12 +88,7 @@ export default async function timed(
         .set(Date.now().valueOf());
     let embed = new Discord.MessageEmbed()
         .setTitle(`You claimed your ${mode} coins!`)
-        .setColor('#ffff00')
-        .setDescription(
-            `Added <:dicecoin:839981846419079178> ${numberFormat.format(
-                reward
-            )} to your balance!`
-        );
+        .setColor('#ffff00');
     if (multiplier > 1) {
         multiplier -= 1;
         embed = embed.setFooter(
@@ -102,14 +97,13 @@ export default async function timed(
             } Patreon donator`
         );
     }
-    if (streak > 1) {
-        if (mode === 'hourly') {
-            streak =
-                (moment().valueOf() - (memberProfile.hourly || 0)) /
-                    (1000 * 60 * 60) <
-                2
-                    ? (memberProfile.hourlyStreak || streak) + 1
-                    : 1;
+
+    if (mode === 'hourly') {
+        streak =
+            (moment().valueOf() - (memberProfile.hourly || 0)) / period < 2
+                ? (memberProfile.hourlyStreak || 1) + 1
+                : 1;
+        if (streak > 1) {
             await database
                 .ref(`discord_bot/community/currency/${member.id}/hourlyStreak`)
                 .set(streak);
@@ -119,13 +113,13 @@ export default async function timed(
                 `**${streak} streaks *(x${streak}00% reward)***`
             );
         }
-        if (mode === 'daily') {
-            streak =
-                (moment().valueOf() - (memberProfile.daily || 0)) /
-                    (1000 * 60 * 60 * 24) <
-                2
-                    ? (memberProfile.dailyStreak || streak) + 1
-                    : 1;
+    }
+    if (mode === 'daily') {
+        streak =
+            (moment().valueOf() - (memberProfile.daily || 0)) / period < 2
+                ? (memberProfile.dailyStreak || 1) + 1
+                : 1;
+        if (streak > 1) {
             await database
                 .ref(`discord_bot/community/currency/${member.id}/dailyStreak`)
                 .set(streak);
@@ -140,6 +134,11 @@ export default async function timed(
             );
         }
     }
+    embed = embed.setDescription(
+        `Added <:dicecoin:839981846419079178> ${numberFormat.format(
+            reward
+        )} to your balance!`
+    );
     if (mode === 'yearly') {
         embed = embed
             .setDescription(
