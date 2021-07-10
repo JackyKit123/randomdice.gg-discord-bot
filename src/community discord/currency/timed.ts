@@ -123,7 +123,7 @@ export default async function timed(
             .ref(`discord_bot/community/currency/${member.id}/dailyStreak`)
             .set(streak);
         if (streak > 1) {
-            reward += Math.min(1000 * (streak - 1), 11111);
+            reward += Math.min(100 * (streak - 1), 11111);
             embed = embed.addField(
                 'Daily Streak',
                 `**${streak} streaks ${
