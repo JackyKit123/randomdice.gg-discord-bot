@@ -253,11 +253,19 @@ client.on('message', async function messageHandler(message) {
                     await raffle(message);
                     break;
                 case '!hourly':
+                    await timed(message, 'hourly');
+                    break;
                 case '!daily':
+                    await timed(message, 'daily');
+                    break;
                 case '!weekly':
+                    await timed(message, 'weekly');
+                    break;
                 case '!monthly':
+                    await timed(message, 'monthly');
+                    break;
                 case '!yearly':
-                    await timed(message);
+                    await timed(message, 'yearly');
                     break;
                 case '!currency':
                     await currencyUpdate(message);
