@@ -105,8 +105,8 @@ export default async function timed(
     if (streak > 1) {
         if (mode === 'hourly') {
             streak =
-                ((moment().valueOf() - (memberProfile.hourly || 0)) / 1000) *
-                    60 <
+                (moment().valueOf() - (memberProfile.hourly || 0)) /
+                    (1000 * 60 * 60) <
                 2
                     ? (memberProfile.hourlyStreak || streak) + 1
                     : 1;
