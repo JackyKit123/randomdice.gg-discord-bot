@@ -103,10 +103,10 @@ export default async function timed(
             (moment().valueOf() - (memberProfile.hourly || 0)) / period < 2
                 ? (memberProfile.hourlyStreak || 1) + 1
                 : 1;
+        await database
+            .ref(`discord_bot/community/currency/${member.id}/hourlyStreak`)
+            .set(streak);
         if (streak > 1) {
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/hourlyStreak`)
-                .set(streak);
             reward *= streak;
             embed = embed.addField(
                 'Hourly Streak',
@@ -119,11 +119,11 @@ export default async function timed(
             (moment().valueOf() - (memberProfile.daily || 0)) / period < 2
                 ? (memberProfile.dailyStreak || 1) + 1
                 : 1;
+        await database
+            .ref(`discord_bot/community/currency/${member.id}/dailyStreak`)
+            .set(streak);
         if (streak > 1) {
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/dailyStreak`)
-                .set(streak);
-            reward += Math.min(1000 * (streak - 1), 11111);
+            reward += Math.min(100 * (streak - 1), 11111);
             embed = embed.addField(
                 'Daily Streak',
                 `**${streak} streaks ${
