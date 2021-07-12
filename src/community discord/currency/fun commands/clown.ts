@@ -63,7 +63,8 @@ export default async function clown(message: Discord.Message): Promise<void> {
         );
     } else if (
         member.id === '195174308052467712' ||
-        (target.id === '722951439567290458' && Math.random() < 0.95)
+        (['722951439567290458', '415166565550653442'].includes(target.id) &&
+            Math.random() < 0.95)
     ) {
         await sentMessage.edit(
             `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
@@ -81,7 +82,8 @@ export default async function clown(message: Discord.Message): Promise<void> {
         target = member;
     } else if (
         target.id === '195174308052467712' ||
-        (member.id === '722951439567290458' && Math.random() < 0.95) ||
+        (['722951439567290458', '415166565550653442'].includes(target.id) &&
+            Math.random() < 0.95) ||
         (target.id !== member.id && Math.random() < 0.6)
     ) {
         await sentMessage.edit(
@@ -105,22 +107,20 @@ export default async function clown(message: Discord.Message): Promise<void> {
         // suppress error
     } finally {
         await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('🤡'.repeat(howClown))
-                .setColor('#ffffff')
-                .setDescription(
-                    typedWrongCommand || clownedABot
-                        ? `${target} ${
-                              clownedABot ? 'tried to clown a bot.' : ''
-                          }${
-                              typedWrongCommand
-                                  ? 'typed the wrong command.'
-                                  : ''
-                          } 100% clown!<a:clowndance:845532985787940894>`
-                        : `${target} is a ${
-                              howClown * 10
-                          }% clown.<a:clowndance:845532985787940894>`
-                )
+            typedWrongCommand || clownedABot
+                ? `${target} ${clownedABot ? 'tried to clown a bot.' : ''}${
+                      typedWrongCommand ? 'typed the wrong command.' : ''
+                  } 100% clown!<a:clowndance:845532985787940894>`
+                : `${target} is a ${
+                      howClown * 10
+                  }% clown.<a:clowndance:845532985787940894>`,
+            {
+                allowedMentions: {
+                    users: [],
+                    roles: [],
+                    parse: [],
+                },
+            }
         );
         await wait(1000 * 60 * 5);
         try {
