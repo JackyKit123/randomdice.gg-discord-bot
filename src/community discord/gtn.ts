@@ -18,9 +18,9 @@ export default async function gtn(message: Discord.Message): Promise<void> {
         return;
     }
 
-    if (!maxRange || maxRange < 100) {
+    if (!maxRange || maxRange < 100 || maxRange > 1000000) {
         await channel.send(
-            'Usage of the command: `!gtn <max Range (100 minimum)>` Example```!gtn 1000```'
+            'Usage of the command: `!gtn <max Range (100 - 1m)>` Example```!gtn 1000```'
         );
         return;
     }
