@@ -48,7 +48,7 @@ export default async function afk(message: Discord.Message): Promise<void> {
             : member.displayName;
     await Promise.all([
         wait(30 * 1000),
-        channel.send(`I have set your afk to: ${afkMessage}`, {
+        message.reply(`I have set your afk to: ${afkMessage}`, {
             allowedMentions: {
                 parse: [],
                 users: [],
@@ -69,29 +69,32 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
 
     if (!guild || !member) return;
 
-    const afkMentioned = Object.entries(
-        cache['discord_bot/community/afk'] || {}
-    ).filter(([uid]) => {
-        if (uid === member.id) {
-            if (member.manageable)
-                member.setNickname(member.displayName.replace(/^\[AFK\] /, ''));
-            channel.send(`Welcome back ${member}, I have removed your afk.`);
-            database
-                .ref('discord_bot/community/afk')
-                .child(member.id)
-                .set(null);
-            return false;
+    Object.entries(cache['discord_bot/community/afk'] || {}).forEach(
+        async ([uid, afkMessage]) => {
+            if (uid === member.id) {
+                await Promise.all([
+                    channel.send(
+                        `Welcome back ${member}, I have removed your afk.`
+                    ),
+                    database
+                        .ref('discord_bot/community/afk')
+                        .child(member.id)
+                        .set(null),
+                    member.manageable
+                        ? member.setNickname(
+                              member.displayName.replace(/^\[AFK\] /, '')
+                          )
+                        : null,
+                ]);
+            } else if (content.includes(uid)) {
+                await channel.send(`<@${uid}> is afk: ${afkMessage}`, {
+                    allowedMentions: {
+                        parse: [],
+                        users: [],
+                        roles: [],
+                    },
+                });
+            }
         }
-        return content.includes(uid);
-    });
-
-    afkMentioned.forEach(([uid, afkMessage]) => {
-        channel.send(`<@${uid}> is afk: ${afkMessage}`, {
-            allowedMentions: {
-                parse: [],
-                users: [],
-                roles: [],
-            },
-        });
-    });
+    );
 }
