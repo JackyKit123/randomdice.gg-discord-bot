@@ -98,33 +98,33 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
     const lowerCased = content.toLowerCase();
     const words = lowerCased.split(' ');
     if (!guild) return;
-    const match = Object.entries(
-        cache['discord_bot/community/customreact'] || {}
-    ).find(([uid]) => {
-        const member = guild.members.cache.get(uid);
-        if (!member) return false;
-        const username = member.user.username.toLowerCase();
-        const displayName = member.displayName.toLowerCase();
-        return (
-            content.includes(uid) ||
-            words.some((_, i) => {
-                const substring = words.slice(i, words.length).join(' ');
-                return (
-                    (stringSimilarity.compareTwoStrings(username, substring) >=
-                        0.6 &&
-                        username.startsWith(substring)) ||
-                    (stringSimilarity.compareTwoStrings(
-                        displayName,
-                        substring
-                    ) >= 0.6 &&
-                        displayName.startsWith(substring))
-                );
-            })
-        );
-    });
-    if (match) {
-        await message.react(match[1]);
-    }
+    Object.entries(cache['discord_bot/community/customreact'] || {}).forEach(
+        async ([uid, emojiID]) => {
+            const member = guild.members.cache.get(uid);
+            if (!member) return;
+            const username = member.user.username.toLowerCase();
+            const displayName = member.displayName.toLowerCase();
+            if (
+                content.includes(uid) ||
+                words.some((_, i) => {
+                    const substring = words.slice(i, words.length).join(' ');
+                    return (
+                        (stringSimilarity.compareTwoStrings(
+                            username,
+                            substring
+                        ) >= 0.6 &&
+                            username.startsWith(substring)) ||
+                        (stringSimilarity.compareTwoStrings(
+                            displayName,
+                            substring
+                        ) >= 0.6 &&
+                            displayName.startsWith(substring))
+                    );
+                })
+            )
+                await message.react(emojiID);
+        }
+    );
 }
 
 export async function fetchAutoReactionRegistry(
