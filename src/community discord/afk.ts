@@ -90,7 +90,7 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
             } else if (content.includes(uid)) {
                 await channel.send(
                     `<@${uid}> has been afk for ${parseMsIntoReadableText(
-                        timestamp - createdTimestamp,
+                        createdTimestamp - timestamp,
                         true
                     )
                         .split(' ')
