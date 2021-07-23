@@ -196,7 +196,8 @@ export async function spyLogBanHandler(
     const banned = await guild.fetchBans();
     if (banned.some(({ user: u }) => u.id === id)) return;
     await guild.members.ban(id, {
-        reason: 'Random Dice Hack Discord related activity',
+        reason:
+            'Random Dice Hack Discord related activity\nFeel free to [appeal here](https://discord.gg/yJBdSRZJmS) if you found this ban to be unjustified.',
     });
     channel.messages.cache.forEach(m => cleanUpMessage(m, id));
 }
