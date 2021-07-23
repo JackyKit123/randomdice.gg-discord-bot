@@ -107,18 +107,26 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
             if (
                 content.includes(uid) ||
                 words.some((_, i) => {
-                    const substring = words.slice(i, words.length).join(' ');
+                    const substring = words
+                        .slice(
+                            i,
+                            Math.min(
+                                displayName.split(' ').length,
+                                words.length
+                            )
+                        )
+                        .join(' ');
                     return (
                         (stringSimilarity.compareTwoStrings(
                             username,
                             substring
                         ) >= 0.6 &&
-                            username.startsWith(substring)) ||
+                            substring.startsWith(username)) ||
                         (stringSimilarity.compareTwoStrings(
                             displayName,
                             substring
                         ) >= 0.6 &&
-                            displayName.startsWith(substring))
+                            substring.startsWith(displayName))
                     );
                 })
             )
