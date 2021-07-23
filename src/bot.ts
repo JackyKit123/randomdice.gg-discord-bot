@@ -58,7 +58,10 @@ import myEmoji, {
 } from './community discord/myEmoji';
 import eightBall from './community discord/8ball';
 import solveMathEquation from './community discord/solveMathEquation';
-import spy, { fetchSpyLogOnBoot, spyLogBanHandler } from './community discord/spy';
+import spy, {
+    fetchSpyLogOnBoot,
+    spyLogBanHandler,
+} from './community discord/spy';
 import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
 import profile from './community discord/currency/profile';
