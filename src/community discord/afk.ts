@@ -9,7 +9,7 @@ const wait = promisify(setTimeout);
 
 export default async function afk(message: Discord.Message): Promise<void> {
     const database = firebase.app().database();
-    const { member, content, channel } = message;
+    const { member, content, channel, createdTimestamp } = message;
 
     if (!member) return;
     const afkMessage = content.replace(/!afk ?/i, '') || 'AFK';
@@ -60,12 +60,12 @@ export default async function afk(message: Discord.Message): Promise<void> {
     ]);
     await database.ref('discord_bot/community/afk').child(member.id).set({
         afkMessage,
-        timestamp: Date.now(),
+        timestamp: createdTimestamp,
     });
 }
 
 export async function afkResponse(message: Discord.Message): Promise<void> {
-    const { guild, member, content, channel } = message;
+    const { guild, member, content, channel, createdTimestamp } = message;
     const database = firebase.app().database();
 
     if (!guild || !member) return;
@@ -90,11 +90,12 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
             } else if (content.includes(uid)) {
                 await channel.send(
                     `<@${uid}> has been afk for ${parseMsIntoReadableText(
-                        timestamp,
+                        timestamp - createdTimestamp,
                         true
                     )
                         .split(' ')
-                        .slice(0, 2)}: ${afkMessage}`,
+                        .slice(0, 2)
+                        .join(' ')}: ${afkMessage}`,
                     {
                         allowedMentions: {
                             parse: [],
