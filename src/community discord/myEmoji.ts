@@ -94,17 +94,20 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
 
 export async function autoReaction(message: Discord.Message): Promise<void> {
     const { guild, content } = message;
-    const lowerCased = content.toLowerCase();
+    const words = content.toLowerCase().split(' ');
     if (!guild) return;
     const match = Object.entries(
         cache['discord_bot/community/customreact'] || {}
     ).find(([uid]) => {
         const member = guild.members.cache.get(uid);
         return (
-            lowerCased.includes(uid) ||
-            (member &&
-                lowerCased.includes(member.user.username.toLowerCase())) ||
-            (member && lowerCased.includes(member.displayName.toLowerCase()))
+            content.includes(uid) ||
+            words.some(
+                word =>
+                    member &&
+                    (member.user.username.toLowerCase().startsWith(word) ||
+                        member.displayName.toLowerCase().startsWith(word))
+            )
         );
     });
     if (match) {
