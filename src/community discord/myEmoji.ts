@@ -2,12 +2,28 @@ import firebase from 'firebase-admin';
 import Discord from 'discord.js';
 import axios, { AxiosResponse } from 'axios';
 import cache from '../util/cache';
+import cooldown from '../util/cooldown';
 
 export default async function myEmoji(message: Discord.Message): Promise<void> {
     const database = firebase.app().database();
     const { member, guild, content, channel, author, attachments } = message;
     if (!member || !guild) return;
 
+    if (
+        !member.roles.cache.has('804513079319592980') &&
+        !member.roles.cache.has('809142956715671572')
+    ) {
+        await channel.send(
+            new Discord.MessageEmbed()
+                .setTitle(`You cannot use custom emoji command.`)
+                .setColor('#ff0000')
+                .setDescription(
+                    'You need one of the following roles to use this command.\n' +
+                        '<@&804513079319592980> <@&809142956715671572>\n'
+                )
+        );
+        return;
+    }
     const attachment = attachments.first();
     const emojiArg = content.split(' ')[1];
     const emojiRegexMatch = emojiArg?.match(/^<(a)?:[\w\d_]+:(\d{18})>$/);
@@ -46,6 +62,14 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
         await channel.send(
             'Usage of command\n`!myEmoji <emoji>`\nor\n`!myEmoji` with an image attachment'
         );
+        return;
+    }
+    if (
+        await cooldown(message, '!myEmoji', {
+            default: 10 * 60 * 1000,
+            donator: 60 * 1000,
+        })
+    ) {
         return;
     }
     const newEmoji = await guild.emojis.create(
