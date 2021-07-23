@@ -121,12 +121,12 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
                             username,
                             substring
                         ) >= 0.5 &&
-                            substring.startsWith(username)) ||
+                            username.startsWith(substring)) ||
                         (stringSimilarity.compareTwoStrings(
                             displayName,
                             substring
                         ) >= 0.5 &&
-                            substring.startsWith(displayName))
+                            displayName.startsWith(substring))
                     );
                 })
             )
