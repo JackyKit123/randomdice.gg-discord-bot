@@ -189,6 +189,10 @@ interface CustomRoles {
     [memberId: string]: string;
 }
 
+interface CustomReact {
+    [memberId: string]: string;
+}
+
 interface Tournament {
     timestamp: number;
 }
@@ -206,6 +210,7 @@ interface CacheObject {
     'discord_bot/community/raffle': Raffle;
     'discord_bot/community/currency': MemberCurrency;
     'discord_bot/community/currencyConfig': CurrencyConfig;
+    'discord_bot/community/customreact': CustomReact;
     'discord_bot/community/customroles': CustomRoles;
     'discord_bot/community/timer': TimerData;
     'discord_bot/community/tournament': Tournament | null;
@@ -253,6 +258,7 @@ const cacheData = {
     'discord_bot/community/tournament': {
         timestamp: 0,
     } as Tournament,
+    'discord_bot/community/customreact': {} as CustomReact,
     'discord_bot/community/customroles': {} as CustomRoles,
     'discord_bot/community/timer': {} as TimerData,
     'wiki/boss': [] as Boss[],

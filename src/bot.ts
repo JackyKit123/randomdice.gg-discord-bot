@@ -52,6 +52,10 @@ import validateOneWordStory from './community discord/oneworldstoryValidate';
 import voteAutoResponder from './community discord/voteAutoResponder';
 import gtn from './community discord/gtn';
 import customRole from './community discord/customRole';
+import myEmoji, {
+    autoReaction,
+    fetchAutoReactionRegistry,
+} from './community discord/myEmoji';
 import eightBall from './community discord/8ball';
 import solveMathEquation from './community discord/solveMathEquation';
 import spy from './community discord/spy';
@@ -141,6 +145,7 @@ client.on('ready', async () => {
     setRaffleTimerOnBoot(client, database);
     weeklyAutoReset(client);
     registerTimer(client);
+    fetchAutoReactionRegistry(client);
 });
 
 client.on('message', async function messageHandler(message) {
@@ -217,6 +222,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!customrole':
                     await customRole(message, database);
+                    break;
+                case '!myemoji':
+                    await myEmoji(message);
                     break;
                 case '!promote':
                 case '!advertise':
@@ -323,6 +331,7 @@ client.on('message', async function messageHandler(message) {
             chatRevivePing(message);
             voteAutoResponder(message);
             eightBall(message);
+            autoReaction(message);
         }
 
         if (
