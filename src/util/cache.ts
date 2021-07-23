@@ -193,6 +193,10 @@ interface CustomReact {
     [memberId: string]: string;
 }
 
+interface Afks {
+    [memberId: string]: string;
+}
+
 interface Tournament {
     timestamp: number;
 }
@@ -206,6 +210,7 @@ interface CacheObject {
     'discord_bot/registry': Registry;
     'discord_bot/help': Help[];
     'discord_bot/dev_help': Help[];
+    'discord_bot/community/afk': Afks;
     'discord_bot/community/applications': CommunityDiscordApplication[];
     'discord_bot/community/raffle': Raffle;
     'discord_bot/community/currency': MemberCurrency;
@@ -233,6 +238,7 @@ const cacheData = {
     'discord_bot/registry': {} as Registry,
     'discord_bot/help': [] as Help[],
     'discord_bot/dev_help': [] as Help[],
+    'discord_bot/community/afk': {} as Afks,
     'discord_bot/community/help': [] as Help[],
     'discord_bot/community/applications': [] as CommunityDiscordApplication[],
     'discord_bot/community/raffle': {

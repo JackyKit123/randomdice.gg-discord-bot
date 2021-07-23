@@ -101,6 +101,7 @@ import clown, {
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 import cleverBot from './community discord/cleverbot';
+import afk, { afkResponse } from './community discord/afk';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -294,6 +295,9 @@ client.on('message', async function messageHandler(message) {
                 case '!welcomerick':
                     await welcomerick(message);
                     break;
+                case '!afk':
+                    afk(message);
+                    break;
                 case '!bedtime':
                     await bedtime(message);
                     break;
@@ -332,6 +336,7 @@ client.on('message', async function messageHandler(message) {
             voteAutoResponder(message);
             eightBall(message);
             autoReaction(message);
+            afkResponse(message);
         }
 
         if (
