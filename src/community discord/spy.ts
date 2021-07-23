@@ -117,7 +117,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
                 attachments.map(attachment => attachment.url).join('\n')
             );
         }
-        await spyLog.send(
+        const sentMessage = await spyLog.send(
             triggered.length
                 ? `${
                       isBanned
@@ -131,6 +131,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
                 : '',
             embed
         );
+        await sentMessage.react('868148038311489578');
     } catch (err) {
         try {
             await logMessage(message.client, err.stack);
@@ -138,4 +139,73 @@ export default async function spy(message: Discord.Message): Promise<void> {
             // no action
         }
     }
+}
+
+async function cleanUpMessage(
+    message: Discord.Message,
+    id: string
+): Promise<void> {
+    const { embeds, author, reactions, client } = message;
+    if (!embeds[0] || author.id !== (client.user as Discord.ClientUser).id)
+        return;
+    const embed = embeds[0];
+    const { fields } = embed;
+    const memberBannedDisplayed = fields.some(
+        ({ name, value }) => name === 'User has been banned' && value === '✔️'
+    );
+    if (
+        fields[0]?.name !== 'User' ||
+        id !== fields[0]?.value?.match(/ID: (\d{18})$/m)?.[1]
+    )
+        return;
+    if (!memberBannedDisplayed) {
+        embed.fields = fields.filter(
+            field => field.name !== 'User is member in this discord'
+        );
+        embed.fields[1].value = '✔️';
+        await message.edit(embed);
+    }
+    if (reactions.cache.size) {
+        await reactions.removeAll();
+    }
+}
+
+export async function spyLogBanHandler(
+    reaction: Discord.MessageReaction,
+    userInitial: Discord.User | Discord.PartialUser
+): Promise<void> {
+    const { message, client } = reaction;
+    const { channel, guild, embeds, author } = message;
+    const user = userInitial.partial
+        ? await client.users.fetch(userInitial.id)
+        : userInitial;
+    if (
+        !guild ||
+        !guild.member(user)?.hasPermission('BAN_MEMBERS') ||
+        channel.id !== '852355980779978752' ||
+        !embeds[0] ||
+        author.id !== (client.user as Discord.ClientUser).id ||
+        reaction.emoji.id !== '868153141793783849'
+    )
+        return;
+
+    const { fields } = embeds[0];
+    if (fields[0]?.name !== 'User') return;
+    const id = fields[0]?.value?.match(/ID: (\d{18})$/m)?.[1];
+    if (!id) return;
+    const banned = await guild.fetchBans();
+    if (banned.some(({ user: u }) => u.id === id)) return;
+    await guild.members.ban(id, {
+        reason: 'Random Dice Hack Discord related activity',
+    });
+    channel.messages.cache.forEach(m => cleanUpMessage(m, id));
+}
+
+export async function fetchSpyLogOnBoot(client: Discord.Client): Promise<void> {
+    const guild = await client.guilds.fetch(
+        process.env.COMMUNITY_SERVER_ID || ''
+    );
+    const channel = guild.channels.cache.get('852355980779978752');
+    if (!channel?.isText()) return;
+    await channel.messages.fetch();
 }

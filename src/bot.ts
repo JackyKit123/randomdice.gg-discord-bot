@@ -58,7 +58,7 @@ import myEmoji, {
 } from './community discord/myEmoji';
 import eightBall from './community discord/8ball';
 import solveMathEquation from './community discord/solveMathEquation';
-import spy from './community discord/spy';
+import spy, { fetchSpyLogOnBoot, spyLogBanHandler } from './community discord/spy';
 import welcomeReward from './community discord/currency/welcomeReward';
 import balance from './community discord/currency/balance';
 import profile from './community discord/currency/profile';
@@ -142,6 +142,7 @@ client.on('ready', async () => {
     fetchGeneralOnBoot(client);
     pickCoinsInit(client, database);
     fetchExistingCrewAds(client);
+    fetchSpyLogOnBoot(client);
     await fetchAll(database);
     setRaffleTimerOnBoot(client, database);
     weeklyAutoReset(client);
@@ -553,11 +554,12 @@ client.on('messageReactionAdd', async (reaction, user) => {
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            await closeApplication(
+            closeApplication(
                 reaction,
                 user,
                 (client.user as Discord.ClientUser).id
             );
+            spyLogBanHandler(reaction, user);
         }
     } catch (err) {
         try {
