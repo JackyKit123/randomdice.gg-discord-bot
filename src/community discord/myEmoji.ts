@@ -111,7 +111,7 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
                         .slice(
                             i,
                             Math.min(
-                                displayName.split(' ').length,
+                                i + displayName.split(' ').length,
                                 words.length
                             )
                         )
