@@ -1,4 +1,5 @@
 import firebase from 'firebase-admin';
+import stringSimilarity from 'string-similarity';
 import Discord from 'discord.js';
 import axios, { AxiosResponse } from 'axios';
 import cache from '../util/cache';
@@ -102,12 +103,20 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
         const member = guild.members.cache.get(uid);
         return (
             content.includes(uid) ||
-            words.some(
-                word =>
-                    member &&
-                    (member.user.username.toLowerCase().startsWith(word) ||
-                        member.displayName.toLowerCase().startsWith(word))
-            )
+            words.some(word => {
+                if (!member) return false;
+                const username = member.user.username.toLowerCase();
+                const displayName = member.displayName.toLowerCase();
+
+                return (
+                    (stringSimilarity.compareTwoStrings(username, word) >=
+                        0.6 &&
+                        username.startsWith(word)) ||
+                    (stringSimilarity.compareTwoStrings(displayName, word) >=
+                        0.6 &&
+                        displayName.startsWith(word))
+                );
+            })
         );
     });
     if (match) {
