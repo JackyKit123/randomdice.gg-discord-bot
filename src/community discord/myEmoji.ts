@@ -120,12 +120,12 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
                         (stringSimilarity.compareTwoStrings(
                             username,
                             substring
-                        ) >= 0.6 &&
+                        ) >= 0.5 &&
                             substring.startsWith(username)) ||
                         (stringSimilarity.compareTwoStrings(
                             displayName,
                             substring
-                        ) >= 0.6 &&
+                        ) >= 0.5 &&
                             substring.startsWith(displayName))
                     );
                 })
