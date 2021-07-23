@@ -3,6 +3,7 @@ import Discord from 'discord.js';
 import { promisify } from 'util';
 import cache from '../util/cache';
 import cooldown from '../util/cooldown';
+import parseMsIntoReadableText from '../util/parseMS';
 
 const wait = promisify(setTimeout);
 
@@ -57,10 +58,10 @@ export default async function afk(message: Discord.Message): Promise<void> {
         }),
         member.manageable ? member.setNickname(`[AFK] ${displayName}`) : null,
     ]);
-    await database
-        .ref('discord_bot/community/afk')
-        .child(member.id)
-        .set(afkMessage);
+    await database.ref('discord_bot/community/afk').child(member.id).set({
+        afkMessage,
+        timestamp: Date.now(),
+    });
 }
 
 export async function afkResponse(message: Discord.Message): Promise<void> {
@@ -70,7 +71,7 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
     if (!guild || !member) return;
 
     Object.entries(cache['discord_bot/community/afk'] || {}).forEach(
-        async ([uid, afkMessage]) => {
+        async ([uid, { afkMessage, timestamp }]) => {
             if (uid === member.id) {
                 await Promise.all([
                     channel.send(
@@ -87,13 +88,21 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
                         : null,
                 ]);
             } else if (content.includes(uid)) {
-                await channel.send(`<@${uid}> is afk: ${afkMessage}`, {
-                    allowedMentions: {
-                        parse: [],
-                        users: [],
-                        roles: [],
-                    },
-                });
+                await channel.send(
+                    `<@${uid}> has been afk for ${parseMsIntoReadableText(
+                        timestamp,
+                        true
+                    )
+                        .split(' ')
+                        .slice(0, 2)}: ${afkMessage}`,
+                    {
+                        allowedMentions: {
+                            parse: [],
+                            users: [],
+                            roles: [],
+                        },
+                    }
+                );
             }
         }
     );

@@ -194,7 +194,10 @@ interface CustomReact {
 }
 
 interface Afks {
-    [memberId: string]: string;
+    [memberId: string]: {
+        afkMessage: string;
+        timestamp: number;
+    };
 }
 
 interface Tournament {
