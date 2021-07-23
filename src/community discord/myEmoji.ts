@@ -107,17 +107,19 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
         const displayName = member.displayName.toLowerCase();
         return (
             content.includes(uid) ||
-            words.some(
-                word =>
-                    (stringSimilarity.compareTwoStrings(username, word) >=
+            words.some((_, i) => {
+                const substring = words.slice(i, words.length).join(' ');
+                return (
+                    (stringSimilarity.compareTwoStrings(username, substring) >=
                         0.6 &&
-                        username.startsWith(word)) ||
-                    (stringSimilarity.compareTwoStrings(displayName, word) >=
-                        0.6 &&
-                        displayName.startsWith(word))
-            ) ||
-            lowerCased.includes(username) ||
-            lowerCased.includes(displayName)
+                        username.startsWith(substring)) ||
+                    (stringSimilarity.compareTwoStrings(
+                        displayName,
+                        substring
+                    ) >= 0.6 &&
+                        displayName.startsWith(substring))
+                );
+            })
         );
     });
     if (match) {
