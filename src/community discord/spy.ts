@@ -131,7 +131,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
                 : '',
             embed
         );
-        await sentMessage.react('868148038311489578');
+        if (!isBanned) await sentMessage.react('868148038311489578');
     } catch (err) {
         try {
             await logMessage(message.client, err.stack);
