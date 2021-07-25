@@ -165,6 +165,7 @@ async function cleanUpMessage(
         embed.fields[1].value = '✔️';
         await message.edit(embed);
     }
+    embed.color = 0;
     if (reactions.cache.size) {
         await reactions.removeAll();
     }
@@ -185,7 +186,7 @@ export async function spyLogBanHandler(
         channel.id !== '852355980779978752' ||
         !embeds[0] ||
         author.id !== (client.user as Discord.ClientUser).id ||
-        reaction.emoji.id !== '868153141793783849'
+        reaction.emoji.id !== '868148038311489578'
     )
         return;
 
