@@ -135,22 +135,36 @@ client.on('ready', async () => {
     const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
         process.env.NODE_ENV
     }`;
-    await logMessage(client, bootMessage);
-    // eslint-disable-next-line no-console
-    console.log(bootMessage);
-    infoVC(client);
-    purgeMoonedRoles(client);
-    purgeClownRoles(client);
-    fetchApps(client);
-    fetchGeneralOnBoot(client);
-    pickCoinsInit(client, database);
-    fetchExistingCrewAds(client);
-    fetchSpyLogOnBoot(client);
-    await fetchAll(database);
-    setRaffleTimerOnBoot(client, database);
-    weeklyAutoReset(client);
-    registerTimer(client);
-    fetchAutoReactionRegistry(client);
+    try {
+        await logMessage(client, bootMessage);
+        // eslint-disable-next-line no-console
+        console.log(bootMessage);
+        infoVC(client);
+        purgeMoonedRoles(client);
+        purgeClownRoles(client);
+        fetchApps(client);
+        fetchGeneralOnBoot(client);
+        pickCoinsInit(client, database);
+        fetchExistingCrewAds(client);
+        fetchSpyLogOnBoot(client);
+        await fetchAll(database);
+        setRaffleTimerOnBoot(client, database);
+        weeklyAutoReset(client);
+        registerTimer(client);
+        fetchAutoReactionRegistry(client);
+    } catch (err) {
+        try {
+            await logMessage(
+                client,
+                `Oops, something went wrong in client#Ready : ${
+                    err.stack || err.message || err
+                }`
+            );
+        } catch (criticalError) {
+            // eslint-disable-next-line no-console
+            console.error(criticalError);
+        }
+    }
 });
 
 client.on('message', async function messageHandler(message) {
