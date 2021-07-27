@@ -70,7 +70,7 @@ async function afkHandler(
     {
         content,
         createdTimestamp,
-    }: { content?: string; createdTimestamp?: number }
+    }: { content?: string; createdTimestamp?: number } = {}
 ): Promise<void> {
     const database = firebase.app().database();
 
@@ -115,10 +115,26 @@ async function afkHandler(
     );
 }
 
+export function isGuild(
+    channel: Discord.Channel
+): channel is Discord.TextChannel | Discord.NewsChannel {
+    return channel.type === 'text' || channel.type === 'news';
+}
+
 export async function afkResponse(message: Discord.Message): Promise<void> {
     const { member, content, channel, createdTimestamp } = message;
     if (!member) return;
     await afkHandler(channel, member, { content, createdTimestamp });
+}
+
+export async function removeAfkOnTypingStart(
+    channel: Discord.Channel | Discord.PartialDMChannel,
+    user: Discord.User | Discord.PartialUser
+): Promise<void> {
+    if (!isGuild(channel)) return;
+    const member = channel.guild.member(user.id);
+    if (!member) return;
+    await afkHandler(channel, member);
 }
 
 export async function removeAfkOnReaction(
@@ -126,8 +142,9 @@ export async function removeAfkOnReaction(
     user: Discord.User | Discord.PartialUser
 ): Promise<void> {
     const { channel, guild } = reaction.message;
-    if (!guild) return;
+    const { COMMUNITY_SERVER_ID } = process.env;
+    if (!COMMUNITY_SERVER_ID || guild?.id !== COMMUNITY_SERVER_ID) return;
     const member = guild.member(user.id);
     if (!member) return;
-    await afkHandler(channel, member, {});
+    await afkHandler(channel, member);
 }

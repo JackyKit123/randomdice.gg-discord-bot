@@ -104,7 +104,11 @@ import clown, {
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 import cleverBot from './community discord/cleverbot';
-import afk, { afkResponse, removeAfkOnReaction } from './community discord/afk';
+import afk, {
+    afkResponse,
+    removeAfkOnReaction,
+    removeAfkOnTypingStart,
+} from './community discord/afk';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -657,6 +661,27 @@ client.on('guildMemberSpeaking', async (possiblePartialMember, speaking) => {
         ? await possiblePartialMember.fetch()
         : possiblePartialMember;
     voiceChatCoins(member, speaking);
+});
+
+client.on('typingStart', async (possiblePartialChannel, user) => {
+    const channel = await possiblePartialChannel.fetch(false);
+    try {
+        if (!user.bot && process.env.NODE_ENV === 'production') {
+            removeAfkOnTypingStart(channel, user);
+        }
+    } catch (err) {
+        try {
+            await logMessage(
+                client,
+                `Oops, something went wrong when listening to typing start event ${
+                    err.stack || err.message || err
+                }.`
+            );
+        } catch (criticalError) {
+            // eslint-disable-next-line no-console
+            console.error(criticalError);
+        }
+    }
 });
 
 client.login(process.env.BOT_TOKEN);
