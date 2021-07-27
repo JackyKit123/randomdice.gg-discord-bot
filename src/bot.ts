@@ -104,7 +104,7 @@ import clown, {
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 import cleverBot from './community discord/cleverbot';
-import afk, { afkResponse } from './community discord/afk';
+import afk, { afkResponse, removeAfkOnReaction } from './community discord/afk';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -577,6 +577,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 (client.user as Discord.ClientUser).id
             );
             spyLogBanHandler(reaction, user);
+            removeAfkOnReaction(reaction, user);
         }
     } catch (err) {
         try {

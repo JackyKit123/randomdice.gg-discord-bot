@@ -64,11 +64,15 @@ export default async function afk(message: Discord.Message): Promise<void> {
     });
 }
 
-export async function afkResponse(message: Discord.Message): Promise<void> {
-    const { guild, member, content, channel, createdTimestamp } = message;
+async function afkHandler(
+    channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel,
+    member: Discord.GuildMember,
+    {
+        content,
+        createdTimestamp,
+    }: { content?: string; createdTimestamp?: number }
+): Promise<void> {
     const database = firebase.app().database();
-
-    if (!guild || !member) return;
 
     Object.entries(cache['discord_bot/community/afk'] || {}).forEach(
         async ([uid, { afkMessage, timestamp }]) => {
@@ -87,7 +91,9 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
                           )
                         : null,
                 ]);
-            } else if (content.includes(uid)) {
+                return;
+            }
+            if (content?.includes(uid) && createdTimestamp) {
                 await channel.send(
                     `<@${uid}> has been afk for ${parseMsIntoReadableText(
                         createdTimestamp - timestamp,
@@ -107,4 +113,21 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
             }
         }
     );
+}
+
+export async function afkResponse(message: Discord.Message): Promise<void> {
+    const { member, content, channel, createdTimestamp } = message;
+    if (!member) return;
+    await afkHandler(channel, member, { content, createdTimestamp });
+}
+
+export async function removeAfkOnReaction(
+    reaction: Discord.MessageReaction,
+    user: Discord.User | Discord.PartialUser
+): Promise<void> {
+    const { channel, guild } = reaction.message;
+    if (!guild) return;
+    const member = guild.member(user.id);
+    if (!member) return;
+    await afkHandler(channel, member, {});
 }
