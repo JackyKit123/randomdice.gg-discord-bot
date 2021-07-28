@@ -143,7 +143,8 @@ export async function removeAfkOnReaction(
 ): Promise<void> {
     const { channel, guild } = reaction.message;
     const { COMMUNITY_SERVER_ID } = process.env;
-    if (!COMMUNITY_SERVER_ID || guild?.id !== COMMUNITY_SERVER_ID) return;
+    if (!COMMUNITY_SERVER_ID || !guild || guild.id !== COMMUNITY_SERVER_ID)
+        return;
     const member = guild.member(user.id);
     if (!member) return;
     await afkHandler(channel, member);
