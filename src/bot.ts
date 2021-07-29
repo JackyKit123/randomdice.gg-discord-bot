@@ -104,11 +104,7 @@ import clown, {
 import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 import cleverBot from './community discord/cleverbot';
-import afk, {
-    afkResponse,
-    removeAfkOnReaction,
-    removeAfkOnTypingStart,
-} from './community discord/afk';
+import afk, { afkResponse, removeAfkListener } from './community discord/afk';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -581,7 +577,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 (client.user as Discord.ClientUser).id
             );
             spyLogBanHandler(reaction, user);
-            removeAfkOnReaction(reaction, user);
+            removeAfkListener(reaction, user);
         }
     } catch (err) {
         try {
@@ -667,7 +663,7 @@ client.on('typingStart', async (possiblePartialChannel, user) => {
     const channel = await possiblePartialChannel.fetch(false);
     try {
         if (!user.bot && process.env.NODE_ENV === 'production') {
-            removeAfkOnTypingStart(channel, user);
+            removeAfkListener(channel, user);
         }
     } catch (err) {
         try {

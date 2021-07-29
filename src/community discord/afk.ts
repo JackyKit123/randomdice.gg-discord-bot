@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import cache from '../util/cache';
 import cooldown from '../util/cooldown';
 import parseMsIntoReadableText from '../util/parseMS';
+import { isGuild } from '../util/typeguard';
 
 const wait = promisify(setTimeout);
 
@@ -115,37 +116,22 @@ async function afkHandler(
     );
 }
 
-export function isGuild(
-    channel: Discord.Channel
-): channel is Discord.TextChannel | Discord.NewsChannel {
-    return channel.type === 'text' || channel.type === 'news';
-}
-
 export async function afkResponse(message: Discord.Message): Promise<void> {
     const { member, content, channel, createdTimestamp } = message;
     if (!member) return;
     await afkHandler(channel, member, { content, createdTimestamp });
 }
 
-export async function removeAfkOnTypingStart(
-    channel: Discord.Channel | Discord.PartialDMChannel,
+export async function removeAfkListener(
+    arg: Discord.Channel | Discord.PartialDMChannel | Discord.MessageReaction,
     user: Discord.User | Discord.PartialUser
 ): Promise<void> {
-    if (!isGuild(channel)) return;
-    const member = channel.guild.member(user.id);
-    if (!member) return;
-    await afkHandler(channel, member);
-}
-
-export async function removeAfkOnReaction(
-    reaction: Discord.MessageReaction,
-    user: Discord.User | Discord.PartialUser
-): Promise<void> {
-    const { channel, guild } = reaction.message;
+    const channel =
+        arg instanceof Discord.MessageReaction ? arg.message.channel : arg;
     const { COMMUNITY_SERVER_ID } = process.env;
-    if (!COMMUNITY_SERVER_ID || !guild || guild.id !== COMMUNITY_SERVER_ID)
-        return;
+    if (!isGuild(channel) || !COMMUNITY_SERVER_ID) return;
+    const { guild } = channel;
     const member = guild.member(user.id);
-    if (!member) return;
+    if (!member || !guild || guild.id !== COMMUNITY_SERVER_ID) return;
     await afkHandler(channel, member);
 }
