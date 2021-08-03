@@ -104,24 +104,23 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
             if (!member) return;
             const username = member.user.username.toLowerCase();
             const displayName = member.displayName.toLowerCase();
-            const substring = (str: string, i: number): string =>
-                words
-                    .slice(i, Math.min(i + str.split(' ').length, words.length))
+
+            const match = (str: string, i: number): boolean => {
+                const substring = words
+                    .slice(i, i + str.split(' ').length)
                     .join(' ');
+                if (substring.length < 3) return false;
+                return (
+                    (stringSimilarity.compareTwoStrings(str, substring) >=
+                        0.5 &&
+                        str.startsWith(substring)) ||
+                    stringSimilarity.compareTwoStrings(str, substring) >= 0.7
+                );
+            };
             if (
                 content.includes(uid) ||
                 words.some(
-                    (_, i) =>
-                        (substring(username, i).length >= 3 &&
-                            stringSimilarity.compareTwoStrings(
-                                username,
-                                substring(username, i)
-                            ) >= 0.5) ||
-                        (substring(displayName, i).length >= 3 &&
-                            stringSimilarity.compareTwoStrings(
-                                displayName,
-                                substring(displayName, i)
-                            ) >= 0.5)
+                    (_, i) => match(username, i) || match(displayName, i)
                 )
             )
                 await message.react(emojiID);
