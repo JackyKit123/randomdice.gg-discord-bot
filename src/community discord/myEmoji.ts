@@ -112,12 +112,12 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
                 content.includes(uid) ||
                 words.some(
                     (_, i) =>
-                        (username.length >= 3 &&
+                        (substring(username, i).length >= 3 &&
                             stringSimilarity.compareTwoStrings(
                                 username,
                                 substring(username, i)
                             ) >= 0.5) ||
-                        (displayName.length >= 3 &&
+                        (substring(displayName, i).length >= 3 &&
                             stringSimilarity.compareTwoStrings(
                                 displayName,
                                 substring(displayName, i)
