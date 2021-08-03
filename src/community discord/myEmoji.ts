@@ -104,29 +104,23 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
             if (!member) return;
             const username = member.user.username.toLowerCase();
             const displayName = member.displayName.toLowerCase();
+            const substring = (str: string, i: number): string =>
+                words
+                    .slice(i, Math.min(i + str.split(' ').length, words.length))
+                    .join(' ');
             if (
                 content.includes(uid) ||
                 words.some((_, i) => {
-                    const substring = words
-                        .slice(
-                            i,
-                            Math.min(
-                                i + displayName.split(' ').length,
-                                words.length
-                            )
-                        )
-                        .join(' ');
+                    if (substring.length < 3) return false;
                     return (
-                        (stringSimilarity.compareTwoStrings(
+                        stringSimilarity.compareTwoStrings(
                             username,
-                            substring
-                        ) >= 0.5 &&
-                            username.startsWith(substring)) ||
-                        (stringSimilarity.compareTwoStrings(
+                            substring(username, i)
+                        ) >= 0.5 ||
+                        stringSimilarity.compareTwoStrings(
                             displayName,
-                            substring
-                        ) >= 0.5 &&
-                            displayName.startsWith(substring))
+                            substring(displayName, i)
+                        ) >= 0.5
                     );
                 })
             )
