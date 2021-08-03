@@ -110,19 +110,19 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
                     .join(' ');
             if (
                 content.includes(uid) ||
-                words.some((_, i) => {
-                    if (substring.length < 3) return false;
-                    return (
-                        stringSimilarity.compareTwoStrings(
-                            username,
-                            substring(username, i)
-                        ) >= 0.5 ||
-                        stringSimilarity.compareTwoStrings(
-                            displayName,
-                            substring(displayName, i)
-                        ) >= 0.5
-                    );
-                })
+                words.some(
+                    (_, i) =>
+                        (username.length >= 3 &&
+                            stringSimilarity.compareTwoStrings(
+                                username,
+                                substring(username, i)
+                            ) >= 0.5) ||
+                        (displayName.length >= 3 &&
+                            stringSimilarity.compareTwoStrings(
+                                displayName,
+                                substring(displayName, i)
+                            ) >= 0.5)
+                )
             )
                 await message.react(emojiID);
         }
