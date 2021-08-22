@@ -39,7 +39,7 @@ export default function listener(
                             process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
                         ) as Discord.TextChannel) || undefined
                     )?.send(
-                        `Error encountered when posting guide: ${err.message}`
+                        `Error encountered when posting guide: ${err.stack}`
                     );
                 } catch (criticalError) {
                     console.error(criticalError);
@@ -78,7 +78,7 @@ export default function listener(
                             process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
                         ) as Discord.TextChannel) || undefined
                     )?.send(
-                        `Error encountered when posting news: ${err.message}`
+                        `Error encountered when posting news: ${err.stack}`
                     );
                 } catch (criticalError) {
                     console.error(criticalError);
