@@ -35,7 +35,7 @@ export async function postGuide(
                     }
                 })
         )
-    ).filter(channel => channel) as Discord.TextChannel[];
+    ).filter(channel => channel?.isText()) as Discord.TextChannel[];
     const [guides, battlefields, emojiList] = [
         cache.decks_guide,
         cache['wiki/battlefield'],
@@ -333,7 +333,7 @@ export async function postNews(
                     }
                 })
         )
-    ).filter(channel => channel) as Discord.TextChannel[];
+    ).filter(channel => channel?.isText())) as Discord.TextChannel[];
     const data = cache.news;
 
     const ytUrl = data.game.match(
