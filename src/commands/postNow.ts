@@ -29,13 +29,14 @@ export async function postGuide(
                         const guideChannel = await client.channels.fetch(
                             config.guide
                         );
+                        if (!guideChannel.isText()) return undefined;
                         return guideChannel;
                     } catch {
                         return undefined;
                     }
                 })
         )
-    ).filter(channel => channel?.isText()) as Discord.TextChannel[];
+    ).filter(channel => channel) as Discord.TextChannel[];
     const [guides, battlefields, emojiList] = [
         cache.decks_guide,
         cache['wiki/battlefield'],
@@ -327,13 +328,14 @@ export async function postNews(
                         const newsChannel = await client.channels.fetch(
                             config.news
                         );
+                        if (!newsChannel.isText()) return undefined;
                         return newsChannel;
                     } catch {
                         return undefined;
                     }
                 })
         )
-    ).filter(channel => channel?.isText())) as Discord.TextChannel[];
+    ).filter(channel => channel) as Discord.TextChannel[];
     const data = cache.news;
 
     const ytUrl = data.game.match(
