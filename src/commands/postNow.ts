@@ -164,7 +164,12 @@ export async function postGuide(
             }
             const fetched = (
                 await channel.messages.fetch({ limit: 100 })
-            ).filter(message => message.author.id === client.user?.id);
+            ).filter(
+                message =>
+                    message.author.id === client.user?.id &&
+                    new Date().valueOf() - message.createdTimestamp <=
+                        86400000 * 14
+            );
             await channel.bulkDelete(fetched);
             const statusMessage = await channel.send(
                 new Discord.MessageEmbed()
