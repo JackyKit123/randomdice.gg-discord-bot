@@ -85,7 +85,7 @@ function tickTimer(
             }
         } catch (err) {
             killTimerFromDB(key);
-            if (err.message === 'Unknown Message') throw new Error(err);
+            if (err.message !== 'Unknown Message') throw new Error(err);
         }
     }, 5 * 1000);
 }
