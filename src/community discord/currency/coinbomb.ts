@@ -271,10 +271,6 @@ export default async function pickCoins(
             }
 
             if (!recursive) return;
-            const waitTime =
-                process.env.NODE_ENV === 'production'
-                    ? 1000 * 60 * 30
-                    : 10 * 1000; // only wait 10 seconds on dev
             const messageTimeout = new Map<string, boolean>();
 
             await channel.awaitMessages(
@@ -294,7 +290,6 @@ export default async function pickCoins(
                 },
                 {
                     max: 20,
-                    time: waitTime,
                 }
             );
             pickCoins(client, channel, true);
