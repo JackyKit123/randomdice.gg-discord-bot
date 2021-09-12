@@ -55,10 +55,10 @@ export default async function coinflip(
     } else if (
         !Number.isInteger(amount) ||
         Number(amountArg) < 100 ||
-        Number(amountArg) > 1000
+        Number(amountArg) > 10000
     ) {
         await channel.send(
-            'Coinflip amount must be a integer between 100 - 1000'
+            'Coinflip amount must be a integer between 100 - 10000'
         );
         return;
     }
