@@ -7,6 +7,42 @@ import cooldown from '../../util/cooldown';
 
 const numberFormat = new Intl.NumberFormat();
 
+async function host(
+    duration: number,
+    maxEntries: number,
+    ticketCost: number,
+    channel: Discord.TextChannel | Discord.NewsChannel,
+    author: Discord.User
+): Promise<void> {
+    const database = firebase.app().database();
+    const ref = database.ref('discord_bot/community/raffle');
+    const { guild } = channel;
+
+    await ref.set({
+        endTimestamp: Date.now() + duration,
+        hostId: author.id,
+        maxEntries,
+        ticketCost,
+    });
+    await channel.send(
+        '<@&839694796431294485>',
+        new Discord.MessageEmbed()
+            .setAuthor(
+                'randomdice.gg Server',
+                guild.iconURL({ dynamic: true }) ?? undefined
+            )
+            .setColor('#00ff00')
+            .setTitle('New Dice Coins Raffle')
+            .addField(
+                'Ticket Entries',
+                `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
+            )
+            .addField('Hosted by', `${author}`)
+            .setFooter('Raffle ends at')
+            .setTimestamp(Date.now() + duration)
+    );
+}
+
 async function announceWinner(
     guild: Discord.Guild,
     database: firebase.database.Database
@@ -87,7 +123,6 @@ async function announceWinner(
             while (maxEntries * ticketCost > 200_000) {
                 maxEntries = Math.ceil(Math.random() * 100);
             }
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             await host(
                 duration,
                 ticketCost,
@@ -95,44 +130,8 @@ async function announceWinner(
                 channel as Discord.TextChannel,
                 channel.client.user as Discord.ClientUser
             );
+            announceWinner(guild, database);
         }, raffleInfo.endTimestamp - Date.now());
-}
-
-async function host(
-    duration: number,
-    maxEntries: number,
-    ticketCost: number,
-    channel: Discord.TextChannel | Discord.NewsChannel,
-    author: Discord.User
-): Promise<void> {
-    const database = firebase.app().database();
-    const ref = database.ref('discord_bot/community/raffle');
-    const { guild } = channel;
-
-    await ref.set({
-        endTimestamp: Date.now() + duration,
-        hostId: author.id,
-        maxEntries,
-        ticketCost,
-    });
-    await channel.send(
-        '<@&839694796431294485>',
-        new Discord.MessageEmbed()
-            .setAuthor(
-                'randomdice.gg Server',
-                guild.iconURL({ dynamic: true }) ?? undefined
-            )
-            .setColor('#00ff00')
-            .setTitle('New Dice Coins Raffle')
-            .addField(
-                'Ticket Entries',
-                `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
-            )
-            .addField('Hosted by', `${author}`)
-            .setFooter('Raffle ends at')
-            .setTimestamp(Date.now() + duration)
-    );
-    announceWinner(guild, database);
 }
 
 export default async function raffle(message: Discord.Message): Promise<void> {
@@ -431,6 +430,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                 channel as Discord.TextChannel,
                 author
             );
+            await announceWinner(guild, database);
             return;
         }
         case 'cancel':
