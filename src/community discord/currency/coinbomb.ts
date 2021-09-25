@@ -86,7 +86,7 @@ export default async function pickCoins(
             endMessage = (members): string =>
                 `${members.join(' ')} ${
                     members.length > 1 ? 'have' : 'has'
-                } ⛏️ up the tiny batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                } ⛏️ up the tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )}`;
         } else if (rngReward < 1000) {
@@ -107,7 +107,7 @@ export default async function pickCoins(
             endMessage = (members): string =>
                 `💵💵 ${members.join(' ')} ${
                     members.length > 1 ? 'have' : 'has'
-                } ⛏️ up the batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                } ⛏️ up the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} 💵💵`;
         } else if (rngReward < 10000) {
@@ -128,7 +128,7 @@ export default async function pickCoins(
             endMessage = (members): string =>
                 `💰💰💰💰 ${members.join(' ')} ${
                     members.length > 1 ? 'have' : 'has'
-                } ⛏️ up the huge batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                } ⛏️ up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} 💰💰💰💰`;
         } else {
@@ -147,7 +147,7 @@ export default async function pickCoins(
             endMessage = (members): string =>
                 `💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎\n ${members.join(' ')} ${
                     members.length > 1 ? 'have' : 'has'
-                } ⛏️ up the huge batch of of <:dicecoin:839981846419079178> ${numberFormat.format(
+                } ⛏️ up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} `;
         }

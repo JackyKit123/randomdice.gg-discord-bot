@@ -120,7 +120,7 @@ export default async function rickBomb(
                 ' '
             )} ${
                 members.length > 1 ? 'have' : 'has'
-            } ⛏️ up the huge batch of of Rick Astley selfies <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
+            } ⛏️ up the huge batch of Rick Astley selfies <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
     } else {
         collectionTrigger =
             advancedCollectionTriggers[
