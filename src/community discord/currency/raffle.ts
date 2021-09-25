@@ -13,16 +13,16 @@ async function announceWinner(
 ): Promise<void> {
     const channel = guild.channels.cache.get('807229757049012266');
     if (channel?.type !== 'text') return;
-    let raffle = cache['discord_bot/community/raffle'];
-    if (!raffle.hostId) {
+    let raffleInfo = cache['discord_bot/community/raffle'];
+    if (!raffleInfo.hostId) {
         return;
     }
 
-    if (raffle.endTimestamp - Date.now() > 0)
+    if (raffleInfo.endTimestamp - Date.now() > 0)
         setTimeout(async () => {
-            raffle = cache['discord_bot/community/raffle'];
+            raffleInfo = cache['discord_bot/community/raffle'];
 
-            const entries = Object.entries(raffle.tickets || {});
+            const entries = Object.entries(raffleInfo.tickets || {});
             const uniqueEntry = {} as { [uid: string]: string };
             entries.forEach(([, uid]) => {
                 if (!uniqueEntry[uid]) {
@@ -33,7 +33,7 @@ async function announceWinner(
                 Math.floor(entries.length * Math.random())
             ] || [null, null];
 
-            const amount = entries.length * raffle.ticketCost;
+            const amount = entries.length * raffleInfo.ticketCost;
             const winningMessage = await (channel as Discord.TextChannel).send(
                 '<@&839694796431294485>',
                 new Discord.MessageEmbed()
@@ -81,10 +81,61 @@ async function announceWinner(
             await database
                 .ref(`discord_bot/community/currency/${target.id}/balance`)
                 .set(balance + amount);
-        }, raffle.endTimestamp - Date.now());
+            const duration = 60 * 60 * Math.ceil(Math.random() * 36 + 12); // 12 - 48 hours in random
+            const ticketCost = Math.ceil(Math.random() * 100_000);
+            let maxEntries = 100;
+            while (maxEntries * ticketCost > 200_000) {
+                maxEntries = Math.ceil(Math.random() * 100);
+            }
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            await host(
+                duration,
+                ticketCost,
+                maxEntries,
+                channel as Discord.TextChannel,
+                channel.client.user as Discord.ClientUser
+            );
+        }, raffleInfo.endTimestamp - Date.now());
 }
 
-export default async function lotto(message: Discord.Message): Promise<void> {
+async function host(
+    duration: number,
+    maxEntries: number,
+    ticketCost: number,
+    channel: Discord.TextChannel | Discord.NewsChannel,
+    author: Discord.User
+): Promise<void> {
+    const database = firebase.app().database();
+    const ref = database.ref('discord_bot/community/raffle');
+    const { guild } = channel;
+
+    await ref.set({
+        endTimestamp: Date.now() + duration,
+        hostId: author.id,
+        maxEntries,
+        ticketCost,
+    });
+    await channel.send(
+        '<@&839694796431294485>',
+        new Discord.MessageEmbed()
+            .setAuthor(
+                'randomdice.gg Server',
+                guild.iconURL({ dynamic: true }) ?? undefined
+            )
+            .setColor('#00ff00')
+            .setTitle('New Dice Coins Raffle')
+            .addField(
+                'Ticket Entries',
+                `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
+            )
+            .addField('Hosted by', `${author}`)
+            .setFooter('Raffle ends at')
+            .setTimestamp(Date.now() + duration)
+    );
+    announceWinner(guild, database);
+}
+
+export default async function raffle(message: Discord.Message): Promise<void> {
     const { channel, member, content, guild, author } = message;
 
     const [, subcommand, arg, arg2, arg3] = content
@@ -113,9 +164,9 @@ export default async function lotto(message: Discord.Message): Promise<void> {
     const balance = await getBalance(message, 'emit new member', member);
     if (balance === false) return;
     const ref = database.ref('discord_bot/community/raffle');
-    const raffle = cache['discord_bot/community/raffle'];
-    const currentEntries = Object.entries(raffle.tickets ?? {});
-    const raffleTimeLeft = raffle.endTimestamp - Date.now();
+    const entries = cache['discord_bot/community/raffle'];
+    const currentEntries = Object.entries(entries.tickets ?? {});
+    const raffleTimeLeft = entries.endTimestamp - Date.now();
 
     switch (subcommand?.toLowerCase()) {
         case 'info':
@@ -130,24 +181,24 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         .setTitle('Dice Coins Raffle')
                         .addField(
                             'Ticket Entries',
-                            `<:dicecoin:839981846419079178> **${raffle.ticketCost} per ticket** (${raffle.maxEntries} ticket(s) max)`
+                            `<:dicecoin:839981846419079178> **${entries.ticketCost} per ticket** (${entries.maxEntries} ticket(s) max)`
                         )
                         .addField(
                             'Current Prize Pool',
                             `<:dicecoin:839981846419079178> **${numberFormat.format(
-                                currentEntries.length * raffle.ticketCost
+                                currentEntries.length * entries.ticketCost
                             )}** (${currentEntries.length} Tickets)`
                         )
-                        .addField('Hosted by', `<@${raffle.hostId}>`)
+                        .addField('Hosted by', `<@${entries.hostId}>`)
                         .addField(
                             'Your Entries',
-                            Object.entries(raffle.tickets ?? {})
+                            Object.entries(entries.tickets ?? {})
                                 .filter(([, uid]) => uid === author.id)
                                 .map(([ticketNumber]) => `**${ticketNumber}**`)
                                 .join(', ') || '*none*'
                         )
                         .setFooter('Raffle ends at')
-                        .setTimestamp(raffle.endTimestamp)
+                        .setTimestamp(entries.endTimestamp)
                 );
             } else {
                 await channel.send(
@@ -199,25 +250,25 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         ?.length || 0;
                 let currEntry = 0;
                 if (/max/i.test(arg)) {
-                    if (prevEntry === raffle.maxEntries) {
+                    if (prevEntry === entries.maxEntries) {
                         await channel.send(
-                            `You have already entered with max entries (${raffle.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
+                            `You have already entered with max entries (${entries.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
                         );
                         return;
                     }
-                    if (balance < raffle.ticketCost) {
+                    if (balance < entries.ticketCost) {
                         await channel.send(
-                            `The cost per ticket in this raffle is <:dicecoin:839981846419079178> ${raffle.ticketCost} but you only have <:dicecoin:839981846419079178> ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
+                            `The cost per ticket in this raffle is <:dicecoin:839981846419079178> ${entries.ticketCost} but you only have <:dicecoin:839981846419079178> ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
                         );
                         return;
                     }
                     currEntry = Math.min(
-                        raffle.maxEntries - prevEntry,
-                        Math.floor(balance / raffle.ticketCost)
+                        entries.maxEntries - prevEntry,
+                        Math.floor(balance / entries.ticketCost)
                     );
                     await channel.send(
                         `You are entering the raffle with \`max\` entries, which will cost you <:dicecoin:839981846419079178> ${
-                            currEntry * raffle.ticketCost
+                            currEntry * entries.ticketCost
                         }, answer \`yes\` if you wish to continue.`
                     );
                     const awaitedMessage = (
@@ -254,38 +305,38 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                         return;
                     }
                 }
-                if (currEntry + prevEntry > raffle.maxEntries) {
+                if (currEntry + prevEntry > entries.maxEntries) {
                     await channel.send(
                         `You have already entered with ${prevEntry} ticket(s), the max entires allowance per person for this raffle is ${
-                            raffle.maxEntries
+                            entries.maxEntries
                         } ticket(s). You can only join with ${
-                            raffle.maxEntries - prevEntry
+                            entries.maxEntries - prevEntry
                         } more ticket(s). Use \`!raffle info\` to review your entries.`
                     );
                     return;
                 }
-                if (balance < currEntry * raffle.ticketCost) {
+                if (balance < currEntry * entries.ticketCost) {
                     await channel.send(
                         `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is <:dicecoin:839981846419079178> **${numberFormat.format(
-                            currEntry * raffle.ticketCost
+                            currEntry * entries.ticketCost
                         )}** but you have only <:dicecoin:839981846419079178> **${numberFormat.format(
                             balance
                         )}**.`
                     );
                     return;
                 }
-                raffle.tickets = raffle.tickets || {};
+                entries.tickets = entries.tickets || {};
                 for (
                     let i = currentEntries.length;
                     i < currEntry + currentEntries.length;
                     i += 1
                 ) {
-                    raffle.tickets[i + 1] = author.id;
+                    entries.tickets[i + 1] = author.id;
                 }
-                await ref.child('tickets').set(raffle.tickets);
+                await ref.child('tickets').set(entries.tickets);
                 await database
                     .ref(`discord_bot/community/currency/${member.id}/balance`)
-                    .set(balance - currEntry * raffle.ticketCost);
+                    .set(balance - currEntry * entries.ticketCost);
                 const gambleProfile =
                     cache['discord_bot/community/currency'][author.id]?.gamble;
                 await database
@@ -294,18 +345,18 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                     )
                     .set(
                         (gambleProfile?.lose || 0) +
-                            currEntry * raffle.ticketCost
+                            currEntry * entries.ticketCost
                     );
                 await channel.send(
                     `You have entered the raffle with ${currEntry} ticket(s), costing you <:dicecoin:839981846419079178> **${numberFormat.format(
-                        currEntry * raffle.ticketCost
+                        currEntry * entries.ticketCost
                     )}**${
                         prevEntry > 0
                             ? `, you now have a total of ${
                                   currEntry + prevEntry
                               } ticket(s)`
                             : '.'
-                    }\nTicket Numbers: ${Object.entries(raffle.tickets ?? {})
+                    }\nTicket Numbers: ${Object.entries(entries.tickets ?? {})
                         .filter(([, uid]) => uid === author.id)
                         .map(([ticketNumber]) => `**${ticketNumber}**`)
                         .join(', ')}`
@@ -373,30 +424,13 @@ export default async function lotto(message: Discord.Message): Promise<void> {
                 await channel.send('The duration for the raffle is too long.');
                 return;
             }
-            await ref.set({
-                endTimestamp: Date.now() + time,
-                hostId: author.id,
+            await host(
+                time,
                 maxEntries,
                 ticketCost,
-            });
-            await channel.send(
-                '<@&839694796431294485>',
-                new Discord.MessageEmbed()
-                    .setAuthor(
-                        'randomdice.gg Server',
-                        guild.iconURL({ dynamic: true }) ?? undefined
-                    )
-                    .setColor('#00ff00')
-                    .setTitle('New Dice Coins Raffle')
-                    .addField(
-                        'Ticket Entries',
-                        `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
-                    )
-                    .addField('Hosted by', `${author}`)
-                    .setFooter('Raffle ends at')
-                    .setTimestamp(Date.now() + time)
+                channel as Discord.TextChannel,
+                author
             );
-            announceWinner(guild, database);
             return;
         }
         case 'cancel':
