@@ -60,8 +60,8 @@ async function announceWinner(
         }
         await host(
             duration,
-            ticketCost,
             maxEntries,
+            ticketCost,
             channel as Discord.TextChannel,
             channel.client.user as Discord.ClientUser
         );
