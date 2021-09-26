@@ -50,11 +50,29 @@ async function announceWinner(
     const channel = guild.channels.cache.get('807229757049012266');
     if (channel?.type !== 'text') return;
     let raffleInfo = cache['discord_bot/community/raffle'];
+
+    const hostNewRaffle = async (): Promise<void> => {
+        const duration = 1000 * 60 * 60 * Math.ceil(Math.random() * 36 + 12); // 12 - 48 hours in random
+        const ticketCost = Math.ceil(Math.random() * 100_000);
+        let maxEntries = 100;
+        while (maxEntries * ticketCost > 200_000) {
+            maxEntries = Math.ceil(Math.random() * 100);
+        }
+        await host(
+            duration,
+            ticketCost,
+            maxEntries,
+            channel as Discord.TextChannel,
+            channel.client.user as Discord.ClientUser
+        );
+        await announceWinner(guild, database);
+    };
     if (!raffleInfo.hostId) {
+        await hostNewRaffle();
         return;
     }
 
-    if (raffleInfo.endTimestamp - Date.now() > 0)
+    if (raffleInfo.endTimestamp - Date.now() > 0) {
         setTimeout(async () => {
             raffleInfo = cache['discord_bot/community/raffle'];
 
@@ -117,21 +135,9 @@ async function announceWinner(
             await database
                 .ref(`discord_bot/community/currency/${target.id}/balance`)
                 .set(balance + amount);
-            const duration = 60 * 60 * Math.ceil(Math.random() * 36 + 12); // 12 - 48 hours in random
-            const ticketCost = Math.ceil(Math.random() * 100_000);
-            let maxEntries = 100;
-            while (maxEntries * ticketCost > 200_000) {
-                maxEntries = Math.ceil(Math.random() * 100);
-            }
-            await host(
-                duration,
-                ticketCost,
-                maxEntries,
-                channel as Discord.TextChannel,
-                channel.client.user as Discord.ClientUser
-            );
-            announceWinner(guild, database);
+            await hostNewRaffle();
         }, raffleInfo.endTimestamp - Date.now());
+    }
 }
 
 export default async function raffle(message: Discord.Message): Promise<void> {
