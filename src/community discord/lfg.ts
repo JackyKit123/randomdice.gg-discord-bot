@@ -22,7 +22,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
     if (
         !(
             member.roles.cache.has('') ||
-            member.roles.cache.has('804496339794264085') ||
+            member.roles.cache.has('804231753535193119') ||
             member.roles.cache.has('806896328255733780') ||
             member.roles.cache.has('805388604791586826') ||
             member.hasPermission('MENTION_EVERYONE')
@@ -34,7 +34,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
                 .setColor('#ff0000')
                 .setDescription(
                     'You need one of the following roles to use this command.\n' +
-                        '<@&805388604791586826> <@&804496339794264085> <@&806896328255733780> <@&805388604791586826>'
+                        '<@&805388604791586826> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
                 )
         );
         return;

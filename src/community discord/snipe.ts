@@ -88,7 +88,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     if (
         !(
             member.roles.cache.has('804512584375599154') ||
-            member.roles.cache.has('804496339794264085') ||
+            member.roles.cache.has('804231753535193119') ||
             member.roles.cache.has('806896328255733780') ||
             member.roles.cache.has('805388604791586826')
         )
@@ -99,7 +99,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
                 .setColor('#ff0000')
                 .setDescription(
                     'You need one of the following roles to use this command.\n' +
-                        '<@&804512584375599154> <@&804496339794264085> <@&806896328255733780> <@&805388604791586826>'
+                        '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
                 )
         );
         return;

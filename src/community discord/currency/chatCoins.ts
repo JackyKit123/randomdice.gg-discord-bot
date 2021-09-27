@@ -4,11 +4,11 @@ import getBalance from './balance';
 import cache from '../../util/cache';
 
 export function duplicatedRoleMulti(member: Discord.GuildMember): number {
-    const tier1roles = ['804231753535193119', '806312627877838878'];
+    const tier1roles = ['806312627877838878'];
     const tier2roles = [
         '804512584375599154',
         '806896328255733780',
-        '804496339794264085',
+        '804231753535193119',
         '805388604791586826',
     ];
     const tier3roles = ['804513079319592980', '809142956715671572'];
