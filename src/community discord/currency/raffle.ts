@@ -53,7 +53,9 @@ async function announceWinner(
 
     const hostNewRaffle = async (): Promise<void> => {
         const duration = 1000 * 60 * 60 * Math.ceil(Math.random() * 36 + 12); // 12 - 48 hours in random
-        const ticketCost = Math.ceil(Math.random() * 100_000);
+        const ticketCost = Math.ceil(
+            10 ** (Math.floor(Math.random() * 4) + 2) * Math.random()
+        );
         let maxEntries = 100;
         while (maxEntries * ticketCost > 200_000) {
             maxEntries = Math.ceil(Math.random() * 100);
@@ -118,6 +120,10 @@ async function announceWinner(
                 maxEntries: 0,
                 ticketCost: 0,
             });
+            if (entries.length === 0) {
+                await hostNewRaffle();
+                return;
+            }
             const target = await guild.members.fetch(winner);
             if (!target) {
                 await (channel as Discord.TextChannel).send(
