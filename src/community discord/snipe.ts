@@ -117,7 +117,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     if (
         snipeIndex &&
         !(
-            member.roles.cache.has('804513079319592980') ||
+            member.roles.cache.has('804512584375599154') ||
             member.roles.cache.has('809142956715671572')
         )
     ) {
@@ -130,7 +130,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
                 .setDescription(
                     'To use enhanced snipe to snipe with index\n' +
                         'You need one of the following roles to use this command.\n' +
-                        '<@&804513079319592980> <@&809142956715671572>\n'
+                        '<@&804512584375599154> <@&809142956715671572>\n'
                 )
         );
         return;

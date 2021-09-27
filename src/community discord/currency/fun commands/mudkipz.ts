@@ -20,7 +20,7 @@ export default async function givemoney(
     await channel.send(
         `Congratulations! You have ${
             author.id === '285696350702796801' &&
-            member?.roles.cache.has('805727466219372546')
+            member?.roles.cache.has('804513117228367882')
                 ? 'earned'
                 : 'lost'
         } <a:Dice_TierX_RickCoin:827059872810008616> ${numberFormat.format(

@@ -110,7 +110,7 @@ export default async function promote(message: Discord.Message): Promise<void> {
 
     if (!member || !guild) return;
     if (
-        !member.roles.cache.has('804513117228367882') &&
+        !member.roles.cache.has('804513079319592980') &&
         !member.roles.cache.has('809143588105486346')
     ) {
         await channel.send(
@@ -119,7 +119,7 @@ export default async function promote(message: Discord.Message): Promise<void> {
                 .setColor('#ff0000')
                 .setDescription(
                     'You need one of the following roles to use this command.\n' +
-                        '<@&804513117228367882> <@&809143588105486346>'
+                        '<@&804513079319592980> <@&809143588105486346>'
                 )
         );
         return;

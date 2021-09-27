@@ -6,13 +6,13 @@ import cache from '../../util/cache';
 export function duplicatedRoleMulti(member: Discord.GuildMember): number {
     const tier1roles = ['806312627877838878'];
     const tier2roles = [
-        '804512584375599154',
         '806896328255733780',
         '804231753535193119',
         '805388604791586826',
     ];
-    const tier3roles = ['804513079319592980', '809142956715671572'];
-    const tier4roles = ['804513117228367882', '809143588105486346'];
+    const tier3roles = ['804512584375599154', '809142956715671572'];
+    const tier4roles = ['804513079319592980', '809143588105486346'];
+    const tier5roles = ['804513117228367882', '805727466219372546'];
 
     const duplicatedTierMulti = (
         tierRoles: string[],
@@ -30,7 +30,8 @@ export function duplicatedRoleMulti(member: Discord.GuildMember): number {
         duplicatedTierMulti(tier1roles, 2) +
         duplicatedTierMulti(tier2roles, 5) +
         duplicatedTierMulti(tier3roles, 10) +
-        duplicatedTierMulti(tier4roles, 20)
+        duplicatedTierMulti(tier4roles, 20) +
+        duplicatedTierMulti(tier5roles, 50)
     );
 }
 

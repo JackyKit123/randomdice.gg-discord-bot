@@ -11,7 +11,7 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
     if (!member || !guild) return;
 
     if (
-        !member.roles.cache.has('804513079319592980') &&
+        !member.roles.cache.has('804512584375599154') &&
         !member.roles.cache.has('809142956715671572')
     ) {
         await channel.send(
@@ -20,7 +20,7 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
                 .setColor('#ff0000')
                 .setDescription(
                     'You need one of the following roles to use this command.\n' +
-                        '<@&804513079319592980> <@&809142956715671572>\n'
+                        '<@&804512584375599154> <@&809142956715671572>\n'
                 )
         );
         return;
