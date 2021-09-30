@@ -5,27 +5,17 @@ export interface News {
     website: string;
 }
 
-export interface DeckGuide {
-    archived: boolean;
-    id: number;
-    name: string;
-    type: 'PvP' | 'Co-op' | 'Crew';
-    diceList: Dice['id'][][];
-    battlefield: Battlefield['id'];
-    guide: string;
-}
-
-interface Alternatives {
-    desc: string;
-    list: Array<Dice['name']>;
-}
-
 interface ArenaValue {
     type: 'Main Dps' | 'Assist Dps' | 'Slow' | 'Value';
     assist: number;
     dps: number;
     slow: number;
     value: number;
+}
+
+interface Alternatives {
+    desc: string;
+    list: Array<number>;
 }
 
 export interface Dice {
@@ -105,6 +95,16 @@ export interface Battlefield {
     buffValue: number;
     buffUnit: string;
     buffCupValue: number;
+}
+
+export interface DeckGuide {
+    archived: boolean;
+    id: number;
+    name: string;
+    type: 'PvP' | 'Co-op' | 'Crew';
+    diceList: Dice['id'][][];
+    battlefield: Battlefield['id'];
+    guide: string;
 }
 
 export interface Help {
@@ -205,6 +205,7 @@ interface Tournament {
 }
 
 interface CacheObject {
+    // eslint-disable-next-line camelcase
     decks_guide: DeckGuide[];
     dice: Dice[];
     decks: Deck[];
@@ -229,7 +230,7 @@ interface CacheObject {
 }
 
 const cacheData = {
-    // eslint-disable-next-line @typescript-eslint/camelcase
+    // eslint-disable-next-line camelcase
     decks_guide: [] as DeckGuide[],
     dice: [] as Dice[],
     decks: [] as Deck[],

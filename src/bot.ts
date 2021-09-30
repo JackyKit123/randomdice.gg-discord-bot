@@ -89,6 +89,7 @@ import shush, {
     pokeballTrap,
 } from './community discord/currency/fun commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
+import myClass from './community discord/myclass';
 import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
@@ -244,6 +245,9 @@ client.on('message', async function messageHandler(message) {
                     break;
                 case '!myemoji':
                     await myEmoji(message);
+                    break;
+                case '!myclass':
+                    await myClass(message);
                     break;
                 case '!promote':
                 case '!advertise':

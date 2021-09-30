@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
 import cache from '../util/cache';
