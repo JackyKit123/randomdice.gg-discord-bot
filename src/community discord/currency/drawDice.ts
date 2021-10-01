@@ -165,6 +165,11 @@ export default async function drawDice(
         }
         return randomDraw;
     });
+    const isChatChannels =
+        !channel.isThread() &&
+        channel.type !== 'DM' &&
+        channel.parentId === '804222694488932363';
+    outcome.reward *= isChatChannels ? 1 : -10;
     await database
         .ref(`discord_bot/community/currency/${member.id}/diceDrawn`)
         .set(diceDrawn);
@@ -185,7 +190,9 @@ export default async function drawDice(
     await wait(1000);
     embed = embed
         .setDescription(
-            `You earned <:dicecoin:839981846419079178> ${numberFormat.format(
+            `You ${
+                isChatChannels ? 'lost' : 'earned'
+            } <:dicecoin:839981846419079178> ${numberFormat.format(
                 outcome.reward
             )}`
         )
@@ -193,7 +200,9 @@ export default async function drawDice(
     embed.fields = [
         {
             name: `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
-            value: drawnDice.map(randomDraw => emoji[randomDraw.id]).join(' '),
+            value: isChatChannels
+                ? `<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>**JACKPOT**<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>\nYou lost <:dicecoin:839981846419079178> ${outcome.reward} instead since you are using this command in ${channel}`
+                : drawnDice.map(randomDraw => emoji[randomDraw.id]).join(' '),
             inline: false,
         },
         {
