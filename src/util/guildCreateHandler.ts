@@ -18,8 +18,8 @@ export default async function handler(guild: Discord.Guild): Promise<void> {
     if (
         !msgChannel ||
         !(
-            msgChannel instanceof Discord.BaseGuildTextChannel ||
-            msgChannel instanceof Discord.BaseGuildVoiceChannel
+            msgChannel instanceof Discord.TextChannel ||
+            msgChannel instanceof Discord.VoiceChannel
         )
     )
         return;

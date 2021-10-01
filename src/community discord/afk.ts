@@ -68,7 +68,7 @@ export default async function afk(message: Discord.Message): Promise<void> {
 }
 
 async function afkHandler(
-    channel: Discord.BaseGuildTextChannel | Discord.ThreadChannel,
+    channel: Discord.TextChannel,
     member: Discord.GuildMember,
     {
         content,
@@ -121,22 +121,18 @@ async function afkHandler(
 
 export async function afkResponse(message: Discord.Message): Promise<void> {
     const { member, content, channel, createdTimestamp } = message;
-    if (!member || channel.type === 'DM') return;
+    if (!member || channel.type !== 'GUILD_TEXT') return;
     await afkHandler(channel, member, { content, createdTimestamp });
 }
 
 export async function removeAfkListener(
-    arg: Discord.Channel | Discord.PartialDMChannel | Discord.MessageReaction,
+    arg: Discord.TextBasedChannels | Discord.MessageReaction,
     user: Discord.User | Discord.PartialUser
 ): Promise<void> {
     const channel =
         arg instanceof Discord.MessageReaction ? arg.message.channel : arg;
     const { COMMUNITY_SERVER_ID } = process.env;
-    if (
-        !(channel instanceof Discord.BaseGuildTextChannel) ||
-        !COMMUNITY_SERVER_ID
-    )
-        return;
+    if (channel.type !== 'GUILD_TEXT' || !COMMUNITY_SERVER_ID) return;
     const { guild } = channel;
     const member = guild.members.cache.get(user.id);
     if (!member || !guild || guild.id !== COMMUNITY_SERVER_ID) return;
