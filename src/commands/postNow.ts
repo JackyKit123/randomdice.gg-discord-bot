@@ -36,7 +36,7 @@ export async function postGuide(
                         return guideChannel;
                     } catch (err) {
                         if (
-                            (err as DiscordAPIError | Error).name ===
+                            (err as DiscordAPIError | Error).message ===
                             'Unknown Channel'
                         ) {
                             database
@@ -349,7 +349,7 @@ export async function postNews(
                         return guideChannel;
                     } catch (err) {
                         if (
-                            (err as DiscordAPIError | Error).name ===
+                            (err as DiscordAPIError | Error).message ===
                             'Unknown Channel'
                         ) {
                             database
