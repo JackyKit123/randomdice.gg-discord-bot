@@ -169,7 +169,7 @@ export default async function drawDice(
         !channel.isThread() &&
         channel.type !== 'DM' &&
         channel.parentId === '804222694488932363';
-    outcome.reward *= isChatChannels ? 1 : -10;
+    outcome.reward *= isChatChannels ? -10 : 1;
     await database
         .ref(`discord_bot/community/currency/${member.id}/diceDrawn`)
         .set(diceDrawn);
@@ -193,7 +193,7 @@ export default async function drawDice(
             `You ${
                 isChatChannels ? 'lost' : 'earned'
             } <:dicecoin:839981846419079178> ${numberFormat.format(
-                outcome.reward
+                outcome.reward * (isChatChannels ? -1 : 1)
             )}`
         )
         .setColor(outcome.color);
