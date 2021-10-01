@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-import Discord from 'discord.js';
+import Discord, { DiscordAPIError } from 'discord.js';
 import firebase from 'firebase-admin';
 import cache from '../util/cache';
 import parsedText from '../util/parseText';
@@ -22,15 +22,32 @@ export async function postGuide(
                 .filter(([guildId, config]) =>
                     member ? member.guild.id === guildId : config.guide
                 )
-                .map(async ([, config]) => {
+                .map(async ([guildId, config]) => {
                     if (!config.guide) {
                         throw new Error('missing registered guide channel.');
                     }
-                    const guideChannel = await client.channels.fetch(
-                        config.guide
-                    );
-                    if (!guideChannel?.isText()) return undefined;
-                    return guideChannel;
+                    try {
+                        const guideChannel = await client.channels.fetch(
+                            config.guide
+                        );
+
+                        if (!guideChannel?.isText())
+                            throw new Error('Unknown Channel');
+                        return guideChannel;
+                    } catch (err) {
+                        if (
+                            (err as DiscordAPIError | Error).name ===
+                            'Unknown Channel'
+                        ) {
+                            database
+                                .ref('discord_bot/registry')
+                                .child(guildId)
+                                .child('guide')
+                                .set(null);
+                            return undefined;
+                        }
+                        throw err;
+                    }
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
@@ -318,15 +335,32 @@ export async function postNews(
                 .filter(([guildId, config]) =>
                     guild ? guild.id === guildId : config.news
                 )
-                .map(async ([, config]) => {
+                .map(async ([guildId, config]) => {
                     if (!config.news) {
                         throw new Error('missing registered news channel.');
                     }
-                    const newsChannel = await client.channels.fetch(
-                        config.news
-                    );
-                    if (!newsChannel?.isText()) return undefined;
-                    return newsChannel;
+                    try {
+                        const guideChannel = await client.channels.fetch(
+                            config.news
+                        );
+
+                        if (!guideChannel?.isText())
+                            throw new Error('Unknown Channel');
+                        return guideChannel;
+                    } catch (err) {
+                        if (
+                            (err as DiscordAPIError | Error).name ===
+                            'Unknown Channel'
+                        ) {
+                            database
+                                .ref('discord_bot/registry')
+                                .child(guildId)
+                                .child('news')
+                                .set(null);
+                            return undefined;
+                        }
+                        throw err;
+                    }
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
