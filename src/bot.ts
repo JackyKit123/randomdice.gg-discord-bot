@@ -387,7 +387,7 @@ client.on('messageCreate', async message => {
             return;
         }
 
-        if (!suffix.match(/^\\?\.gg\b/i) || author.bot) {
+        if (!/^\.gg ?/i.test(suffix) || author.bot) {
             return;
         }
         if (process.env.DEV_USERS_ID?.includes(author.id)) {
