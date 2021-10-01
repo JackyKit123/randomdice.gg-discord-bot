@@ -31,11 +31,13 @@ export default async function gtn(message: Discord.Message): Promise<void> {
     );
     const numberPrompt = await author.send('What is the number in your mind?');
     try {
-        const awaitedMessage = await numberPrompt.channel.awaitMessages(
-            (newMessage: Discord.Message) =>
+        const awaitedMessage = await numberPrompt.channel.awaitMessages({
+            filter: (newMessage: Discord.Message) =>
                 Number.isInteger(Number(newMessage.content)),
-            { time: 20000, max: 1, errors: ['time'] }
-        );
+            time: 20000,
+            max: 1,
+            errors: ['time'],
+        });
         if (numberToGuess.get(channel.id) !== 0) {
             await author.send(
                 'Someone else has started a game, please wait for the next round.'
@@ -69,15 +71,17 @@ export default async function gtn(message: Discord.Message): Promise<void> {
     );
     await joinMessage.react('✅');
 
-    const reactions = await joinMessage.awaitReactions(
-        (reaction: Discord.MessageReaction, user: Discord.User) =>
+    const reactions = await joinMessage.awaitReactions({
+        filter: (reaction: Discord.MessageReaction, user: Discord.User) =>
             reaction.emoji.name === '✅' && user.id !== author.id && !user.bot,
-        { time: 10000 }
-    );
-    const participants = reactions
-        .find(reaction => reaction.emoji.name === '✅')
-        ?.users.cache.filter(user => user.id !== author.id && !user.bot)
-        .array();
+        time: 10000,
+    });
+    const participants = [
+        ...(reactions
+            .find(reaction => reaction.emoji.name === '✅')
+            ?.users.cache.filter(user => user.id !== author.id && !user.bot)
+            .values() ?? []),
+    ];
     await message.reactions.removeAll();
 
     if (!participants?.length) {
@@ -101,12 +105,14 @@ export default async function gtn(message: Discord.Message): Promise<void> {
         );
         try {
             /* eslint-disable no-loop-func */
-            const awaitedMessage = await channel.awaitMessages(
-                (newMessage: Discord.Message) =>
+            const awaitedMessage = await channel.awaitMessages({
+                filter: (newMessage: Discord.Message) =>
                     Number.isInteger(Number(newMessage.content)) &&
                     newMessage.author.id === currentParticipant.id,
-                { time: 20000, max: 1, errors: ['time'] }
-            );
+                time: 20000,
+                max: 1,
+                errors: ['time'],
+            });
             afks = 0;
             const guess = Number(awaitedMessage.first()?.content);
             if (guess < smallGuess || guess > bigGuess) {

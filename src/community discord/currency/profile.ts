@@ -22,7 +22,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const balance = await getBalance(message, 'emit new member', target);
     if (balance === false) return;
 
-    const prestigeLevels = {
+    const prestigeLevels: { [level: number]: string } = {
         1: '806312627877838878',
         2: '806896328255733780',
         3: '806896441947324416',
@@ -33,8 +33,6 @@ export default async function Profile(message: Discord.Message): Promise<void> {
         8: '809143374555774997',
         9: '809143390791925780',
         10: '809143588105486346',
-    } as {
-        [level: number]: string;
     };
     const currentPrestigeLevel = Number(
         Object.entries(prestigeLevels)
@@ -122,7 +120,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 ? `**${guild.roles.cache
                       .get(prestigeLevels[profile.prestige])
                       ?.name.toUpperCase()}**`
-                : ''
+                : ' '
         )
         .addField(
             'Balance',
@@ -244,36 +242,35 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             'Showing page DICE DRAWN of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
         );
 
-    const sentMessage = await channel.send(generalProfile);
+    const sentMessage = await channel.send({ embeds: [generalProfile] });
 
-    const collector = sentMessage.createReactionCollector(
-        (reaction: Discord.MessageReaction, user) =>
-            (['👤', '⏲️', '🎰', '❌'].includes(reaction.emoji.name) ||
+    const collector = sentMessage.createReactionCollector({
+        filter: (reaction: Discord.MessageReaction, user) =>
+            ((reaction.emoji.name &&
+                ['👤', '⏲️', '🎰', '❌'].includes(reaction.emoji.name)) ||
                 reaction.emoji.id === '807019807312183366') &&
             user.id === member.id,
-        {
-            time: 60 * 1000,
-        }
-    );
+        time: 60 * 1000,
+    });
 
     collector.on('collect', async (reaction, user) => {
         try {
             switch (reaction.emoji.name) {
                 case '👤':
-                    await sentMessage.edit(generalProfile);
+                    await sentMessage.edit({ embeds: [generalProfile] });
                     break;
                 case '⏲️':
-                    await sentMessage.edit(cooldownProfile);
+                    await sentMessage.edit({ embeds: [cooldownProfile] });
                     break;
                 case '🎰':
-                    await sentMessage.edit(gambleProfile);
+                    await sentMessage.edit({ embeds: [gambleProfile] });
                     break;
                 case '❌':
                     collector.stop();
-                    break;
+                    return;
                 default:
                     if (reaction.emoji.id === '807019807312183366')
-                        await sentMessage.edit(diceDrawnProfile);
+                        await sentMessage.edit({ embeds: [diceDrawnProfile] });
             }
             await reaction.users.remove(user.id);
         } catch {

@@ -97,7 +97,7 @@ export default async function moon(message: Discord.Message): Promise<void> {
         // suppress error
     } finally {
         await sentMessage.edit(
-            `${target.toString()}...You have been mooned! <a:Taxi:780350572212781086>`
+            `${target.toString()}...You have been mooned! 💩`
         );
         await wait(1000 * 60 * 5);
         try {
@@ -114,14 +114,16 @@ export default async function moon(message: Discord.Message): Promise<void> {
 export async function purgeRolesOnReboot(
     client: Discord.Client
 ): Promise<void> {
+    if (!client.user) return;
     const guild = await client.guilds.fetch('804222694488932362');
     const logs = await guild.fetchAuditLogs({
-        user: client.user as Discord.ClientUser,
+        user: client.user,
         type: 'MEMBER_ROLE_UPDATE',
     });
     logs.entries.forEach(async entry => {
+        if (!(entry.target instanceof Discord.User)) return;
         if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 7) {
-            const member = guild.member((entry.target as Discord.User).id);
+            const member = guild.members.cache.get(entry.target.id);
             if (member?.roles.cache.has('804508975503638558')) {
                 await member.roles.remove('804508975503638558');
             }

@@ -2,6 +2,7 @@
 import firebase from 'firebase-admin';
 import Discord from 'discord.js';
 import * as post from '../commands/postNow';
+import logMessage from '../dev-commands/logMessage';
 
 export default function listener(
     client: Discord.Client,
@@ -17,8 +18,8 @@ export default function listener(
     };
     const guild = client.guilds.cache.get(process.env.DEV_SERVER_ID || '');
     const member =
-        process.env.NODE_ENV === 'development'
-            ? guild?.members.cache.get((client.user as Discord.ClientUser).id)
+        process.env.NODE_ENV === 'development' && client.user
+            ? guild?.members.cache.get(client.user.id)
             : undefined;
     const postGuideListener = async (
         snapshot: firebase.database.DataSnapshot,
@@ -34,12 +35,11 @@ export default function listener(
             } catch (err) {
                 try {
                     // eslint-disable-next-line no-unused-expressions
-                    (
-                        (client.channels.cache.get(
-                            process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
-                        ) as Discord.TextChannel) || undefined
-                    )?.send(
-                        `Error encountered when posting guide: ${err.stack}`
+                    logMessage(
+                        client,
+                        `Error encountered when posting guide: ${
+                            (err as Error).stack
+                        }`
                     );
                 } catch (criticalError) {
                     console.error(criticalError);
@@ -73,12 +73,11 @@ export default function listener(
             } catch (err) {
                 try {
                     // eslint-disable-next-line no-unused-expressions
-                    (
-                        (client.channels.cache.get(
-                            process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
-                        ) as Discord.TextChannel) || undefined
-                    )?.send(
-                        `Error encountered when posting news: ${err.stack}`
+                    logMessage(
+                        client,
+                        `Error encountered when posting news: ${
+                            (err as Error).stack
+                        }`
                     );
                 } catch (criticalError) {
                     console.error(criticalError);

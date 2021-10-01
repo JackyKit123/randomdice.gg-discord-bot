@@ -12,7 +12,12 @@ function sortLeaderboard(
     currencyList: MemberCurrency,
     type: 'default' | 'weekly' | 'gamble' = 'default'
 ): { name: string; value: string }[] {
-    const sortFn = {
+    const sortFn: {
+        [key in typeof type]: (
+            a: [string, MemberCurrency['key']],
+            b: [string, MemberCurrency['key']]
+        ) => number;
+    } = {
         default: ([, profileA], [, profileB]) =>
             profileB.balance - profileA.balance,
         weekly: ([, profileA], [, profileB]) =>
@@ -21,19 +26,14 @@ function sortLeaderboard(
             (profileB?.gamble?.gain || 0) -
             (profileB?.gamble?.lose || 0) -
             ((profileA?.gamble?.gain || 0) - (profileA?.gamble?.lose || 0)),
-    } as {
-        [key in typeof type]: (
-            a: [string, MemberCurrency['key']],
-            b: [string, MemberCurrency['key']]
-        ) => number;
     };
-    const value = {
+    const value: {
+        [key in typeof type]: (profile: MemberCurrency['key']) => number;
+    } = {
         default: profile => profile.balance || 0,
         weekly: profile => profile.weeklyChat || 0,
         gamble: profile =>
             (profile?.gamble?.gain || 0) - (profile?.gamble?.lose || 0),
-    } as {
-        [key in typeof type]: (profile: MemberCurrency['key']) => number;
     };
     return Object.entries(currencyList)
         .sort(sortFn[type])
@@ -69,7 +69,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
         return;
     }
     const channel = guild.channels.cache.get('805388492174655488');
-    if (channel?.type !== 'text') {
+    if (!channel?.isText()) {
         await logMessage(
             client,
             'Unable to get text channel 805388492174655488 when resetting weekly.'
@@ -84,23 +84,25 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
     Object.keys(currencyList).forEach(id =>
         database.ref(`discord_bot/community/currency/${id}/weeklyChat`).set(0)
     );
-    await (channel as Discord.TextChannel).send(
-        '<@&804544088153391124>',
-        new Discord.MessageEmbed()
-            .setColor('#6ba4a5')
-            .setThumbnail(
-                'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
-            )
-            .setTitle(`Top 5 Weekly Winners`)
-            .setAuthor(
-                'Randomdice.gg Server',
-                guild.iconURL({
-                    dynamic: true,
-                }) ?? undefined,
-                `https://discord.gg/randomdice`
-            )
-            .addFields(sortedWeekly.slice(0, 5))
-    );
+    await channel.send({
+        content: '<@&804544088153391124>',
+        embeds: [
+            new Discord.MessageEmbed()
+                .setColor('#6ba4a5')
+                .setThumbnail(
+                    'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
+                )
+                .setTitle(`Top 5 Weekly Winners`)
+                .setAuthor(
+                    'Randomdice.gg Server',
+                    guild.iconURL({
+                        dynamic: true,
+                    }) ?? undefined,
+                    `https://discord.gg/randomdice`
+                )
+                .addFields(sortedWeekly.slice(0, 5)),
+        ],
+    });
     const findUniques = new Map<string, true>();
     await Promise.all(
         weeklyWinners
@@ -121,19 +123,18 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
                 }
             })
     );
-    await (channel as Discord.TextChannel).send(
+    await channel.send(
         `Remove <@&805388604791586826> from ${findUniques.size} members`
     );
     const weeklyList = await Promise.all(
         sortedWeekly.slice(0, 5).map(async ({ value }) => {
-            const uid = (value.match(/^<@!(\d{18})>/) as RegExpMatchArray)[1];
+            const uid = value.match(/^<@!(\d{18})>/)?.[1];
+            if (!uid) return '';
             try {
                 const m = await guild.members.fetch(uid);
                 if (m) {
                     await m.roles.add('805388604791586826');
-                    await (channel as Discord.TextChannel).send(
-                        `Added <@&805388604791586826> to ${m}`
-                    );
+                    await channel.send(`Added <@&805388604791586826> to ${m}`);
                 }
                 return uid;
             } catch {
@@ -217,7 +218,7 @@ export default async function leaderboard(
     const currencyList = cache['discord_bot/community/currency'];
 
     if (isReset && isWeekly) {
-        if (member.hasPermission('MANAGE_GUILD')) {
+        if (member.permissions.has('MANAGE_GUILD')) {
             await resetWeekly(client);
         } else {
             await channel.send('You do not have permission to reset weekly');
@@ -269,19 +270,18 @@ export default async function leaderboard(
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setTimestamp()
         );
-    const sentMessage = await channel.send(embeds[currentPage]);
+    const sentMessage = await channel.send({ embeds: [embeds[currentPage]] });
     if (pageNumbers <= 1) {
         return;
     }
 
-    const collector = sentMessage.createReactionCollector(
-        (reaction, user) =>
+    const collector = sentMessage.createReactionCollector({
+        filter: (reaction, user) =>
+            !!reaction.emoji.name &&
             ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name) &&
             user.id === member.id,
-        {
-            time: 180000,
-        }
-    );
+        time: 180000,
+    });
 
     collector.on('collect', async (reaction, user) => {
         switch (reaction.emoji.name) {
@@ -299,10 +299,11 @@ export default async function leaderboard(
                 break;
             case '❌':
                 collector.stop();
-                break;
+                return;
             default:
         }
-        if (sentMessage.editable) await sentMessage.edit(embeds[currentPage]);
+        if (sentMessage.editable)
+            await sentMessage.edit({ embeds: [embeds[currentPage]] });
         await reaction.users.remove(user.id);
     });
 

@@ -9,7 +9,8 @@ export default async function solveMathEquation(
     try {
         const evaluated = math.evaluate(content);
         const formatted = math.format(evaluated, 14);
-        await channel.send(formatted, {
+        await channel.send({
+            content: formatted,
             allowedMentions: {
                 parse: [],
                 users: [],

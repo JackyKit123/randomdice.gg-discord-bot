@@ -93,15 +93,17 @@ export default async function snipe(message: Discord.Message): Promise<void> {
             member.roles.cache.has('805388604791586826')
         )
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(`You cannot use ${command?.toLowerCase()}`)
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need one of the following roles to use this command.\n' +
-                        '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(`You cannot use ${command?.toLowerCase()}`)
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need one of the following roles to use this command.\n' +
+                            '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -121,18 +123,20 @@ export default async function snipe(message: Discord.Message): Promise<void> {
             member.roles.cache.has('809142956715671572')
         )
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(
-                    `You cannot use enhanced ${command?.toLowerCase()} with snipe index.`
-                )
-                .setColor('#ff0000')
-                .setDescription(
-                    'To use enhanced snipe to snipe with index\n' +
-                        'You need one of the following roles to use this command.\n' +
-                        '<@&804512584375599154> <@&809142956715671572>\n'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(
+                        `You cannot use enhanced ${command?.toLowerCase()} with snipe index.`
+                    )
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'To use enhanced snipe to snipe with index\n' +
+                            'You need one of the following roles to use this command.\n' +
+                            '<@&804512584375599154> <@&809142956715671572>\n'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -178,12 +182,13 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         );
     }
 
-    await channel.send(
-        snipeIndexTooBig
+    await channel.send({
+        content: snipeIndexTooBig
             ? `The snipe index ${snipeIndex + 1} is too big, there are only ${
                   snipedList.length
               } of messages to be sniped, sniping the most recent message instead.`
-            : '',
-        { embed, files: snipedAttachments }
-    );
+            : undefined,
+        embeds: [embed],
+        files: snipedAttachments,
+    });
 }

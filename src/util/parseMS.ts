@@ -47,10 +47,11 @@ export default function parseMsIntoReadableText(
 }
 
 export function parseStringIntoMs(str: string): number | null {
-    const regex = /(?:(\d+)y)?(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/i;
-    const [, y, w, d, h, m, s] = Array.from(
+    const regex =
+        /(?:(\d+)y)?(?:(\d+)w)?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/i;
+    const [, y, w, d, h, m, s]: (string | undefined)[] = Array.from(
         str?.match(regex) || Array(6).fill(undefined)
-    ) as (string | undefined)[];
+    );
 
     if (
         [y, w, d, h, m, s].every(

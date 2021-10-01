@@ -8,7 +8,7 @@ export default async function sendLinks(
     const [, command, ...args] = content.split(' ');
 
     if (
-        await cooldown(message, '.gg contact', {
+        await cooldown(message, '.gg link', {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
@@ -32,34 +32,37 @@ export default async function sendLinks(
             break;
         case 'invite':
             await channel.send(
-                `You can click this link to invite ${(client.user as Discord.ClientUser).toString()} to your own server.\nhttps://discord.com/oauth2/authorize?client_id=723917706641801316&permissions=355393&scope=bot`
+                `You can click this link to invite ${(
+                    client.user as Discord.ClientUser
+                ).toString()} to your own server.\nhttps://discord.com/oauth2/authorize?client_id=723917706641801316&permissions=355393&scope=bot`
             );
             break;
         case 'support':
-            await channel.send(
-                new Discord.MessageEmbed()
-                    .setTitle('Support Us')
-                    .setAuthor(
-                        'Random Dice Community Website',
-                        'https://randomdice.gg/android-chrome-512x512.png',
-                        'https://randomdice.gg/'
-                    )
-                    .setColor('#6ba4a5')
-                    .setDescription(
-                        'You can support randomdice.gg by funding in patreon or contributing on github.'
-                    )
-                    .addFields([
-                        {
-                            name: 'Patreon',
-                            value:
-                                'https://www.patreon.com/RandomDiceCommunityWebsite',
-                        },
-                        {
-                            name: 'Github',
-                            value: 'https://github.randomdice.gg',
-                        },
-                    ])
-            );
+            await channel.send({
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setTitle('Support Us')
+                        .setAuthor(
+                            'Random Dice Community Website',
+                            'https://randomdice.gg/android-chrome-512x512.png',
+                            'https://randomdice.gg/'
+                        )
+                        .setColor('#6ba4a5')
+                        .setDescription(
+                            'You can support randomdice.gg by funding in patreon or contributing on github.'
+                        )
+                        .addFields([
+                            {
+                                name: 'Patreon',
+                                value: 'https://www.patreon.com/RandomDiceCommunityWebsite',
+                            },
+                            {
+                                name: 'Github',
+                                value: 'https://github.randomdice.gg',
+                            },
+                        ]),
+                ],
+            });
             break;
         default:
     }

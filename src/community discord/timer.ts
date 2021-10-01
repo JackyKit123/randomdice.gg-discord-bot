@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { DiscordAPIError } from 'discord.js';
 import firebase from 'firebase-admin';
 import cache from '../util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from '../util/parseMS';
@@ -49,10 +49,14 @@ function tickTimer(
             if (now <= endTime) {
                 const newText = parseTimeText(endTime - now);
                 if (newText !== embed.description) {
-                    await message.edit(embed.setDescription(newText));
+                    await message.edit({
+                        embeds: [embed.setDescription(newText)],
+                    });
                 }
             } else {
-                await message.edit(embed.setDescription('**Timer Ended**'));
+                await message.edit({
+                    embeds: [embed.setDescription('**Timer Ended**')],
+                });
                 clearInterval(interval);
                 killTimerFromDB(key);
                 const timerReact = reactions.cache.find(
@@ -62,8 +66,8 @@ function tickTimer(
                     ?.filter(user => !user.bot && user.id !== hostId)
                     .map(user => user.toString())
                     .join(' ');
-                await channel.send(
-                    `<@${hostId}> ${
+                await channel.send({
+                    content: `<@${hostId}> ${
                         // eslint-disable-next-line no-nested-ternary
                         userList
                             ? userList.length < 2048
@@ -74,18 +78,21 @@ function tickTimer(
                                   )}`
                             : ''
                     }`,
-                    new Discord.MessageEmbed().setDescription(
-                        `The [timer](https://discord.com/channels/${
-                            (guild as Discord.Guild).id
-                        }/${channel.id}/${id}) for **${
-                            embed.title || '"no title"'
-                        }** has ended.`
-                    )
-                );
+                    embeds: [
+                        new Discord.MessageEmbed().setDescription(
+                            `The [timer](https://discord.com/channels/${
+                                (guild as Discord.Guild).id
+                            }/${channel.id}/${id}) for **${
+                                embed.title || '"no title"'
+                            }** has ended.`
+                        ),
+                    ],
+                });
             }
         } catch (err) {
             killTimerFromDB(key);
-            if (err.message !== 'Unknown Message') throw new Error(err);
+            if ((err as DiscordAPIError).message !== 'Unknown Message')
+                throw new Error((err as DiscordAPIError).message);
         }
     }, 5 * 1000);
 }
@@ -115,9 +122,7 @@ export default async function setTimer(
             return;
         }
         if (
-            !(timerChannel as Discord.TextChannel)
-                .permissionsFor(member)
-                ?.has('MANAGE_MESSAGES') &&
+            !timerChannel.permissionsFor(member)?.has('MANAGE_MESSAGES') &&
             existingTimer?.[1].hostId !== member.id
         ) {
             await channel.send(
@@ -130,11 +135,9 @@ export default async function setTimer(
             const existingTimerMessage = await timerChannel.messages.fetch(
                 timerId
             );
-            await existingTimerMessage.delete({
-                reason: `${member.user.username}#${member.user.discriminator} deleted timer.`,
-            });
+            await existingTimerMessage.delete();
         } catch (err) {
-            if (err.message !== 'Unknown Message') {
+            if ((err as DiscordAPIError).message !== 'Unknown Message') {
                 throw err;
             }
         }
@@ -146,37 +149,41 @@ export default async function setTimer(
     const msg = args.join(' ');
 
     if (!time) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('Command Parse Error')
-                .setColor('#ff0000')
-                .setDescription('usage of the command')
-                .addField(
-                    `!timer <time> [message]`,
-                    'Example:```!timer 20s Just a countdown\n!timer 4d20m smoke weed everyday```'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle('Command Parse Error')
+                    .setColor('#ff0000')
+                    .setDescription('usage of the command')
+                    .addField(
+                        `!timer <time> [message]`,
+                        'Example:```!timer 20s Just a countdown\n!timer 4d20m smoke weed everyday```'
+                    ),
+            ],
+        });
         return;
     }
     const endTime = Date.now() + time;
 
-    const timerMessage = await channel.send(
-        new Discord.MessageEmbed()
-            .setAuthor(
-                `Timer by ${member.displayName}`,
-                member.user.displayAvatarURL(
-                    { dynamic: true } ?? member.user.defaultAvatarURL
+    const timerMessage = await channel.send({
+        embeds: [
+            new Discord.MessageEmbed()
+                .setAuthor(
+                    `Timer by ${member.displayName}`,
+                    member.user.displayAvatarURL(
+                        { dynamic: true } ?? member.user.defaultAvatarURL
+                    )
                 )
-            )
-            .setTitle(msg)
-            .setColor(member.displayHexColor)
-            .setFooter(
-                'Timer ends at',
-                'https://cdn.discordapp.com/emojis/804524690440847381.png?v=1'
-            )
-            .setTimestamp(endTime)
-            .setDescription(parseTimeText(time))
-    );
+                .setTitle(msg)
+                .setColor(member.displayHexColor)
+                .setFooter(
+                    'Timer ends at',
+                    'https://cdn.discordapp.com/emojis/804524690440847381.png?v=1'
+                )
+                .setTimestamp(endTime)
+                .setDescription(parseTimeText(time)),
+        ],
+    });
     const ref = database.ref('discord_bot/community/timer').push();
     await ref.set({
         guildId: guild.id,

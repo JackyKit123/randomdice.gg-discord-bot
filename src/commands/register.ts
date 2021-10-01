@@ -53,7 +53,7 @@ export async function register(
     const targetedChannel =
         mentions.channels.first() || client.channels.cache.get(args[3] || '');
 
-    if (!member.hasPermission('MANAGE_CHANNELS')) {
+    if (!member.permissions.has('MANAGE_CHANNELS')) {
         await channel.send(
             'You lack permission to execute this command, required permission: `MANAGE_CHANNELS`'
         );
@@ -84,7 +84,9 @@ export async function register(
                     );
                     return;
                 }
-                const missingPermissions = (targetedChannel as Discord.GuildChannel)
+                const missingPermissions = (
+                    targetedChannel as Discord.GuildChannel
+                )
                     .permissionsFor(client.user as Discord.ClientUser)
                     ?.missing([
                         'VIEW_CHANNEL',
@@ -115,20 +117,17 @@ export async function register(
                 );
                 let answeredYes = false;
                 try {
-                    const awaitedMessage = await channel.awaitMessages(
-                        (newMessage: Discord.Message) =>
+                    const awaitedMessage = await channel.awaitMessages({
+                        filter: (newMessage: Discord.Message) =>
                             newMessage.author === message.author &&
-                            !!newMessage.content
-                                .replace(/[^\040-\176\200-\377]/gi, '')
-                                .match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                        { time: 60000, max: 1, errors: ['time'] }
-                    );
-                    if (
-                        awaitedMessage
-                            .first()
-                            ?.content.replace(/[^\040-\176\200-\377]/gi, '')
-                            .match(/^y(es)?/i)
-                    ) {
+                            !!newMessage.content.match(
+                                /^(y(es)?|no?|\\?\.gg ?)/i
+                            ),
+                        time: 60000,
+                        max: 1,
+                        errors: ['time'],
+                    });
+                    if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
                         answeredYes = true;
                     }
                 } catch {
@@ -147,9 +146,15 @@ export async function register(
             }
             break;
         }
-        case 'list':
-            await channel.send(await checkRegistered(guild, database));
+        case 'list': {
+            const checkedMessage = await checkRegistered(guild, database);
+            await channel.send(
+                typeof checkedMessage === 'string'
+                    ? { content: checkedMessage }
+                    : { embeds: [checkedMessage] }
+            );
             break;
+        }
         default:
             await channel.send(
                 'Targeted type not found, supported type: `guide` `news`. The correct command format is `.gg register <guide|news> #channel-mention` or list all registered channel with `.gg register list`'
@@ -167,7 +172,7 @@ export async function unregister(
         return;
     }
 
-    if (!member.hasPermission('MANAGE_CHANNELS')) {
+    if (!member.permissions.has('MANAGE_CHANNELS')) {
         await channel.send(
             'You lack permission to execute this command, required permission: `MANAGE_CHANNELS`'
         );

@@ -1,6 +1,6 @@
 import firebase from 'firebase-admin';
 import stringSimilarity from 'string-similarity';
-import Discord from 'discord.js';
+import Discord, { DiscordAPIError } from 'discord.js';
 import axios, { AxiosResponse } from 'axios';
 import cache from '../util/cache';
 import cooldown from '../util/cooldown';
@@ -14,15 +14,17 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
         !member.roles.cache.has('804512584375599154') &&
         !member.roles.cache.has('809142956715671572')
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(`You cannot use custom emoji command.`)
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need one of the following roles to use this command.\n' +
-                        '<@&804512584375599154> <@&809142956715671572>\n'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(`You cannot use custom emoji command.`)
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need one of the following roles to use this command.\n' +
+                            '<@&804512584375599154> <@&809142956715671572>\n'
+                    ),
+            ],
+        });
         return;
     }
     const attachment = attachments.first();
@@ -117,13 +119,19 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
                     stringSimilarity.compareTwoStrings(str, substring) >= 0.7
                 );
             };
-            if (
-                content.includes(uid) ||
-                words.some(
-                    (_, i) => match(username, i) || match(displayName, i)
+            try {
+                if (
+                    content.includes(uid) ||
+                    words.some(
+                        (_, i) => match(username, i) || match(displayName, i)
+                    )
                 )
-            )
-                await message.react(emojiID);
+                    await message.react(emojiID);
+            } catch (err) {
+                if ((err as DiscordAPIError).message === 'Unknown Message')
+                    return;
+                throw err;
+            }
         }
     );
 }

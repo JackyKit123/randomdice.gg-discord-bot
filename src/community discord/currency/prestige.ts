@@ -22,7 +22,9 @@ export default async function prestige(
     const balance = await getBalance(message, 'emit new member');
     if (balance === false) return;
 
-    const prestigeLevels = {
+    const prestigeLevels: {
+        [level: number]: string;
+    } = {
         1: '806312627877838878',
         2: '806896328255733780',
         3: '806896441947324416',
@@ -33,8 +35,6 @@ export default async function prestige(
         8: '809143374555774997',
         9: '809143390791925780',
         10: '809143588105486346',
-    } as {
-        [level: number]: string;
     };
 
     const currentPrestigeLevel = Number(
@@ -53,39 +53,41 @@ export default async function prestige(
     const nextPrestigeLevel = currentPrestigeLevel + 1;
     const progress = balance / (nextPrestigeLevel * 250000);
     if (progress < 1) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setAuthor(
-                    `${member.user.username}#${member.user.discriminator}`,
-                    member.user.avatarURL({
-                        dynamic: true,
-                    }) ?? undefined
-                )
-                .setColor(member.displayHexColor)
-                .setTitle('Prestige Progress')
-                .setDescription(
-                    `${'■'.repeat(
-                        Math.max(0, Math.floor(progress * 10))
-                    )}${'□'.repeat(
-                        Math.min(
-                            Math.max(10 - Math.floor(progress * 10), 0),
-                            10
-                        )
-                    )}(${Math.floor(progress * 1000) / 10}%)`
-                )
-                .addField(
-                    'Prestige Cost',
-                    `<:dicecoin:839981846419079178> ${numberFormat.format(
-                        nextPrestigeLevel * 250000
-                    )}`
-                )
-                .addField(
-                    'Your Balance',
-                    `<:dicecoin:839981846419079178> ${numberFormat.format(
-                        balance
-                    )}`
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setAuthor(
+                        `${member.user.username}#${member.user.discriminator}`,
+                        member.user.avatarURL({
+                            dynamic: true,
+                        }) ?? undefined
+                    )
+                    .setColor(member.displayHexColor)
+                    .setTitle('Prestige Progress')
+                    .setDescription(
+                        `${'■'.repeat(
+                            Math.max(0, Math.floor(progress * 10))
+                        )}${'□'.repeat(
+                            Math.min(
+                                Math.max(10 - Math.floor(progress * 10), 0),
+                                10
+                            )
+                        )}(${Math.floor(progress * 1000) / 10}%)`
+                    )
+                    .addField(
+                        'Prestige Cost',
+                        `<:dicecoin:839981846419079178> ${numberFormat.format(
+                            nextPrestigeLevel * 250000
+                        )}`
+                    )
+                    .addField(
+                        'Your Balance',
+                        `<:dicecoin:839981846419079178> ${numberFormat.format(
+                            balance
+                        )}`
+                    ),
+            ],
+        });
         return;
     }
 
@@ -122,12 +124,13 @@ export default async function prestige(
                     : ''
             }`
         );
-        const awaitedMessage = await channel.awaitMessages(
-            (newMessage: Discord.Message) =>
+        const awaitedMessage = await channel.awaitMessages({
+            filter: (newMessage: Discord.Message) =>
                 newMessage.author.id === member.id &&
                 newMessage.content.toLowerCase() === 'prestige me',
-            { time: 60000, max: 1 }
-        );
+            time: 60000,
+            max: 1,
+        });
         if (awaitedMessage.first()?.content.toLowerCase() === 'prestige me') {
             await member.roles.add(
                 prestigeLevels[nextPrestigeLevel],

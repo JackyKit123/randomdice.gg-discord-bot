@@ -82,26 +82,30 @@ export default async function coinflip(
             }`
         )
         .set(Number(gambleProfile?.[won ? 'gain' : 'lose'] || 0) + amount);
-    await channel.send(
-        new Discord.MessageEmbed()
-            .setAuthor(
-                `${author.username}#${author.discriminator}`,
-                author.avatarURL({
-                    dynamic: true,
-                }) ?? undefined
-            )
-            .setColor(won ? '#99ff00' : '#ff0000')
-            .setTitle(`You ${won ? 'Won' : 'Lost'}!`)
-            .setDescription(
-                `You ${
-                    won ? 'won' : 'lost'
-                } <:dicecoin:839981846419079178> ${numberFormat.format(amount)}`
-            )
-            .addField(
-                'Current Balance',
-                `<:dicecoin:839981846419079178> ${numberFormat.format(
-                    Number(balance) + amount * (won ? 1 : -1)
-                )}`
-            )
-    );
+    await channel.send({
+        embeds: [
+            new Discord.MessageEmbed()
+                .setAuthor(
+                    `${author.username}#${author.discriminator}`,
+                    author.avatarURL({
+                        dynamic: true,
+                    }) ?? undefined
+                )
+                .setColor(won ? '#99ff00' : '#ff0000')
+                .setTitle(`You ${won ? 'Won' : 'Lost'}!`)
+                .setDescription(
+                    `You ${
+                        won ? 'won' : 'lost'
+                    } <:dicecoin:839981846419079178> ${numberFormat.format(
+                        amount
+                    )}`
+                )
+                .addField(
+                    'Current Balance',
+                    `<:dicecoin:839981846419079178> ${numberFormat.format(
+                        Number(balance) + amount * (won ? 1 : -1)
+                    )}`
+                ),
+        ],
+    });
 }

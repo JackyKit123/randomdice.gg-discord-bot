@@ -58,16 +58,18 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
             },
             bedtimeForReal ? 1000 * 60 * 60 * 8 : 1000 * 10
         );
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('Temporary role added')
-                .setColor(5496236)
-                .setDescription(
-                    `${target} has been granted the <@&804223995025162280> role for ${
-                        bedtimeForReal ? '8 hours' : 'now'
-                    }.`
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle('Temporary role added')
+                    .setColor(5496236)
+                    .setDescription(
+                        `${target} has been granted the <@&804223995025162280> role for ${
+                            bedtimeForReal ? '8 hours' : 'now'
+                        }.`
+                    ),
+            ],
+        });
     } else {
         await channel.send(
             'You cannot use `!bedtime` on someone who already has this role.'

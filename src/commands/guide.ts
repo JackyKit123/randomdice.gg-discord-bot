@@ -17,9 +17,7 @@ export default async function deckGuide(
     ) {
         return;
     }
-    const guideName = content
-        .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg guide ?/i, '');
+    const guideName = content.replace(/^\\?\.gg guide ?/i, '');
     if (!guideName) {
         await channel.send(
             'Please include the guide name or use parameter `list` to list guides'
@@ -52,7 +50,7 @@ export default async function deckGuide(
         );
 
     if (guideName === 'list') {
-        await channel.send(guideList);
+        await channel.send({ embeds: [guideList] });
         return;
     }
     const guideData = guides.find(
@@ -120,7 +118,7 @@ export default async function deckGuide(
                             'https://randomdice.gg/android-chrome-512x512.png'
                         );
                     }
-                    return channel.send(embed);
+                    return channel.send({ embeds: [embed] });
                 })
         );
     };
@@ -137,47 +135,45 @@ export default async function deckGuide(
     const bestMatchGuide = guides.find(
         guide => guide.name === bestMatch.target
     );
-    const sentMessage = await channel.send(
-        bestMatch.rating > 0.3
-            ? `Guide \`${guideName}\` not found. Did you mean \`${bestMatchGuide?.type} Deck: ${bestMatchGuide?.name}\`? You may answer \`Yes\` to display the guide, or you can lookup a list guide here and display the guide with \`.gg guide <guide name>\`.`
-            : `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
-        guideList
-    );
+    const sentMessage = await channel.send({
+        content:
+            bestMatch.rating > 0.3
+                ? `Guide \`${guideName}\` not found. Did you mean \`${bestMatchGuide?.type} Deck: ${bestMatchGuide?.name}\`? You may answer \`Yes\` to display the guide, or you can lookup a list guide here and display the guide with \`.gg guide <guide name>\`.`
+                : `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
+        embeds: [guideList],
+    });
     if (bestMatch.rating <= 0.3) {
         return;
     }
     let answeredYes = false;
     try {
-        const awaitedMessage = await channel.awaitMessages(
-            (newMessage: Discord.Message) =>
+        const awaitedMessage = await channel.awaitMessages({
+            filter: (newMessage: Discord.Message) =>
                 newMessage.author === message.author &&
-                !!newMessage.content
-                    .replace(/[^\040-\176\200-\377]/gi, '')
-                    .match(/^(y(es)?|no?|\\?\.gg ?)/i),
-            { time: 60000, max: 1, errors: ['time'] }
-        );
-        const response = awaitedMessage
-            .first()
-            ?.content.replace(/[^\040-\176\200-\377]/gi, '');
+                !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
+            time: 60000,
+            max: 1,
+            errors: ['time'],
+        });
+        const response = awaitedMessage.first()?.content;
         if (response?.match(/^y(es)?/i)) {
             answeredYes = true;
         }
     } catch {
         if (sentMessage.editable) {
-            await sentMessage.edit(
-                `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
-                guideList
-            );
+            await sentMessage.edit({
+                content: `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
+                embeds: [guideList],
+            });
         }
     }
     if (answeredYes) {
-        await execute(
-            guides.find(g => g.name === bestMatch.target) as DeckGuide
-        );
+        const newGuide = guides.find(g => g.name === bestMatch.target);
+        if (newGuide) await execute(newGuide);
     } else if (sentMessage.editable) {
-        await sentMessage.edit(
-            `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
-            guideList
-        );
+        await sentMessage.edit({
+            content: `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
+            embeds: [guideList],
+        });
     }
 }

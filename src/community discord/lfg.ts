@@ -25,18 +25,20 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             member.roles.cache.has('804231753535193119') ||
             member.roles.cache.has('806896328255733780') ||
             member.roles.cache.has('805388604791586826') ||
-            member.hasPermission('MENTION_EVERYONE')
+            member.permissions.has('MENTION_EVERYONE')
         )
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('Unable to cast command')
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need one of the following roles to use this command.\n' +
-                        '<@&805388604791586826> <@&804231753535193119> <@&804512584375599154> <@&805388604791586826>'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle('Unable to cast command')
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need one of the following roles to use this command.\n' +
+                            '<@&805388604791586826> <@&804231753535193119> <@&804512584375599154> <@&805388604791586826>'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -60,7 +62,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
             })
         )
         .setColor(member.displayHexColor)
-        .addField('Ping / DM', member)
+        .addField('Ping / DM', member.toString())
         .setTitle(
             `${member.displayName} is looking for a Random Dice partner!`
         );
@@ -70,5 +72,5 @@ export default async function LFG(message: Discord.Message): Promise<void> {
     }
 
     if (deletable) await message.delete();
-    await channel.send('<@&805757095232274442>', embed);
+    await channel.send({ content: '<@&805757095232274442>', embeds: [embed] });
 }

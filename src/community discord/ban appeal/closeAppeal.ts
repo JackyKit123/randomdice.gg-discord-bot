@@ -103,10 +103,12 @@ export default async function closeAppeal(
         return;
     }
     const executorRole = member.roles.highest;
-    const executorCanBan = member.hasPermission('BAN_MEMBERS');
-    const clientRole = (guild.member(
-        (client.user as Discord.ClientUser).id
-    ) as Discord.GuildMember).roles.highest;
+    const executorCanBan = member.permissions.has('BAN_MEMBERS');
+    const clientRole = (
+        guild.members.cache.get(
+            (client.user as Discord.ClientUser).id
+        ) as Discord.GuildMember
+    ).roles.highest;
     const targetRole = target.roles.highest;
 
     if (executorRole.comparePositionTo(targetRole) < 0) {
@@ -125,23 +127,25 @@ export default async function closeAppeal(
     }
 
     let archiveCat = guild.channels.cache.find(
-        chl => /archives/i.test(chl.name) && chl.type === 'category'
-    )?.id;
+        chl =>
+            /archives/i.test(chl.name) && chl instanceof Discord.CategoryChannel
+    );
 
     if (
-        !archiveCat ||
-        (guild.channels.cache.get(archiveCat) as Discord.CategoryChannel)
-            .children.size >= 50
+        !(archiveCat instanceof Discord.CategoryChannel) ||
+        archiveCat.children.size >= 50
     ) {
-        archiveCat = (
-            await guild.channels.create('Archives', {
-                type: 'category',
-                position: -1,
-            })
-        ).id;
+        archiveCat = await guild.channels.create('Archives', {
+            type: 'GUILD_CATEGORY',
+            position: -1,
+        });
     }
 
-    (channel as Discord.TextChannel).setParent(archiveCat);
+    if (
+        channel.type === 'GUILD_TEXT' &&
+        archiveCat instanceof Discord.CategoryChannel
+    )
+        await channel.setParent(archiveCat);
 
     switch (command) {
         case '!accept':

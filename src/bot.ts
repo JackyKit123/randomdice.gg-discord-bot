@@ -78,10 +78,7 @@ import leaderboard, {
 } from './community discord/currency/leaderboard';
 import drawDice from './community discord/currency/drawDice';
 import timed from './community discord/currency/timed';
-import chatCoins, {
-    voiceChatCoins,
-    joinVC,
-} from './community discord/currency/chatCoins';
+import chatCoins from './community discord/currency/chatCoins';
 import multiplier from './community discord/currency/multiplier';
 import announceLastToLeaveVC from './community discord/lastToLeaveVC';
 import shush, {
@@ -110,7 +107,24 @@ import afk, { afkResponse, removeAfkListener } from './community discord/afk';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
-const client = new Discord.Client({ partials: ['MESSAGE', 'GUILD_MEMBER'] });
+const client = new Discord.Client({
+    partials: ['MESSAGE', 'GUILD_MEMBER'],
+    intents: [
+        'GUILDS',
+        'GUILD_BANS',
+        'GUILD_EMOJIS_AND_STICKERS',
+        'GUILD_INTEGRATIONS',
+        'GUILD_WEBHOOKS',
+        'GUILD_INVITES',
+        'GUILD_VOICE_STATES',
+        'GUILD_MESSAGES',
+        'GUILD_MESSAGE_REACTIONS',
+        'GUILD_MESSAGE_TYPING',
+        'DIRECT_MESSAGES',
+        'DIRECT_MESSAGE_REACTIONS',
+        'DIRECT_MESSAGE_TYPING',
+    ],
+});
 firebase.initializeApp({
     credential: firebase.credential.cert({
         projectId: 'random-dice-web',
@@ -159,7 +173,7 @@ client.on('ready', async () => {
             await logMessage(
                 client,
                 `Oops, something went wrong in client#Ready : ${
-                    err.stack || err.message || err
+                    (err as Error).stack ?? (err as Error).message ?? err
                 }`
             );
         } catch (criticalError) {
@@ -169,7 +183,7 @@ client.on('ready', async () => {
     }
 });
 
-client.on('message', async function messageHandler(message) {
+client.on('messageCreate', async message => {
     const { content, channel, guild, author } = message;
     const [suffix, command] = content.split(' ');
 
@@ -305,9 +319,6 @@ client.on('message', async function messageHandler(message) {
                 case '!currency':
                     await currencyUpdate(message);
                     break;
-                case '!joinvc':
-                    await joinVC(message);
-                    break;
                 case '!coinbomb':
                     await spawnCoinbomb(message);
                     break;
@@ -376,12 +387,7 @@ client.on('message', async function messageHandler(message) {
             return;
         }
 
-        if (
-            !suffix
-                .replace(/[^\040-\176\200-\377]/gi, '')
-                .match(/^\\?\.gg\b/i) ||
-            author.bot
-        ) {
+        if (!suffix.match(/^\\?\.gg\b/i) || author.bot) {
             return;
         }
         if (process.env.DEV_USERS_ID?.includes(author.id)) {
@@ -486,32 +492,27 @@ client.on('message', async function messageHandler(message) {
                     listOfCommands
                 );
                 if (bestMatch.rating >= 0.5) {
-                    const sentMessage = await channel.send(
-                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`? You may answer \`Yes\` to execute the new command.`,
-                        {
-                            allowedMentions: {
-                                parse: [],
-                                users: [],
-                                roles: [],
-                            },
-                        }
-                    );
+                    const sentMessage = await channel.send({
+                        content: `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`? You may answer \`Yes\` to execute the new command.`,
+                        allowedMentions: {
+                            parse: [],
+                            users: [],
+                            roles: [],
+                        },
+                    });
                     let answeredYes = false;
                     try {
-                        const awaitedMessage = await channel.awaitMessages(
-                            (newMessage: Discord.Message) =>
+                        const awaitedMessage = await channel.awaitMessages({
+                            filter: (newMessage: Discord.Message) =>
                                 newMessage.author === message.author &&
-                                !!newMessage.content
-                                    .replace(/[^\040-\176\200-\377]/gi, '')
-                                    .match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                            { time: 60000, max: 1, errors: ['time'] }
-                        );
-                        if (
-                            awaitedMessage
-                                .first()
-                                ?.content.replace(/[^\040-\176\200-\377]/gi, '')
-                                .match(/^y(es)?/i)
-                        ) {
+                                !!newMessage.content.match(
+                                    /^(y(es)?|no?|\\?\.gg ?)/i
+                                ),
+                            time: 60000,
+                            max: 1,
+                            errors: ['time'],
+                        });
+                        if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
                             answeredYes = true;
                         }
                     } catch {
@@ -521,44 +522,42 @@ client.on('message', async function messageHandler(message) {
                             );
                     }
                     if (answeredYes) {
-                        const editedCommandString = content
-                            .replace(/[^\040-\176\200-\377]/gi, '')
-                            .replace(
-                                `.gg ${command}`,
-                                `.gg ${bestMatch.target}`
-                            );
+                        const editedCommandString = content.replace(
+                            `.gg ${command}`,
+                            `.gg ${bestMatch.target}`
+                        );
                         // eslint-disable-next-line no-param-reassign
                         message.content = editedCommandString;
-                        client.emit('message', message);
+                        client.emit('messageCreate', message);
                     } else if (sentMessage.editable) {
                         await sentMessage.edit(
                             `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`
                         );
                     }
                 } else {
-                    await channel.send(
-                        `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``,
-                        {
-                            allowedMentions: {
-                                parse: [],
-                                users: [],
-                                roles: [],
-                            },
-                        }
-                    );
+                    await channel.send({
+                        content: `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``,
+                        allowedMentions: {
+                            parse: [],
+                            users: [],
+                            roles: [],
+                        },
+                    });
                 }
             }
         }
     } catch (err) {
         try {
-            await channel.send(`Oops, something went wrong: ${err.message}`);
+            await channel.send(
+                `Oops, something went wrong: ${(err as Error).message}`
+            );
 
             await logMessage(
                 client,
                 `Oops, something went wrong in ${
                     guild ? `server ${guild.name}` : `DM with <@${author.id}>`
                 } : ${
-                    err.stack || err.message || err
+                    (err as Error).stack ?? (err as Error).message ?? err
                 }\nCommand Attempting to execute:\`${content}\``
             );
         } catch (criticalError) {
@@ -572,6 +571,9 @@ client.on('guildCreate', guild => guildCreateHandler(guild));
 
 client.on('messageReactionAdd', async (reaction, user) => {
     const { guild } = reaction.message;
+    const nonPartialReaction = reaction.partial
+        ? await reaction.fetch()
+        : reaction;
 
     try {
         if (
@@ -579,13 +581,9 @@ client.on('messageReactionAdd', async (reaction, user) => {
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            closeApplication(
-                reaction,
-                user,
-                (client.user as Discord.ClientUser).id
-            );
-            spyLogBanHandler(reaction, user);
-            removeAfkListener(reaction, user);
+            closeApplication(nonPartialReaction, user);
+            spyLogBanHandler(nonPartialReaction, user);
+            removeAfkListener(nonPartialReaction, user);
         }
     } catch (err) {
         try {
@@ -594,7 +592,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 `Oops, something went wrong in ${
                     guild ? `server ${guild.name}` : `DM with <@${user.id}>`
                 } : ${
-                    err.stack || err.message || err
+                    (err as Error).stack ?? (err as Error).message ?? err
                 }\n when handling message reaction.`
             );
         } catch (criticalError) {
@@ -622,7 +620,7 @@ client.on('messageDelete', async message => {
                         ? `in DM with <@${author.id}>`
                         : ''
                 } : ${
-                    err.stack || err.message || err
+                    (err as Error).stack ?? (err as Error).message ?? err
                 }\n when listening to message deletion.`
             );
         } catch (criticalError) {
@@ -650,7 +648,7 @@ client.on('messageUpdate', async message => {
                         ? `in DM with <@${author.id}>`
                         : ''
                 } : ${
-                    err.stack || err.message || err
+                    (err as Error).stack ?? (err as Error).message ?? err
                 }\n when listening to message edition.`
             );
         } catch (criticalError) {
@@ -660,15 +658,8 @@ client.on('messageUpdate', async message => {
     }
 });
 
-client.on('guildMemberSpeaking', async (possiblePartialMember, speaking) => {
-    const member = possiblePartialMember.partial
-        ? await possiblePartialMember.fetch()
-        : possiblePartialMember;
-    voiceChatCoins(member, speaking);
-});
-
-client.on('typingStart', async (possiblePartialChannel, user) => {
-    const channel = await possiblePartialChannel.fetch(false);
+client.on('typingStart', async typing => {
+    const { user, channel } = typing;
     try {
         if (!user.bot && process.env.NODE_ENV === 'production') {
             removeAfkListener(channel, user);
@@ -678,7 +669,7 @@ client.on('typingStart', async (possiblePartialChannel, user) => {
             await logMessage(
                 client,
                 `Oops, something went wrong when listening to typing start event ${
-                    err.stack || err.message || err
+                    (err as Error).stack ?? (err as Error).message ?? err
                 }.`
             );
         } catch (criticalError) {

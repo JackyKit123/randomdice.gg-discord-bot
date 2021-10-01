@@ -14,9 +14,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
     ) {
         return;
     }
-    const command = content
-        .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg dice ?/i, '');
+    const command = content.replace(/^\\?\.gg dice ?/i, '');
     if (!command || command.startsWith('-')) {
         await channel.send(
             'Please include the dice name in the first parameter after `.gg dice`.'
@@ -157,63 +155,65 @@ export default async function dice(message: Discord.Message): Promise<void> {
                     100
             ) / 100;
 
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(`${target.name} Dice`)
-                .setDescription(parsedText(target.detail))
-                .setThumbnail(target.img)
-                .setAuthor(
-                    'Random Dice Community Website',
-                    'https://randomdice.gg/android-chrome-512x512.png',
-                    'https://randomdice.gg/'
-                )
-                .setColor('#6ba4a5')
-                .setURL(`https://randomdice.gg/wiki/dice_mechanics`)
-                .addFields([
-                    {
-                        name: 'Attack Damage',
-                        value: atk || '-',
-                        inline: true,
-                    },
-                    {
-                        name: 'Type',
-                        value: target.type,
-                        inline: true,
-                    },
-                    {
-                        name: 'Attack Speed',
-                        value: spd ? `${spd}s` : '-',
-                        inline: true,
-                    },
-                    {
-                        name: 'Target',
-                        value: target.target,
-                        inline: true,
-                    },
-                    ...(!target.nameEff1 || target.nameEff1 === '-'
-                        ? []
-                        : [
-                              {
-                                  name: target.nameEff1,
-                                  value: eff1 + target.unitEff1,
-                                  inline: true,
-                              },
-                          ]),
-                    ...(!target.nameEff2 || target.nameEff2 === '-'
-                        ? []
-                        : [
-                              {
-                                  name: target.nameEff2,
-                                  value: eff2 + target.unitEff2,
-                                  inline: true,
-                              },
-                          ]),
-                ])
-                .setFooter(
-                    'randomdice.gg Dice Information',
-                    'https://randomdice.gg/android-chrome-512x512.png'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(`${target.name} Dice`)
+                    .setDescription(parsedText(target.detail))
+                    .setThumbnail(target.img)
+                    .setAuthor(
+                        'Random Dice Community Website',
+                        'https://randomdice.gg/android-chrome-512x512.png',
+                        'https://randomdice.gg/'
+                    )
+                    .setColor('#6ba4a5')
+                    .setURL(`https://randomdice.gg/wiki/dice_mechanics`)
+                    .addFields([
+                        {
+                            name: 'Attack Damage',
+                            value: String(atk) || '-',
+                            inline: true,
+                        },
+                        {
+                            name: 'Type',
+                            value: target.type,
+                            inline: true,
+                        },
+                        {
+                            name: 'Attack Speed',
+                            value: spd ? `${spd}s` : '-',
+                            inline: true,
+                        },
+                        {
+                            name: 'Target',
+                            value: target.target,
+                            inline: true,
+                        },
+                        ...(!target.nameEff1 || target.nameEff1 === '-'
+                            ? []
+                            : [
+                                  {
+                                      name: target.nameEff1,
+                                      value: eff1 + target.unitEff1,
+                                      inline: true,
+                                  },
+                              ]),
+                        ...(!target.nameEff2 || target.nameEff2 === '-'
+                            ? []
+                            : [
+                                  {
+                                      name: target.nameEff2,
+                                      value: eff2 + target.unitEff2,
+                                      inline: true,
+                                  },
+                              ]),
+                    ])
+                    .setFooter(
+                        'randomdice.gg Dice Information',
+                        'https://randomdice.gg/android-chrome-512x512.png'
+                    ),
+            ],
+        });
     };
 
     if (die) {
@@ -236,20 +236,15 @@ export default async function dice(message: Discord.Message): Promise<void> {
         );
         let answeredYes = false;
         try {
-            const awaitedMessage = await channel.awaitMessages(
-                (newMessage: Discord.Message) =>
+            const awaitedMessage = await channel.awaitMessages({
+                filter: (newMessage: Discord.Message) =>
                     newMessage.author === message.author &&
-                    !!newMessage.content
-                        .replace(/[^\040-\176\200-\377]/gi, '')
-                        .match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                { time: 60000, max: 1, errors: ['time'] }
-            );
-            if (
-                awaitedMessage
-                    .first()
-                    ?.content.replace(/[^\040-\176\200-\377]/gi, '')
-                    .match(/^y(es)?/i)
-            ) {
+                    !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
+                time: 60000,
+                max: 1,
+                errors: ['time'],
+            });
+            if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
                 answeredYes = true;
             }
         } catch {
@@ -259,9 +254,8 @@ export default async function dice(message: Discord.Message): Promise<void> {
                 );
         }
         if (answeredYes) {
-            await execute(
-                diceList.find(d => d.name === bestMatch.target) as Dice
-            );
+            const newDice = diceList.find(d => d.name === bestMatch.target);
+            if (newDice) await execute(newDice);
         } else if (sentMessage.editable) {
             await sentMessage.edit(
                 `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`

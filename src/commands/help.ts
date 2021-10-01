@@ -61,17 +61,18 @@ export default async function help(
         );
 
     if (communityHelpOnly) {
-        await author.send(communityHelpMessage);
+        await author.send({ embeds: [communityHelpMessage] });
     } else {
-        await author.send(helpMessage);
+        await author.send({ embeds: [helpMessage] });
         if (guild?.id === '804222694488932362') {
-            await author.send(
-                'It looks like you are requesting the help message from the community discord. Here is the list of fun commands specific towards the community discord only.',
-                communityHelpMessage
-            );
+            await author.send({
+                content:
+                    'It looks like you are requesting the help message from the community discord. Here is the list of fun commands specific towards the community discord only.',
+                embeds: [communityHelpMessage],
+            });
         }
     }
-    if (channel.type === 'text')
+    if (channel.type !== 'DM')
         await channel.send(
             'The list of commands has been sent to your via DM.'
         );

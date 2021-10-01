@@ -15,9 +15,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
     ) {
         return;
     }
-    const command = content
-        .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg battlefield ?/i, '');
+    const command = content.replace(/^\\?\.gg battlefield ?/i, '');
     if (!command || command.startsWith('-')) {
         await channel.send(
             'Please include the battlefield name in the first parameter after `.gg battlefield`.'
@@ -83,38 +81,40 @@ export default async function dice(message: Discord.Message): Promise<void> {
 
         const desc = parsedText(target.desc);
 
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(target.name)
-                .setImage(target.img)
-                .setDescription(desc)
-                .addField(
-                    target.buffName,
-                    `${
-                        Math.round(
-                            (target.buffValue +
-                                target.buffCupValue * battlefieldLevel) *
-                                100
-                        ) / 100
-                    }${target.buffUnit}`
-                )
-                .addField('Obtained From', target.source)
-                .setAuthor(
-                    'Random Dice Community Website',
-                    'https://randomdice.gg/android-chrome-512x512.png',
-                    'https://randomdice.gg/'
-                )
-                .setColor('#6ba4a5')
-                .setURL(
-                    `https://randomdice.gg/wiki/battlefield#${encodeURI(
-                        target.name
-                    )}`
-                )
-                .setFooter(
-                    'randomdice.gg Battlefield Information',
-                    'https://randomdice.gg/android-chrome-512x512.png'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(target.name)
+                    .setImage(target.img)
+                    .setDescription(desc)
+                    .addField(
+                        target.buffName,
+                        `${
+                            Math.round(
+                                (target.buffValue +
+                                    target.buffCupValue * battlefieldLevel) *
+                                    100
+                            ) / 100
+                        }${target.buffUnit}`
+                    )
+                    .addField('Obtained From', target.source)
+                    .setAuthor(
+                        'Random Dice Community Website',
+                        'https://randomdice.gg/android-chrome-512x512.png',
+                        'https://randomdice.gg/'
+                    )
+                    .setColor('#6ba4a5')
+                    .setURL(
+                        `https://randomdice.gg/wiki/battlefield#${encodeURI(
+                            target.name
+                        )}`
+                    )
+                    .setFooter(
+                        'randomdice.gg Battlefield Information',
+                        'https://randomdice.gg/android-chrome-512x512.png'
+                    ),
+            ],
+        });
     };
 
     if (battlefield) {
@@ -137,20 +137,15 @@ export default async function dice(message: Discord.Message): Promise<void> {
         );
         let answeredYes = false;
         try {
-            const awaitedMessage = await channel.awaitMessages(
-                (newMessage: Discord.Message) =>
+            const awaitedMessage = await channel.awaitMessages({
+                filter: (newMessage: Discord.Message) =>
                     newMessage.author === message.author &&
-                    !!newMessage.content
-                        .replace(/[^\040-\176\200-\377]/gi, '')
-                        .match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                { time: 60000, max: 1, errors: ['time'] }
-            );
-            if (
-                awaitedMessage
-                    .first()
-                    ?.content.replace(/[^\040-\176\200-\377]/gi, '')
-                    .match(/^y(es)?/i)
-            ) {
+                    !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
+                time: 60000,
+                max: 1,
+                errors: ['time'],
+            });
+            if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
                 answeredYes = true;
             }
         } catch {
@@ -160,11 +155,10 @@ export default async function dice(message: Discord.Message): Promise<void> {
                 );
         }
         if (answeredYes) {
-            await execute(
-                battlefieldList.find(
-                    b => b.name === bestMatch.target
-                ) as Battlefield
+            const newBattlefield = battlefieldList.find(
+                b => b.name === bestMatch.target
             );
+            if (newBattlefield) await execute(newBattlefield);
         } else if (sentMessage.editable) {
             await sentMessage.edit(
                 `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`?`

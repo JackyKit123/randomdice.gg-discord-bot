@@ -56,14 +56,12 @@ export default async function myCrit(message: Discord.Message): Promise<void> {
             }
         })
     );
-    await channel.send(
-        `Updated your crit role to be <@&${critRoleIds[tier]}>, you can also update your class role by using \`!myClass\``,
-        {
-            allowedMentions: {
-                users: [],
-                roles: [],
-                parse: [],
-            },
-        }
-    );
+    await channel.send({
+        content: `Updated your crit role to be <@&${critRoleIds[tier]}>, you can also update your class role by using \`!myClass\``,
+        allowedMentions: {
+            users: [],
+            roles: [],
+            parse: [],
+        },
+    });
 }

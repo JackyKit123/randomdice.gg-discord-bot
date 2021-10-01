@@ -15,9 +15,7 @@ export default async function drawUntil(
     ) {
         return;
     }
-    const command = content
-        .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg drawuntil ?/i, '');
+    const command = content.replace(/^\\?\.gg drawuntil ?/i, '');
 
     if (!command) {
         await channel.send(
@@ -36,8 +34,9 @@ export default async function drawUntil(
     }
 
     const sentMessage = await channel.send('Running Simulation...');
-    const legendaryPoolSize = cache.dice.filter(d => d.rarity === 'Legendary')
-        .length;
+    const legendaryPoolSize = cache.dice.filter(
+        d => d.rarity === 'Legendary'
+    ).length;
     const simulationRuns = 100;
 
     const [
@@ -50,7 +49,7 @@ export default async function drawUntil(
     ] = (
         await Promise.all(
             new Array(simulationRuns).fill([0, 0]).map(async () => {
-                const target = {
+                const target: { [legendaryClass: number]: number } = {
                     7: 1,
                     8: 1 + 2,
                     9: 1 + 2 + 4,
@@ -60,7 +59,7 @@ export default async function drawUntil(
                     13: 1 + 2 + 4 + 10 + 20 + 50 + 100,
                     14: 1 + 2 + 4 + 10 + 20 + 50 + 100 + 150,
                     15: 1 + 2 + 4 + 10 + 20 + 50 + 100 + 150 + 200,
-                } as { [legendaryClass: number]: number };
+                };
                 const draw = async (
                     mode: 'normal' | 'card box' | 'kings birth'
                 ): Promise<[number, number]> => {
@@ -91,7 +90,8 @@ export default async function drawUntil(
                                         target[targetClass] &&
                                     numberOfDrawsForFirstLegendary === 0
                                 ) {
-                                    numberOfDrawsForFirstLegendary = numberOfDraws;
+                                    numberOfDrawsForFirstLegendary =
+                                        numberOfDraws;
                                 }
                             }
                         }
@@ -137,32 +137,32 @@ export default async function drawUntil(
         )
         .addField(
             `For first class ${targetClass} (from Legend Box / King's Legacy):`,
-            LegendBoxFirst / simulationRuns
+            String(LegendBoxFirst / simulationRuns)
         )
         .addField(
             `For all class ${targetClass} (from Legend Box / King's Legacy):`,
-            LegendBoxAll / simulationRuns
+            String(LegendBoxAll / simulationRuns)
         )
         .addField(
             `For first class ${targetClass} (from opening Card Box)`,
-            CardBoxFirst / simulationRuns
+            String(CardBoxFirst / simulationRuns)
         )
         .addField(
             `For all class ${targetClass} (from opening Card Box)`,
-            CardBoxAll / simulationRuns
+            String(CardBoxAll / simulationRuns)
         )
         .addField(
             `For first class ${targetClass} (from King's Birth / King's Death)`,
-            KingsBirthFirst / simulationRuns
+            String(KingsBirthFirst / simulationRuns)
         )
         .addField(
             `For all class ${targetClass} (from King's Birth / King's Death)`,
-            (KingsBirthAll * 2) / simulationRuns
+            String((KingsBirthAll * 2) / simulationRuns)
         );
 
     if (sentMessage.editable) {
-        await sentMessage.edit('', messageEmbed);
+        await sentMessage.edit({ embeds: [messageEmbed] });
     } else {
-        await channel.send(messageEmbed);
+        await channel.send({ embeds: [messageEmbed] });
     }
 }

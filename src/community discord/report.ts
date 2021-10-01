@@ -13,7 +13,7 @@ async function closeReport(message: Discord.Message): Promise<void> {
     ) {
         return;
     }
-    if (!guild || !member) {
+    if (!guild || !member || channel.type !== 'GUILD_TEXT') {
         return;
     }
     const modRoleId = '804223928427216926';
@@ -22,19 +22,17 @@ async function closeReport(message: Discord.Message): Promise<void> {
         !(
             member.roles.cache.has(modRoleId) ||
             member.roles.cache.has(tModRoleId) ||
-            (channel as Discord.TextChannel)
-                .permissionsFor(member)
-                ?.has('MANAGE_CHANNELS')
+            channel.permissionsFor(member)?.has('MANAGE_CHANNELS')
         )
     ) {
         await channel.send('You do not have permission to close this report.');
         return;
     }
-    if (!(channel as Discord.TextChannel).name.endsWith('-report-room')) {
+    if (!channel.name.endsWith('-report-room')) {
         await channel.send('You cannot use this command here.');
         return;
     }
-    if ((channel as Discord.TextChannel).parentID === '806634775514710106') {
+    if (channel.parentId === '806634775514710106') {
         await channel.send('This report is already closed.');
         return;
     }
@@ -45,13 +43,13 @@ async function closeReport(message: Discord.Message): Promise<void> {
         return;
     }
 
-    const reportedMemberId = (channel as Discord.TextChannel).permissionOverwrites.find(
+    const reportedMemberId = channel.permissionOverwrites.cache.find(
         overwrite => overwrite.type === 'member'
     )?.id;
     const reportMember = guild.members.cache.get(reportedMemberId || '');
     const archiveCat = guild.channels.cache.get('806634775514710106');
     if (archiveCat) {
-        await (channel as Discord.TextChannel).setParent('806634775514710106', {
+        await channel.setParent('806634775514710106', {
             reason: 'Report Closed',
         });
     } else {
@@ -61,7 +59,7 @@ async function closeReport(message: Discord.Message): Promise<void> {
     }
     const reportLog = guild.channels.cache.get('806812461302022145');
     const now = Date.now();
-    if (reportLog?.type === 'text') {
+    if (reportLog?.isText()) {
         let embed = new Discord.MessageEmbed()
             .setTitle('Report Closed')
             .setDescription(content.replace('!closereport', ''))
@@ -97,7 +95,7 @@ async function closeReport(message: Discord.Message): Promise<void> {
             );
         }
         const pinnedMessages = await channel.messages.fetchPinned();
-        const reportLogMessages = await (reportLog as Discord.TextChannel).messages.fetch();
+        const reportLogMessages = await reportLog.messages.fetch();
         const initialLogMessage = reportLogMessages.find(msg =>
             msg.embeds.some(emb =>
                 pinnedMessages.some(pinMsg =>
@@ -109,8 +107,8 @@ async function closeReport(message: Discord.Message): Promise<void> {
             )
         );
         if (initialLogMessage) {
-            await initialLogMessage.edit(
-                initialLogMessage.embeds.map(emb => {
+            await initialLogMessage.edit({
+                embeds: initialLogMessage.embeds.map(emb => {
                     const edited = emb
                         .setTitle('Report Closed')
                         .setColor('#000000')
@@ -131,27 +129,27 @@ async function closeReport(message: Discord.Message): Promise<void> {
                         );
                     }
                     return edited;
-                })
-            );
+                }),
+            });
         } else {
-            await (reportLog as Discord.TextChannel).send(embed);
+            await reportLog.send({ embeds: [embed] });
         }
     }
     const { everyone } = guild.roles;
     const modRole = guild.roles.cache.get(modRoleId);
     const tModRole = guild.roles.cache.get(tModRoleId);
-    await (channel as Discord.TextChannel).overwritePermissions(
+    await channel.permissionOverwrites.set(
         [
             {
                 id: everyone,
                 deny: ['VIEW_CHANNEL', 'SEND_MESSAGES'],
             },
             {
-                id: modRole as Discord.Role,
+                id: modRole ?? '',
                 allow: ['VIEW_CHANNEL'],
             },
             {
-                id: tModRole as Discord.Role,
+                id: tModRole ?? '',
                 allow: ['VIEW_CHANNEL'],
             },
         ],
@@ -160,20 +158,22 @@ async function closeReport(message: Discord.Message): Promise<void> {
     await channel.send(
         `Report closed, removed access for everyone, archiving this channel.`
     );
-    await reportMember?.send(
-        new Discord.MessageEmbed()
-            .setTitle('Report Closed')
-            .setColor('#6ba4a5')
-            .setAuthor(
-                `Moderator: ${member.user.username}#${member.user.discriminator}`,
-                member.user.displayAvatarURL({
-                    dynamic: true,
-                })
-            )
-            .setDescription(content.replace('!closereport', ''))
-            .setFooter('Report closed at')
-            .setTimestamp()
-    );
+    await reportMember?.send({
+        embeds: [
+            new Discord.MessageEmbed()
+                .setTitle('Report Closed')
+                .setColor('#6ba4a5')
+                .setAuthor(
+                    `Moderator: ${member.user.username}#${member.user.discriminator}`,
+                    member.user.displayAvatarURL({
+                        dynamic: true,
+                    })
+                )
+                .setDescription(content.replace('!closereport', ''))
+                .setFooter('Report closed at')
+                .setTimestamp(),
+        ],
+    });
 }
 
 export default async function report(message: Discord.Message): Promise<void> {
@@ -211,7 +211,7 @@ export default async function report(message: Discord.Message): Promise<void> {
         }
     }
     const now = Date.now();
-    const lastMessage = channel.lastMessageID;
+    const lastMessage = channel.lastMessageId;
     const memberMentions = mentions.members;
     let embed = new Discord.MessageEmbed()
         .setAuthor(
@@ -268,10 +268,11 @@ export default async function report(message: Discord.Message): Promise<void> {
     const modRole = guild.roles.cache.get('804223928427216926');
     const tModRole = guild.roles.cache.get('807219483311603722');
     const { everyone } = guild.roles;
-    if (logChannel?.type === 'text') {
-        await (logChannel as Discord.TextChannel).send(
-            embed.setTitle('Member Report')
-        );
+    if (!(supportCategory instanceof Discord.CategoryChannel)) {
+        throw new Error('unable to locate server support category');
+    }
+    if (logChannel?.isText()) {
+        await logChannel.send({ embeds: [embed.setTitle('Member Report')] });
     }
     const reportRoom = await guild.channels.create(
         `${author.username}-${author.discriminator}-report-room`,
@@ -281,26 +282,26 @@ export default async function report(message: Discord.Message): Promise<void> {
             permissionOverwrites: [
                 {
                     id: everyone,
-                    deny: 'VIEW_CHANNEL',
+                    deny: ['VIEW_CHANNEL'],
                 },
                 {
                     id: member,
-                    allow: 'VIEW_CHANNEL',
+                    allow: ['VIEW_CHANNEL'],
                 },
                 {
-                    id: modRole as Discord.Role,
+                    id: modRole ?? '',
                     allow: ['VIEW_CHANNEL', 'MANAGE_MESSAGES'],
                 },
                 {
-                    id: tModRole as Discord.Role,
+                    id: tModRole ?? '',
                     allow: ['VIEW_CHANNEL', 'MANAGE_MESSAGES'],
                 },
             ],
         }
     );
-    const initMessage = await reportRoom.send(
-        `${author.toString()}, please wait patiently for our ${modRole} ${tModRole} team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
-        embed
-    );
+    const initMessage = await reportRoom.send({
+        content: `${author.toString()}, please wait patiently for our ${modRole} ${tModRole} team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
+        embeds: [embed],
+    });
     await initMessage.pin();
 }

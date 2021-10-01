@@ -33,52 +33,56 @@ export default async function Cooldown(
         (userIsDonator ? cooldown.donator : cooldown.default)
     ) {
         if (cooldown.donator === cooldown.default) {
-            await channel.send(
-                new Discord.MessageEmbed()
-                    .setTitle('Slow Down!')
-                    .setColor('#6ba4a5')
-                    .setDescription(
-                        `Your command is still on \`${parseMsIntoReadableText(
-                            cooldown.default - (now - userCooldown)
-                        )}\` cooldown.`
-                    )
-                    .setFooter(
-                        userIsDonator
-                            ? 'Nice You are a donator!'
-                            : 'https://randomdice.gg/about/patreon'
-                    )
-            );
+            await channel.send({
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setTitle('Slow Down!')
+                        .setColor('#6ba4a5')
+                        .setDescription(
+                            `Your command is still on \`${parseMsIntoReadableText(
+                                cooldown.default - (now - userCooldown)
+                            )}\` cooldown.`
+                        )
+                        .setFooter(
+                            userIsDonator
+                                ? 'Nice You are a donator!'
+                                : 'https://randomdice.gg/about/patreon'
+                        ),
+                ],
+            });
         } else {
-            await channel.send(
-                new Discord.MessageEmbed()
-                    .setTitle('Slow Down!')
-                    .setColor('#6ba4a5')
-                    .setDescription(
-                        `Your command is still on \`${parseMsIntoReadableText(
-                            (userIsDonator
-                                ? cooldown.donator
-                                : cooldown.default) -
-                                (now - userCooldown)
-                        )}\` cooldown. ${
+            await channel.send({
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setTitle('Slow Down!')
+                        .setColor('#6ba4a5')
+                        .setDescription(
+                            `Your command is still on \`${parseMsIntoReadableText(
+                                (userIsDonator
+                                    ? cooldown.donator
+                                    : cooldown.default) -
+                                    (now - userCooldown)
+                            )}\` cooldown. ${
+                                userIsDonator
+                                    ? 'Since you are a [Patreon donator](https://www.patreon.com/RandomDiceCommunityWebsite), your cooldown is reduced'
+                                    : '[Patreon donators](https://www.patreon.com/RandomDiceCommunityWebsite) can have their command cooldown reduced'
+                            } from \`${parseMsIntoReadableText(
+                                cooldown.default
+                            )}\` to \`${parseMsIntoReadableText(
+                                cooldown.donator
+                            )}\`${
+                                userIsDonator
+                                    ? ''
+                                    : '\nIf you have subscribed to patreon, please login and link your account on [randomdice.gg website](https://randomdice.gg).'
+                            }`
+                        )
+                        .setFooter(
                             userIsDonator
-                                ? 'Since you are a [Patreon donator](https://www.patreon.com/RandomDiceCommunityWebsite), your cooldown is reduced'
-                                : '[Patreon donators](https://www.patreon.com/RandomDiceCommunityWebsite) can have their command cooldown reduced'
-                        } from \`${parseMsIntoReadableText(
-                            cooldown.default
-                        )}\` to \`${parseMsIntoReadableText(
-                            cooldown.donator
-                        )}\`${
-                            userIsDonator
-                                ? ''
-                                : '\nIf you have subscribed to patreon, please login and link your account on [randomdice.gg website](https://randomdice.gg).'
-                        }`
-                    )
-                    .setFooter(
-                        userIsDonator
-                            ? 'Nice You are a donator!'
-                            : 'https://randomdice.gg/about/patreon'
-                    )
-            );
+                                ? 'Nice You are a donator!'
+                                : 'https://randomdice.gg/about/patreon'
+                        ),
+                ],
+            });
         }
         return true;
     }

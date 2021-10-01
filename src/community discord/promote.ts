@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { DiscordAPIError } from 'discord.js';
 
 const activePromotionCreation = new Map<string, boolean>();
 
@@ -9,7 +9,8 @@ async function createPromotion(
     const { channel } = await user.send(
         'What type of content do you wish to promote? (e.g. YouTube, Discord Server, Random Dice Crew)'
     );
-    let awaitedMessage = await channel.awaitMessages(m => !!m.content, {
+    let awaitedMessage = await channel.awaitMessages({
+        filter: m => !!m.content,
         time: 1000 * 60,
         max: 1,
     });
@@ -19,7 +20,8 @@ async function createPromotion(
         return false;
     }
     await user.send('Please provide a description of your promotion');
-    awaitedMessage = await channel.awaitMessages(m => !!m.content, {
+    awaitedMessage = await channel.awaitMessages({
+        filter: m => !!m.content,
         time: 1000 * 60 * 5,
         max: 1,
     });
@@ -31,28 +33,24 @@ async function createPromotion(
     await user.send(
         'Please provide the url for your promotion, or you can say **skip**, make sure the url starts with https:// or http:// or I will ignore it'
     );
-    awaitedMessage = await channel.awaitMessages(
-        m =>
+    awaitedMessage = await channel.awaitMessages({
+        filter: m =>
             /^https?:\/\//i.test(m.content) ||
             m.content.toLowerCase() === 'skip',
-        {
-            time: 1000 * 60,
-            max: 1,
-        }
-    );
+        time: 1000 * 60,
+        max: 1,
+    });
     const url = awaitedMessage.first();
     if (!url) {
         await user.send('You did not answer the question in time');
         return false;
     }
     await user.send('You can provide an image, or say **skip**');
-    awaitedMessage = await channel.awaitMessages(
-        m => m.attachments.size || m.content === 'skip',
-        {
-            time: 1000 * 60 * 5,
-            max: 1,
-        }
-    );
+    awaitedMessage = await channel.awaitMessages({
+        filter: m => !!m.attachments.size || m.content === 'skip',
+        time: 1000 * 60 * 5,
+        max: 1,
+    });
     const image = awaitedMessage.first();
     if (!image) {
         await user.send('You did not answer the question in time');
@@ -82,17 +80,16 @@ async function createPromotion(
             (image.attachments.first() as Discord.MessageAttachment).url
         );
     }
-    await user.send(
-        'This is how the embed will look, reply `yes` if you confirm to post it, or `no` to redo making the embed.',
-        embed
-    );
-    awaitedMessage = await channel.awaitMessages(
-        m => /^(y(:es)?|(no?)$)/i.test(m.content),
-        {
-            time: 1000 * 60,
-            max: 1,
-        }
-    );
+    await user.send({
+        content:
+            'This is how the embed will look, reply `yes` if you confirm to post it, or `no` to redo making the embed.',
+        embeds: [embed],
+    });
+    awaitedMessage = await channel.awaitMessages({
+        filter: m => /^(y(:es)?|(no?)$)/i.test(m.content),
+        time: 1000 * 60,
+        max: 1,
+    });
     const confirmation = awaitedMessage.first();
     if (confirmation?.content.match(/^y(es)?$/i)) {
         return embed;
@@ -113,15 +110,17 @@ export default async function promote(message: Discord.Message): Promise<void> {
         !member.roles.cache.has('804513079319592980') &&
         !member.roles.cache.has('809143588105486346')
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('Unable to cast command')
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need one of the following roles to use this command.\n' +
-                        '<@&804513079319592980> <@&809143588105486346>'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle('Unable to cast command')
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need one of the following roles to use this command.\n' +
+                            '<@&804513079319592980> <@&809143588105486346>'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -154,21 +153,21 @@ export default async function promote(message: Discord.Message): Promise<void> {
             );
             await channel.send('Please proceed in DM channel.');
         } catch (err) {
-            if (err.message === 'Cannot send messages to this user') {
-                await message.reply(
-                    'I cannot send a message in your DM, please make sure you have DM enabled from member in this server. If you make sure so, this is probably my fault, please type the command again.'
-                );
-                return;
+            if (
+                (err as DiscordAPIError).message ===
+                'Cannot send messages to this user'
+            ) {
+                throw new Error('I cannot initial a DM with you.');
             }
             throw err;
         }
 
         const item = await Promise.race([
             createPromotion(member),
-            author.dmChannel?.awaitMessages(
-                m => m.content.toLowerCase() === 'exit',
-                { max: 1 }
-            ),
+            author.dmChannel?.awaitMessages({
+                filter: m => m.content.toLowerCase() === 'exit',
+                max: 1,
+            }),
         ]);
         const isEmbed = (arg: typeof item): arg is Discord.MessageEmbed =>
             arg instanceof Discord.MessageEmbed;
@@ -177,17 +176,17 @@ export default async function promote(message: Discord.Message): Promise<void> {
             return;
         }
         if (existingUserPromotion) {
-            await existingUserPromotion.edit(item);
+            await existingUserPromotion.edit({ embeds: [item] });
             await author.send(
                 `Your promotion has been edited\n${existingUserPromotion.url}`
             );
         } else {
-            const sent = await promotionChannel.send(item);
+            const sent = await promotionChannel.send({ embeds: [item] });
             await author.send(`Your promotion has been sent\n${sent.url}`);
         }
         activePromotionCreation.set(author.id, false);
     } catch (err) {
         activePromotionCreation.set(author.id, false);
-        throw new Error(err);
+        throw err;
     }
 }

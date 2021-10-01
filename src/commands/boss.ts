@@ -15,9 +15,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
     ) {
         return;
     }
-    const bossName = content
-        .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg boss ?/, '');
+    const bossName = content.replace(/^\\?\.gg boss ?/, '');
     if (!bossName) {
         await channel.send(
             'Please include the boss name in command parameter.'
@@ -38,27 +36,29 @@ export default async function dice(message: Discord.Message): Promise<void> {
                 value: desc,
             }));
 
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(target.name)
-                .setThumbnail(target.img)
-                .setAuthor(
-                    'Random Dice Community Website',
-                    'https://randomdice.gg/android-chrome-512x512.png',
-                    'https://randomdice.gg/'
-                )
-                .setColor('#6ba4a5')
-                .setURL(
-                    `https://randomdice.gg/wiki/boss_mechanics#${encodeURI(
-                        target.name
-                    )}`
-                )
-                .addFields(embedFields)
-                .setFooter(
-                    'randomdice.gg Boos Information',
-                    'https://randomdice.gg/android-chrome-512x512.png'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(target.name)
+                    .setThumbnail(target.img)
+                    .setAuthor(
+                        'Random Dice Community Website',
+                        'https://randomdice.gg/android-chrome-512x512.png',
+                        'https://randomdice.gg/'
+                    )
+                    .setColor('#6ba4a5')
+                    .setURL(
+                        `https://randomdice.gg/wiki/boss_mechanics#${encodeURI(
+                            target.name
+                        )}`
+                    )
+                    .addFields(embedFields)
+                    .setFooter(
+                        'randomdice.gg Boos Information',
+                        'https://randomdice.gg/android-chrome-512x512.png'
+                    ),
+            ],
+        });
     };
 
     if (boss) {
@@ -76,20 +76,15 @@ export default async function dice(message: Discord.Message): Promise<void> {
         );
         let answeredYes = false;
         try {
-            const awaitedMessage = await channel.awaitMessages(
-                (newMessage: Discord.Message) =>
+            const awaitedMessage = await channel.awaitMessages({
+                filter: (newMessage: Discord.Message) =>
                     newMessage.author === message.author &&
-                    !!newMessage.content
-                        .replace(/[^\040-\176\200-\377]/gi, '')
-                        .match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                { time: 60000, max: 1, errors: ['time'] }
-            );
-            if (
-                awaitedMessage
-                    .first()
-                    ?.content.replace(/[^\040-\176\200-\377]/gi, '')
-                    .match(/^y(es)?/i)
-            ) {
+                    !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
+                time: 60000,
+                max: 1,
+                errors: ['time'],
+            });
+            if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
                 answeredYes = true;
             }
         } catch {
@@ -99,9 +94,8 @@ export default async function dice(message: Discord.Message): Promise<void> {
                 );
         }
         if (answeredYes) {
-            await execute(
-                bossList.find(b => b.name === bestMatch.target) as Boss
-            );
+            const newBoss = bossList.find(b => b.name === bestMatch.target);
+            if (newBoss) await execute(newBoss);
         }
         if (sentMessage.editable) {
             await sentMessage.edit(

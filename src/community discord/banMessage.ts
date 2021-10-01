@@ -11,7 +11,7 @@ export default async function banMessage(
         guild &&
         author.id === '235148962103951360' /* carl-bot */ &&
         channel.id === '804235946807525409' /* #public-mod-log */ &&
-        general?.type === 'text'
+        general?.isText()
     ) {
         const embed = embeds[0];
         if (embed && embed.title?.startsWith('ban | case ')) {
@@ -31,23 +31,25 @@ export default async function banMessage(
                       );
                 const moderator = await fetchMention(moderatorName, guild);
                 if (!user) return;
-                await (general as Discord.TextChannel).send(
-                    new Discord.MessageEmbed()
-                        .setImage(
-                            'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
-                        )
-                        .setThumbnail(
-                            user.displayAvatarURL({ dynamic: true }) ??
-                                user.defaultAvatarURL
-                        )
-                        .setTitle(
-                            `${user.username}#${user.discriminator} Got banned`
-                        )
-                        .setColor('#ff0000')
-                        .setDescription(
-                            `${user} got banned by ${moderator} for ||${reason}||`
-                        )
-                );
+                await general.send({
+                    embeds: [
+                        new Discord.MessageEmbed()
+                            .setImage(
+                                'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
+                            )
+                            .setThumbnail(
+                                user.displayAvatarURL({ dynamic: true }) ??
+                                    user.defaultAvatarURL
+                            )
+                            .setTitle(
+                                `${user.username}#${user.discriminator} Got banned`
+                            )
+                            .setColor('#ff0000')
+                            .setDescription(
+                                `${user} got banned by ${moderator} for ||${reason}||`
+                            ),
+                    ],
+                });
             }
         }
     }

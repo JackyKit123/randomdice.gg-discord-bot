@@ -4,11 +4,11 @@ import parseMsIntoReadableText from '../util/parseMS';
 export default async function announceLastToLeaveVC(
     message: Discord.Message
 ): Promise<void> {
-    const { webhookID, embeds, guild, channel } = message;
+    const { webhookId, embeds, guild, channel } = message;
     let embed = embeds?.[0];
     if (
         channel.id !== '804243533195640852' /* #voice-log */ ||
-        !webhookID ||
+        !webhookId ||
         !embed ||
         !guild
     ) {
@@ -16,7 +16,8 @@ export default async function announceLastToLeaveVC(
     }
     const { title, description, footer, timestamp } = embed;
     const leaveVcRegex = /^\*\*.+#\d{4}\*\* left #Last to Leave VC Event$/;
-    let changeVcRegex = /^\*\*Before:\*\* #Last to Leave VC Event\n\*\*\+After:\*\* #.+$/;
+    let changeVcRegex =
+        /^\*\*Before:\*\* #Last to Leave VC Event\n\*\*\+After:\*\* #.+$/;
     const id = footer?.text?.match(/^ID: (\d{18})$/)?.[1];
     if (
         !(
@@ -29,16 +30,18 @@ export default async function announceLastToLeaveVC(
     ) {
         return;
     }
-    const member = guild.member(id);
+    const member = guild.members.cache.get(id);
     if (member) {
         const messages = await channel.messages.fetch({
             limit: 100,
         });
         const joinMessage = messages.find(msg => {
             [embed] = msg.embeds;
-            const joinVCRegex = /^\*\*.+#\d{4}\*\* joined #Last to Leave VC Event$/;
-            changeVcRegex = /^\*\*Before:\*\* #.+\n\*\*\+After:\*\* #Last to Leave VC Event$/;
-            if (!msg.webhookID || !embed) {
+            const joinVCRegex =
+                /^\*\*.+#\d{4}\*\* joined #Last to Leave VC Event$/;
+            changeVcRegex =
+                /^\*\*Before:\*\* #.+\n\*\*\+After:\*\* #Last to Leave VC Event$/;
+            if (!msg.webhookId || !embed) {
                 return false;
             }
             if (

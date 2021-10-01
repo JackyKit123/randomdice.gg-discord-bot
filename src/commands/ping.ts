@@ -13,20 +13,30 @@ export default async function ping(message: Discord.Message): Promise<void> {
         return;
     }
 
-    const sent = await channel.send(
-        new Discord.MessageEmbed()
-            .setTitle('Pong')
-            .setDescription(`Time elapsed: ...ms`)
-            .setColor('#6ba4a5')
-            .setThumbnail('https://randomdice.gg/android-chrome-512x512.png')
-    );
-    await sent.edit(
-        new Discord.MessageEmbed()
-            .setTitle('Pong')
-            .setDescription(
-                `Time elapsed: ${sent.createdTimestamp - createdTimestamp}ms`
-            )
-            .setColor('#6ba4a5')
-            .setThumbnail('https://randomdice.gg/android-chrome-512x512.png')
-    );
+    const sent = await channel.send({
+        embeds: [
+            new Discord.MessageEmbed()
+                .setTitle('Pong')
+                .setDescription(`Time elapsed: ...ms`)
+                .setColor('#6ba4a5')
+                .setThumbnail(
+                    'https://randomdice.gg/android-chrome-512x512.png'
+                ),
+        ],
+    });
+    await sent.edit({
+        embeds: [
+            new Discord.MessageEmbed()
+                .setTitle('Pong')
+                .setDescription(
+                    `Time elapsed: ${
+                        sent.createdTimestamp - createdTimestamp
+                    }ms`
+                )
+                .setColor('#6ba4a5')
+                .setThumbnail(
+                    'https://randomdice.gg/android-chrome-512x512.png'
+                ),
+        ],
+    });
 }

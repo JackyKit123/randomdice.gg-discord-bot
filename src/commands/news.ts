@@ -48,7 +48,7 @@ export default async function sendNews(
         embed = embed.setImage(imgUrl);
     }
 
-    await channel.send(embed);
+    await channel.send({ embeds: [embed] });
     if (ytUrl) {
         await channel.send(ytUrl);
     }

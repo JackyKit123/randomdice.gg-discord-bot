@@ -15,9 +15,7 @@ export default async function decklist(
     ) {
         return;
     }
-    const command = content
-        .replace(/[^\040-\176\200-\377]/gi, '')
-        .replace(/^\\?\.gg deck ?/i, '');
+    const command = content.replace(/^\\?\.gg deck ?/i, '');
     const type = command.split(' ')[0];
     if (!type.match(/^(pvp|co-op|coop|crew)$/i)) {
         await channel.send(
@@ -118,12 +116,14 @@ export default async function decklist(
         cache.decks,
         cache['wiki/battlefield'],
     ];
-    const deckType = ({
-        pvp: 'PvP',
-        coop: 'Co-op',
-        'co-op': 'Co-op',
-        crew: 'Crew',
-    } as { [key: string]: string })[type.toLowerCase()];
+    const deckType = (
+        {
+            pvp: 'PvP',
+            coop: 'Co-op',
+            'co-op': 'Co-op',
+            crew: 'Crew',
+        } as { [key: string]: string }
+    )[type.toLowerCase()];
     const fields = decks
         .filter(deck => deckType === deck.type)
         .map(deckInfo => ({
@@ -143,11 +143,11 @@ export default async function decklist(
                     : ''
             }`,
         }))
+        .sort((a, b) => b.rating - a.rating)
         .map(deck => ({
-            name: deck.rating,
+            name: String(deck.rating),
             value: deck.diceList,
-        }))
-        .sort((a, b) => b.name - a.name);
+        }));
     const pageNumbers = Math.ceil(fields.length / 10);
     let currentPage = 0;
     if (page >= 0) {
@@ -179,19 +179,18 @@ export default async function decklist(
                     'https://randomdice.gg/android-chrome-512x512.png'
                 )
         );
-    const sentMessage = await channel.send(embeds[currentPage]);
+    const sentMessage = await channel.send({ embeds: [embeds[currentPage]] });
     if (pageNumbers <= 1) {
         return;
     }
 
-    const collector = sentMessage.createReactionCollector(
-        (reaction, user) =>
+    const collector = sentMessage.createReactionCollector({
+        filter: (reaction, user) =>
+            !!reaction.emoji.name &&
             ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name) &&
             user.id === author.id,
-        {
-            time: 180000,
-        }
-    );
+        time: 180000,
+    });
 
     collector.on('collect', async (reaction, user) => {
         switch (reaction.emoji.name) {
@@ -209,11 +208,12 @@ export default async function decklist(
                 break;
             case '❌':
                 collector.stop();
-                break;
+                return;
             default:
                 return;
         }
-        if (sentMessage.editable) await sentMessage.edit(embeds[currentPage]);
+        if (sentMessage.editable)
+            await sentMessage.edit({ embeds: [embeds[currentPage]] });
         await reaction.users.remove(user.id);
     });
 

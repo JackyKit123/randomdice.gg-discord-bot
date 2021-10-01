@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { DiscordAPIError } from 'discord.js';
 import firebase from 'firebase-admin';
 import { promisify } from 'util';
 import logMessage from '../../dev-commands/logMessage';
@@ -59,18 +59,17 @@ export default async function pickCoins(
             str.replace(/\w/g, match => `‎${match}‎`);
 
         const uniqueChatters: string[] = [];
-        channel.messages.cache
-            .filter(
-                msg =>
-                    msg.author &&
-                    !msg.author.bot &&
-                    Date.now() - msg.createdTimestamp < 60 * 1000
-            )
-            .array()
+        [
+            ...channel.messages.cache
+                .filter(
+                    msg =>
+                        !msg.author.bot &&
+                        Date.now() - msg.createdTimestamp < 60 * 1000
+                )
+                .values(),
+        ]
             .concat(
-                channel.messages.cache
-                    .filter(msg => msg.author && !msg.author.bot)
-                    .last(10)
+                channel.messages.cache.filter(msg => !msg.author.bot).last(10)
             )
             .forEach(msg => {
                 if (!uniqueChatters.includes(msg.author.id))
@@ -155,106 +154,80 @@ export default async function pickCoins(
         const collected: Discord.GuildMember[] = [];
         const sentMessage = await channel.send(content);
         activeCoinbombInChannel.set(channel.id, true);
-        const collector: Discord.Collector<
-            Discord.Snowflake,
-            Discord.Message | Discord.MessageReaction
-        > =
-            collectionTrigger === 'reaction'
-                ? sentMessage.createReactionCollector(
-                      (reaction: Discord.MessageReaction, user: Discord.User) =>
-                          reaction.emoji.name === '⛏️' && !user?.bot,
-                      {
-                          time: 20 * 1000,
-                      }
-                  )
-                : channel.createMessageCollector(
-                      (message: Discord.Message) =>
-                          !message.author?.bot &&
-                          message.content.toLowerCase() ===
-                              collectionTrigger.toLowerCase(),
-                      {
-                          time: 20 * 1000,
-                      }
-                  );
-        collector.on(
-            'collect',
-            async (
-                collect: Discord.Message | Discord.MessageReaction,
-                user: Discord.User
-            ) => {
-                let member: Discord.GuildMember | null;
-                let message: Discord.Message;
-                if (collect instanceof Discord.Message) {
-                    ({ member } = collect);
-                    message = collect;
-                } else {
-                    member = guild.member(user.id);
-                    message = sentMessage;
-                }
-                if (
-                    !member ||
-                    collected.some(m => member?.id === m.id) ||
-                    collected.length >= maxCollectorAllowed
-                ) {
-                    return;
-                }
-                if (
-                    !(
-                        channel.messages.cache.some(
+
+        const onCollect = async (
+            collector: Discord.MessageCollector | Discord.ReactionCollector,
+            collect: Discord.Message | Discord.MessageReaction,
+            user?: Discord.User
+        ) => {
+            let member: Discord.GuildMember | null | undefined;
+            let message: Discord.Message;
+            if (collect instanceof Discord.Message) {
+                ({ member } = collect);
+                message = collect;
+            } else if (user) {
+                member = guild.members.cache.get(user.id);
+                message = sentMessage;
+            } else {
+                return;
+            }
+            if (
+                !member ||
+                collected.some(m => member?.id === m.id) ||
+                collected.length >= maxCollectorAllowed
+            ) {
+                return;
+            }
+            if (
+                !(
+                    channel.messages.cache.some(
+                        msg =>
+                            msg.author.id === member?.id &&
+                            sentMessage.createdTimestamp -
+                                msg.createdTimestamp <
+                                1000 * 60 &&
+                            msg.createdTimestamp < sentMessage.createdTimestamp
+                    ) ||
+                    channel.messages.cache
+                        .filter(
                             msg =>
-                                msg.author &&
-                                msg.author.id === member?.id &&
-                                sentMessage.createdTimestamp -
-                                    msg.createdTimestamp <
-                                    1000 * 60 &&
+                                !msg.author.bot &&
                                 msg.createdTimestamp <
                                     sentMessage.createdTimestamp
-                        ) ||
-                        channel.messages.cache
-                            .filter(
-                                msg =>
-                                    msg.author &&
-                                    !msg.author.bot &&
-                                    msg.createdTimestamp <
-                                        sentMessage.createdTimestamp
-                            )
-                            .last(10)
-                            .some(msg => msg.author.id === member?.id)
-                    )
-                ) {
-                    if (collect instanceof Discord.Message) {
-                        await channel.send(
-                            `${member}, no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`
-                        );
-                    } else {
-                        await collect.users.remove(member.id);
-                    }
-                    return;
-                }
-                collected.push(member);
-                const balance = await getBalance(message, 'silence', member);
-                if (balance === false) return;
-                await database
-                    .ref(`discord_bot/community/currency/${member.id}/balance`)
-                    .set(balance + rngReward);
-                if (rngReward < 1000 && rngReward >= 100) {
-                    await message.react('<:dicecoin:839981846419079178>');
-                } else if (rngReward > 1000) {
+                        )
+                        .last(10)
+                        .some(msg => msg.author.id === member?.id)
+                )
+            ) {
+                if (collect instanceof Discord.Message) {
                     await channel.send(
-                        `${member} has collected the prize of <:dicecoin:839981846419079178> ${numberFormat.format(
-                            rngReward
-                        )}. Congratulations!`
+                        `${member}, no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`
                     );
+                } else {
+                    await collect.users.remove(member.id);
                 }
-                if (collected.length >= maxCollectorAllowed) {
-                    collector.stop();
-                }
+                return;
             }
-        );
-        if (collector instanceof Discord.ReactionCollector) {
-            await sentMessage.react('⛏️');
-        }
-        collector.on('end', async () => {
+            collected.push(member);
+            const balance = await getBalance(message, 'silence', member);
+            if (balance === false) return;
+            await database
+                .ref(`discord_bot/community/currency/${member.id}/balance`)
+                .set(balance + rngReward);
+            if (rngReward < 1000 && rngReward >= 100) {
+                await message.react('<:dicecoin:839981846419079178>');
+            } else if (rngReward > 1000) {
+                await channel.send(
+                    `${member} has collected the prize of <:dicecoin:839981846419079178> ${numberFormat.format(
+                        rngReward
+                    )}. Congratulations!`
+                );
+            }
+            if (collected.length >= maxCollectorAllowed) {
+                collector.stop();
+            }
+        };
+        const onEnd = async () => {
             activeCoinbombInChannel.set(channel.id, false);
             if (collected.length === 0) {
                 await channel.send(
@@ -272,9 +245,8 @@ export default async function pickCoins(
 
             if (!recursive) return;
             const messageTimeout = new Map<string, boolean>();
-
-            await channel.awaitMessages(
-                (newMessage: Discord.Message) => {
+            await channel.awaitMessages({
+                filter: (newMessage: Discord.Message) => {
                     if (
                         activeCoinbombInChannel.get(channel.id) ||
                         messageTimeout.get(newMessage.author.id) ||
@@ -288,14 +260,40 @@ export default async function pickCoins(
                     );
                     return true;
                 },
-                {
-                    max: 20,
-                }
-            );
+                max: 20,
+            });
             pickCoins(client, channel, true);
-        });
+        };
+
+        if (collectionTrigger === 'reaction') {
+            const collector = sentMessage
+                .createReactionCollector({
+                    filter: (
+                        reaction: Discord.MessageReaction,
+                        user: Discord.User
+                    ) => reaction.emoji.name === '⛏️' && !user?.bot,
+                    time: 20 * 1000,
+                })
+                .on('end', onEnd);
+            collector.on('collect', (reaction, user) =>
+                onCollect(collector, reaction, user)
+            );
+            await sentMessage.react('⛏️');
+        } else {
+            const collector = channel
+                .createMessageCollector({
+                    filter: (message: Discord.Message) =>
+                        !message.author?.bot &&
+                        message.content.toLowerCase() ===
+                            collectionTrigger.toLowerCase(),
+                    time: 20 * 1000,
+                })
+
+                .on('end', onEnd);
+            collector.on('collect', message => onCollect(collector, message));
+        }
     } catch (err) {
-        await logMessage(client, err.stack);
+        await logMessage(client, (err as DiscordAPIError).stack);
     }
 }
 
@@ -313,14 +311,15 @@ export async function pickCoinsInit(
             : '804640084007321600' // #jackykit-playground
     );
 
-    if (!channel?.isText()) {
+    if (channel?.type !== 'GUILD_TEXT' || !channel?.isText()) {
         return;
     }
     if (process.env.NODE_ENV === 'production') {
         await wait(
-            (await channel.messages.fetch({ limit: 50 })).filter(
-                msg => Date.now() - msg.createdTimestamp > 1000 * 60 * 5
-            ).size *
+            (
+                await channel.messages.fetch({ limit: 50 })
+            ).filter(msg => Date.now() - msg.createdTimestamp > 1000 * 60 * 5)
+                .size *
                 1000 *
                 3
         );
@@ -333,11 +332,11 @@ export async function spawnCoinbomb(message: Discord.Message): Promise<void> {
     if (
         !member ||
         !(
-            member.hasPermission('ADMINISTRATOR') ||
+            member.permissions.has('ADMINISTRATOR') ||
             member.roles.cache.has('805000661133295616') ||
             member.roles.cache.has('805772165394858015')
         ) ||
-        channel instanceof Discord.DMChannel
+        channel?.type !== 'GUILD_TEXT'
     ) {
         await channel.send('You do not have permission to spawn a coinbomb');
         return;

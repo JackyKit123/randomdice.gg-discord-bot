@@ -29,22 +29,24 @@ export default async function bon(message: Discord.Message): Promise<void> {
     if (!(await commandCost(message, 1000))) return;
     const general = guild?.channels.cache.get('804222694488932364');
     await channel.send(`Goodbye ${target}, get fucking bonned!`);
-    if (general?.type === 'text')
-        await (general as Discord.TextChannel).send(
-            new Discord.MessageEmbed()
-                .setImage(
-                    'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
-                )
-                .setThumbnail(
-                    target.user.displayAvatarURL({ dynamic: true }) ??
-                        target.user.defaultAvatarURL
-                )
-                .setTitle(
-                    `${target.user.username}#${target.user.discriminator} Got bonned`
-                )
-                .setColor('#ff0000')
-                .setDescription(
-                    `${target} got bonned by ${author} for ||${reason}||`
-                )
-        );
+    if (general?.isText())
+        await general.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setImage(
+                        'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
+                    )
+                    .setThumbnail(
+                        target.user.displayAvatarURL({ dynamic: true }) ??
+                            target.user.defaultAvatarURL
+                    )
+                    .setTitle(
+                        `${target.user.username}#${target.user.discriminator} Got bonned`
+                    )
+                    .setColor('#ff0000')
+                    .setDescription(
+                        `${target} got bonned by ${author} for ||${reason}||`
+                    ),
+            ],
+        });
 }

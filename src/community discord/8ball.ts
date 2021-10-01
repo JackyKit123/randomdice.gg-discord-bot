@@ -4,7 +4,8 @@ export default async function eightBall(
     message: Discord.Message
 ): Promise<void> {
     const { channel } = message;
-    const regex = /^(does|do|did|wanna|should|is|are|am|should|may|shall|was|were|will|can|could|would|have|had|havn't|hadn't|haven't|didn't|don't|wouldn't|isn't|aren't|ain't|shouldn't|won't|can't|weren't|couldn't)( .+){1,}\?/i;
+    const regex =
+        /^(does|do|did|wanna|should|is|are|am|should|may|shall|was|were|will|can|could|would|have|had|havn't|hadn't|haven't|didn't|don't|wouldn't|isn't|aren't|ain't|shouldn't|won't|can't|weren't|couldn't)( .+){1,}\?/i;
     if (
         [
             '804229330443436032',

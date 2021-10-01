@@ -59,7 +59,7 @@ export function userMentionToText(
             const userId = str.match(matchUserMentionRegex)?.[1];
             if (!userId) return '';
             if (instance instanceof Discord.Guild) {
-                const member = instance.member(userId);
+                const member = instance.members.cache.get(userId);
                 return member?.displayName || '';
             }
             return instance.users.cache.get(userId)?.username || '';

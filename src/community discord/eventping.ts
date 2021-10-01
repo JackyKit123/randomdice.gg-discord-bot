@@ -15,7 +15,7 @@ export default async function eventPing(
             member?.roles.cache.has('807219483311603722') ||
             member?.roles.cache.has('805000661133295616') ||
             member?.roles.cache.has('805772165394858015') ||
-            member?.hasPermission('MENTION_EVERYONE')
+            member?.permissions.has('MENTION_EVERYONE')
         )
     ) {
         return;
@@ -39,7 +39,7 @@ export default async function eventPing(
         )
         .setColor(member.displayHexColor)
         .setFooter('Enjoy the event!')
-        .addField('Hosted by', member);
+        .addField('Hosted by', member.toString());
 
     if (msg.length > 1024) {
         await reply('Event detail cannot be longer than 1024 characters.');
@@ -50,5 +50,5 @@ export default async function eventPing(
     }
 
     if (deletable) await message.delete();
-    await channel.send('<@&804544088153391124>', embed);
+    await channel.send({ content: '<@&804544088153391124>', embeds: [embed] });
 }

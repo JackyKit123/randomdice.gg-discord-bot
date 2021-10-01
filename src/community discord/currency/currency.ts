@@ -26,18 +26,20 @@ export default async function currency(
         !(
             member?.roles.cache.has('805000661133295616') ||
             member?.roles.cache.has('805772165394858015') ||
-            member?.hasPermission('ADMINISTRATOR')
+            member?.permissions.has('ADMINISTRATOR')
         )
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(`You cannot use currency audit command.`)
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need one of the following roles to use this command.\n' +
-                        '<@&805000661133295616> <@&805772165394858015>\n'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(`You cannot use currency audit command.`)
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need one of the following roles to use this command.\n' +
+                            '<@&805000661133295616> <@&805772165394858015>\n'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -63,7 +65,7 @@ export default async function currency(
             return false;
         targetInList.push(m.id);
         return true;
-    }) as Discord.GuildMember[];
+    });
 
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !targets.length) {
@@ -76,7 +78,7 @@ export default async function currency(
         await channel.send('The amount entered should be a non-zero integer.');
         return;
     }
-    const botTargets = targets.filter(target => target.user.bot);
+    const botTargets = targets.filter(target => target?.user.bot);
     if (botTargets.length) {
         await channel.send(
             `${botTargets} ${
@@ -85,7 +87,7 @@ export default async function currency(
         );
         return;
     }
-    if (amount > 50000 && !member.hasPermission('ADMINISTRATOR')) {
+    if (amount > 50000 && !member.permissions.has('ADMINISTRATOR')) {
         await channel.send(
             'The audit amount is too large (> <:dicecoin:839981846419079178> 50,000), you need `ADMINISTRATOR` permission to enter that large amount.'
         );
@@ -94,47 +96,40 @@ export default async function currency(
 
     await Promise.all(
         targets.map(async target => {
-            const balance = (await getBalance(
-                message,
-                'silence',
-                target
-            )) as number;
+            const balance = await getBalance(message, 'silence', target);
+            if (balance === false) return;
             await database
-                .ref(`discord_bot/community/currency/${target.id}/balance`)
+                .ref(`discord_bot/community/currency/${target?.id}/balance`)
                 .set(balance + amount);
         })
     );
 
     const deduction = amount < 0;
-    await channel.send(
-        `You have ${
+    await channel.send({
+        content: `You have ${
             deduction ? 'taken away' : 'given'
         } <:dicecoin:839981846419079178> ${numberFormat.format(
             Math.abs(amount)
         )} ${deduction ? 'from' : 'to'} ${targets.join(' ')}`,
-        {
+        allowedMentions: {
+            parse: [],
+            users: [],
+            roles: [],
+        },
+    });
+    const logChannel = guild.channels.cache.get('804640084007321600');
+    if (logChannel?.isText()) {
+        await logChannel.send({
+            content: `${member} have ${
+                deduction ? 'taken away' : 'given'
+            } <:dicecoin:839981846419079178> ${numberFormat.format(
+                Math.abs(amount)
+            )} ${deduction ? 'from' : 'to'} ${targets.join(' ')}`,
             allowedMentions: {
                 parse: [],
                 users: [],
                 roles: [],
             },
-        }
-    );
-    const logChannel = guild.channels.cache.get('804640084007321600');
-    if (logChannel?.isText()) {
-        await logChannel.send(
-            `${member} have ${
-                deduction ? 'taken away' : 'given'
-            } <:dicecoin:839981846419079178> ${numberFormat.format(
-                Math.abs(amount)
-            )} ${deduction ? 'from' : 'to'} ${targets.join(' ')}`,
-            {
-                allowedMentions: {
-                    parse: [],
-                    users: [],
-                    roles: [],
-                },
-            }
-        );
+        });
     }
 }

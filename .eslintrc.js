@@ -2,7 +2,7 @@ module.exports = {
     root: true,
     parser: '@typescript-eslint/parser',
     parserOptions: {
-        ecmaVersion: 2018,
+        ecmaVersion: 2021,
         sourceType: 'module',
         project: './tsconfig.json',
         tsconfigRootDir: __dirname,
@@ -11,12 +11,11 @@ module.exports = {
         node: true,
     },
     extends: [
+        'prettier',
         'airbnb',
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
-        'prettier/@typescript-eslint',
         'plugin:prettier/recommended',
-        'prettier',
     ],
     settings: {
         'import/resolver': {

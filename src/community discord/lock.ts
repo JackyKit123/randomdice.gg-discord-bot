@@ -36,7 +36,7 @@ export default async function lockUnlock(
 
     const { everyone } = guild.roles;
     async function lock(): Promise<void> {
-        if (target.type === 'voice') {
+        if (target.type === 'GUILD_VOICE') {
             if (
                 target.permissionsFor(everyone.id)?.serialize().CONNECT ===
                 false
@@ -45,10 +45,13 @@ export default async function lockUnlock(
                 return;
             }
 
-            target.updateOverwrite(everyone, {
+            target.permissionOverwrites.edit(everyone, {
                 CONNECT: false,
             });
-        } else if (target.type === 'text' || target.type === 'news') {
+        } else if (
+            target.type === 'GUILD_TEXT' ||
+            target.type === 'GUILD_NEWS'
+        ) {
             if (
                 target.permissionsFor(everyone.id)?.serialize()
                     .SEND_MESSAGES === false
@@ -57,13 +60,13 @@ export default async function lockUnlock(
                 return;
             }
 
-            target.updateOverwrite(everyone, {
+            target.permissionOverwrites.edit(everyone, {
                 SEND_MESSAGES: false,
             });
         }
         if (
             channel.id !== target.id &&
-            (target.type === 'text' || target.type === 'news')
+            (target.type === 'GUILD_TEXT' || target.type === 'GUILD_NEWS')
         ) {
             await (target as Discord.TextChannel).send(
                 `Locked down ${target}${
@@ -81,20 +84,23 @@ export default async function lockUnlock(
     }
 
     async function unlock(): Promise<void> {
-        if (target.type === 'voice') {
+        if (target.type === 'GUILD_VOICE') {
             if (target.permissionsFor(everyone.id)?.has('CONNECT')) {
                 await channel.send(`${target} is already unlocked.`);
                 return;
             }
-            target.updateOverwrite(everyone, {
+            target.permissionOverwrites.edit(everyone, {
                 CONNECT: null,
             });
-        } else if (target.type === 'text' || target.type === 'news') {
+        } else if (
+            target.type === 'GUILD_TEXT' ||
+            target.type === 'GUILD_NEWS'
+        ) {
             if (target.permissionsFor(everyone.id)?.has('SEND_MESSAGES')) {
                 await channel.send(`${target} is already unlocked.`);
                 return;
             }
-            target.updateOverwrite(everyone, {
+            target.permissionOverwrites.edit(everyone, {
                 SEND_MESSAGES: null,
                 CONNECT: null,
             });
@@ -102,7 +108,7 @@ export default async function lockUnlock(
 
         if (
             channel.id !== target.id &&
-            (target.type === 'text' || target.type === 'news')
+            (target.type === 'GUILD_TEXT' || target.type === 'GUILD_NEWS')
         ) {
             await (target as Discord.TextChannel).send(
                 `Unlocked channel ${target}${
@@ -120,10 +126,12 @@ export default async function lockUnlock(
     }
     if (
         (target.permissionsFor(member)?.has('MANAGE_ROLES') &&
-            target.permissionOverwrites.some(
+            target.permissionOverwrites.cache.some(
                 perm =>
                     perm.allow.has(
-                        target.type === 'voice' ? 'CONNECT' : 'SEND_MESSAGES'
+                        target.type === 'GUILD_VOICE'
+                            ? 'CONNECT'
+                            : 'SEND_MESSAGES'
                     ) &&
                     (member.roles.cache.has(perm.id) || author.id === perm.id)
             )) ||

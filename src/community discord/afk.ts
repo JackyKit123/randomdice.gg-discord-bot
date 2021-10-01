@@ -4,7 +4,6 @@ import { promisify } from 'util';
 import cache from '../util/cache';
 import cooldown from '../util/cooldown';
 import parseMsIntoReadableText from '../util/parseMS';
-import { isGuild } from '../util/typeguard';
 
 const wait = promisify(setTimeout);
 
@@ -23,15 +22,17 @@ export default async function afk(message: Discord.Message): Promise<void> {
             member.roles.cache.has('805388604791586826')
         )
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle(`You cannot use !afk`)
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need one of the following roles to use this command.\n' +
-                        '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle(`You cannot use !afk`)
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need one of the following roles to use this command.\n' +
+                            '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -50,7 +51,8 @@ export default async function afk(message: Discord.Message): Promise<void> {
             : member.displayName;
     await Promise.all([
         wait(30 * 1000),
-        message.reply(`I have set your afk to: ${afkMessage}`, {
+        message.reply({
+            content: `I have set your afk to: ${afkMessage}`,
             allowedMentions: {
                 parse: [],
                 users: [],
@@ -66,7 +68,7 @@ export default async function afk(message: Discord.Message): Promise<void> {
 }
 
 async function afkHandler(
-    channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel,
+    channel: Discord.BaseGuildTextChannel | Discord.ThreadChannel,
     member: Discord.GuildMember,
     {
         content,
@@ -95,8 +97,8 @@ async function afkHandler(
                 return;
             }
             if (content?.includes(uid) && createdTimestamp) {
-                await channel.send(
-                    `<@${uid}> has been afk for ${parseMsIntoReadableText(
+                await channel.send({
+                    content: `<@${uid}> has been afk for ${parseMsIntoReadableText(
                         createdTimestamp - timestamp,
                         true
                     )
@@ -106,14 +108,12 @@ async function afkHandler(
                         /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi,
                         match => `<${match}>`
                     )}`,
-                    {
-                        allowedMentions: {
-                            parse: [],
-                            users: [],
-                            roles: [],
-                        },
-                    }
-                );
+                    allowedMentions: {
+                        parse: [],
+                        users: [],
+                        roles: [],
+                    },
+                });
             }
         }
     );
@@ -121,7 +121,7 @@ async function afkHandler(
 
 export async function afkResponse(message: Discord.Message): Promise<void> {
     const { member, content, channel, createdTimestamp } = message;
-    if (!member) return;
+    if (!member || channel.type === 'DM') return;
     await afkHandler(channel, member, { content, createdTimestamp });
 }
 
@@ -132,9 +132,13 @@ export async function removeAfkListener(
     const channel =
         arg instanceof Discord.MessageReaction ? arg.message.channel : arg;
     const { COMMUNITY_SERVER_ID } = process.env;
-    if (!isGuild(channel) || !COMMUNITY_SERVER_ID) return;
+    if (
+        !(channel instanceof Discord.BaseGuildTextChannel) ||
+        !COMMUNITY_SERVER_ID
+    )
+        return;
     const { guild } = channel;
-    const member = guild.member(user.id);
+    const member = guild.members.cache.get(user.id);
     if (!member || !guild || guild.id !== COMMUNITY_SERVER_ID) return;
     await afkHandler(channel, member);
 }

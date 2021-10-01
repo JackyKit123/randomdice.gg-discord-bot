@@ -23,12 +23,13 @@ export default async function drawDice(
     if (challenged === 'ban' || challenged === 'challenging') return;
     const balance = await getBalanced(message, 'emit new member');
     if (balance === false) return;
-    const nextDD = channel.createMessageCollector(
-        awaited =>
+    const nextDD = channel.createMessageCollector({
+        filter: awaited =>
             awaited.author.id === member.id &&
             /^\w{5}$|^dd\b|^!drawdice\b|^!dicedraw\b/i.test(awaited.content),
-        { time: 10 * 10000, max: 1 }
-    );
+        time: 10 * 10000,
+        max: 1,
+    });
     const lastDDTime = Date.now();
     nextDD.on('collect', () => {
         const interval = Date.now() - lastDDTime;
@@ -53,19 +54,21 @@ export default async function drawDice(
         } else {
             const str = randomstring.generate(5);
             memberChallengeState.set(member.id, 'challenging');
-            await channel.send(
-                `**ANTI-BOT Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
-                new Discord.MessageEmbed().setDescription(
-                    `||${str
-                        .split('')
-                        .map(s => `${s}‎`)
-                        .join('')}||`
-                )
-            );
-            const collector = channel.createMessageCollector(
-                awaited => awaited.author.id === member.id,
-                { time: 30 * 10000 }
-            );
+            await channel.send({
+                content: `**ANTI-BOT Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
+                embeds: [
+                    new Discord.MessageEmbed().setDescription(
+                        `||${str
+                            .split('')
+                            .map(s => `${s}‎`)
+                            .join('')}||`
+                    ),
+                ],
+            });
+            const collector = channel.createMessageCollector({
+                filter: awaited => awaited.author.id === member.id,
+                time: 30 * 10000,
+            });
             let failure = 0;
             collector.on('collect', async msg => {
                 if (msg.content === str) {
@@ -99,28 +102,34 @@ export default async function drawDice(
             });
             setTimeout(async () => {
                 if (failure > 0)
-                    await message.reply(
-                        'You have 10 seconds left to complete your captcha',
-                        new Discord.MessageEmbed().setDescription(
-                            `||${str
-                                .split('')
-                                .map(s => `${s}‎`)
-                                .join('')}||`
-                        )
-                    );
+                    await message.reply({
+                        content:
+                            'You have 10 seconds left to complete your captcha',
+                        embeds: [
+                            new Discord.MessageEmbed().setDescription(
+                                `||${str
+                                    .split('')
+                                    .map(s => `${s}‎`)
+                                    .join('')}||`
+                            ),
+                        ],
+                    });
             }, 1000 * 30);
             return;
         }
     }
     const emoji = cache['discord_bot/emoji'];
     let dice = [...cache.dice];
-    let { diceDrawn, prestige } = cache['discord_bot/community/currency'][
-        member.id
-    ];
-    const outcome = {
+    let { diceDrawn, prestige } =
+        cache['discord_bot/community/currency'][member.id];
+    const outcome: {
+        reward: number;
+        color: `#${string}`;
+        tier: Dice['rarity'];
+    } = {
         reward: 0,
         color: '#999999',
-        tier: 'Common' as Dice['rarity'],
+        tier: 'Common',
     };
     diceDrawn = diceDrawn || {};
     prestige = prestige || 1;
@@ -133,7 +142,7 @@ export default async function drawDice(
             outcome.reward += 10;
             outcome.tier = 'Rare';
             if (outcome.color === '#999999') {
-                outcome.color = '006eff';
+                outcome.color = '#006eff';
             }
         } else if (tierRng < 99) {
             outcome.reward += 40;
@@ -172,7 +181,7 @@ export default async function drawDice(
             `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
             '<:Dice_TierX_Null:807019807312183366> '.repeat(prestige)
         );
-    const sentMessage = await channel.send(embed);
+    const sentMessage = await channel.send({ embeds: [embed] });
     await wait(1000);
     embed = embed
         .setDescription(
@@ -195,6 +204,6 @@ export default async function drawDice(
             inline: false,
         },
     ];
-    await sentMessage.edit(embed);
+    await sentMessage.edit({ embeds: [embed] });
     await chatCoins(message, true);
 }

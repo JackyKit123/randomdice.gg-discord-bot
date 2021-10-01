@@ -19,9 +19,7 @@ export default async function validateCrewAds(
         messages.filter(msg => msg.author && msg.author.id === author.id)
             .length > 1
     ) {
-        await message.delete({
-            reason: 'Spam Detection: Member has not waited 10 messages',
-        });
+        await message.delete();
         const warningMessage = await channel.send(
             `${author.toString()} I have delete your message. Reason: **Spam Detection: You have posted a crew ad in the last 10 messages**`
         );
@@ -36,10 +34,7 @@ export default async function validateCrewAds(
                 stringSimilarity.compareTwoStrings(content, msg.content) > 0.6
         ).length > 1
     ) {
-        await message.delete({
-            reason:
-                'Spam Detection: Duplicated or Similar Crew Ads in the last 10 messages',
-        });
+        await message.delete();
         const warningMessage = await channel.send(
             `${author.toString()} I have delete your message. Reason: **Spam Detection: Duplicated or Similar Crew Ads in the last 10 messages**`
         );

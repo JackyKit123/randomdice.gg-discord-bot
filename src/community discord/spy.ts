@@ -9,12 +9,13 @@ async function fetchIsBanned(
 ): Promise<boolean> {
     try {
         if (!bannedCache.includes(user.id)) {
-            const banUser = await guild.fetchBan(user);
+            const banUser = await guild.bans.fetch(user);
             bannedCache.push(banUser.user.id);
         }
         return true;
     } catch (err) {
-        if (err.message === 'Unknown Ban') return false;
+        if ((err as Discord.DiscordAPIError).message === 'Unknown Ban')
+            return false;
         throw err;
     }
 }
@@ -27,22 +28,16 @@ async function fetchMember(
         await guild.members.fetch(user);
         return true;
     } catch (err) {
-        if (err.message === 'Unknown Member') return false;
+        if ((err as Discord.DiscordAPIError).message === 'Unknown Member')
+            return false;
         throw err;
     }
 }
 
 export default async function spy(message: Discord.Message): Promise<void> {
     try {
-        const {
-            guild,
-            member,
-            content,
-            client,
-            author,
-            channel,
-            attachments,
-        } = message;
+        const { guild, member, content, client, author, channel, attachments } =
+            message;
         if (
             !guild ||
             !member ||
@@ -54,15 +49,15 @@ export default async function spy(message: Discord.Message): Promise<void> {
         const communityDiscord = await client.guilds.fetch(
             '804222694488932362'
         );
-        const spyLog = communityDiscord.channels.cache.get(
-            '852355980779978752'
-        );
+        const spyLog =
+            communityDiscord.channels.cache.get('852355980779978752');
         const isBanned = await fetchIsBanned(communityDiscord, author);
         const isCommunityDiscordMember = isBanned
             ? false
             : await fetchMember(communityDiscord, author);
         if (!spyLog?.isText()) return;
-        const sensitiveWords = /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(carry\w*)|(carried)|(c(?:lass)? ?15)|(\$)\b/gi;
+        const sensitiveWords =
+            /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(carry\w*)|(carried)|(c(?:lass)? ?15)|(\$)\b/gi;
         const triggered = Array.from(content.matchAll(sensitiveWords));
         const [sliced1, sliced2] = [
             content.slice(0, 1024),
@@ -117,8 +112,8 @@ export default async function spy(message: Discord.Message): Promise<void> {
                 attachments.map(attachment => attachment.url).join('\n')
             );
         }
-        const sentMessage = await spyLog.send(
-            triggered.length
+        const sentMessage = await spyLog.send({
+            content: triggered.length
                 ? `${
                       isBanned
                           ? ''
@@ -128,13 +123,13 @@ export default async function spy(message: Discord.Message): Promise<void> {
                   } triggered: ${Array.from(triggered)
                       .map(match => `**${match[0]}**`)
                       .join(' ')}`
-                : '',
-            embed
-        );
+                : undefined,
+            embeds: [embed],
+        });
         if (!isBanned) await sentMessage.react('868148038311489578');
     } catch (err) {
         try {
-            await logMessage(message.client, err.stack);
+            await logMessage(message.client, (err as Error).stack);
         } catch (e) {
             // no action
         }
@@ -163,7 +158,7 @@ async function cleanUpMessage(
             field => field.name !== 'User is member in this discord'
         );
         embed.fields[1].value = '✔️';
-        await message.edit(embed);
+        await message.edit({ embeds: [embed] });
     }
     embed.color = 0;
     if (reactions.cache.size) {
@@ -182,10 +177,10 @@ export async function spyLogBanHandler(
         : userInitial;
     if (
         !guild ||
-        !guild.member(user)?.hasPermission('BAN_MEMBERS') ||
+        !guild.members.cache.get(user.id)?.permissions.has('BAN_MEMBERS') ||
         channel.id !== '852355980779978752' ||
         !embeds[0] ||
-        author.id !== (client.user as Discord.ClientUser).id ||
+        author?.id !== (client.user as Discord.ClientUser).id ||
         reaction.emoji.id !== '868148038311489578'
     )
         return;
@@ -194,11 +189,10 @@ export async function spyLogBanHandler(
     if (fields[0]?.name !== 'User') return;
     const id = fields[0]?.value?.match(/ID: (\d{18})$/m)?.[1];
     if (!id) return;
-    const banned = await guild.fetchBans();
+    const banned = await guild.bans.fetch();
     if (banned.some(({ user: u }) => u.id === id)) return;
     await guild.members.ban(id, {
-        reason:
-            'Random Dice Hack Discord related activity\nFeel free to [appeal here](https://discord.gg/yJBdSRZJmS) if you found this ban to be unjustified.',
+        reason: 'Random Dice Hack Discord related activity\nFeel free to [appeal here](https://discord.gg/yJBdSRZJmS) if you found this ban to be unjustified.',
     });
     channel.messages.cache.forEach(m => cleanUpMessage(m, id));
 }

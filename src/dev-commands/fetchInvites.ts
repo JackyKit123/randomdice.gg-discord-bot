@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { DiscordAPIError } from 'discord.js';
 
 export default async function createInvites(
     message: Discord.Message
@@ -16,14 +16,13 @@ export default async function createInvites(
     }> => {
         try {
             const code = (
-                await guildData.channels.cache
-                    .find(
+                await (
+                    guildData.channels.cache.find(
                         c =>
-                            c.name === 'welcome' ||
-                            c.name === 'general' ||
-                            c.type === 'text'
-                    )
-                    ?.createInvite()
+                            (c.name === 'welcome' || c.name === 'general') &&
+                            c.type === 'GUILD_TEXT'
+                    ) as Discord.TextChannel
+                )?.createInvite()
             )?.code;
             return {
                 name: guildData.name,
@@ -32,7 +31,7 @@ export default async function createInvites(
         } catch (err) {
             return {
                 name: guildData.name,
-                error: err.message,
+                error: (err as DiscordAPIError).message,
             };
         }
     };

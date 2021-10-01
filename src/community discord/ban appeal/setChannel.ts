@@ -1,14 +1,14 @@
-import Discord from 'discord.js';
+import Discord, { DiscordAPIError } from 'discord.js';
 
 export default async function setChannel(
     message: Discord.Message
 ): Promise<void> {
-    const { client, embeds, webhookID, channel, guild } = message;
+    const { client, embeds, webhookId, channel, guild } = message;
     const { COMMUNITY_SERVER_ID } = process.env;
 
     if (
         !guild ||
-        !webhookID ||
+        !webhookId ||
         channel.id !== '805059910484099112' ||
         !embeds
     ) {
@@ -31,9 +31,9 @@ export default async function setChannel(
     const communityDiscord = await client.guilds.fetch(COMMUNITY_SERVER_ID);
 
     try {
-        await communityDiscord.fetchBan(id);
+        await communityDiscord.bans.fetch(id);
     } catch (err) {
-        if (err.message !== 'Unknown Ban') throw new Error(err);
+        if ((err as DiscordAPIError).message !== 'Unknown Ban') throw err;
         try {
             const memberOfMain = await communityDiscord.members.fetch(id);
             if (
@@ -62,39 +62,44 @@ export default async function setChannel(
     const appealRoom = await guild.channels.create(
         `${member.user.username}${member.user.discriminator}`,
         {
-            parent: appealRoomCat,
+            parent:
+                appealRoomCat instanceof Discord.CategoryChannel
+                    ? appealRoomCat
+                    : undefined,
         }
     );
-    await appealRoom.updateOverwrite(member, {
+    await appealRoom.permissionOverwrites.edit(member, {
         VIEW_CHANNEL: true,
     });
-    await appealRoom.send(
-        member,
-        new Discord.MessageEmbed()
-            .setTitle('Appeal Form')
-            .setDescription(
-                `Welcome to the randomdice.gg unbanning server.\n` +
-                    `Before we can start processing your application for a ban, we need important key information from you.\n` +
-                    `It should be said that your application will be rejected with immediate effect if we expose one or more of your information as a lie.\n` +
-                    `We need the following information from you: `
-            )
-            .setColor('#6ba4a5')
-            .addField(
-                'When were you banned?',
-                '*Specify the date, time and your time zone to make it easier for us.*'
-            )
-            .addField(
-                'What reason was given for your ban?',
-                '*If it was not provided, say not provided*'
-            )
-            .addField(
-                'Why should you be unbanned?',
-                '*You will only be unbanned if you are not guilty*'
-            )
-            .addField(
-                'Would you like to add further information to your application that could help with your unban? ',
-                '*If so, please attach them.*'
-            )
-            .setTimestamp()
-    );
+    await appealRoom.send({
+        content: member.toString(),
+        embeds: [
+            new Discord.MessageEmbed()
+                .setTitle('Appeal Form')
+                .setDescription(
+                    `Welcome to the randomdice.gg unbanning server.\n` +
+                        `Before we can start processing your application for a ban, we need important key information from you.\n` +
+                        `It should be said that your application will be rejected with immediate effect if we expose one or more of your information as a lie.\n` +
+                        `We need the following information from you: `
+                )
+                .setColor('#6ba4a5')
+                .addField(
+                    'When were you banned?',
+                    '*Specify the date, time and your time zone to make it easier for us.*'
+                )
+                .addField(
+                    'What reason was given for your ban?',
+                    '*If it was not provided, say not provided*'
+                )
+                .addField(
+                    'Why should you be unbanned?',
+                    '*You will only be unbanned if you are not guilty*'
+                )
+                .addField(
+                    'Would you like to add further information to your application that could help with your unban? ',
+                    '*If so, please attach them.*'
+                )
+                .setTimestamp(),
+        ],
+    });
 }

@@ -106,22 +106,21 @@ export default async function clown(message: Discord.Message): Promise<void> {
     } catch (err) {
         // suppress error
     } finally {
-        await channel.send(
-            typedWrongCommand || clownedABot
-                ? `${target} ${clownedABot ? 'tried to clown a bot.' : ''}${
-                      typedWrongCommand ? 'typed the wrong command.' : ''
-                  } 100% clown!<a:clowndance:845532985787940894>`
-                : `${target} is a ${
-                      howClown * 10
-                  }% clown.<a:clowndance:845532985787940894>`,
-            {
-                allowedMentions: {
-                    users: [],
-                    roles: [],
-                    parse: [],
-                },
-            }
-        );
+        await channel.send({
+            content:
+                typedWrongCommand || clownedABot
+                    ? `${target} ${clownedABot ? 'tried to clown a bot.' : ''}${
+                          typedWrongCommand ? 'typed the wrong command.' : ''
+                      } 100% clown!<a:clowndance:845532985787940894>`
+                    : `${target} is a ${
+                          howClown * 10
+                      }% clown.<a:clowndance:845532985787940894>`,
+            allowedMentions: {
+                users: [],
+                roles: [],
+                parse: [],
+            },
+        });
         await wait(1000 * 60 * 5);
         try {
             if (target.roles.cache.has('845530033695096853')) {
@@ -139,15 +138,17 @@ export async function purgeRolesOnReboot(
     client: Discord.Client
 ): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
+    if (!client.user) return;
     const logs = await guild.fetchAuditLogs({
-        user: client.user as Discord.ClientUser,
+        user: client.user,
     });
     logs.entries.forEach(async entry => {
         if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 10) {
             const memberNicknameUpdated: string[] = [];
+            if (!(entry.target instanceof Discord.User)) return;
             try {
                 const member = await guild.members.fetch({
-                    user: entry.target as Discord.User,
+                    user: entry.target,
                 });
                 if (
                     entry.action === 'MEMBER_ROLE_UPDATE' &&
@@ -157,15 +158,22 @@ export async function purgeRolesOnReboot(
                 } else if (entry.action === 'MEMBER_UPDATE') {
                     entry.changes?.forEach(async change => {
                         if (change.key === 'nick') {
-                            if (change.new?.match(/^\u{1F921}{1,10}$/u)) {
+                            if (
+                                typeof change.new === 'string' &&
+                                /^\u{1F921}{1,10}$/u.test(change.new)
+                            ) {
                                 if (
-                                    change.old &&
-                                    change.old.match(/^\u{1F921}{1,10}$/u) &&
+                                    typeof change.old === 'string' &&
+                                    /^\u{1F921}{1,10}$/u.test(change.old) &&
                                     memberNicknameUpdated.includes(member.id)
                                 ) {
                                     return;
                                 }
-                                await member.setNickname(change.old || '');
+                                await member.setNickname(
+                                    typeof change.old === 'string'
+                                        ? change.old
+                                        : null
+                                );
                                 memberNicknameUpdated.push(member.id);
                             }
                         }

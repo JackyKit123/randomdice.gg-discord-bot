@@ -11,11 +11,12 @@ async function host(
     duration: number,
     maxEntries: number,
     ticketCost: number,
-    channel: Discord.TextChannel | Discord.NewsChannel,
+    channel: Discord.TextBasedChannels,
     author: Discord.User
 ): Promise<void> {
     const database = firebase.app().database();
     const ref = database.ref('discord_bot/community/raffle');
+    if (channel.type === 'DM') return;
     const { guild } = channel;
 
     await ref.set({
@@ -24,23 +25,25 @@ async function host(
         maxEntries,
         ticketCost,
     });
-    await channel.send(
-        '<@&839694796431294485>',
-        new Discord.MessageEmbed()
-            .setAuthor(
-                'randomdice.gg Server',
-                guild.iconURL({ dynamic: true }) ?? undefined
-            )
-            .setColor('#00ff00')
-            .setTitle('New Dice Coins Raffle')
-            .addField(
-                'Ticket Entries',
-                `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
-            )
-            .addField('Hosted by', `${author}`)
-            .setFooter('Raffle ends at')
-            .setTimestamp(Date.now() + duration)
-    );
+    await channel.send({
+        content: '<@&839694796431294485>',
+        embeds: [
+            new Discord.MessageEmbed()
+                .setAuthor(
+                    'randomdice.gg Server',
+                    guild.iconURL({ dynamic: true }) ?? undefined
+                )
+                .setColor('#00ff00')
+                .setTitle('New Dice Coins Raffle')
+                .addField(
+                    'Ticket Entries',
+                    `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
+                )
+                .addField('Hosted by', `${author}`)
+                .setFooter('Raffle ends at')
+                .setTimestamp(Date.now() + duration),
+        ],
+    });
 }
 
 async function announceWinner(
@@ -48,7 +51,10 @@ async function announceWinner(
     database: firebase.database.Database
 ): Promise<void> {
     const channel = guild.channels.cache.get('807229757049012266');
-    if (channel?.type !== 'text') return;
+    const { client } = guild;
+    const clientUser = client.user;
+    if (channel?.type !== 'GUILD_TEXT' || !channel.isText() || !clientUser)
+        return;
     let raffleInfo = cache['discord_bot/community/raffle'];
 
     const hostNewRaffle = async (): Promise<void> => {
@@ -60,13 +66,7 @@ async function announceWinner(
         while (maxEntries * ticketCost > 200_000) {
             maxEntries = Math.ceil(Math.random() * 100);
         }
-        await host(
-            duration,
-            maxEntries,
-            ticketCost,
-            channel as Discord.TextChannel,
-            channel.client.user as Discord.ClientUser
-        );
+        await host(duration, maxEntries, ticketCost, channel, clientUser);
         await announceWinner(guild, database);
     };
     if (!raffleInfo.hostId) {
@@ -79,7 +79,7 @@ async function announceWinner(
             raffleInfo = cache['discord_bot/community/raffle'];
 
             const entries = Object.entries(raffleInfo.tickets || {});
-            const uniqueEntry = {} as { [uid: string]: string };
+            const uniqueEntry: { [uid: string]: string } = {};
             entries.forEach(([, uid]) => {
                 if (!uniqueEntry[uid]) {
                     uniqueEntry[uid] = uid;
@@ -90,28 +90,32 @@ async function announceWinner(
             ] || [null, null];
 
             const amount = entries.length * raffleInfo.ticketCost;
-            const winningMessage = await (channel as Discord.TextChannel).send(
-                '<@&839694796431294485>',
-                new Discord.MessageEmbed()
-                    .setAuthor(
-                        'randomdice.gg Server',
-                        guild.iconURL({ dynamic: true }) ?? undefined
-                    )
-                    .setColor('#800080')
-                    .setTitle('Dice Coins Raffle')
-                    .setDescription(
-                        entries.length === 0
-                            ? 'Raffle ended but no one entered the raffle.'
-                            : `Raffle ended, **${
-                                  Object.keys(uniqueEntry).length
-                              }** people entered the raffle with a total of **${
-                                  entries.length
-                              }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:dicecoin:839981846419079178> **${numberFormat.format(
-                                  amount
-                              )}**. Congratulations!`
-                    )
-                    .setFooter('A new round of raffle will be hosted very soon')
-            );
+            const winningMessage = await channel.send({
+                content: '<@&839694796431294485>',
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setAuthor(
+                            'randomdice.gg Server',
+                            guild.iconURL({ dynamic: true }) ?? undefined
+                        )
+                        .setColor('#800080')
+                        .setTitle('Dice Coins Raffle')
+                        .setDescription(
+                            entries.length === 0
+                                ? 'Raffle ended but no one entered the raffle.'
+                                : `Raffle ended, **${
+                                      Object.keys(uniqueEntry).length
+                                  }** people entered the raffle with a total of **${
+                                      entries.length
+                                  }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:dicecoin:839981846419079178> **${numberFormat.format(
+                                      amount
+                                  )}**. Congratulations!`
+                        )
+                        .setFooter(
+                            'A new round of raffle will be hosted very soon'
+                        ),
+                ],
+            });
 
             const ref = database.ref('discord_bot/community/raffle');
             await ref.set({
@@ -126,9 +130,7 @@ async function announceWinner(
             }
             const target = await guild.members.fetch(winner);
             if (!target) {
-                await (channel as Discord.TextChannel).send(
-                    `Cannot add currency to ${target}`
-                );
+                await channel.send(`Cannot add currency to ${target}`);
                 return;
             }
             let balance = await getBalance(winningMessage, 'silence', target);
@@ -182,48 +184,55 @@ export default async function raffle(message: Discord.Message): Promise<void> {
     switch (subcommand?.toLowerCase()) {
         case 'info':
             if (raffleTimeLeft > 0) {
-                await channel.send(
-                    new Discord.MessageEmbed()
-                        .setAuthor(
-                            'randomdice.gg Server',
-                            guild.iconURL({ dynamic: true }) ?? undefined
-                        )
-                        .setColor('#00ff00')
-                        .setTitle('Dice Coins Raffle')
-                        .addField(
-                            'Ticket Entries',
-                            `<:dicecoin:839981846419079178> **${entries.ticketCost} per ticket** (${entries.maxEntries} ticket(s) max)`
-                        )
-                        .addField(
-                            'Current Prize Pool',
-                            `<:dicecoin:839981846419079178> **${numberFormat.format(
-                                currentEntries.length * entries.ticketCost
-                            )}** (${currentEntries.length} Tickets)`
-                        )
-                        .addField('Hosted by', `<@${entries.hostId}>`)
-                        .addField(
-                            'Your Entries',
-                            Object.entries(entries.tickets ?? {})
-                                .filter(([, uid]) => uid === author.id)
-                                .map(([ticketNumber]) => `**${ticketNumber}**`)
-                                .join(', ') || '*none*'
-                        )
-                        .setFooter('Raffle ends at')
-                        .setTimestamp(entries.endTimestamp)
-                );
+                await channel.send({
+                    embeds: [
+                        new Discord.MessageEmbed()
+                            .setAuthor(
+                                'randomdice.gg Server',
+                                guild.iconURL({ dynamic: true }) ?? undefined
+                            )
+                            .setColor('#00ff00')
+                            .setTitle('Dice Coins Raffle')
+                            .addField(
+                                'Ticket Entries',
+                                `<:dicecoin:839981846419079178> **${entries.ticketCost} per ticket** (${entries.maxEntries} ticket(s) max)`
+                            )
+                            .addField(
+                                'Current Prize Pool',
+                                `<:dicecoin:839981846419079178> **${numberFormat.format(
+                                    currentEntries.length * entries.ticketCost
+                                )}** (${currentEntries.length} Tickets)`
+                            )
+                            .addField('Hosted by', `<@${entries.hostId}>`)
+                            .addField(
+                                'Your Entries',
+                                Object.entries(entries.tickets ?? {})
+                                    .filter(([, uid]) => uid === author.id)
+                                    .map(
+                                        ([ticketNumber]) =>
+                                            `**${ticketNumber}**`
+                                    )
+                                    .join(', ') || '*none*'
+                            )
+                            .setFooter('Raffle ends at')
+                            .setTimestamp(entries.endTimestamp),
+                    ],
+                });
             } else {
-                await channel.send(
-                    new Discord.MessageEmbed()
-                        .setAuthor(
-                            'randomdice.gg Server',
-                            guild.iconURL({ dynamic: true }) ?? undefined
-                        )
-                        .setColor('#ff0000')
-                        .setTitle('Dice Coins Raffle')
-                        .setDescription(
-                            'There is no active raffle at the moment'
-                        )
-                );
+                await channel.send({
+                    embeds: [
+                        new Discord.MessageEmbed()
+                            .setAuthor(
+                                'randomdice.gg Server',
+                                guild.iconURL({ dynamic: true }) ?? undefined
+                            )
+                            .setColor('#ff0000')
+                            .setTitle('Dice Coins Raffle')
+                            .setDescription(
+                                'There is no active raffle at the moment'
+                            ),
+                    ],
+                });
             }
             return;
         case 'join':
@@ -236,18 +245,21 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                 }
 
                 if (raffleTimeLeft < 0) {
-                    await channel.send(
-                        new Discord.MessageEmbed()
-                            .setAuthor(
-                                'randomdice.gg Server',
-                                guild.iconURL({ dynamic: true }) ?? undefined
-                            )
-                            .setColor('#ff0000')
-                            .setTitle('Dice Coins Raffle')
-                            .setDescription(
-                                'There is no active raffle at the moment'
-                            )
-                    );
+                    await channel.send({
+                        embeds: [
+                            new Discord.MessageEmbed()
+                                .setAuthor(
+                                    'randomdice.gg Server',
+                                    guild.iconURL({ dynamic: true }) ??
+                                        undefined
+                                )
+                                .setColor('#ff0000')
+                                .setTitle('Dice Coins Raffle')
+                                .setDescription(
+                                    'There is no active raffle at the moment'
+                                ),
+                        ],
+                    });
                     return;
                 }
                 if (arg === '0') {
@@ -283,17 +295,15 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                         }, answer \`yes\` if you wish to continue.`
                     );
                     const awaitedMessage = (
-                        await channel.awaitMessages(
-                            m =>
+                        await channel.awaitMessages({
+                            filter: m =>
                                 m.author.id === member.id &&
                                 /^(ok(ay)?|y(es)?|no?|!raffle join)/i.test(
                                     m.content
                                 ),
-                            {
-                                time: 1000 * 10,
-                                max: 1,
-                            }
-                        )
+                            time: 1000 * 10,
+                            max: 1,
+                        })
                     )?.first();
                     if (
                         !awaitedMessage ||
@@ -373,23 +383,23 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                         .join(', ')}`
                 );
                 if (!member.roles.cache.has('839694796431294485')) {
-                    const sentMessage = await channel.send(
-                        new Discord.MessageEmbed()
-                            .setTitle('Tip!')
-                            .setColor('#32cd32')
-                            .setDescription(
-                                'It looks like you are missing the role <@&839694796431294485>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can react to the ✅ to claim this role now.'
-                            )
-                    );
-                    const collector = sentMessage.createReactionCollector(
-                        reaction => reaction.emoji.name === '✅',
-                        {
-                            time: 60000,
-                        }
-                    );
+                    const sentMessage = await channel.send({
+                        embeds: [
+                            new Discord.MessageEmbed()
+                                .setTitle('Tip!')
+                                .setColor('#32cd32')
+                                .setDescription(
+                                    'It looks like you are missing the role <@&839694796431294485>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can react to the ✅ to claim this role now.'
+                                ),
+                        ],
+                    });
+                    const collector = sentMessage.createReactionCollector({
+                        filter: reaction => reaction.emoji.name === '✅',
+                        time: 60000,
+                    });
                     collector.on('collect', async (reaction, user) => {
-                        await guild
-                            .member(user)
+                        await guild.members.cache
+                            .get(user.id)
                             ?.roles.add('839694796431294485');
                     });
                     await sentMessage.react('✅');
@@ -401,7 +411,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                 !(
                     member.roles.cache.has('805772165394858015') ||
                     member.roles.cache.has('805000661133295616') ||
-                    member.hasPermission('ADMINISTRATOR')
+                    member.permissions.has('ADMINISTRATOR')
                 )
             ) {
                 await channel.send(
@@ -413,18 +423,20 @@ export default async function raffle(message: Discord.Message): Promise<void> {
             const ticketCost = Number(arg2);
             const maxEntries = Number(arg3) || 1;
             if (!time || !ticketCost || !maxEntries) {
-                await channel.send(
-                    new Discord.MessageEmbed()
-                        .setTitle('Command Parse Error')
-                        .setColor('#ff0000')
-                        .setDescription('usage of the command')
-                        .addField(
-                            'Hosting a raffle',
-                            '`!raffle host <time> <ticketCost> [maxEntries default=1]`' +
-                                '\n' +
-                                'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
-                        )
-                );
+                await channel.send({
+                    embeds: [
+                        new Discord.MessageEmbed()
+                            .setTitle('Command Parse Error')
+                            .setColor('#ff0000')
+                            .setDescription('usage of the command')
+                            .addField(
+                                'Hosting a raffle',
+                                '`!raffle host <time> <ticketCost> [maxEntries default=1]`' +
+                                    '\n' +
+                                    'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
+                            ),
+                    ],
+                });
                 return;
             }
             if (maxEntries < 0 || maxEntries > 100) {
@@ -435,37 +447,33 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                 await channel.send('The duration for the raffle is too long.');
                 return;
             }
-            await host(
-                time,
-                maxEntries,
-                ticketCost,
-                channel as Discord.TextChannel,
-                author
-            );
+            await host(time, maxEntries, ticketCost, channel, author);
             await announceWinner(guild, database);
             return;
         }
         case 'cancel':
             if (raffleTimeLeft < 0) {
-                await channel.send(
-                    new Discord.MessageEmbed()
-                        .setAuthor(
-                            'randomdice.gg Server',
-                            guild.iconURL({ dynamic: true }) ?? undefined
-                        )
-                        .setColor('#ff0000')
-                        .setTitle('Dice Coins Raffle')
-                        .setDescription(
-                            'There is no active raffle at the moment'
-                        )
-                );
+                await channel.send({
+                    embeds: [
+                        new Discord.MessageEmbed()
+                            .setAuthor(
+                                'randomdice.gg Server',
+                                guild.iconURL({ dynamic: true }) ?? undefined
+                            )
+                            .setColor('#ff0000')
+                            .setTitle('Dice Coins Raffle')
+                            .setDescription(
+                                'There is no active raffle at the moment'
+                            ),
+                    ],
+                });
                 return;
             }
             if (
                 !(
                     member.roles.cache.has('805772165394858015') ||
                     member.roles.cache.has('805000661133295616') ||
-                    member.hasPermission('ADMINISTRATOR')
+                    member.permissions.has('ADMINISTRATOR')
                 )
             ) {
                 await channel.send(
@@ -477,12 +485,14 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                 '⚠️ WARNING ⚠️\n Type `end` to cancel the raffle, the action is irreversible.'
             );
             try {
-                await channel.awaitMessages(
-                    (newMessage: Discord.Message) =>
+                await channel.awaitMessages({
+                    filter: (newMessage: Discord.Message) =>
                         newMessage.author.id === author.id &&
                         newMessage.content.toLowerCase() === 'end',
-                    { time: 60000, max: 1, errors: ['time'] }
-                );
+                    time: 60000,
+                    max: 1,
+                    errors: ['time'],
+                });
                 await ref.set({
                     endTimestamp: 0,
                     hostId: 0,
@@ -497,34 +507,36 @@ export default async function raffle(message: Discord.Message): Promise<void> {
             }
             return;
         default:
-            await channel.send(
-                new Discord.MessageEmbed()
-                    .setTitle('Command Parse Error')
-                    .setColor('#ff0000')
-                    .setDescription('usage of the command')
-                    .addField(
-                        'Joining the raffle',
-                        '`!raffle join [ticket Amount default=1]`' +
-                            '\n' +
-                            'Example```!raffle join\n!raffle join 10```'
-                    )
-                    .addField(
-                        'Showing the info for current raffle',
-                        '`!raffle info`\nExample```!raffle info```'
-                    )
-                    .addField(
-                        'Hosting a raffle (requires Event Manager)',
-                        '`!raffle host <time> <ticketCost> [maxEntries default=1]`' +
-                            '\n' +
-                            'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
-                    )
-                    .addField(
-                        'Canceling a raffle (requires Event Manager)',
-                        '`!raffle cancel`' +
-                            '\n' +
-                            'Example```!raffle cancel```'
-                    )
-            );
+            await channel.send({
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setTitle('Command Parse Error')
+                        .setColor('#ff0000')
+                        .setDescription('usage of the command')
+                        .addField(
+                            'Joining the raffle',
+                            '`!raffle join [ticket Amount default=1]`' +
+                                '\n' +
+                                'Example```!raffle join\n!raffle join 10```'
+                        )
+                        .addField(
+                            'Showing the info for current raffle',
+                            '`!raffle info`\nExample```!raffle info```'
+                        )
+                        .addField(
+                            'Hosting a raffle (requires Event Manager)',
+                            '`!raffle host <time> <ticketCost> [maxEntries default=1]`' +
+                                '\n' +
+                                'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
+                        )
+                        .addField(
+                            'Canceling a raffle (requires Event Manager)',
+                            '`!raffle cancel`' +
+                                '\n' +
+                                'Example```!raffle cancel```'
+                        ),
+                ],
+            });
     }
 }
 

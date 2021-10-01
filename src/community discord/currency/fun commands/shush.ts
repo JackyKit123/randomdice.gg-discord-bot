@@ -79,15 +79,8 @@ export async function unShush(message: Discord.Message): Promise<void> {
 }
 
 export async function pokeballTrap(message: Discord.Message): Promise<void> {
-    const {
-        member,
-        deletable,
-        channel,
-        content,
-        attachments,
-        author,
-        guild,
-    } = message;
+    const { member, deletable, channel, content, attachments, author, guild } =
+        message;
 
     if (!guild || !member || !shushMember.includes(member.id)) {
         return;
@@ -105,7 +98,7 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
 
     if (deletable) {
         try {
-            await message.delete({ reason: 'Fun Command' });
+            await message.delete();
         } catch {
             // do nothing
         }
@@ -122,9 +115,8 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
 
             if (
                 !role.mentionable &&
-                !(channel as Discord.GuildChannel)
-                    .permissionsFor(member)
-                    ?.has('MENTION_EVERYONE')
+                channel instanceof Discord.GuildChannel &&
+                !channel.permissionsFor(member)?.has('MENTION_EVERYONE')
             ) {
                 sanitized = sanitized.replace(
                     new RegExp(`<@&${role.id}>`, 'g'),
@@ -152,14 +144,12 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
         `A sound from a distant <:pokeball:820533431217815573>, **${displayName}** says: ||${sanitized}||`,
         `<:pokeball:820533431217815573>**${displayName}**<:pokeball:820533431217815573>\n||${sanitized}||`,
     ];
-    await channel.send(
-        randomString[Math.floor(Math.random() * randomString.length)],
-        {
-            allowedMentions: {
-                parse: ['users'],
-            },
-        }
-    );
+    await channel.send({
+        content: randomString[Math.floor(Math.random() * randomString.length)],
+        allowedMentions: {
+            parse: ['users'],
+        },
+    });
 
     if (
         /^!(?:poll|echo|aesthetics|ae|boldfancy|bf|boldfraktur|clap|double|ds|emojify|fancy|ff|fraktur|owofy|smallcaps|sc|space)\b/.test(
@@ -177,14 +167,17 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
                 )
                 ?.delete();
             channel
-                .createMessageCollector(
-                    m =>
+                .createMessageCollector({
+                    filter: m =>
                         m.author.id === '235148962103951360' &&
                         !m.embeds.length &&
                         !m.attachments.size,
-                    { max: 1, time: 3 * 1000 }
-                )
-                .on('collect', m => m.delete());
+                    max: 1,
+                    time: 3 * 1000,
+                })
+                .on('collect', async m => {
+                    await m.delete();
+                });
         } catch {
             //
         }

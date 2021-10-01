@@ -70,16 +70,18 @@ export default async function timed(
     }
 
     if (endOf.diff(timestamp) < period) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('Slow Down!')
-                .setColor('#6ba4a5')
-                .setDescription(
-                    `Your command is still on \`${parseMsIntoReadableText(
-                        endOf.diff(moment())
-                    )}\` cooldown.`
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle('Slow Down!')
+                    .setColor('#6ba4a5')
+                    .setDescription(
+                        `Your command is still on \`${parseMsIntoReadableText(
+                            endOf.diff(moment())
+                        )}\` cooldown.`
+                    ),
+            ],
+        });
         return;
     }
 
@@ -150,16 +152,18 @@ export default async function timed(
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(reward + balance);
-    await channel.send(embed);
+    await channel.send({ embeds: [embed] });
     if (mode === 'daily') {
         if (streak === 100) {
             await member?.roles.add('847777372745105438', '100 daily streaks');
-            await channel.send(
-                'Congratulation on achieving 100 daily streaks.',
-                new Discord.MessageEmbed()
-                    .setDescription(`Added <@&847777372745105438> to you.`)
-                    .setColor('#FFD700')
-            );
+            await channel.send({
+                content: 'Congratulation on achieving 100 daily streaks.',
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setDescription(`Added <@&847777372745105438> to you.`)
+                        .setColor('#FFD700'),
+                ],
+            });
         } else if (
             streak < 100 &&
             member?.roles.cache.has('847777372745105438')

@@ -26,15 +26,11 @@ export async function postGuide(
                     if (!config.guide) {
                         throw new Error('missing registered guide channel.');
                     }
-                    try {
-                        const guideChannel = await client.channels.fetch(
-                            config.guide
-                        );
-                        if (!guideChannel.isText()) return undefined;
-                        return guideChannel;
-                    } catch {
-                        return undefined;
-                    }
+                    const guideChannel = await client.channels.fetch(
+                        config.guide
+                    );
+                    if (!guideChannel?.isText()) return undefined;
+                    return guideChannel;
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
@@ -135,9 +131,8 @@ export async function postGuide(
             );
             const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
             const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
-            const cantDeleteMessage = !channelPermission?.has(
-                'MANAGE_MESSAGES'
-            );
+            const cantDeleteMessage =
+                !channelPermission?.has('MANAGE_MESSAGES');
             if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
                 if (cantViewChannel) {
                     await logMessage(
@@ -173,32 +168,32 @@ export async function postGuide(
                         86400000 * 14
             );
             await channel.bulkDelete(fetched);
-            const statusMessage = await channel.send(
-                new Discord.MessageEmbed()
-                    .setColor('#6ba4a5')
-                    .setTimestamp()
-                    .setTitle(
-                        `${
-                            updateListener
-                                ? `Deck Guide **${
-                                      updateListener.snapshot.val().name
-                                  }** is ${
-                                      updateListener.snapshot.val().archived
-                                          ? 'archived'
-                                          : updateListener.event
-                                  }.`
-                                : `\`.gg postnow guide\` is executed.`
-                        } Refreshing all deck guides.`
-                    )
-                    .setAuthor(
-                        'Random Dice Community Website',
-                        'https://randomdice.gg/android-chrome-512x512.png',
-                        'https://randomdice.gg/'
-                    )
-                    .setDescription(
-                        member ? `Requested By: ${member.toString()}` : ''
-                    )
-            );
+            const statusMessage = await channel.send({
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setColor('#6ba4a5')
+                        .setTimestamp()
+                        .setTitle(
+                            `${
+                                updateListener
+                                    ? `Deck Guide **${
+                                          updateListener.snapshot.val().name
+                                      }** is ${
+                                          updateListener.snapshot.val().archived
+                                              ? 'archived'
+                                              : updateListener.event
+                                      }.`
+                                    : `\`.gg postnow guide\` is executed.`
+                            } Refreshing all deck guides.`
+                        )
+                        .setAuthor(
+                            'Random Dice Community Website',
+                            'https://randomdice.gg/android-chrome-512x512.png',
+                            'https://randomdice.gg/'
+                        )
+                        .setDescription(`Requested By: ${member?.toString()}`),
+                ],
+            });
             const messageIds = (
                 await Promise.all(
                     embeds.map(async embed => {
@@ -220,7 +215,7 @@ export async function postGuide(
                                     );
                             }
                         }
-                        const { id } = await channel.send(embed);
+                        const { id } = await channel.send({ embeds: [embed] });
                         return {
                             isTitle: !!embed.title,
                             isUpdated:
@@ -260,51 +255,53 @@ export async function postGuide(
                         }))
                 );
             try {
-                await statusMessage.edit(guideListEmbed);
+                await statusMessage.edit({ embeds: [guideListEmbed] });
             } catch {
-                if (!statusMessage.edits.length)
-                    await channel.send(guideListEmbed);
+                if (!statusMessage.editedAt)
+                    await channel.send({ embeds: [guideListEmbed] });
             }
 
-            await channel.send(
-                new Discord.MessageEmbed()
-                    .setColor('#6ba4a5')
-                    .setTimestamp()
-                    .setTitle(
-                        updateListener
-                            ? `Last Updated: Deck Guide **${
-                                  updateListener.snapshot.val().name
-                              }** is ${
-                                  updateListener.snapshot.val().archived
-                                      ? 'archived'
-                                      : updateListener.event
-                              }.`
-                            : `Last Updated: \`.gg postnow guide\` is executed. Manual requested refresh.`
-                    )
-                    .setDescription(
-                        updateListener?.event === 'added' ||
-                            updateListener?.event === 'updated'
-                            ? `Navigate to the update guide by [clicking here](https://discordapp.com/channels/${
-                                  channel.guild.id
-                              }/${channel.id}/${
-                                  messageIds.find(id => id.isUpdated)?.id ||
-                                  statusMessage.id
-                              }).`
-                            : `Navigate to the list of guides for quick navigation by [clicking here](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}).`
-                    )
-                    .setAuthor(
-                        'Random Dice Community Website',
-                        'https://randomdice.gg/android-chrome-512x512.png',
-                        'https://randomdice.gg/'
-                    )
-                    .setFooter(
-                        updateListener
-                            ? 'Last Updated Timestamp'
-                            : `Requested by ${member?.user.username}#${member?.user.discriminator}`,
-                        member?.user.avatarURL({ dynamic: true }) ||
-                            'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Dice%20Images%2FTime?alt=media&token=5c459fc5-4059-4099-b93d-f4bc86debf6d'
-                    )
-            );
+            await channel.send({
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setColor('#6ba4a5')
+                        .setTimestamp()
+                        .setTitle(
+                            updateListener
+                                ? `Last Updated: Deck Guide **${
+                                      updateListener.snapshot.val().name
+                                  }** is ${
+                                      updateListener.snapshot.val().archived
+                                          ? 'archived'
+                                          : updateListener.event
+                                  }.`
+                                : `Last Updated: \`.gg postnow guide\` is executed. Manual requested refresh.`
+                        )
+                        .setDescription(
+                            updateListener?.event === 'added' ||
+                                updateListener?.event === 'updated'
+                                ? `Navigate to the update guide by [clicking here](https://discordapp.com/channels/${
+                                      channel.guild.id
+                                  }/${channel.id}/${
+                                      messageIds.find(id => id.isUpdated)?.id ||
+                                      statusMessage.id
+                                  }).`
+                                : `Navigate to the list of guides for quick navigation by [clicking here](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}).`
+                        )
+                        .setAuthor(
+                            'Random Dice Community Website',
+                            'https://randomdice.gg/android-chrome-512x512.png',
+                            'https://randomdice.gg/'
+                        )
+                        .setFooter(
+                            updateListener
+                                ? 'Last Updated Timestamp'
+                                : `Requested by ${member?.user.username}#${member?.user.discriminator}`,
+                            member?.user.avatarURL({ dynamic: true }) ||
+                                'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Dice%20Images%2FTime?alt=media&token=5c459fc5-4059-4099-b93d-f4bc86debf6d'
+                        ),
+                ],
+            });
         })
     );
 }
@@ -325,15 +322,11 @@ export async function postNews(
                     if (!config.news) {
                         throw new Error('missing registered news channel.');
                     }
-                    try {
-                        const newsChannel = await client.channels.fetch(
-                            config.news
-                        );
-                        if (!newsChannel.isText()) return undefined;
-                        return newsChannel;
-                    } catch {
-                        return undefined;
-                    }
+                    const newsChannel = await client.channels.fetch(
+                        config.news
+                    );
+                    if (!newsChannel?.isText()) return undefined;
+                    return newsChannel;
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
@@ -377,9 +370,8 @@ export async function postNews(
             );
             const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
             const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
-            const cantDeleteMessage = !channelPermission?.has(
-                'MANAGE_MESSAGES'
-            );
+            const cantDeleteMessage =
+                !channelPermission?.has('MANAGE_MESSAGES');
             if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
                 if (cantViewChannel) {
                     await logMessage(
@@ -415,7 +407,7 @@ export async function postNews(
                         86400000 * 14
             );
             await channel.bulkDelete(fetched);
-            await channel.send(embed);
+            await channel.send({ embeds: [embed] });
             if (ytUrl) {
                 await channel.send(ytUrl);
             }
@@ -442,7 +434,7 @@ export default async function postNow(
         return;
     }
 
-    if (!member.hasPermission('MANAGE_MESSAGES')) {
+    if (!member.permissions.has('MANAGE_MESSAGES')) {
         await channel.send(
             'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`'
         );
@@ -463,7 +455,7 @@ export default async function postNow(
             try {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } catch {
-                if (!statusMessage.edits.length)
+                if (!statusMessage.editedAt)
                     await channel.send(`Finished Posting ${type}`);
             }
             return;
@@ -472,7 +464,7 @@ export default async function postNow(
             try {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } catch {
-                if (!statusMessage.edits.length)
+                if (!statusMessage.editedAt)
                     await channel.send(`Finished Posting ${type}`);
             }
             return;

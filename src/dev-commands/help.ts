@@ -25,5 +25,5 @@ export default async function help(message: Discord.Message): Promise<void> {
             }))
         );
 
-    await author.send(helpMessage);
+    await author.send({ embeds: [helpMessage] });
 }

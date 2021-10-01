@@ -26,11 +26,9 @@ export async function fetchGeneralOnBoot(
 ): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
     const general = guild.channels.cache.get('804222694488932364');
-    if (general?.type !== 'text') {
-        return;
-    }
+    if (!general?.isText()) return;
     try {
-        const lastMessages = await (general as Discord.TextChannel).messages.fetch();
+        const lastMessages = await general.messages.fetch();
         const lastMessage = lastMessages
             .filter(message => !message.author.bot)
             .first();
@@ -40,7 +38,7 @@ export async function fetchGeneralOnBoot(
         if (!timeout) {
             timeout = setTimeout(
                 async () =>
-                    (general as Discord.TextChannel).send(
+                    general.send(
                         '<@&807578981003689984> come and revive this dead chat.'
                     ),
                 tenMinutes - deadChatTimer

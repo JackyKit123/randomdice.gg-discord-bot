@@ -30,14 +30,12 @@ export default async function voteReward(
     await database
         .ref(`discord_bot/community/currency/${uid}/balance`)
         .set(balance + 1000);
-    await channel.send(
-        `Added <:dicecoin:839981846419079178> 1000 to ${member}'s balance. Thanks for voting us!`,
-        {
-            allowedMentions: {
-                parse: [],
-                users: [],
-                roles: [],
-            },
-        }
-    );
+    await channel.send({
+        content: `Added <:dicecoin:839981846419079178> 1000 to ${member}'s balance. Thanks for voting us!`,
+        allowedMentions: {
+            parse: [],
+            users: [],
+            roles: [],
+        },
+    });
 }

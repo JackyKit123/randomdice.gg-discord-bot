@@ -22,15 +22,17 @@ export default async function customRole(
             member.roles.cache.has('805388604791586826')
         )
     ) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('Unable to cast command')
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need one of the following roles to use this command.\n' +
-                        '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
-                )
-        );
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle('Unable to cast command')
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need one of the following roles to use this command.\n' +
+                            '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -87,7 +89,7 @@ export default async function customRole(
         }
     }
     const role = await guild.roles.create({
-        data: manageRoleOptions,
+        ...manageRoleOptions,
         reason: `!customrole creation for  ${member.user.username}#${member.user.discriminator}`,
     });
     await database
@@ -118,11 +120,11 @@ export async function manageLeave(
     message: Discord.Message,
     database: firebase.database.Database
 ): Promise<void> {
-    const { webhookID, embeds, guild, channel } = message;
+    const { webhookId, embeds, guild, channel } = message;
     const embed = embeds?.[0];
     if (
         channel.id !== '845448948474576946' /* #join-leave-log */ ||
-        !webhookID ||
+        !webhookId ||
         !embed ||
         !guild
     ) {

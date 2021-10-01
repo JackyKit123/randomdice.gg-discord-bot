@@ -73,14 +73,16 @@ export default async function rickBomb(
         'I am fan pls give',
     ];
     const uniqueChatters: string[] = [];
-    channel.messages.cache
-        .filter(
-            msg =>
-                msg.author &&
-                !msg.author.bot &&
-                Date.now() - msg.createdTimestamp < 60 * 1000
-        )
-        .array()
+    [
+        ...channel.messages.cache
+            .filter(
+                msg =>
+                    msg.author &&
+                    !msg.author.bot &&
+                    Date.now() - msg.createdTimestamp < 60 * 1000
+            )
+            .values(),
+    ]
         .concat(
             channel.messages.cache
                 .filter(msg => msg.author && !msg.author.bot)
@@ -137,17 +139,13 @@ export default async function rickBomb(
     const collected: Discord.User[] = [];
     const sentMessage = await channel.send(messageToSend);
     activeCoinbombInChannel.set(channel.id, true);
-    const collector: Discord.Collector<
-        Discord.Snowflake,
-        Discord.Message
-    > = channel.createMessageCollector(
-        (m: Discord.Message) =>
-            !m.author.bot &&
-            m.content.toLowerCase() === collectionTrigger.toLowerCase(),
-        {
+    const collector: Discord.Collector<Discord.Snowflake, Discord.Message> =
+        channel.createMessageCollector({
+            filter: (m: Discord.Message) =>
+                !m.author.bot &&
+                m.content.toLowerCase() === collectionTrigger.toLowerCase(),
             time: 20 * 1000,
-        }
-    );
+        });
     collector.on('collect', async (collect: Discord.Message) => {
         const { id } = collect.author;
         if (collected.some(user => user.id === id)) return;

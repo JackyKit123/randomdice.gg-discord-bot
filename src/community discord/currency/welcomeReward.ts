@@ -27,17 +27,17 @@ export default async function welcomeReward(
     const general = guild.channels.cache.get('804222694488932364') as
         | Discord.TextChannel
         | undefined;
-    if (general?.type !== 'text') return;
-    const saidWelcome = [joinedMember] as (string | undefined)[];
+    if (general?.type !== 'GUILD_TEXT') return;
+    const saidWelcome: (string | undefined)[] = [joinedMember];
     general
-        .createMessageCollector(
-            (collected: Discord.Message) =>
+        .createMessageCollector({
+            filter: (collected: Discord.Message) =>
                 !collected.author.bot && /welcome/i.test(collected.content),
-            { time: 60 * 1000 }
-        )
+            time: 60 * 1000,
+        })
         .on('collect', async (collected: Discord.Message) => {
-            const { id } = collected.member as Discord.GuildMember;
-            if (saidWelcome.includes(id)) return;
+            const id = collected.member?.id;
+            if (!id || saidWelcome.includes(id)) return;
             saidWelcome.push(id);
             const balance = await getBalance(collected, 'silence');
             if (balance === false) return;

@@ -9,6 +9,6 @@ export default async function statistic(
             process.env.NODE_ENV === 'development'
                 ? 'development'
                 : process.env.HEROKU_RELEASE_VERSION
-        }\`** of ${(client.user as Discord.ClientUser).toString()}.`
+        }\`** of ${client.user?.toString()}.`
     );
 }

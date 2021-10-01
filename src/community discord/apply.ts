@@ -37,11 +37,13 @@ export default async function Apply(message: Discord.Message): Promise<void> {
         )
         .setFooter(`Opened Application Count: ${openedApplications.length}`);
     if (!args.join(' ')) {
-        await channel.send(
-            openedApplicationsEmbed.setDescription(
-                `Please specify an application you are applying for.\`\`\`!apply <position>\`\`\``
-            )
-        );
+        await channel.send({
+            embeds: [
+                openedApplicationsEmbed.setDescription(
+                    `Please specify an application you are applying for.\`\`\`!apply <position>\`\`\``
+                ),
+            ],
+        });
         return;
     }
 
@@ -52,18 +54,26 @@ export default async function Apply(message: Discord.Message): Promise<void> {
     );
 
     if (!application) {
-        await channel.send(
-            openedApplicationsEmbed.setDescription(
-                `\`${args.join(' ')}\` is not a currently opened application.`
-            )
-        );
+        await channel.send({
+            embeds: [
+                openedApplicationsEmbed.setDescription(
+                    `\`${args.join(
+                        ' '
+                    )}\` is not a currently opened application.`
+                ),
+            ],
+        });
         return;
     }
 
+    const applicationCategory = guild.channels.cache.get('807183574645735474');
     const newChannel = await guild.channels.create(
         `${member.user.username}-${member.user.discriminator}-${application.position}-application`,
         {
-            parent: guild.channels.cache.get('807183574645735474'),
+            parent:
+                applicationCategory instanceof Discord.CategoryChannel
+                    ? applicationCategory
+                    : undefined,
             reason: 'Member Application',
             permissionOverwrites: [
                 {
@@ -94,23 +104,28 @@ export default async function Apply(message: Discord.Message): Promise<void> {
             question
         );
     });
-    const applicationMessage = await newChannel.send(
-        member.toString(),
-        applicationEmbed
-    );
+    const applicationMessage = await newChannel.send({
+        content: member.toString(),
+        embeds: [applicationEmbed],
+    });
     await applicationMessage.react('✅');
     await applicationMessage.react('❌');
 }
 
 export async function closeApplication(
     reaction: Discord.MessageReaction,
-    user: Discord.User | Discord.PartialUser,
-    clientUserId: string
+    user: Discord.User | Discord.PartialUser
 ): Promise<void> {
     const { message } = reaction;
-    const { channel, author, embeds, guild } = message;
+    const {
+        channel,
+        author,
+        embeds,
+        guild,
+        client: { user: clientUser },
+    } = message;
 
-    if (!guild || guild.id !== process.env.COMMUNITY_SERVER_ID) {
+    if (!guild || guild.id !== process.env.COMMUNITY_SERVER_ID || !clientUser) {
         return;
     }
 
@@ -118,16 +133,15 @@ export async function closeApplication(
         embed.title?.endsWith(' Application')
     )?.title;
     if (
-        !(channel as Discord.TextChannel).name.match(
-            /^.{2,32}-\d{4}-.+-application$/
-        ) ||
-        author.id !== clientUserId ||
+        channel.type !== 'GUILD_TEXT' ||
+        !channel.name.match(/^.{2,32}-\d{4}-.+-application$/) ||
+        author?.id !== clientUser.id ||
         !applicationName
     ) {
         return;
     }
 
-    const memberId = (channel as Discord.TextChannel).permissionOverwrites.find(
+    const memberId = channel.permissionOverwrites.cache.find(
         overwrite => overwrite.type === 'member'
     )?.id;
 
@@ -140,19 +154,23 @@ export async function closeApplication(
             '✅ Please type `submit` to confirm your submission and notify the Admins.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.'
         );
         try {
-            const awaitedMessage = await channel.awaitMessages(
-                (newMessage: Discord.Message) =>
+            const awaitedMessage = await channel.awaitMessages({
+                filter: (newMessage: Discord.Message) =>
                     newMessage.author.id === user.id &&
                     newMessage.content.toLowerCase() === 'submit',
-                { time: 60000, max: 1, errors: ['time'] }
-            );
+                time: 60000,
+                max: 1,
+                errors: ['time'],
+            });
             if (awaitedMessage.first()?.content.toLowerCase() === 'submit') {
-                await (channel as Discord.TextChannel).updateOverwrite(
+                await channel.permissionOverwrites.edit(
                     guild.roles.everyone,
                     {
                         SEND_MESSAGES: false,
                     },
-                    'Application Submit'
+                    {
+                        reason: 'Application Submit',
+                    }
                 );
                 await message.reactions.removeAll();
                 await channel.send(`Locked down ${channel}`);
@@ -170,14 +188,16 @@ export async function closeApplication(
             '❌ Please type `cancel` to cancel your application.\n⚠️ Warning, once you confirm cancel, the channel will be deleted, this action cannot be undone.'
         );
         try {
-            const awaitedMessage = await channel.awaitMessages(
-                (newMessage: Discord.Message) =>
+            const awaitedMessage = await channel.awaitMessages({
+                filter: (newMessage: Discord.Message) =>
                     newMessage.author.id === user.id &&
                     newMessage.content.toLowerCase() === 'cancel',
-                { time: 60000, max: 1, errors: ['time'] }
-            );
+                time: 60000,
+                max: 1,
+                errors: ['time'],
+            });
             if (awaitedMessage.first()?.content.toLowerCase() === 'cancel') {
-                await channel.delete('Cancel Application');
+                await channel.delete();
             }
         } catch {
             await channel.send("You didn't say `cancel` in time.");
@@ -191,17 +211,15 @@ export async function fetchApps(client: Discord.Client): Promise<void> {
         process.env.COMMUNITY_SERVER_ID as string
     );
     const applications = guild.channels.cache.get('807183574645735474');
-    if (applications?.type === 'category') {
-        (applications as Discord.CategoryChannel).children.forEach(
-            async child => {
-                if (child.type === 'text') {
-                    await (child as Discord.TextChannel).messages.fetch(
-                        { limit: 100 },
-                        true
-                    );
-                }
+    if (applications instanceof Discord.CategoryChannel) {
+        applications.children.forEach(async child => {
+            if (child.isText()) {
+                await child.messages.fetch(
+                    { limit: 100 },
+                    { cache: true, force: false }
+                );
             }
-        );
+        });
     }
 }
 
@@ -230,15 +248,17 @@ export async function configApps(message: Discord.Message): Promise<void> {
         return;
     }
 
-    if (!member.hasPermission('ADMINISTRATOR')) {
-        await channel.send(
-            new Discord.MessageEmbed()
-                .setTitle('Command Parse Error')
-                .setColor('#ff0000')
-                .setDescription(
-                    'You need `ADMINISTRATOR` permission to use this command.'
-                )
-        );
+    if (!member.permissions.has('ADMINISTRATOR')) {
+        await channel.send({
+            embeds: [
+                new Discord.MessageEmbed()
+                    .setTitle('Command Parse Error')
+                    .setColor('#ff0000')
+                    .setDescription(
+                        'You need `ADMINISTRATOR` permission to use this command.'
+                    ),
+            ],
+        });
         return;
     }
 
@@ -274,25 +294,24 @@ export async function configApps(message: Discord.Message): Promise<void> {
                         question
                     );
                 });
-                const applicationMessage = await channel.send(
-                    `${member} Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel`,
-                    applicationEmbed
-                );
+                const applicationMessage = await channel.send({
+                    content: `${member} Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel`,
+                    embeds: [applicationEmbed],
+                });
                 await applicationMessage.react('✅');
                 await applicationMessage.react('❌');
                 try {
-                    const collector = applicationMessage.createReactionCollector(
-                        (
-                            reaction: Discord.MessageReaction,
-                            user: Discord.User
-                        ) =>
-                            (reaction.emoji.name === '✅' ||
-                                reaction.emoji.name === '❌') &&
-                            user.id === member.id,
-                        {
+                    const collector =
+                        applicationMessage.createReactionCollector({
+                            filter: (
+                                reaction: Discord.MessageReaction,
+                                user: Discord.User
+                            ) =>
+                                (reaction.emoji.name === '✅' ||
+                                    reaction.emoji.name === '❌') &&
+                                user.id === member.id,
                             time: 60 * 1000,
-                        }
-                    );
+                        });
                     collector.on('collect', async collection => {
                         if (collection.emoji.name === '✅') {
                             collector.stop();
@@ -357,25 +376,24 @@ export async function configApps(message: Discord.Message): Promise<void> {
                         question
                     );
                 });
-                const applicationMessage = await channel.send(
-                    `${member} Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel`,
-                    applicationEmbed
-                );
+                const applicationMessage = await channel.send({
+                    content: `${member} Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel`,
+                    embeds: [applicationEmbed],
+                });
                 await applicationMessage.react('✅');
                 await applicationMessage.react('❌');
                 try {
-                    const collector = applicationMessage.createReactionCollector(
-                        (
-                            reaction: Discord.MessageReaction,
-                            user: Discord.User
-                        ) =>
-                            (reaction.emoji.name === '✅' ||
-                                reaction.emoji.name === '❌') &&
-                            user.id === member.id,
-                        {
+                    const collector =
+                        applicationMessage.createReactionCollector({
+                            filter: (
+                                reaction: Discord.MessageReaction,
+                                user: Discord.User
+                            ) =>
+                                (reaction.emoji.name === '✅' ||
+                                    reaction.emoji.name === '❌') &&
+                                user.id === member.id,
                             time: 60 * 1000,
-                        }
-                    );
+                        });
                     collector.on('collect', async collection => {
                         if (collection.emoji.name === '✅') {
                             collector.stop();
@@ -442,25 +460,24 @@ export async function configApps(message: Discord.Message): Promise<void> {
                         question
                     );
                 });
-                const applicationMessage = await channel.send(
-                    `${member} You are about to delete this application, react to ✅ in 1 minute to confirm delete, react to ❌ to cancel`,
-                    applicationEmbed
-                );
+                const applicationMessage = await channel.send({
+                    content: `${member} You are about to delete this application, react to ✅ in 1 minute to confirm delete, react to ❌ to cancel`,
+                    embeds: [applicationEmbed],
+                });
                 await applicationMessage.react('✅');
                 await applicationMessage.react('❌');
                 try {
-                    const collector = applicationMessage.createReactionCollector(
-                        (
-                            reaction: Discord.MessageReaction,
-                            user: Discord.User
-                        ) =>
-                            (reaction.emoji.name === '✅' ||
-                                reaction.emoji.name === '❌') &&
-                            user.id === member.id,
-                        {
+                    const collector =
+                        applicationMessage.createReactionCollector({
+                            filter: (
+                                reaction: Discord.MessageReaction,
+                                user: Discord.User
+                            ) =>
+                                (reaction.emoji.name === '✅' ||
+                                    reaction.emoji.name === '❌') &&
+                                user.id === member.id,
                             time: 60 * 1000,
-                        }
-                    );
+                        });
                     collector.on('collect', async collection => {
                         if (collection.emoji.name === '✅') {
                             collector.stop();
@@ -530,25 +547,31 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     app => app.position.toLowerCase() === position.toLowerCase()
                 );
                 if (!target) {
-                    await channel.send(
-                        new Discord.MessageEmbed()
-                            .setTitle(`All Applications`)
-                            .setColor(member.displayHexColor)
-                            .setAuthor(
-                                `${member.user.username}#${member.user.discriminator}`,
-                                member.user.displayAvatarURL({ dynamic: true })
-                            )
-                            .setDescription(
-                                existingApplications
-                                    .map(
-                                        app =>
-                                            `${
-                                                app.isOpen ? 'opened' : 'closed'
-                                            } \`${app.position}\``
-                                    )
-                                    .join('\n')
-                            )
-                    );
+                    await channel.send({
+                        embeds: [
+                            new Discord.MessageEmbed()
+                                .setTitle(`All Applications`)
+                                .setColor(member.displayHexColor)
+                                .setAuthor(
+                                    `${member.user.username}#${member.user.discriminator}`,
+                                    member.user.displayAvatarURL({
+                                        dynamic: true,
+                                    })
+                                )
+                                .setDescription(
+                                    existingApplications
+                                        .map(
+                                            app =>
+                                                `${
+                                                    app.isOpen
+                                                        ? 'opened'
+                                                        : 'closed'
+                                                } \`${app.position}\``
+                                        )
+                                        .join('\n')
+                                ),
+                        ],
+                    });
                 } else {
                     let applicationEmbed = new Discord.MessageEmbed()
                         .setTitle(`${target.position} Application`)
@@ -569,7 +592,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                             question
                         );
                     });
-                    await channel.send(applicationEmbed);
+                    await channel.send({ embeds: [applicationEmbed] });
                 }
             }
             break;
@@ -580,25 +603,31 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     app => app.position.toLowerCase() === position.toLowerCase()
                 );
                 if (!target) {
-                    await channel.send(
-                        new Discord.MessageEmbed()
-                            .setTitle(`All Applications`)
-                            .setColor(member.displayHexColor)
-                            .setAuthor(
-                                `${member.user.username}#${member.user.discriminator}`,
-                                member.user.displayAvatarURL({ dynamic: true })
-                            )
-                            .setDescription(
-                                existingApplications
-                                    .map(
-                                        app =>
-                                            `${
-                                                app.isOpen ? 'opened' : 'closed'
-                                            } \`${app.position}\``
-                                    )
-                                    .join('\n')
-                            )
-                    );
+                    await channel.send({
+                        embeds: [
+                            new Discord.MessageEmbed()
+                                .setTitle(`All Applications`)
+                                .setColor(member.displayHexColor)
+                                .setAuthor(
+                                    `${member.user.username}#${member.user.discriminator}`,
+                                    member.user.displayAvatarURL({
+                                        dynamic: true,
+                                    })
+                                )
+                                .setDescription(
+                                    existingApplications
+                                        .map(
+                                            app =>
+                                                `${
+                                                    app.isOpen
+                                                        ? 'opened'
+                                                        : 'closed'
+                                                } \`${app.position}\``
+                                        )
+                                        .join('\n')
+                                ),
+                        ],
+                    });
                 } else {
                     await channel.send(
                         `\`\`\`${target.position} | ${target.questions.join(
@@ -609,41 +638,43 @@ export async function configApps(message: Discord.Message): Promise<void> {
             }
             break;
         default:
-            await channel.send(
-                new Discord.MessageEmbed()
-                    .setTitle('Command Parse Error')
-                    .setColor('#ff0000')
-                    .setDescription('usage of the command')
-                    .addField(
-                        'Adding new application',
-                        '`!application add <position> | <questions separated with linebreaks>`' +
-                            '\n' +
-                            'Example```!application add ADMIN | Why do you want to be admin?\nHow will you do your admin task?\nHow active are you?```'
-                    )
-                    .addField(
-                        'Editing existing application',
-                        '`!application edit <position> | <questions separated with linebreaks>`' +
-                            '\n' +
-                            'Example```!application edit ADMIN | Why do you want to be admin?\nHow will you do your admin task?\nHow active are you?```'
-                    )
-                    .addField(
-                        'Deleting existing application',
-                        '`!application delete <position>`' +
-                            '\n' +
-                            'Example```!application delete ADMIN```'
-                    )
-                    .addField(
-                        'Toggling accepting new applications',
-                        '`!application toggle <position>`' +
-                            '\n' +
-                            'Example```!application toggle ADMIN```'
-                    )
-                    .addField(
-                        'Showing stored applications',
-                        '`!application show [position]`' +
-                            '\n' +
-                            'Example```!application show\n!application show ADMIN```'
-                    )
-            );
+            await channel.send({
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setTitle('Command Parse Error')
+                        .setColor('#ff0000')
+                        .setDescription('usage of the command')
+                        .addField(
+                            'Adding new application',
+                            '`!application add <position> | <questions separated with linebreaks>`' +
+                                '\n' +
+                                'Example```!application add ADMIN | Why do you want to be admin?\nHow will you do your admin task?\nHow active are you?```'
+                        )
+                        .addField(
+                            'Editing existing application',
+                            '`!application edit <position> | <questions separated with linebreaks>`' +
+                                '\n' +
+                                'Example```!application edit ADMIN | Why do you want to be admin?\nHow will you do your admin task?\nHow active are you?```'
+                        )
+                        .addField(
+                            'Deleting existing application',
+                            '`!application delete <position>`' +
+                                '\n' +
+                                'Example```!application delete ADMIN```'
+                        )
+                        .addField(
+                            'Toggling accepting new applications',
+                            '`!application toggle <position>`' +
+                                '\n' +
+                                'Example```!application toggle ADMIN```'
+                        )
+                        .addField(
+                            'Showing stored applications',
+                            '`!application show [position]`' +
+                                '\n' +
+                                'Example```!application show\n!application show ADMIN```'
+                        ),
+                ],
+            });
     }
 }

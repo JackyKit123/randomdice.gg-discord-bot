@@ -69,7 +69,7 @@ export default async function balance(
             prestigeLevel > 0
                 ? member.guild.roles.cache.get(
                       prestigeRoleIds[prestigeLevel - 1]
-                  )?.name
+                  )?.name ?? ''
                 : ''
         );
     if (!profile || !profile.initiated) {
@@ -86,14 +86,17 @@ export default async function balance(
             .ref(`discord_bot/community/currency/${target.id}/prestige`)
             .set(prestigeLevel);
         if (output === 'emit new member' || output === 'emit') {
-            await channel.send(
-                'Looks like you are the first time using server currency command, you have been granted **<:dicecoin:839981846419079178> 10,000** as a starter reward.',
-                embed.setDescription(
-                    `<:dicecoin:839981846419079178> ${numberFormat.format(
-                        Number(profile?.balance) || 10000
-                    )}`
-                )
-            );
+            await channel.send({
+                content:
+                    'Looks like you are the first time using server currency command, you have been granted **<:dicecoin:839981846419079178> 10,000** as a starter reward.',
+                embeds: [
+                    embed.setDescription(
+                        `<:dicecoin:839981846419079178> ${numberFormat.format(
+                            Number(profile?.balance) || 10000
+                        )}`
+                    ),
+                ],
+            });
             await database
                 .ref(`discord_bot/community/currency/${target.id}/initiated`)
                 .set(true);
@@ -103,12 +106,14 @@ export default async function balance(
     if (output !== 'emit') {
         return Number(profile.balance);
     }
-    await channel.send(
-        embed.setDescription(
-            `<:dicecoin:839981846419079178> ${numberFormat.format(
-                Number(profile?.balance)
-            )}`
-        )
-    );
+    await channel.send({
+        embeds: [
+            embed.setDescription(
+                `<:dicecoin:839981846419079178> ${numberFormat.format(
+                    Number(profile?.balance)
+                )}`
+            ),
+        ],
+    });
     return false;
 }

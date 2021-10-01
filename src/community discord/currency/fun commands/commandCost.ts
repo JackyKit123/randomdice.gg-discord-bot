@@ -33,14 +33,14 @@ export default async function commandCost(
             );
             await notification.react('🔇');
             notification
-                .createReactionCollector(
-                    (reaction: Discord.MessageReaction, user: Discord.User) =>
-                        reaction.emoji.name === '🔇' && user.id === author.id,
-                    {
-                        time: 1000 * 60,
-                        max: 1,
-                    }
-                )
+                .createReactionCollector({
+                    filter: (
+                        reaction: Discord.MessageReaction,
+                        user: Discord.User
+                    ) => reaction.emoji.name === '🔇' && user.id === author.id,
+                    time: 1000 * 60,
+                    max: 1,
+                })
                 .on('collect', () =>
                     database
                         .ref(
