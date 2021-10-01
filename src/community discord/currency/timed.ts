@@ -136,22 +136,34 @@ export default async function timed(
             );
         }
     }
-    embed = embed.setDescription(
-        `Added <:dicecoin:839981846419079178> ${numberFormat.format(
-            reward
-        )} to your balance!`
-    );
+
+    const isChatChannels =
+        !channel.isThread() &&
+        channel.type !== 'DM' &&
+        channel.parentId === '804222694488932363';
+
     if (mode === 'yearly') {
         embed = embed
             .setDescription(
                 `${embed.description}\n||What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.||`
             )
             .setFooter('');
+    } else {
+        embed = embed.setDescription(
+            `${
+                isChatChannels ? 'Removed' : 'Added'
+            } <:dicecoin:839981846419079178> ${numberFormat.format(reward)} ${
+                isChatChannels ? 'from' : 'to'
+            } your balance!${
+                isChatChannels && ` Don't use this command in ${channel} again.`
+            }`
+        );
     }
 
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
-        .set(reward + balance);
+        .set(balance + reward * (isChatChannels ? -1 : 1));
+
     await channel.send({ embeds: [embed] });
     if (mode === 'daily') {
         if (streak === 100) {
