@@ -36,8 +36,9 @@ export async function postGuide(
                         return guideChannel;
                     } catch (err) {
                         if (
-                            (err as DiscordAPIError | Error).message ===
-                            'Unknown Channel'
+                            ['Unknown Channel', 'Missing Access'].includes(
+                                (err as DiscordAPIError | Error).message
+                            )
                         ) {
                             database
                                 .ref('discord_bot/registry')
@@ -349,8 +350,9 @@ export async function postNews(
                         return guideChannel;
                     } catch (err) {
                         if (
-                            (err as DiscordAPIError | Error).message ===
-                            'Unknown Channel'
+                            ['Unknown Channel', 'Missing Access'].includes(
+                                (err as DiscordAPIError | Error).message
+                            )
                         ) {
                             database
                                 .ref('discord_bot/registry')
