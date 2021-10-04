@@ -77,7 +77,7 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
     }
     const newEmoji = await guild.emojis.create(
         alienEmojiBinary.data,
-        author.username,
+        author.username.replaceAll(/[^\d\w_]/g, ''),
         {
             reason: `!customreaction command used by ${author.username}#${author.discriminator}`,
         }
