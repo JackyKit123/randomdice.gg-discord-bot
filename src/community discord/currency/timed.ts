@@ -4,6 +4,7 @@ import firebase from 'firebase-admin';
 import cache from '../../util/cache';
 import getBalance from './balance';
 import parseMsIntoReadableText from '../../util/parseMS';
+import isBotChannels from '../isBotChannels';
 
 export default async function timed(
     message: Discord.Message,
@@ -137,11 +138,6 @@ export default async function timed(
         }
     }
 
-    const isChatChannels =
-        !channel.isThread() &&
-        channel.type !== 'DM' &&
-        channel.parentId === '804222694488932363';
-
     if (mode === 'yearly') {
         embed = embed
             .setDescription(
@@ -151,18 +147,24 @@ export default async function timed(
     } else {
         embed = embed.setDescription(
             `${
-                isChatChannels ? 'Removed' : 'Added'
+                isBotChannels(channel) ? 'Added' : 'Removed'
             } <:dicecoin:839981846419079178> ${numberFormat.format(reward)} ${
-                isChatChannels ? 'from' : 'to'
-            } your balance!${
-                isChatChannels && ` Don't use this command in ${channel} again.`
+                isBotChannels(channel) ? 'to' : 'from'
+            } your balance${
+                !isBotChannels(channel)
+                    ? ` as a punishment because you are using this command in ${channel}`
+                    : ''
+            }!${
+                !isBotChannels(channel)
+                    ? `\n<#805739701902114826> <#804227071765118976> exist for a reason to let you to spam your commands.`
+                    : ''
             }`
         );
     }
 
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
-        .set(balance + reward * (isChatChannels ? -1 : 1));
+        .set(balance + reward * (isBotChannels(channel) ? 1 : -1));
 
     await channel.send({ embeds: [embed] });
     if (mode === 'daily') {

@@ -3,6 +3,7 @@ import Discord from 'discord.js';
 import getBalance from './balance';
 import cache from '../../util/cache';
 import cooldown from '../../util/cooldown';
+import isBotChannels from '../isBotChannels';
 
 export default async function coinflip(
     message: Discord.Message
@@ -72,16 +73,27 @@ export default async function coinflip(
 
     const random = Math.random();
     const won = (random < 0.5 && isHead) || (random >= 0.5 && isTail);
+    // eslint-disable-next-line no-nested-ternary
+    const gainMultiplier = won
+        ? isBotChannels(channel)
+            ? 1
+            : 0
+        : isBotChannels(channel)
+        ? -1
+        : -10;
     await database
         .ref(`discord_bot/community/currency/${author.id}/balance`)
-        .set(balance + amount * (won ? 1 : -1));
+        .set(balance + amount * gainMultiplier);
     await database
         .ref(
             `discord_bot/community/currency/${author.id}/gamble/${
                 won ? 'gain' : 'lose'
             }`
         )
-        .set(Number(gambleProfile?.[won ? 'gain' : 'lose'] || 0) + amount);
+        .set(
+            Number(gambleProfile?.[won ? 'gain' : 'lose'] || 0) +
+                Math.abs(amount * gainMultiplier)
+        );
     await channel.send({
         embeds: [
             new Discord.MessageEmbed()
@@ -92,18 +104,30 @@ export default async function coinflip(
                     }) ?? undefined
                 )
                 .setColor(won ? '#99ff00' : '#ff0000')
-                .setTitle(`You ${won ? 'Won' : 'Lost'}!`)
+                .setTitle(
+                    `It is${won && isHead ? ' HEAD' : 'TAIL'}!!! You ${
+                        won ? 'Won' : 'Lost'
+                    }!`
+                )
                 .setDescription(
                     `You ${
                         won ? 'won' : 'lost'
                     } <:dicecoin:839981846419079178> ${numberFormat.format(
                         amount
-                    )}`
+                    )}${
+                        !isBotChannels(channel)
+                            ? `\nBut since you're using this command in ${channel}, you ${
+                                  won ? 'won' : 'lost'
+                              } <:dicecoin:839981846419079178> ${numberFormat.format(
+                                  Math.abs(gainMultiplier * amount)
+                              )} instead\n<#805739701902114826> <#804227071765118976> exist for a reason to let you to spam your commands.`
+                            : ''
+                    }`
                 )
                 .addField(
                     'Current Balance',
                     `<:dicecoin:839981846419079178> ${numberFormat.format(
-                        Number(balance) + amount * (won ? 1 : -1)
+                        Number(balance) + amount * gainMultiplier
                     )}`
                 ),
         ],

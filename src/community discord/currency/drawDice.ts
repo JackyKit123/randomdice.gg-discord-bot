@@ -7,6 +7,7 @@ import chatCoins from './chatCoins';
 import cooldown from '../../util/cooldown';
 import getBalanced from './balance';
 import cache, { Dice } from '../../util/cache';
+import isBotChannels from '../isBotChannels';
 
 const wait = promisify(setTimeout);
 const ddIntervals = new Map<string, number[]>();
@@ -165,11 +166,8 @@ export default async function drawDice(
         }
         return randomDraw;
     });
-    const isChatChannels =
-        !channel.isThread() &&
-        channel.type !== 'DM' &&
-        channel.parentId === '804222694488932363';
-    outcome.reward *= isChatChannels ? -10 : 1;
+
+    outcome.reward *= isBotChannels(channel) ? 1 : -10;
     await database
         .ref(`discord_bot/community/currency/${member.id}/diceDrawn`)
         .set(diceDrawn);
@@ -191,18 +189,18 @@ export default async function drawDice(
     embed = embed
         .setDescription(
             `You ${
-                isChatChannels ? 'lost' : 'earned'
+                isBotChannels(channel) ? 'earned' : 'lost'
             } <:dicecoin:839981846419079178> ${numberFormat.format(
-                outcome.reward * (isChatChannels ? -1 : 1)
+                Math.abs(outcome.reward)
             )}`
         )
         .setColor(outcome.color);
     embed.fields = [
         {
             name: `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
-            value: isChatChannels
-                ? `<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>**JACKPOT**<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>\nYou lost <:dicecoin:839981846419079178> ${outcome.reward} instead since you are using this command in ${channel}`
-                : drawnDice.map(randomDraw => emoji[randomDraw.id]).join(' '),
+            value: isBotChannels(channel)
+                ? drawnDice.map(randomDraw => emoji[randomDraw.id]).join(' ')
+                : `<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>**JACKPOT**<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>\nYou lost <:dicecoin:839981846419079178> ${outcome.reward} instead since you are using this command in ${channel}\n<#805739701902114826> <#804227071765118976> exist for a reason to let you to spam your commands.`,
             inline: false,
         },
         {
