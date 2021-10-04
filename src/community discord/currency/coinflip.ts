@@ -71,8 +71,8 @@ export default async function coinflip(
     }
     amount = amount || Number(amountArg);
 
-    const random = Math.random();
-    const won = (random < 0.5 && isHead) || (random >= 0.5 && isTail);
+    const flip = Math.random() < 0.5 ? 'head' : 'tail';
+    const won = (flip === 'head' && isHead) || (flip === 'tail' && isTail);
     // eslint-disable-next-line no-nested-ternary
     const gainMultiplier = won
         ? isBotChannels(channel)
@@ -105,12 +105,12 @@ export default async function coinflip(
                 )
                 .setColor(won ? '#99ff00' : '#ff0000')
                 .setTitle(
-                    `It is${won && isHead ? ' HEAD' : 'TAIL'}!!! You ${
+                    `It is ${flip.toUpperCase()}!!! You ${
                         won ? 'Won' : 'Lost'
                     }!`
                 )
                 .setThumbnail(
-                    won && isHead
+                    flip === 'head'
                         ? 'https://e7.pngegg.com/pngimages/140/487/png-clipart-dogecoin-cryptocurrency-digital-currency-doge-mammal-cat-like-mammal.png'
                         : 'https://mpng.subpng.com/20180413/sge/kisspng-dogecoin-cryptocurrency-dash-digital-currency-doge-5ad13b0da01474.3329552115236615816557.jpg'
                 )
