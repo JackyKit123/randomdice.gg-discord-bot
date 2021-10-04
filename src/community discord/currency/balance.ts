@@ -25,7 +25,7 @@ export default async function balance(
     const app = firebase.app();
     const database = app.database();
     const numberFormat = new Intl.NumberFormat();
-    const { member, channel, guild, content } = message;
+    const { member, channel, guild, content, client } = message;
     if (!guild || !member) return false;
     if (output === 'emit') {
         if (
@@ -100,6 +100,7 @@ export default async function balance(
             await database
                 .ref(`discord_bot/community/currency/${target.id}/initiated`)
                 .set(true);
+            client.emit('messageCreate', message);
         }
         return output === 'silence' ? Number(profile?.balance) || 10000 : false;
     }
