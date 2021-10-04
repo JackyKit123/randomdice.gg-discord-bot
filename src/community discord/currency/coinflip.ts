@@ -109,6 +109,11 @@ export default async function coinflip(
                         won ? 'Won' : 'Lost'
                     }!`
                 )
+                .setThumbnail(
+                    won && isHead
+                        ? 'https://e7.pngegg.com/pngimages/140/487/png-clipart-dogecoin-cryptocurrency-digital-currency-doge-mammal-cat-like-mammal.png'
+                        : 'https://mpng.subpng.com/20180413/sge/kisspng-dogecoin-cryptocurrency-dash-digital-currency-doge-5ad13b0da01474.3329552115236615816557.jpg'
+                )
                 .setDescription(
                     `You ${
                         won ? 'won' : 'lost'
