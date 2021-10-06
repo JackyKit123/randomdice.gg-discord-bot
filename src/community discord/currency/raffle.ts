@@ -398,9 +398,10 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                         time: 60000,
                     });
                     collector.on('collect', async (reaction, user) => {
-                        await guild.members.cache
-                            .get(user.id)
-                            ?.roles.add('839694796431294485');
+                        if (user.bot)
+                            await guild.members.cache
+                                .get(user.id)
+                                ?.roles.add('839694796431294485');
                     });
                     await sentMessage.react('✅');
                 }
