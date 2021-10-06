@@ -155,19 +155,23 @@ client.on('ready', async () => {
         await logMessage(client, bootMessage);
         // eslint-disable-next-line no-console
         console.log(bootMessage);
-        infoVC(client);
-        purgeMoonedRoles(client);
-        purgeClownRoles(client);
-        fetchApps(client);
-        fetchGeneralOnBoot(client);
-        pickCoinsInit(client, database);
-        fetchExistingCrewAds(client);
-        fetchSpyLogOnBoot(client);
-        await fetchAll(database);
-        setRaffleTimerOnBoot(client, database);
-        weeklyAutoReset(client);
-        registerTimer(client);
-        fetchAutoReactionRegistry(client);
+        await Promise.all([
+            infoVC(client),
+            purgeMoonedRoles(client),
+            purgeClownRoles(client),
+            fetchApps(client),
+            fetchGeneralOnBoot(client),
+            pickCoinsInit(client, database),
+            fetchExistingCrewAds(client),
+            fetchSpyLogOnBoot(client),
+            fetchAll(database),
+        ]);
+        await Promise.all([
+            setRaffleTimerOnBoot(client, database),
+            weeklyAutoReset(client),
+            registerTimer(client),
+            fetchAutoReactionRegistry(client),
+        ]);
     } catch (err) {
         try {
             await logMessage(
