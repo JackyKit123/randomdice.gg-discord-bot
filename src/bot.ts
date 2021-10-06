@@ -156,7 +156,6 @@ client.on('ready', async () => {
         // eslint-disable-next-line no-console
         console.log(bootMessage);
         await Promise.all([
-            infoVC(client),
             purgeMoonedRoles(client),
             purgeClownRoles(client),
             fetchApps(client),
@@ -172,6 +171,7 @@ client.on('ready', async () => {
             registerTimer(client),
             fetchAutoReactionRegistry(client),
         ]);
+        await infoVC(client);
     } catch (err) {
         try {
             await logMessage(
