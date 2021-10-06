@@ -14,9 +14,10 @@ export default async function myCrit(message: Discord.Message): Promise<void> {
 
     if (!member || !guild) return;
 
-    const crit = Number(content.replace(/^!mycrit ?/i, ''));
+    const arg = content.replace(/^!mycrit ?/i, '');
+    const crit = Number(arg);
 
-    if (Number.isNaN(crit)) {
+    if (Number.isNaN(crit) || !arg) {
         await channel.send(
             'You need to enter your crit%, example: `!myCrit 1337`'
         );
