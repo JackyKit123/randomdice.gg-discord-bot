@@ -142,9 +142,15 @@ export async function fetchAutoReactionRegistry(
     const guild = await client.guilds.fetch(
         process.env.COMMUNITY_SERVER_ID || ''
     );
-    Promise.all(
-        Object.keys(cache['discord_bot/community/customreact'] || {}).map(uid =>
-            guild.members.fetch(uid)
+    await Promise.all(
+        Object.keys(cache['discord_bot/community/customreact'] || {}).map(
+            async uid => {
+                try {
+                    await guild.members.fetch(uid);
+                } catch {
+                    // do nothing
+                }
+            }
         )
     );
 }
