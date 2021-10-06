@@ -685,4 +685,24 @@ client.on('typingStart', async typing => {
 
 client.login(process.env.BOT_TOKEN);
 
+process.on('uncaughtException', async error => {
+    try {
+        await logMessage(
+            client,
+            `${process.env.DEV_USERS_ID}\n**__Critical Error__**\n**Unhandled Exception**\n${error.stack}`
+        );
+    } catch (networkError) {
+        // eslint-disable-next-line no-console
+        console.error(networkError);
+    } finally {
+        client.destroy();
+
+        try {
+            reboot();
+        } catch {
+            process.exit();
+        }
+    }
+});
+
 process.on('exit', () => client.destroy());
