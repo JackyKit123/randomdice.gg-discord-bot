@@ -141,7 +141,7 @@ export default async function timed(
     if (mode === 'yearly') {
         embed = embed
             .setDescription(
-                `${embed.description}\n||What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.||`
+                `Added 1 <:dicecoin:839981846419079178> to your balance\n||What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.||`
             )
             .setFooter('');
     } else {
