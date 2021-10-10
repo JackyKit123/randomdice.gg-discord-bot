@@ -1,4 +1,14 @@
-import Discord from 'discord.js';
+import {
+    Client,
+    DiscordAPIError,
+    Guild,
+    Message,
+    MessageActionRow,
+    MessageButton,
+    MessageEmbed,
+    TextBasedChannels,
+    User,
+} from 'discord.js';
 import firebase from 'firebase-admin';
 import getBalance from './balance';
 import { parseStringIntoMs } from '../../util/parseMS';
@@ -11,8 +21,8 @@ async function host(
     duration: number,
     maxEntries: number,
     ticketCost: number,
-    channel: Discord.TextBasedChannels,
-    author: Discord.User
+    channel: TextBasedChannels,
+    author: User
 ): Promise<void> {
     const database = firebase.app().database();
     const ref = database.ref('discord_bot/community/raffle');
@@ -28,7 +38,7 @@ async function host(
     await channel.send({
         content: '<@&839694796431294485>',
         embeds: [
-            new Discord.MessageEmbed()
+            new MessageEmbed()
                 .setAuthor(
                     'randomdice.gg Server',
                     guild.iconURL({ dynamic: true }) ?? undefined
@@ -47,7 +57,7 @@ async function host(
 }
 
 async function announceWinner(
-    guild: Discord.Guild,
+    guild: Guild,
     database: firebase.database.Database
 ): Promise<void> {
     const channel = guild.channels.cache.get('807229757049012266');
@@ -93,7 +103,7 @@ async function announceWinner(
             const winningMessage = await channel.send({
                 content: '<@&839694796431294485>',
                 embeds: [
-                    new Discord.MessageEmbed()
+                    new MessageEmbed()
                         .setAuthor(
                             'randomdice.gg Server',
                             guild.iconURL({ dynamic: true }) ?? undefined
@@ -148,7 +158,7 @@ async function announceWinner(
     }
 }
 
-export default async function raffle(message: Discord.Message): Promise<void> {
+export default async function raffle(message: Message): Promise<void> {
     const { channel, member, content, guild, author } = message;
 
     const [, subcommand, arg, arg2, arg3] = content
@@ -186,7 +196,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
             if (raffleTimeLeft > 0) {
                 await channel.send({
                     embeds: [
-                        new Discord.MessageEmbed()
+                        new MessageEmbed()
                             .setAuthor(
                                 'randomdice.gg Server',
                                 guild.iconURL({ dynamic: true }) ?? undefined
@@ -221,7 +231,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
             } else {
                 await channel.send({
                     embeds: [
-                        new Discord.MessageEmbed()
+                        new MessageEmbed()
                             .setAuthor(
                                 'randomdice.gg Server',
                                 guild.iconURL({ dynamic: true }) ?? undefined
@@ -247,7 +257,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                 if (raffleTimeLeft < 0) {
                     await channel.send({
                         embeds: [
-                            new Discord.MessageEmbed()
+                            new MessageEmbed()
                                 .setAuthor(
                                     'randomdice.gg Server',
                                     guild.iconURL({ dynamic: true }) ??
@@ -385,25 +395,46 @@ export default async function raffle(message: Discord.Message): Promise<void> {
                 if (!member.roles.cache.has('839694796431294485')) {
                     const sentMessage = await channel.send({
                         embeds: [
-                            new Discord.MessageEmbed()
+                            new MessageEmbed()
                                 .setTitle('Tip!')
                                 .setColor('#32cd32')
                                 .setDescription(
-                                    'It looks like you are missing the role <@&839694796431294485>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can react to the ✅ to claim this role now.'
+                                    'It looks like you are missing the role <@&839694796431294485>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can click ✅ to claim this role now.'
                                 ),
                         ],
+                        components: [
+                            new MessageActionRow().addComponents([
+                                new MessageButton()
+                                    .setEmoji('✅')
+                                    .setCustomId('✅')
+                                    .setStyle('PRIMARY'),
+                            ]),
+                        ],
                     });
-                    const collector = sentMessage.createReactionCollector({
-                        filter: reaction => reaction.emoji.name === '✅',
-                        time: 60000,
-                    });
-                    collector.on('collect', async (reaction, user) => {
-                        if (user.bot)
-                            await guild.members.cache
-                                .get(user.id)
-                                ?.roles.add('839694796431294485');
-                    });
-                    await sentMessage.react('✅');
+                    sentMessage
+                        .createMessageComponentCollector({
+                            time: 60000,
+                        })
+                        .on('collect', async interaction =>
+                            interaction.reply({
+                                content:
+                                    'Added <@&839694796431294485> role to you',
+                                ephemeral: true,
+                            })
+                        )
+                        .on('end', async () => {
+                            try {
+                                await sentMessage.delete();
+                            } catch (err) {
+                                if (
+                                    (err as DiscordAPIError).message !==
+                                    'Unknown Message'
+                                ) {
+                                    throw err;
+                                }
+                            }
+                        });
+                    return;
                 }
             }
             return;
@@ -426,7 +457,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
             if (!time || !ticketCost || !maxEntries) {
                 await channel.send({
                     embeds: [
-                        new Discord.MessageEmbed()
+                        new MessageEmbed()
                             .setTitle('Command Parse Error')
                             .setColor('#ff0000')
                             .setDescription('usage of the command')
@@ -456,7 +487,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
             if (raffleTimeLeft < 0) {
                 await channel.send({
                     embeds: [
-                        new Discord.MessageEmbed()
+                        new MessageEmbed()
                             .setAuthor(
                                 'randomdice.gg Server',
                                 guild.iconURL({ dynamic: true }) ?? undefined
@@ -487,7 +518,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
             );
             try {
                 await channel.awaitMessages({
-                    filter: (newMessage: Discord.Message) =>
+                    filter: (newMessage: Message) =>
                         newMessage.author.id === author.id &&
                         newMessage.content.toLowerCase() === 'end',
                     time: 60000,
@@ -510,7 +541,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
         default:
             await channel.send({
                 embeds: [
-                    new Discord.MessageEmbed()
+                    new MessageEmbed()
                         .setTitle('Command Parse Error')
                         .setColor('#ff0000')
                         .setDescription('usage of the command')
@@ -542,7 +573,7 @@ export default async function raffle(message: Discord.Message): Promise<void> {
 }
 
 export async function setRaffleTimerOnBoot(
-    client: Discord.Client,
+    client: Client,
     database: firebase.database.Database
 ): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');

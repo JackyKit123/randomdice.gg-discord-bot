@@ -1,10 +1,10 @@
-import Discord from 'discord.js';
+import { Message, MessageActionRow, MessageButton } from 'discord.js';
 import firebase from 'firebase-admin';
 import getBalance from '../balance';
 import cache from '../../../util/cache';
 
 export default async function commandCost(
-    message: Discord.Message,
+    message: Message,
     cost: number
 ): Promise<boolean> {
     const app = firebase.app();
@@ -28,26 +28,34 @@ export default async function commandCost(
         .set(balance - cost);
     if (!ignorePrompt.includes(command.toLowerCase())) {
         try {
-            const notification = await author.send(
-                `You used \`${command.toLowerCase()}\` command which costs you <:dicecoin:839981846419079178> ${cost}, react to 🔇 in 60 seconds to stop this notification.`
-            );
-            await notification.react('🔇');
-            notification
-                .createReactionCollector({
-                    filter: (
-                        reaction: Discord.MessageReaction,
-                        user: Discord.User
-                    ) => reaction.emoji.name === '🔇' && user.id === author.id,
+            (
+                await author.send({
+                    content: `You used \`${command.toLowerCase()}\` command which costs you <:dicecoin:839981846419079178> ${cost}, click 🔇 in 60 seconds to stop this notification.`,
+                    components: [
+                        new MessageActionRow().addComponents([
+                            new MessageButton()
+                                .setCustomId('🔇')
+                                .setEmoji('🔇')
+                                .setStyle('DANGER'),
+                        ]),
+                    ],
+                })
+            )
+                .createMessageComponentCollector({
                     time: 1000 * 60,
                     max: 1,
                 })
-                .on('collect', () =>
-                    database
+                .on('collect', async interaction => {
+                    await database
                         .ref(
                             `discord_bot/community/currency/${author.id}/ignoreFunCommandPrompt`
                         )
-                        .set([...ignorePrompt, command.toLowerCase()])
-                );
+                        .set([...ignorePrompt, command.toLowerCase()]);
+                    await interaction.update({
+                        content: 'Notification Muted. 🔇',
+                        components: [],
+                    });
+                });
         } catch {
             // do nothing
         }
