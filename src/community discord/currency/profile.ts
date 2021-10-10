@@ -1,4 +1,8 @@
-import Discord from 'discord.js';
+import Discord, {
+    DiscordAPIError,
+    MessageActionRow,
+    MessageButton,
+} from 'discord.js';
 import moment from 'moment';
 import getBalance from './balance';
 import cache from '../../util/cache';
@@ -173,7 +177,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             true
         )
         .setFooter(
-            'Showing page GENERAL of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
+            'Showing page GENERAL of "general, cooldown, gamble, dice drawn", click the buttons to flip pages'
         );
 
     const cooldownProfile = new Discord.MessageEmbed(embed)
@@ -198,7 +202,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             )}\n**Yearly**\n${cooldown(profile.yearly || 0, 'yearly')}`
         )
         .setFooter(
-            'Showing page PROFILE of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
+            'Showing page PROFILE of "general, cooldown, gamble, dice drawn", click the buttons to flip pages'
         );
 
     const gambleProfile = new Discord.MessageEmbed(embed)
@@ -213,7 +217,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             )}\n`
         )
         .setFooter(
-            'Showing page GAMBLE of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
+            'Showing page GAMBLE of "general, cooldown, gamble, dice drawn", click the buttons to flip pages'
         );
 
     const diceDrawnProfile = embed
@@ -239,40 +243,99 @@ export default async function Profile(message: Discord.Message): Promise<void> {
                 .flat()
         )
         .setFooter(
-            'Showing page DICE DRAWN of "general, cooldown, gamble, dice drawn", use the reaction to flip pages'
+            'Showing page DICE DRAWN of "general, cooldown, gamble, dice drawn", click the buttons to flip pages'
         );
 
-    const sentMessage = await channel.send({ embeds: [generalProfile] });
+    let components = [
+        new MessageActionRow().addComponents(
+            [
+                '👤',
+                '⏲️',
+                '🎰',
+                '<:Dice_TierX_Null:807019807312183366>',
+                '❌',
+            ].map((button, i) =>
+                new MessageButton()
+                    .setCustomId(button)
+                    .setEmoji(button)
+                    .setDisabled(i === 0)
+                    .setStyle(
+                        // eslint-disable-next-line no-nested-ternary
+                        i === 0
+                            ? 'SECONDARY'
+                            : button === '❌'
+                            ? 'DANGER'
+                            : 'PRIMARY'
+                    )
+            )
+        ),
+    ];
+    const sentMessage = await channel.send({
+        embeds: [generalProfile],
+        components,
+    });
 
-    const collector = sentMessage.createReactionCollector({
-        filter: (reaction: Discord.MessageReaction, user) =>
-            ((reaction.emoji.name &&
-                ['👤', '⏲️', '🎰', '❌'].includes(reaction.emoji.name)) ||
-                reaction.emoji.id === '807019807312183366') &&
-            user.id === member.id,
+    const collector = sentMessage.createMessageComponentCollector({
+        filter: ({ user }) => user.id === member.id,
         time: 60 * 1000,
     });
 
-    collector.on('collect', async (reaction, user) => {
+    collector.on('collect', async interaction => {
         try {
-            switch (reaction.emoji.name) {
+            components = [
+                new MessageActionRow().addComponents(
+                    [
+                        '👤',
+                        '⏲️',
+                        '🎰',
+                        '<:Dice_TierX_Null:807019807312183366>',
+                        '❌',
+                    ].map(button =>
+                        new MessageButton()
+                            .setCustomId(button)
+                            .setEmoji(button)
+                            .setDisabled(button === interaction.customId)
+                            .setStyle(
+                                // eslint-disable-next-line no-nested-ternary
+                                button === interaction.customId
+                                    ? 'SECONDARY'
+                                    : button === '❌'
+                                    ? 'DANGER'
+                                    : 'PRIMARY'
+                            )
+                    )
+                ),
+            ];
+            switch (interaction.customId) {
                 case '👤':
-                    await sentMessage.edit({ embeds: [generalProfile] });
+                    await interaction.update({
+                        embeds: [generalProfile],
+                        components,
+                    });
                     break;
                 case '⏲️':
-                    await sentMessage.edit({ embeds: [cooldownProfile] });
+                    await interaction.update({
+                        embeds: [cooldownProfile],
+                        components,
+                    });
                     break;
                 case '🎰':
-                    await sentMessage.edit({ embeds: [gambleProfile] });
+                    await interaction.update({
+                        embeds: [gambleProfile],
+                        components,
+                    });
+                    break;
+                case '<:Dice_TierX_Null:807019807312183366>':
+                    await interaction.update({
+                        embeds: [diceDrawnProfile],
+                        components,
+                    });
                     break;
                 case '❌':
                     collector.stop();
-                    return;
+                    break;
                 default:
-                    if (reaction.emoji.id === '807019807312183366')
-                        await sentMessage.edit({ embeds: [diceDrawnProfile] });
             }
-            await reaction.users.remove(user.id);
         } catch {
             // message prob got deleted
         }
@@ -281,14 +344,9 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     collector.on('end', async () => {
         try {
             await sentMessage.delete();
-        } catch {
-            // message prob got deleted
+        } catch (err) {
+            if ((err as DiscordAPIError).message !== 'Unknown Message')
+                throw err;
         }
     });
-
-    await sentMessage.react('👤');
-    await sentMessage.react('⏲️');
-    await sentMessage.react('🎰');
-    await sentMessage.react('<:Dice_TierX_Null:807019807312183366>');
-    await sentMessage.react('❌');
 }
