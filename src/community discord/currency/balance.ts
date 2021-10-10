@@ -1,5 +1,5 @@
 import firebase from 'firebase-admin';
-import Discord from 'discord.js';
+import { GuildMember, Message, MessageEmbed } from 'discord.js';
 import cooldown from '../../util/cooldown';
 import fetchMention from '../../util/fetchMention';
 import cache from '../../util/cache';
@@ -18,9 +18,9 @@ const prestigeRoleIds = [
 ];
 
 export default async function balance(
-    message: Discord.Message,
+    message: Message,
     output: 'silence' | 'emit' | 'emit new member',
-    optionalTarget?: Discord.GuildMember
+    optionalTarget?: GuildMember
 ): Promise<number | false> {
     const app = firebase.app();
     const database = app.database();
@@ -56,7 +56,7 @@ export default async function balance(
     prestigeRoleIds.forEach(id => {
         if (target.roles.cache.has(id)) prestigeLevel += 1;
     });
-    const embed = new Discord.MessageEmbed()
+    const embed = new MessageEmbed()
         .setAuthor(
             `${target.user.username}#${target.user.discriminator}`,
             target.user.avatarURL({

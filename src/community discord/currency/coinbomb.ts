@@ -1,4 +1,16 @@
-import Discord, { DiscordAPIError } from 'discord.js';
+import {
+    Client,
+    DiscordAPIError,
+    GuildMember,
+    InteractionCollector,
+    Message,
+    MessageActionRow,
+    MessageButton,
+    MessageCollector,
+    MessageComponentInteraction,
+    NewsChannel,
+    TextChannel,
+} from 'discord.js';
 import firebase from 'firebase-admin';
 import { promisify } from 'util';
 import logMessage from '../../dev-commands/logMessage';
@@ -10,8 +22,8 @@ export const activeCoinbombInChannel = new Map<string, boolean>();
 let database: firebase.database.Database;
 
 export default async function pickCoins(
-    client: Discord.Client,
-    channel: Discord.TextChannel | Discord.NewsChannel,
+    client: Client,
+    channel: TextChannel | NewsChannel,
     recursive = false
 ): Promise<void> {
     try {
@@ -34,7 +46,7 @@ export default async function pickCoins(
         let content: string;
         let maxCollectorAllowed: number;
         let collectionTrigger: string;
-        let endMessage: (members: Discord.GuildMember[]) => string;
+        let endMessage: (members: GuildMember[]) => string;
         const basicCollectionTriggers = [
             'GIMME',
             'MINE',
@@ -80,9 +92,9 @@ export default async function pickCoins(
         if (rngReward < 100) {
             content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                 rngReward
-            )} has shown up, react to ⛏️ to pick it`;
+            )} has shown up, click ⛏️ to pick it`;
             maxCollectorAllowed = Infinity;
-            collectionTrigger = 'reaction';
+            collectionTrigger = '⛏️';
             endMessage = (members): string =>
                 `${members.join(' ')} ${
                     members.length > 1 ? 'have' : 'has'
@@ -152,26 +164,33 @@ export default async function pickCoins(
                 )} `;
         }
 
-        const collected: Discord.GuildMember[] = [];
-        const sentMessage = await channel.send(content);
+        const collected: GuildMember[] = [];
+        const sentMessage = await channel.send({
+            content,
+            components:
+                collectionTrigger === '⛏️'
+                    ? [
+                          new MessageActionRow().addComponents(
+                              new MessageButton()
+                                  .setEmoji('⛏️')
+                                  .setCustomId('⛏️')
+                                  .setStyle('PRIMARY')
+                          ),
+                      ]
+                    : [],
+        });
         activeCoinbombInChannel.set(channel.id, true);
 
         const onCollect = async (
-            collector: Discord.MessageCollector | Discord.ReactionCollector,
-            collect: Discord.Message | Discord.MessageReaction,
-            user?: Discord.User
+            collector:
+                | MessageCollector
+                | InteractionCollector<MessageComponentInteraction>,
+            collect: Message | MessageComponentInteraction
         ) => {
-            let member: Discord.GuildMember | null | undefined;
-            let message: Discord.Message;
-            if (collect instanceof Discord.Message) {
-                ({ member } = collect);
-                message = collect;
-            } else if (user) {
-                member = guild.members.cache.get(user.id);
-                message = sentMessage;
-            } else {
-                return;
-            }
+            const message = collect instanceof Message ? collect : sentMessage;
+            const member = guild.members.cache.get(
+                collect.member?.user.id || ''
+            );
             if (
                 !member ||
                 collected.some(m => member?.id === m.id) ||
@@ -201,13 +220,10 @@ export default async function pickCoins(
                         .some(msg => msg.author.id === member?.id)
                 )
             ) {
-                if (collect instanceof Discord.Message) {
-                    await channel.send(
-                        `${member}, no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`
-                    );
-                } else {
-                    await collect.users.remove(member.id);
-                }
+                await collect.reply({
+                    content: `no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`,
+                    ephemeral: true,
+                });
                 return;
             }
             collected.push(member);
@@ -216,8 +232,13 @@ export default async function pickCoins(
             await database
                 .ref(`discord_bot/community/currency/${member.id}/balance`)
                 .set(balance + rngReward);
-            if (rngReward < 1000 && rngReward >= 100) {
-                await message.react('<:dicecoin:839981846419079178>');
+            if (!(collect instanceof Message)) {
+                await collect.reply({
+                    content: '<:dicecoin:839981846419079178>',
+                    ephemeral: true,
+                });
+            } else if (rngReward < 1000 && rngReward >= 100) {
+                await collect.react('<:dicecoin:839981846419079178>');
             } else if (rngReward > 1000) {
                 await channel.send(
                     `${member} has collected the prize of <:dicecoin:839981846419079178> ${numberFormat.format(
@@ -248,7 +269,7 @@ export default async function pickCoins(
             if (!recursive) return;
             const messageTimeout = new Map<string, boolean>();
             await channel.awaitMessages({
-                filter: (newMessage: Discord.Message) => {
+                filter: (newMessage: Message) => {
                     if (
                         activeCoinbombInChannel.get(channel.id) ||
                         messageTimeout.get(newMessage.author.id) ||
@@ -267,30 +288,25 @@ export default async function pickCoins(
             pickCoins(client, channel, true);
         };
 
-        if (collectionTrigger === 'reaction') {
+        if (collectionTrigger === '⛏️') {
             const collector = sentMessage
-                .createReactionCollector({
-                    filter: (
-                        reaction: Discord.MessageReaction,
-                        user: Discord.User
-                    ) => reaction.emoji.name === '⛏️' && !user?.bot,
+                .createMessageComponentCollector({
+                    filter: interaction => !interaction.user.bot,
                     time: 20 * 1000,
                 })
                 .on('end', onEnd);
-            collector.on('collect', (reaction, user) =>
-                onCollect(collector, reaction, user)
+            collector.on('collect', interaction =>
+                onCollect(collector, interaction)
             );
-            await sentMessage.react('⛏️');
         } else {
             const collector = channel
                 .createMessageCollector({
-                    filter: (message: Discord.Message) =>
+                    filter: (message: Message) =>
                         !message.author?.bot &&
                         message.content.toLowerCase() ===
                             collectionTrigger.toLowerCase(),
                     time: 20 * 1000,
                 })
-
                 .on('end', onEnd);
             collector.on('collect', message => onCollect(collector, message));
         }
@@ -300,7 +316,7 @@ export default async function pickCoins(
 }
 
 export async function pickCoinsInit(
-    client: Discord.Client,
+    client: Client,
     db: firebase.database.Database
 ): Promise<void> {
     database = db;
@@ -329,7 +345,7 @@ export async function pickCoinsInit(
     pickCoins(client, channel, true);
 }
 
-export async function spawnCoinbomb(message: Discord.Message): Promise<void> {
+export async function spawnCoinbomb(message: Message): Promise<void> {
     const { client, member, channel } = message;
     if (
         !member ||
