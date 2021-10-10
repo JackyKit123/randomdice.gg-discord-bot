@@ -260,9 +260,13 @@ export default async function pickCoins(
                 );
             } else {
                 try {
-                    await sentMessage.edit(endMessage(collected));
-                } catch {
-                    // nothing
+                    await sentMessage.edit({
+                        content: endMessage(collected),
+                        components: [],
+                    });
+                } catch (err) {
+                    if ((err as DiscordAPIError).message !== 'Unknown Message')
+                        throw err;
                 }
             }
 
