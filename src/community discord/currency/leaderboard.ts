@@ -3,6 +3,7 @@ import firebase from 'firebase-admin';
 import logMessage from '../../dev-commands/logMessage';
 import cache, { MemberCurrency } from '../../util/cache';
 import cooldown from '../../util/cooldown';
+import getPaginationComponents from '../../util/paginationButtons';
 import { deleteCustomRole } from '../customRole';
 
 const numberFormat = new Intl.NumberFormat();
@@ -262,62 +263,19 @@ export default async function leaderboard(
                     }) ?? undefined,
                     `https://discord.gg/randomdice`
                 )
-                .setDescription(
-                    `Showing page ${
-                        i + 1
-                    } of ${pageNumbers}. Use the message reaction to flip page.`
-                )
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setTimestamp()
+                .setFooter(`Showing page ${i + 1} of ${pageNumbers}.`)
         );
-    const sentMessage = await channel.send({ embeds: [embeds[currentPage]] });
-    if (pageNumbers <= 1) {
-        return;
-    }
 
-    const collector = sentMessage.createReactionCollector({
-        filter: (reaction, user) =>
-            !!reaction.emoji.name &&
-            ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name) &&
-            user.id === member.id,
-        time: 180000,
+    const { components, collectorHandler } = getPaginationComponents(
+        pageNumbers,
+        currentPage
+    );
+    const sentMessage = await channel.send({
+        embeds: [embeds[currentPage]],
+        components,
     });
 
-    collector.on('collect', async (reaction, user) => {
-        switch (reaction.emoji.name) {
-            case '⏪':
-                currentPage = 0;
-                break;
-            case '◀️':
-                currentPage -= 1;
-                break;
-            case '▶️':
-                currentPage += 1;
-                break;
-            case '⏩':
-                currentPage = pageNumbers - 1;
-                break;
-            case '❌':
-                collector.stop();
-                return;
-            default:
-        }
-        if (sentMessage.editable)
-            await sentMessage.edit({ embeds: [embeds[currentPage]] });
-        await reaction.users.remove(user.id);
-    });
-
-    collector.on('end', async () => {
-        try {
-            await sentMessage.delete();
-        } catch {
-            // message prob got deleted
-        }
-    });
-
-    await sentMessage.react('⏪');
-    await sentMessage.react('◀️');
-    await sentMessage.react('▶️');
-    await sentMessage.react('⏩');
-    await sentMessage.react('❌');
+    collectorHandler(sentMessage, member.user, embeds);
 }

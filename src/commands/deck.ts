@@ -1,6 +1,7 @@
 import Discord from 'discord.js';
 import cache, { Deck } from '../util/cache';
 import cooldown from '../util/cooldown';
+import getPaginationComponents from '../util/paginationButtons';
 
 export default async function decklist(
     message: Discord.Message
@@ -168,66 +169,22 @@ export default async function decklist(
                     'https://randomdice.gg/'
                 )
                 .setURL(`https://randomdice.gg/decks/${deckType}`)
-                .setDescription(
-                    `Showing page ${
-                        i + 1
-                    } of ${pageNumbers}. Each deck is listed below with a rating. Use the message reaction to flip page.`
-                )
+                .setDescription('Each deck is listed below with a rating.')
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setFooter(
                     `randomdice.gg Deck List #page ${i + 1}/${pageNumbers}`,
                     'https://randomdice.gg/android-chrome-512x512.png'
                 )
         );
-    const sentMessage = await channel.send({ embeds: [embeds[currentPage]] });
-    if (pageNumbers <= 1) {
-        return;
-    }
 
-    const collector = sentMessage.createReactionCollector({
-        filter: (reaction, user) =>
-            !!reaction.emoji.name &&
-            ['⏪', '◀️', '▶️', '⏩', '❌'].includes(reaction.emoji.name) &&
-            user.id === author.id,
-        time: 180000,
+    const { components, collectorHandler } = getPaginationComponents(
+        pageNumbers,
+        currentPage
+    );
+    const sentMessage = await channel.send({
+        embeds: [embeds[currentPage]],
+        components,
     });
 
-    collector.on('collect', async (reaction, user) => {
-        switch (reaction.emoji.name) {
-            case '⏪':
-                currentPage = 0;
-                break;
-            case '◀️':
-                currentPage -= 1;
-                break;
-            case '▶️':
-                currentPage += 1;
-                break;
-            case '⏩':
-                currentPage = pageNumbers - 1;
-                break;
-            case '❌':
-                collector.stop();
-                return;
-            default:
-                return;
-        }
-        if (sentMessage.editable)
-            await sentMessage.edit({ embeds: [embeds[currentPage]] });
-        await reaction.users.remove(user.id);
-    });
-
-    collector.on('end', async () => {
-        try {
-            await sentMessage.delete();
-        } catch {
-            // message prob got deleted
-        }
-    });
-
-    await sentMessage.react('⏪');
-    await sentMessage.react('◀️');
-    await sentMessage.react('▶️');
-    await sentMessage.react('⏩');
-    await sentMessage.react('❌');
+    collectorHandler(sentMessage, author, embeds);
 }
