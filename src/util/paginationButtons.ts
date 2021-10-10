@@ -28,11 +28,13 @@ export default function getPaginationComponents(
         new MessageButton()
             .setEmoji('◀️')
             .setStyle('PRIMARY')
-            .setCustomId('prev'),
+            .setCustomId('prev')
+            .setDisabled(initialPage === 0),
         new MessageButton()
             .setEmoji('▶️')
             .setStyle('PRIMARY')
-            .setCustomId('next'),
+            .setCustomId('next')
+            .setDisabled(initialPage === totalPages),
         new MessageButton()
             .setEmoji('⏩')
             .setStyle('PRIMARY')
@@ -105,9 +107,11 @@ export default function getPaginationComponents(
                 new MessageActionRow().addComponents(
                     buttons.map(component =>
                         component.setDisabled(
-                            (component.customId === 'first' &&
+                            ((component.customId === 'first' ||
+                                component.customId === 'prev') &&
                                 currentPage === 0) ||
-                                (component.customId === 'last' &&
+                                ((component.customId === 'next' ||
+                                    component.customId === 'last') &&
                                     currentPage === lastPage)
                         )
                     )
