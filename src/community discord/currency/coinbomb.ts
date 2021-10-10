@@ -191,18 +191,21 @@ export default async function pickCoins(
             const member = guild.members.cache.get(
                 collect.member?.user.id || ''
             );
-            if (
-                !member ||
-                collected.some(m => member?.id === m.id) ||
-                collected.length >= maxCollectorAllowed
-            ) {
+            if (!member || collected.length >= maxCollectorAllowed) return;
+            if (collected.some(m => member.id === m.id)) {
+                if (collect instanceof MessageComponentInteraction) {
+                    collect.reply({
+                        ephemeral: true,
+                        content: 'You have already earned the reward this time',
+                    });
+                }
                 return;
             }
             if (
                 !(
                     channel.messages.cache.some(
                         msg =>
-                            msg.author.id === member?.id &&
+                            msg.author.id === member.id &&
                             sentMessage.createdTimestamp -
                                 msg.createdTimestamp <
                                 1000 * 60 &&
@@ -217,11 +220,11 @@ export default async function pickCoins(
                                     sentMessage.createdTimestamp
                         )
                         .last(10)
-                        .some(msg => msg.author.id === member?.id)
+                        .some(msg => msg.author.id === member.id)
                 )
             ) {
                 await collect.reply({
-                    content: `no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`,
+                    content: `${member}, no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`,
                     ephemeral: true,
                 });
                 return;
@@ -233,9 +236,16 @@ export default async function pickCoins(
                 .ref(`discord_bot/community/currency/${member.id}/balance`)
                 .set(balance + rngReward);
             if (!(collect instanceof Message)) {
-                await collect.reply({
-                    content: '<:dicecoin:839981846419079178>',
-                    ephemeral: true,
+                await collect.update({
+                    content: `${content}\n${endMessage(collected)}`,
+                    components: [
+                        new MessageActionRow().addComponents(
+                            new MessageButton()
+                                .setEmoji('⛏️')
+                                .setCustomId('⛏️')
+                                .setStyle('PRIMARY')
+                        ),
+                    ],
                 });
             } else if (rngReward < 1000 && rngReward >= 100) {
                 await collect.react('<:dicecoin:839981846419079178>');
