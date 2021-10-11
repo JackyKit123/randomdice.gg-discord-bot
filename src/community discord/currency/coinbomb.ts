@@ -46,7 +46,7 @@ export default async function pickCoins(
         let content: string;
         let maxCollectorAllowed: number;
         let collectionTrigger: string;
-        let endMessage: (members: GuildMember[]) => string;
+        let endMessage: (members: Map<GuildMember, number>) => string;
         const basicCollectionTriggers = [
             'GIMME',
             'MINE',
@@ -89,18 +89,32 @@ export default async function pickCoins(
                     uniqueChatters.push(msg.author.id);
             });
 
+        const collected = new Map<GuildMember, number>();
+
         if (rngReward < 100) {
             content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                 rngReward
             )} has shown up, click ⛏️ to pick it`;
             maxCollectorAllowed = Infinity;
             collectionTrigger = '⛏️';
-            endMessage = (members): string =>
-                `${members.join(' ')} ${
-                    members.length > 1 ? 'have' : 'has'
-                } ⛏️ up the tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
-                    rngReward
-                )}`;
+            endMessage = (members): string => {
+                const uniqueKeys = Object.fromEntries(
+                    [...members.values()].map(val => [val, [] as GuildMember[]])
+                );
+                [...members].forEach(([member, reward]) => {
+                    uniqueKeys[reward] = [...uniqueKeys[reward], member];
+                });
+                return Object.entries(uniqueKeys)
+                    .map(
+                        ([reward, m]) =>
+                            `${m.join(' ')} ${
+                                m.length > 1 ? 'have' : 'has'
+                            } ⛏️ up <:dicecoin:839981846419079178> ${numberFormat.format(
+                                Number(reward) * rngReward
+                            )}`
+                    )
+                    .join('\n');
+            };
         } else if (rngReward < 1000) {
             maxCollectorAllowed = Math.ceil(uniqueChatters.length / 2);
             collectionTrigger =
@@ -117,8 +131,8 @@ export default async function pickCoins(
                 collectionTrigger
             )}\` can earn the coins. 💵💵`;
             endMessage = (members): string =>
-                `💵💵 ${members.join(' ')} ${
-                    members.length > 1 ? 'have' : 'has'
+                `💵💵 ${[...members.keys()].join(' ')} ${
+                    members.size > 1 ? 'have' : 'has'
                 } ⛏️ up the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} 💵💵`;
@@ -138,8 +152,8 @@ export default async function pickCoins(
                 collectionTrigger
             )}\` can earn the coins. 💰💰💰💰`;
             endMessage = (members): string =>
-                `💰💰💰💰 ${members.join(' ')} ${
-                    members.length > 1 ? 'have' : 'has'
+                `💰💰💰💰 ${[...members.keys()].join(' ')} ${
+                    members.size > 1 ? 'have' : 'has'
                 } ⛏️ up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} 💰💰💰💰`;
@@ -157,14 +171,15 @@ export default async function pickCoins(
             )}\` can earn the coins.`;
             maxCollectorAllowed = 1;
             endMessage = (members): string =>
-                `💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎\n ${members.join(' ')} ${
-                    members.length > 1 ? 'have' : 'has'
+                `💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎💎\n ${[
+                    ...members.keys(),
+                ].join(' ')} ${
+                    members.size > 1 ? 'have' : 'has'
                 } ⛏️ up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} `;
         }
 
-        const collected: GuildMember[] = [];
         const sentMessage = await channel.send({
             content,
             components:
@@ -191,16 +206,13 @@ export default async function pickCoins(
             const member = guild.members.cache.get(
                 collect.member?.user.id || ''
             );
-            if (!member || collected.length >= maxCollectorAllowed) return;
-            if (collected.some(m => member.id === m.id)) {
-                if (collect instanceof MessageComponentInteraction) {
-                    collect.reply({
-                        ephemeral: true,
-                        content: 'You have already earned the reward this time',
-                    });
-                }
+            if (!member) return;
+            const memberHasReward = collected.get(member);
+            if (
+                collected.size >= maxCollectorAllowed ||
+                (memberHasReward && collect instanceof Message)
+            )
                 return;
-            }
             if (
                 !(
                     channel.messages.cache.some(
@@ -229,7 +241,7 @@ export default async function pickCoins(
                 });
                 return;
             }
-            collected.push(member);
+            collected.set(member, (memberHasReward ?? 0) + 1);
             const balance = await getBalance(message, 'silence', member);
             if (balance === false) return;
             await database
@@ -256,13 +268,13 @@ export default async function pickCoins(
                     )}. Congratulations!`
                 );
             }
-            if (collected.length >= maxCollectorAllowed) {
+            if (collected.size >= maxCollectorAllowed) {
                 collector.stop();
             }
         };
         const onEnd = async () => {
             activeCoinbombInChannel.set(channel.id, false);
-            if (collected.length === 0) {
+            if (collected.size === 0) {
                 await channel.send(
                     `🙁 Looks like no one has claimed the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                         rngReward
