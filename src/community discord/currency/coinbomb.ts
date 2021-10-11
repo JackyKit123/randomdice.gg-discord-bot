@@ -97,24 +97,15 @@ export default async function pickCoins(
             )} has shown up, click ⛏️ to pick it`;
             maxCollectorAllowed = Infinity;
             collectionTrigger = '⛏️';
-            endMessage = (members): string => {
-                const uniqueKeys = Object.fromEntries(
-                    [...members.values()].map(val => [val, [] as GuildMember[]])
-                );
-                [...members].forEach(([member, reward]) => {
-                    uniqueKeys[reward] = [...uniqueKeys[reward], member];
-                });
-                return Object.entries(uniqueKeys)
+            endMessage = (members): string =>
+                [...members]
                     .map(
-                        ([reward, m]) =>
-                            `${m.join(' ')} ${
-                                m.length > 1 ? 'have' : 'has'
-                            } ⛏️ up <:dicecoin:839981846419079178> ${numberFormat.format(
+                        ([member, reward]) =>
+                            `${member} has ⛏️ up <:dicecoin:839981846419079178> ${numberFormat.format(
                                 Number(reward) * rngReward
                             )}`
                     )
                     .join('\n');
-            };
         } else if (rngReward < 1000) {
             maxCollectorAllowed = Math.ceil(uniqueChatters.length / 2);
             collectionTrigger =
