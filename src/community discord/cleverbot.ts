@@ -14,6 +14,7 @@ export default async function cleverBot(
     let input = content.match(new RegExp(`^<@!?${client.user.id}> ?(.*)`))?.[1];
     if (!input) return;
     input = replaceAllMentionToText(input, guild);
+    input = encodeURIComponent(input);
     if (
         await cooldown(message, 'cleverbot', {
             default: 20 * 1000,
