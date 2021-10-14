@@ -1,5 +1,6 @@
 import {
     Client,
+    Collection,
     DiscordAPIError,
     GuildMember,
     InteractionCollector,
@@ -46,7 +47,11 @@ export default async function pickCoins(
         let content: string;
         let maxCollectorAllowed: number;
         let collectionTrigger: string;
-        let endMessage: (members: Map<GuildMember, number>) => string;
+        let endMessage: (
+            members: Map<GuildMember, number>,
+            goldenPickaxeUser?: boolean | string
+        ) => string;
+        let goldenPickaxe: boolean | string = false;
         const basicCollectionTriggers = [
             'GIMME',
             'MINE',
@@ -92,17 +97,26 @@ export default async function pickCoins(
         const collected = new Map<GuildMember, number>();
 
         if (rngReward < 100) {
+            goldenPickaxe = Math.random() < 0.1;
             content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                 rngReward
-            )} has shown up, click ⛏️ to pick it`;
+            )} has shown up, keep clicking <:pickaxe:898343065511665695> to pick it\n${
+                goldenPickaxe === true
+                    ? `<a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785>**A GOLDEN PICKAXE HAS SPAWNED, PICK UP THE GOLDEN PICKAXE TO EARN 10X THE MINING REWARD**<a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785><a:golden_pickaxe:898329291786440785>\n`
+                    : ''
+            }`;
             maxCollectorAllowed = Infinity;
-            collectionTrigger = '⛏️';
-            endMessage = (members): string =>
+            collectionTrigger = '<:pickaxe:898343065511665695>';
+            endMessage = (members, goldenPickaxeUser): string =>
                 [...members]
                     .map(
                         ([member, reward]) =>
-                            `${member} has ⛏️ up <:dicecoin:839981846419079178> ${numberFormat.format(
-                                Number(reward) * rngReward
+                            `${member} has ${
+                                goldenPickaxeUser === member.id
+                                    ? '<a:golden_pickaxe:898329291786440785>'
+                                    : '<:pickaxe:898343065511665695>'
+                            } up <:dicecoin:839981846419079178> ${numberFormat.format(
+                                reward
                             )}`
                     )
                     .join('\n');
@@ -124,7 +138,7 @@ export default async function pickCoins(
             endMessage = (members): string =>
                 `💵💵 ${[...members.keys()].join(' ')} ${
                     members.size > 1 ? 'have' : 'has'
-                } ⛏️ up the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
+                } <:pickaxe:898343065511665695> up the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} 💵💵`;
         } else if (rngReward < 10000) {
@@ -145,7 +159,7 @@ export default async function pickCoins(
             endMessage = (members): string =>
                 `💰💰💰💰 ${[...members.keys()].join(' ')} ${
                     members.size > 1 ? 'have' : 'has'
-                } ⛏️ up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
+                } <:pickaxe:898343065511665695> up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} 💰💰💰💰`;
         } else {
@@ -166,24 +180,32 @@ export default async function pickCoins(
                     ...members.keys(),
                 ].join(' ')} ${
                     members.size > 1 ? 'have' : 'has'
-                } ⛏️ up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
+                } <:pickaxe:898343065511665695> up the huge batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                     rngReward
                 )} `;
         }
 
+        const pickaxeButton = new MessageButton()
+            .setEmoji('<:pickaxe:898343065511665695>')
+            .setCustomId('<:pickaxe:898343065511665695>')
+            .setStyle('PRIMARY');
+        const goldenPickaxeButton = new MessageButton()
+            .setEmoji('<a:golden_pickaxe:898329291786440785>')
+            .setCustomId('<a:golden_pickaxe:898329291786440785>')
+            .setStyle('PRIMARY');
+        const getComponents = (goldenPickaxeAlert: typeof goldenPickaxe) =>
+            collectionTrigger === '<:pickaxe:898343065511665695>'
+                ? [
+                      new MessageActionRow().addComponents(
+                          goldenPickaxeAlert === true
+                              ? [pickaxeButton, goldenPickaxeButton]
+                              : [pickaxeButton]
+                      ),
+                  ]
+                : [];
         const sentMessage = await channel.send({
             content,
-            components:
-                collectionTrigger === '⛏️'
-                    ? [
-                          new MessageActionRow().addComponents(
-                              new MessageButton()
-                                  .setEmoji('⛏️')
-                                  .setCustomId('⛏️')
-                                  .setStyle('PRIMARY')
-                          ),
-                      ]
-                    : [],
+            components: getComponents(goldenPickaxe),
         });
         activeCoinbombInChannel.set(channel.id, true);
 
@@ -204,6 +226,13 @@ export default async function pickCoins(
                 (memberHasReward && collect instanceof Message)
             )
                 return;
+            if (
+                collect instanceof MessageComponentInteraction &&
+                goldenPickaxe === true &&
+                collect.customId === '<a:golden_pickaxe:898329291786440785>'
+            ) {
+                goldenPickaxe = collect.user.id;
+            }
             if (
                 !(
                     channel.messages.cache.some(
@@ -232,23 +261,29 @@ export default async function pickCoins(
                 });
                 return;
             }
-            collected.set(member, (memberHasReward ?? 0) + 1);
+            collected.set(
+                member,
+                (memberHasReward ?? 0) +
+                    rngReward * (goldenPickaxe === member.id ? 10 : 1)
+            );
             const balance = await getBalance(message, 'silence', member);
             if (balance === false) return;
             await database
                 .ref(`discord_bot/community/currency/${member.id}/balance`)
-                .set(balance + rngReward);
+                .set(
+                    balance + rngReward * (goldenPickaxe === member.id ? 10 : 1)
+                );
             if (!(collect instanceof Message)) {
                 await collect.update({
-                    content: `${content}\n${endMessage(collected)}`,
-                    components: [
-                        new MessageActionRow().addComponents(
-                            new MessageButton()
-                                .setEmoji('⛏️')
-                                .setCustomId('⛏️')
-                                .setStyle('PRIMARY')
-                        ),
-                    ],
+                    content: `${
+                        typeof goldenPickaxe === 'string'
+                            ? content.replace(
+                                  /<a:golden_pickaxe:898329291786440785>.*<a:golden_pickaxe:898329291786440785>/,
+                                  `<@${goldenPickaxe}> has picked up the <a:golden_pickaxe:898329291786440785>, earning 10x the mining speed!`
+                              )
+                            : content
+                    }${endMessage(collected, goldenPickaxe)}`,
+                    components: getComponents(goldenPickaxe),
                 });
             } else if (rngReward < 1000 && rngReward >= 100) {
                 await collect.react('<:dicecoin:839981846419079178>');
@@ -263,9 +298,18 @@ export default async function pickCoins(
                 collector.stop();
             }
         };
-        const onEnd = async () => {
+        const onEnd = async (
+            collector: Collection<string, MessageComponentInteraction> | void
+        ) => {
             activeCoinbombInChannel.set(channel.id, false);
             if (collected.size === 0) {
+                if (collector) {
+                    await wait(1000);
+                    await sentMessage.edit({
+                        content,
+                        components: [],
+                    });
+                }
                 await channel.send(
                     `🙁 Looks like no one has claimed the batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                         rngReward
@@ -273,8 +317,9 @@ export default async function pickCoins(
                 );
             } else {
                 try {
+                    await wait(1000);
                     await sentMessage.edit({
-                        content: endMessage(collected),
+                        content: endMessage(collected, goldenPickaxe),
                         components: [],
                     });
                 } catch (err) {
@@ -305,7 +350,7 @@ export default async function pickCoins(
             pickCoins(client, channel, true);
         };
 
-        if (collectionTrigger === '⛏️') {
+        if (collectionTrigger === '<:pickaxe:898343065511665695>') {
             const collector = sentMessage
                 .createMessageComponentCollector({
                     filter: interaction => !interaction.user.bot,
@@ -316,16 +361,16 @@ export default async function pickCoins(
                 onCollect(collector, interaction)
             );
         } else {
-            const collector = channel
-                .createMessageCollector({
-                    filter: (message: Message) =>
-                        !message.author?.bot &&
-                        message.content.toLowerCase() ===
-                            collectionTrigger.toLowerCase(),
-                    time: 20 * 1000,
-                })
-                .on('end', onEnd);
-            collector.on('collect', message => onCollect(collector, message));
+            const collector = channel.createMessageCollector({
+                filter: (message: Message) =>
+                    !message.author?.bot &&
+                    message.content.toLowerCase() ===
+                        collectionTrigger.toLowerCase(),
+                time: 20 * 1000,
+            });
+            collector
+                .on('collect', message => onCollect(collector, message))
+                .on('end', () => onEnd());
         }
     } catch (err) {
         await logMessage(client, (err as DiscordAPIError).stack);
