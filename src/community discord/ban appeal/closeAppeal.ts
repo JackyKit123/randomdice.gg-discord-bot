@@ -1,9 +1,13 @@
-import Discord from 'discord.js';
+import {
+    CategoryChannel,
+    ClientUser,
+    Collection,
+    GuildMember,
+    Message,
+} from 'discord.js';
 import cooldown from '../../util/cooldown';
 
-export default async function closeAppeal(
-    message: Discord.Message
-): Promise<void> {
+export default async function closeAppeal(message: Message): Promise<void> {
     const { client, content, member, guild, channel } = message;
     const [command, arg] = content.split(' ');
     const { COMMUNITY_SERVER_ID } = process.env;
@@ -22,13 +26,10 @@ export default async function closeAppeal(
     }
 
     if (!COMMUNITY_SERVER_ID) {
-        await channel.send(
-            'Error: Missing `COMMUNITY_SERVER_ID` env in bot code, please contact an firebase.'
-        );
-        return;
+        throw new Error('Missing `COMMUNITY_SERVER_ID` env in bot code.');
     }
 
-    const accept = async (target: Discord.GuildMember): Promise<void> => {
+    const accept = async (target: GuildMember): Promise<void> => {
         try {
             (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
                 target,
@@ -37,7 +38,7 @@ export default async function closeAppeal(
         } finally {
             try {
                 await target.send(
-                    'Your appeal is accepted, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+                    'Your appeal is accepted, you may now return to this main server. https://gg/ZrXRpZq2mq'
                 );
             } finally {
                 await target.ban({
@@ -50,7 +51,7 @@ export default async function closeAppeal(
         }
     };
 
-    const reject = async (target: Discord.GuildMember): Promise<void> => {
+    const reject = async (target: GuildMember): Promise<void> => {
         try {
             await target.send('Your appeal is rejected.');
         } finally {
@@ -63,7 +64,7 @@ export default async function closeAppeal(
         }
     };
 
-    const falsebanned = async (target: Discord.GuildMember): Promise<void> => {
+    const falsebanned = async (target: GuildMember): Promise<void> => {
         try {
             (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
                 target,
@@ -72,7 +73,7 @@ export default async function closeAppeal(
         } finally {
             try {
                 await target.send(
-                    'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+                    'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://gg/ZrXRpZq2mq'
                 );
             } finally {
                 await target.kick('Member is not guilty, appeal closed.');
@@ -87,7 +88,7 @@ export default async function closeAppeal(
         return;
     }
 
-    const target = (guild as Discord.Guild).members.cache.find(
+    const target = guild.members.cache.find(
         m =>
             m.user.id === arg ||
             m.user.id === arg.match(/<@!?(\d{18})>/)?.[1] ||
@@ -105,9 +106,7 @@ export default async function closeAppeal(
     const executorRole = member.roles.highest;
     const executorCanBan = member.permissions.has('BAN_MEMBERS');
     const clientRole = (
-        guild.members.cache.get(
-            (client.user as Discord.ClientUser).id
-        ) as Discord.GuildMember
+        guild.members.cache.get((client.user as ClientUser).id) as GuildMember
     ).roles.highest;
     const targetRole = target.roles.highest;
 
@@ -115,37 +114,34 @@ export default async function closeAppeal(
         return;
     }
 
-    if (
-        executorRole.comparePositionTo(targetRole) <= 0 ||
-        !executorCanBan ||
-        clientRole.comparePositionTo(targetRole) <= 0
-    ) {
+    if (executorRole.comparePositionTo(targetRole) <= 0 || !executorCanBan) {
         await channel.send(
-            `I cannot close an appeal ticket on **${target.user.username}#${target.user.discriminator}** for you.`
+            'You do not have sufficient permission to execute this command.'
         );
         return;
     }
 
-    let archiveCat = guild.channels.cache.find(
-        chl =>
-            /archives/i.test(chl.name) && chl instanceof Discord.CategoryChannel
-    );
-
-    if (
-        !(archiveCat instanceof Discord.CategoryChannel) ||
-        archiveCat.children.size >= 50
-    ) {
-        archiveCat = await guild.channels.create('Archives', {
-            type: 'GUILD_CATEGORY',
-            position: -1,
-        });
+    if (clientRole.comparePositionTo(targetRole) <= 0) {
+        await channel.send(
+            'I do not have sufficient permission to execute this command.'
+        );
+        return;
     }
 
-    if (
-        channel.type === 'GUILD_TEXT' &&
-        archiveCat instanceof Discord.CategoryChannel
-    )
-        await channel.setParent(archiveCat);
+    const archiveCategories = guild.channels.cache.filter(
+        chl =>
+            /archives/i.test(chl.name) &&
+            chl instanceof CategoryChannel &&
+            chl.children.size < 50
+    ) as Collection<string, CategoryChannel>;
+    const archiveCategory =
+        archiveCategories.last() ??
+        (await guild.channels.create('Archives', {
+            type: 'GUILD_CATEGORY',
+            position: -1,
+        }));
+
+    if (channel.type === 'GUILD_TEXT') await channel.setParent(archiveCategory);
 
     switch (command) {
         case '!accept':
