@@ -252,13 +252,6 @@ export default async function pickCoins(
             )
                 return;
             if (
-                collect instanceof MessageComponentInteraction &&
-                goldenPickaxe === true &&
-                collect.customId === '<a:golden_pickaxe:898329291786440785>'
-            ) {
-                goldenPickaxe = collect.user.id;
-            }
-            if (
                 !(
                     channel.messages.cache.some(
                         msg =>
@@ -285,6 +278,13 @@ export default async function pickCoins(
                     ephemeral: true,
                 });
                 return;
+            }
+            if (
+                collect instanceof MessageComponentInteraction &&
+                goldenPickaxe === true &&
+                collect.customId === '<a:golden_pickaxe:898329291786440785>'
+            ) {
+                goldenPickaxe = collect.user.id;
             }
             collected.set(
                 member,
