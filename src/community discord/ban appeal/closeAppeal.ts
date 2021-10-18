@@ -6,6 +6,7 @@ import {
     Message,
 } from 'discord.js';
 import cooldown from '../../util/cooldown';
+import fetchMentionString from '../../util/fetchMention';
 
 export default async function closeAppeal(message: Message): Promise<void> {
     const { client, content, member, guild, channel } = message;
@@ -88,15 +89,10 @@ export default async function closeAppeal(message: Message): Promise<void> {
         return;
     }
 
-    const target = guild.members.cache.find(
-        m =>
-            m.user.id === arg ||
-            m.user.id === arg.match(/<@!?(\d{18})>/)?.[1] ||
-            `${m.user.username}#${m.user.discriminator}` ===
-                arg.toLowerCase() ||
-            m.user.username === arg.toLowerCase() ||
-            m.nickname === arg.toLowerCase()
-    );
+    const target = await fetchMentionString(arg, guild, {
+        content,
+        mentionIndex: 1,
+    });
     if (!target) {
         await channel.send(
             `Usage of the command: \`\`\`${command} <@mention | user id | username>\`\`\``
