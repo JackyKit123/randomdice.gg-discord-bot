@@ -16,29 +16,54 @@ import firebase from 'firebase-admin';
 import { promisify } from 'util';
 import logMessage from '../../dev-commands/logMessage';
 import getBalance from './balance';
+import rickBomb from './fun commands/rickbomb';
 
 const wait = promisify(setTimeout);
 const numberFormat = new Intl.NumberFormat();
 export const activeCoinbombInChannel = new Map<string, boolean>();
 let database: firebase.database.Database;
 
+type BatchType = 'pick' | 'goldenPick' | 'small' | 'medium' | 'large';
+
 export default async function pickCoins(
     client: Client,
     channel: TextChannel | NewsChannel,
-    recursive = false
+    recursive = false,
+    type?: BatchType
 ): Promise<void> {
     try {
         const { guild } = channel;
-        const rand = Math.random();
-        let rngMultiplier;
-        if (rand < 0.01) {
-            rngMultiplier = 5;
-        } else if (rand < 0.11) {
-            rngMultiplier = 4;
-        } else if (rand < 0.5) {
-            rngMultiplier = 3;
-        } else {
-            rngMultiplier = 2;
+        let rngMultiplier: number;
+        switch (type) {
+            case 'large':
+                rngMultiplier = 5;
+                break;
+            case 'medium':
+                rngMultiplier = 4;
+                break;
+            case 'small':
+                rngMultiplier = 3;
+                break;
+            case 'pick':
+            case 'goldenPick':
+                rngMultiplier = 2;
+                break;
+            default: {
+                const rand = Math.random();
+                switch (true) {
+                    case rand < 0.01:
+                        rngMultiplier = 5;
+                        break;
+                    case rand < 0.11:
+                        rngMultiplier = 4;
+                        break;
+                    case rand < 0.5:
+                        rngMultiplier = 3;
+                        break;
+                    default:
+                        rngMultiplier = 2;
+                }
+            }
         }
         const rngReward = Math.ceil(
             (Math.random() * 0.9 + 0.1) * 10 ** rngMultiplier
@@ -97,7 +122,7 @@ export default async function pickCoins(
         const collected = new Map<GuildMember, number>();
 
         if (rngReward < 100) {
-            goldenPickaxe = Math.random() < 0.1;
+            goldenPickaxe = type === 'goldenPick' || Math.random() < 0.1;
             content = `A tiny batch of <:dicecoin:839981846419079178> ${numberFormat.format(
                 rngReward
             )} has shown up, keep clicking <:pickaxe:898343065511665695> to pick it\n${
@@ -408,7 +433,9 @@ export async function pickCoinsInit(
 }
 
 export async function spawnCoinbomb(message: Message): Promise<void> {
-    const { client, member, channel } = message;
+    const { client, content, member, channel } = message;
+
+    const arg = content.split(' ')[1];
     if (
         !member ||
         !(
@@ -430,5 +457,50 @@ export async function spawnCoinbomb(message: Message): Promise<void> {
         );
         return;
     }
-    pickCoins(client, channel);
+
+    let type: BatchType | undefined;
+
+    switch (arg.toLowerCase()) {
+        case '<a:golden_pickaxe:898329291786440785>':
+        case 'goldenpick':
+            type = 'goldenPick';
+            break;
+        case '<:pickaxe:898343065511665695>':
+        case '⛏️':
+        case ':pick:':
+        case 'tiny':
+            type = 'pick';
+            break;
+        case '💵':
+        case ':dollar:':
+        case 'small':
+            type = 'small';
+            break;
+        case '💰':
+        case ':moneybag:':
+        case 'medium':
+            type = 'medium';
+            break;
+        case '💎':
+        case ':gem:':
+        case 'big':
+        case 'large':
+        case 'huge':
+            type = 'large';
+            break;
+        case 'rick':
+            await rickBomb(message);
+            return;
+        default:
+            if (
+                /^<a?:[\w\d_]*(\d|\b|_)rick(\d|\b|_)[\w\d_]*:\d{18}>$/i.test(
+                    arg
+                )
+            ) {
+                await rickBomb(message);
+                return;
+            }
+    }
+
+    pickCoins(client, channel, false, type);
 }
