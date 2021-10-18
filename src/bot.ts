@@ -43,7 +43,7 @@ import chatRevivePing, {
     fetchGeneralOnBoot,
 } from './community discord/chatrevivePing';
 import lock from './community discord/lock';
-import timer, { registerTimer, setTimer } from './community discord/timer';
+import timer, { hackwarnTimer, registerTimer } from './community discord/timer';
 import promote from './community discord/promote';
 import oneMinute from './community discord/oneMinute';
 import report from './community discord/report';
@@ -256,12 +256,7 @@ client.on('messageCreate', async message => {
                     break;
                 case '!hackwarn':
                 case '!!hackwarn':
-                    await setTimer(
-                        channel,
-                        member,
-                        'Ban this user in 24 hours',
-                        1000 * 60 * 60 * 24
-                    );
+                    await hackwarnTimer(message);
                     break;
                 case '!lfg':
                     await lfg(message);

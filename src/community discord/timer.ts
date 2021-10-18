@@ -238,3 +238,32 @@ export async function registerTimer(client: Client): Promise<void> {
         }
     });
 }
+
+export async function hackwarnTimer(message: Message): Promise<void> {
+    const { guild, channel, member } = message;
+
+    if (!guild || !member) return;
+
+    const carlBotRespond = await channel.awaitMessages({
+        max: 1,
+        filter: m =>
+            /^\*\*.+#\d{4}\*\* has been warned, this is their [\w\d]+ warning\.$/.test(
+                m.content
+            ) && m.author.id === '235148962103951360',
+    });
+
+    const warnConfirmation = carlBotRespond.first();
+
+    if (!warnConfirmation) return;
+
+    const target = warnConfirmation.content.match(
+        /^\*\*(.+#\d{4})\*\* has been warned, this is their [\w\d]+ warning\.$/
+    )?.[1];
+
+    await setTimer(
+        channel,
+        member,
+        `Ban ${target ?? 'this member'} in 24 hours.`,
+        1000 * 60 * 60 * 24
+    );
+}
