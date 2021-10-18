@@ -43,7 +43,7 @@ import chatRevivePing, {
     fetchGeneralOnBoot,
 } from './community discord/chatrevivePing';
 import lock from './community discord/lock';
-import timer, { registerTimer } from './community discord/timer';
+import timer, { registerTimer, setTimer } from './community discord/timer';
 import promote from './community discord/promote';
 import oneMinute from './community discord/oneMinute';
 import report from './community discord/report';
@@ -188,7 +188,7 @@ client.on('ready', async () => {
 });
 
 client.on('messageCreate', async message => {
-    const { content, channel, guild, author } = message;
+    const { content, channel, guild, author, member } = message;
     const [suffix, command] = content.split(' ');
 
     try {
@@ -220,7 +220,11 @@ client.on('messageCreate', async message => {
             announceLastToLeaveVC(message);
             cleverBot(message);
         }
-        if (!author.bot && process.env.COMMUNITY_SERVER_ID === guild?.id) {
+        if (
+            !author.bot &&
+            process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            member
+        ) {
             if (
                 (process.env.NODE_ENV === 'production' &&
                     channel.id === '804640084007321600') ||
@@ -248,7 +252,16 @@ client.on('messageCreate', async message => {
                     await lock(message);
                     break;
                 case '!timer':
-                    await timer(message, database);
+                    await timer(message);
+                    break;
+                case '!hackwarn':
+                case '!!hackwarn':
+                    await setTimer(
+                        channel,
+                        member,
+                        'Ban this user in 24 hours',
+                        1000 * 60 * 60 * 24
+                    );
                     break;
                 case '!lfg':
                     await lfg(message);

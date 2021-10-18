@@ -1,8 +1,14 @@
-import Discord, { DiscordAPIError } from 'discord.js';
+import {
+    CategoryChannel,
+    ClientUser,
+    DiscordAPIError,
+    GuildMember,
+    Message,
+    MessageEmbed,
+} from 'discord.js';
+import { setTimer } from '../timer';
 
-export default async function setChannel(
-    message: Discord.Message
-): Promise<void> {
+export default async function setChannel(message: Message): Promise<void> {
     const { client, embeds, webhookId, channel, guild } = message;
     const { COMMUNITY_SERVER_ID } = process.env;
 
@@ -63,7 +69,7 @@ export default async function setChannel(
         `${member.user.username}${member.user.discriminator}`,
         {
             parent:
-                appealRoomCat instanceof Discord.CategoryChannel
+                appealRoomCat instanceof CategoryChannel
                     ? appealRoomCat
                     : undefined,
         }
@@ -74,7 +80,7 @@ export default async function setChannel(
     await appealRoom.send({
         content: member.toString(),
         embeds: [
-            new Discord.MessageEmbed()
+            new MessageEmbed()
                 .setTitle('Appeal Form')
                 .setDescription(
                     `Welcome to the randomdice.gg unbanning server.\n` +
@@ -96,10 +102,16 @@ export default async function setChannel(
                     '*You will only be unbanned if you are not guilty*'
                 )
                 .addField(
-                    'Would you like to add further information to your application that could help with your unban? ',
+                    'Would you like to add further information to your application that could help with your unban?',
                     '*If so, please attach them.*'
                 )
                 .setTimestamp(),
         ],
     });
+    await setTimer(
+        channel,
+        guild.members.cache.get((client.user as ClientUser).id) as GuildMember,
+        'You have 24 hours to respond to this appeal ticket or you will be banned',
+        1000 * 60 * 60 * 24
+    );
 }
