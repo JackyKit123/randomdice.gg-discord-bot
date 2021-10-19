@@ -5,23 +5,12 @@ import fetchMention from '../../../util/fetchMention';
 
 let shushMember: string[] = [];
 export default async function shush(message: Discord.Message): Promise<void> {
-    const { content, guild, channel, author } = message;
+    const { content, guild, member, channel, author } = message;
 
-    if (!guild) {
-        return;
-    }
-
-    if (
-        await cooldown(message, '!shush', {
-            default: 10 * 60 * 1000,
-            donator: 1 * 60 * 1000,
-        })
-    ) {
-        return;
-    }
+    if (!guild || !member) return;
 
     const memberArg = content.split(' ')[1];
-    const target = await fetchMention(memberArg, guild, {
+    let target = await fetchMention(memberArg, guild, {
         content,
         mentionIndex: 1,
     });
@@ -31,6 +20,18 @@ export default async function shush(message: Discord.Message): Promise<void> {
         );
         return;
     }
+    if (target.id === '195174308052467712') {
+        target = member;
+    }
+    if (
+        await cooldown(message, '!shush', {
+            default: 10 * 60 * 1000,
+            donator: 1 * 60 * 1000,
+        })
+    ) {
+        return;
+    }
+
     if (!(await commandCost(message, 500))) return;
     if (target.user.bot) {
         await channel.send('You cannot trap a bot');
@@ -47,7 +48,8 @@ export default async function shush(message: Discord.Message): Promise<void> {
         `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 1 minute.`
     );
     setTimeout(async () => {
-        shushMember = shushMember.filter(ids => ids !== target.id);
+        if (!target || !shushMember.includes(target?.id)) return;
+        shushMember = shushMember.filter(ids => ids !== target?.id);
         await channel.send(
             `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`
         );
@@ -58,6 +60,7 @@ export async function unShush(message: Discord.Message): Promise<void> {
     const { content, guild, channel, author } = message;
 
     if (!guild || author.id !== '195174308052467712') {
+        await channel.send('You tried.');
         return;
     }
 
@@ -76,6 +79,9 @@ export async function unShush(message: Discord.Message): Promise<void> {
     }
     shushMember = shushMember.filter(ids => ids !== target.id);
     await channel.send(`Untrapped ${target}`);
+    await channel.send(
+        `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`
+    );
 }
 
 export async function pokeballTrap(message: Discord.Message): Promise<void> {
