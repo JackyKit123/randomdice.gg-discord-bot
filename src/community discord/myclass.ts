@@ -104,7 +104,7 @@ export async function autoClass(message: Message): Promise<void> {
 
     const matchKeyword =
         member.displayName.match(/\bc(?:lass)? ?(\d{1,2})\b/i) ??
-        member.displayName.match(/\b((?:grand|master|challenger) [1-3])\b/i);
+        member.displayName.match(/\b((?:grand|master|challenger) ?[1-3])\b/i);
 
     if (!matchKeyword) return;
 
