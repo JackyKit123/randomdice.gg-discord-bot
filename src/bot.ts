@@ -86,8 +86,8 @@ import shush, {
     pokeballTrap,
 } from './community discord/currency/fun commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
-import myClass from './community discord/myclass';
-import myCrit from './community discord/mycrit';
+import myClass, { autoClass } from './community discord/myclass';
+import myCrit, { autoCrit } from './community discord/mycrit';
 import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
@@ -190,10 +190,11 @@ client.on('ready', async () => {
 client.on('messageCreate', async message => {
     const { content, channel, guild, author, member } = message;
     const [suffix, command] = content.split(' ');
+    let asyncPromisesCapturer: Promise<void>[] = [];
 
     try {
         if (process.env.NODE_ENV === 'production') {
-            spy(message);
+            asyncPromisesCapturer = [...asyncPromisesCapturer, spy(message)];
         }
 
         if (
@@ -212,13 +213,14 @@ client.on('messageCreate', async message => {
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            chatCoins(message);
-            welcomeReward(message);
-            validateOneWordStory(message);
-            voteReward(message);
-            banMessage(message);
-            announceLastToLeaveVC(message);
-            cleverBot(message);
+            asyncPromisesCapturer = [
+                ...asyncPromisesCapturer,
+                welcomeReward(message),
+                validateOneWordStory(message),
+                voteReward(message),
+                banMessage(message),
+                announceLastToLeaveVC(message),
+            ];
         }
         if (
             !author.bot &&
@@ -377,15 +379,22 @@ client.on('messageCreate', async message => {
                     break;
                 default:
             }
-            solveMathEquation(message);
-            pokeballTrap(message);
-            oneMinute(message);
-            validateCrewAds(message);
-            chatRevivePing(message);
-            voteAutoResponder(message);
-            eightBall(message);
-            autoReaction(message);
-            afkResponse(message);
+            asyncPromisesCapturer = [
+                ...asyncPromisesCapturer,
+                autoClass(message),
+                autoCrit(message),
+                solveMathEquation(message),
+                pokeballTrap(message),
+                oneMinute(message),
+                validateCrewAds(message),
+                chatRevivePing(message),
+                voteAutoResponder(message),
+                eightBall(message),
+                autoReaction(message),
+                afkResponse(message),
+                cleverBot(message),
+                chatCoins(message),
+            ];
         }
 
         if (
@@ -558,6 +567,7 @@ client.on('messageCreate', async message => {
                 }
             }
         }
+        await Promise.all(asyncPromisesCapturer);
     } catch (err) {
         try {
             await channel.send(

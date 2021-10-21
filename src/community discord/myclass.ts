@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import { GuildMember, Message } from 'discord.js';
 import cooldown from '../util/cooldown';
 
 const classRoles = {
@@ -36,7 +36,28 @@ const classRoles = {
     'Champion 3': '857459958685499423',
 };
 
-export default async function myClass(message: Discord.Message): Promise<void> {
+const flattened = Object.entries(classRoles);
+
+const getClassRoleId = (string: string): string | undefined =>
+    flattened.find(
+        ([roleName]) => roleName.toLowerCase() === string.toLowerCase()
+    )?.[1];
+
+const setClassRole = async (
+    member: GuildMember,
+    assignRoleId: string
+): Promise<void[]> =>
+    Promise.all(
+        flattened.map(async ([, roleId]) => {
+            if (roleId === assignRoleId) {
+                await member.roles.add(assignRoleId);
+            } else if (member.roles.cache.has(roleId)) {
+                await member.roles.remove(roleId);
+            }
+        })
+    );
+
+export default async function myClass(message: Message): Promise<void> {
     const { member, content, channel } = message;
 
     if (!member) {
@@ -44,12 +65,7 @@ export default async function myClass(message: Discord.Message): Promise<void> {
     }
 
     const className = content.replace(/^!myclass ?/i, '');
-
-    const flattened = Object.entries(classRoles);
-
-    const newRoleId = flattened.find(
-        ([roleName]) => roleName.toLowerCase() === className.toLowerCase()
-    )?.[1];
+    const newRoleId = getClassRoleId(className);
 
     if (!newRoleId) {
         await channel.send(
@@ -69,17 +85,44 @@ export default async function myClass(message: Discord.Message): Promise<void> {
         return;
     }
 
-    await Promise.all(
-        flattened.map(async ([, roleId]) => {
-            if (roleId === newRoleId) {
-                await member.roles.add(newRoleId);
-            } else if (member.roles.cache.has(roleId)) {
-                await member.roles.remove(roleId);
-            }
-        })
-    );
+    await setClassRole(member, newRoleId);
+
     await channel.send({
         content: `Updated your class to be <@&${newRoleId}>, you can also update your crit role by using \`!myCrit\``,
+        allowedMentions: {
+            users: [],
+            roles: [],
+            parse: [],
+        },
+    });
+}
+
+export async function autoClass(message: Message): Promise<void> {
+    const { member } = message;
+
+    if (!member) return;
+
+    const matchKeyword =
+        member.displayName.match(/\bc(?:lass)? ?(\d{1,2})\b/i) ??
+        member.displayName.match(/\b((?:grand|master|challenger) [1-3])\b/i);
+
+    if (!matchKeyword) return;
+
+    const newRoleId = getClassRoleId(matchKeyword?.[1]);
+    if (!newRoleId) return;
+
+    const originalRoleId = flattened.find(([, roleId]) =>
+        member.roles.cache.has(roleId)
+    )?.[1];
+
+    if (originalRoleId === newRoleId) return;
+
+    await setClassRole(member, newRoleId);
+
+    await message.reply({
+        content: originalRoleId
+            ? `I have detected that you have updated your name to include \`${matchKeyword?.[0]}\`, therefore I have updated your class role to <@&${newRoleId}>, if this is a mistake, you can change your nickname and update your class role using \`!myClass\``
+            : `I have detected the keyword \`${matchKeyword?.[0]}\` in your name, therefore I have assigned you the <@&${newRoleId}> role, You can update this by using the \`!myClass\` command`,
         allowedMentions: {
             users: [],
             roles: [],
