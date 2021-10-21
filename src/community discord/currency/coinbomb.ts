@@ -460,7 +460,7 @@ export async function spawnCoinbomb(message: Message): Promise<void> {
 
     let type: BatchType | undefined;
 
-    switch (arg.toLowerCase()) {
+    switch (arg?.toLowerCase()) {
         case '<a:golden_pickaxe:898329291786440785>':
         case 'goldenpick':
             type = 'goldenPick';
