@@ -46,9 +46,9 @@ export default async function myCrit(message: Message): Promise<void> {
 
     if (!member || !guild) return;
 
-    const crit = content.replace(/^!mycrit ?/i, '');
+    const crit = Number(content.replace(/^!mycrit ?/i, ''));
 
-    if (!Number.isInteger(Number(crit))) {
+    if (!Number.isInteger(crit)) {
         await channel.send(
             'You need to enter your crit%, example: `!myCrit 1337`'
         );
@@ -64,10 +64,14 @@ export default async function myCrit(message: Message): Promise<void> {
         return;
     }
 
-    const roleSet = await setCritRole(member, crit);
+    const newRoleId = getCritRoleId(member, crit);
+
+    if (!newRoleId) return;
+
+    await setCritRole(member, newRoleId);
 
     await channel.send({
-        content: `Updated your crit role to be <@&${roleSet}>, you can also update your crit role by using \`!myCrit\``,
+        content: `Updated your crit role to be <@&${newRoleId}>, you can also update your crit role by using \`!myCrit\``,
         allowedMentions: {
             users: [],
             roles: [],
