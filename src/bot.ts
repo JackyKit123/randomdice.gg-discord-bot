@@ -715,14 +715,13 @@ process.on('uncaughtException', async error => {
         // eslint-disable-next-line no-console
         console.error(networkError);
     } finally {
-        client.destroy();
-
         try {
             await logMessage(
                 client,
                 'Self rebooting due to unhandled exception.'
             );
-            reboot();
+            client.destroy();
+            await reboot();
         } catch {
             process.exit();
         }
