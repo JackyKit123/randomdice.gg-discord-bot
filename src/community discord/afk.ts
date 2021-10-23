@@ -45,10 +45,13 @@ export default async function afk(message: Discord.Message): Promise<void> {
         return;
     }
 
-    const displayName =
-        member.displayName.length > 32 - 6
-            ? `${member.displayName.substring(0, 32 - 6)}…`
-            : member.displayName;
+    let { displayName } = member;
+    if (!displayName.startsWith('[AFK]')) {
+        displayName = `[AFK] ${displayName}`;
+    }
+    if (displayName.length > 32 - 7) {
+        displayName = `${displayName.slice(0, 32 - 7)}…`;
+    }
     await Promise.all([
         wait(30 * 1000),
         message.reply({
