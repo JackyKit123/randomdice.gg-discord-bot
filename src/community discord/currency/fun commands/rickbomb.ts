@@ -142,6 +142,7 @@ export default async function rickBomb(
     const collector: Discord.Collector<Discord.Snowflake, Discord.Message> =
         channel.createMessageCollector({
             filter: (m: Discord.Message) =>
+                m.author &&
                 !m.author.bot &&
                 m.content.toLowerCase() === collectionTrigger.toLowerCase(),
             time: 20 * 1000,

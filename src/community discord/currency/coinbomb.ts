@@ -112,7 +112,9 @@ export default async function pickCoins(
                 .values(),
         ]
             .concat(
-                channel.messages.cache.filter(msg => !msg.author.bot).last(10)
+                channel.messages.cache
+                    .filter(msg => msg.author && !msg.author.bot)
+                    .last(10)
             )
             .forEach(msg => {
                 if (!uniqueChatters.includes(msg.author.id))
@@ -360,7 +362,7 @@ export default async function pickCoins(
                     if (
                         activeCoinbombInChannel.get(channel.id) ||
                         messageTimeout.get(newMessage.author.id) ||
-                        newMessage.author.bot
+                        newMessage.author?.bot
                     )
                         return false;
                     messageTimeout.set(newMessage.author.id, true);
