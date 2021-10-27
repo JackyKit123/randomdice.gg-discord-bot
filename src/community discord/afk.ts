@@ -62,7 +62,7 @@ export default async function afk(message: Discord.Message): Promise<void> {
                 roles: [],
             },
         }),
-        member.manageable ? member.setNickname(`[AFK] ${displayName}`) : null,
+        member.manageable ? member.setNickname(displayName) : null,
     ]);
     await database.ref('discord_bot/community/afk').child(member.id).set({
         afkMessage,
