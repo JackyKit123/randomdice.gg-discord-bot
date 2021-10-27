@@ -41,14 +41,21 @@ const setCritRole = async (
         })
     );
 
+const hasCritRole = (member: GuildMember, roleId: string): boolean =>
+    critRoleIds.some(
+        critRoleId =>
+            critRoleId === roleId && member.roles.cache.has(critRoleId)
+    );
+
 export default async function myCrit(message: Message): Promise<void> {
     const { member, content, guild, channel } = message;
 
     if (!member || !guild) return;
 
-    const crit = Number(content.replace(/^!mycrit ?/i, ''));
+    const arg = content.replace(/^!mycrit ?/i, '');
+    const crit = Number(arg);
 
-    if (!Number.isInteger(crit)) {
+    if (!arg || !Number.isInteger(crit)) {
         await channel.send(
             'You need to enter your crit%, example: `!myCrit 1337`'
         );
@@ -68,10 +75,24 @@ export default async function myCrit(message: Message): Promise<void> {
 
     if (!newRoleId) return;
 
+    const hasRole = hasCritRole(member, newRoleId);
+
+    if (hasRole) {
+        await channel.send({
+            content: `You already have the <@&${newRoleId}> role`,
+            allowedMentions: {
+                users: [],
+                roles: [],
+                parse: [],
+            },
+        });
+        return;
+    }
+
     await setCritRole(member, newRoleId);
 
     await channel.send({
-        content: `Updated your crit role to be <@&${newRoleId}>, you can also update your crit role by using \`!myCrit\``,
+        content: `Updated your crit role to be <@&${newRoleId}>, you can also update your crit role by using \`!myClass\``,
         allowedMentions: {
             users: [],
             roles: [],
@@ -81,9 +102,9 @@ export default async function myCrit(message: Message): Promise<void> {
 }
 
 export async function autoCrit(message: Message): Promise<void> {
-    const { member } = message;
+    const { member, content } = message;
 
-    if (!member) return;
+    if (!member || content.toLowerCase().startsWith('!mycrit')) return;
 
     const matchKeyword = member.displayName.match(/\b([1-9]\d{2,3}) ?%/);
 
@@ -93,16 +114,12 @@ export async function autoCrit(message: Message): Promise<void> {
 
     if (!newRoleId) return;
 
-    const originalRoleId = critRoleIds.find(roleId =>
-        member.roles.cache.has(roleId)
-    );
-
-    if (originalRoleId === newRoleId) return;
+    const hasRole = hasCritRole(member, newRoleId);
 
     await setCritRole(member, newRoleId);
 
     await message.reply({
-        content: originalRoleId
+        content: hasRole
             ? `I have detected that you have updated your name to include \`${matchKeyword?.[0]}\`, therefore I have updated your crit role to <@&${newRoleId}>, if this is a mistake, you can change your nickname and update your crit role using \`!myCrit\``
             : `I have detected the keyword \`${matchKeyword?.[0]}\` in your name, therefore I have assigned you the <@&${newRoleId}> role, You can update this by using the \`!myCrit\` command`,
         allowedMentions: {

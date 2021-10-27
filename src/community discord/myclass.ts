@@ -57,6 +57,9 @@ const setClassRole = async (
         })
     );
 
+const hasClassRole = (member: GuildMember, roleId: string): boolean =>
+    flattened.some(([, id]) => id === roleId && member.roles.cache.has(id));
+
 export default async function myClass(message: Message): Promise<void> {
     const { member, content, channel } = message;
 
@@ -85,6 +88,18 @@ export default async function myClass(message: Message): Promise<void> {
         return;
     }
 
+    if (hasClassRole(member, newRoleId)) {
+        await channel.send({
+            content: `You already have <@&${newRoleId}> role`,
+            allowedMentions: {
+                users: [],
+                roles: [],
+                parse: [],
+            },
+        });
+        return;
+    }
+
     await setClassRole(member, newRoleId);
 
     await channel.send({
@@ -98,9 +113,9 @@ export default async function myClass(message: Message): Promise<void> {
 }
 
 export async function autoClass(message: Message): Promise<void> {
-    const { member } = message;
+    const { member, content } = message;
 
-    if (!member) return;
+    if (!member || content.toLowerCase().startsWith('!myclass')) return;
 
     const matchKeyword =
         member.displayName.match(/\bc(?:lass)? ?(\d{1,2})\b/i) ??
@@ -111,16 +126,16 @@ export async function autoClass(message: Message): Promise<void> {
     const newRoleId = getClassRoleId(matchKeyword?.[1]);
     if (!newRoleId) return;
 
-    const originalRoleId = flattened.find(([, roleId]) =>
+    const hasAnyClassRole = flattened.some(([, roleId]) =>
         member.roles.cache.has(roleId)
-    )?.[1];
+    );
 
-    if (originalRoleId === newRoleId) return;
+    if (hasClassRole(member, newRoleId)) return;
 
     await setClassRole(member, newRoleId);
 
     await message.reply({
-        content: originalRoleId
+        content: hasAnyClassRole
             ? `I have detected that you have updated your name to include \`${matchKeyword?.[0]}\`, therefore I have updated your class role to <@&${newRoleId}>, if this is a mistake, you can change your nickname and update your class role using \`!myClass\``
             : `I have detected the keyword \`${matchKeyword?.[0]}\` in your name, therefore I have assigned you the <@&${newRoleId}> role, You can update this by using the \`!myClass\` command`,
         allowedMentions: {
