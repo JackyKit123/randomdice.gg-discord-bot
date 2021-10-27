@@ -135,9 +135,11 @@ export async function autoClass(message: Message): Promise<void> {
     await setClassRole(member, newRoleId);
 
     await message.reply({
-        content: hasAnyClassRole
-            ? `I have detected that you have updated your name to include \`${matchKeyword?.[0]}\`, therefore I have updated your class role to <@&${newRoleId}>, if this is a mistake, you can change your nickname and update your class role using \`!myClass\``
-            : `I have detected the keyword \`${matchKeyword?.[0]}\` in your name, therefore I have assigned you the <@&${newRoleId}> role, You can update this by using the \`!myClass\` command`,
+        content: `I have detected ${
+            hasAnyClassRole
+                ? `that you have updated your name to include \`${matchKeyword?.[0]}\``
+                : `the keyword \`${matchKeyword?.[0]}\` in your name`
+        }, therefore I have updated your class role to <@&${newRoleId}>, if this is a mistake, you can change your nickname and update your class role using \`!myClass\``,
         allowedMentions: {
             users: [],
             roles: [],
