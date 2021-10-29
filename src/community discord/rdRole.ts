@@ -197,7 +197,7 @@ export async function autoRole(message: Message): Promise<void> {
 
         if (newClassRole && !hasRole(classRoleIds, member, newClassRole)) {
             updatedClassRole = true;
-            await member.roles.add(newClassRole);
+            await setRole(classRoleIds, member, newClassRole);
         }
     }
 
@@ -208,7 +208,7 @@ export async function autoRole(message: Message): Promise<void> {
 
         if (newCritRole && !hasRole(critRoleIds, member, newCritRole)) {
             updatedCritRole = true;
-            await member.roles.add(newCritRole);
+            await setRole(critRoleIds, member, newCritRole);
         }
     }
 
