@@ -109,7 +109,7 @@ export default async function setChannel(message: Message): Promise<void> {
         ],
     });
     await setTimer(
-        channel,
+        appealRoom,
         guild.members.cache.get((client.user as ClientUser).id) as GuildMember,
         'You have 24 hours to respond to this appeal ticket or you will be banned',
         1000 * 60 * 60 * 24
