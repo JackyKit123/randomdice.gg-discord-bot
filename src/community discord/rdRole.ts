@@ -105,12 +105,13 @@ export async function rdRole(message: Message): Promise<void> {
 
     const [command, arg] = content.split(' ');
 
-    const newRoleId = getClassRoleId(arg) ?? getCritRoleId(member, Number(arg));
-
     const isMyClass = command.toLowerCase() === '!myclass';
     const roleList = isMyClass ? classRoleIds : critRoleIds;
+    const newRoleId = isMyClass
+        ? getClassRoleId(arg ?? '')
+        : getCritRoleId(member, Number(arg));
 
-    if (!newRoleId) {
+    if (!newRoleId || (!isMyClass && !Number.isInteger(Number(arg)))) {
         await channel.send(
             isMyClass
                 ? `Unknown Class, possible values are ${flattened
@@ -218,8 +219,8 @@ export async function autoRole(message: Message): Promise<void> {
 
     const matchResponseText = `the keyword${updatedBothRoles ? 's' : ''} ${
         updatedBothRoles
-            ? `\`${matchCritInName?.[0]}\` and ${matchClassInName?.[0]}`
-            : matchClassInName?.[0] ?? matchCritInName?.[0]
+            ? `\`${matchCritInName?.[0]}\` and \`${matchClassInName?.[0]}\``
+            : `\`${matchClassInName?.[0] ?? matchCritInName?.[0]}\``
     }`;
 
     const updatedClassRoleText =
