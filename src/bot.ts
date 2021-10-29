@@ -86,8 +86,7 @@ import shush, {
     pokeballTrap,
 } from './community discord/currency/fun commands/shush';
 import snipe, { snipeListener } from './community discord/snipe';
-import myClass, { autoClass } from './community discord/myclass';
-import myCrit, { autoCrit } from './community discord/mycrit';
+import { rdRole, autoRole } from './community discord/rdRole';
 import bon from './community discord/currency/fun commands/bon';
 import welcomerick from './community discord/currency/fun commands/welcomerick';
 import bedtime from './community discord/currency/fun commands/bedtime';
@@ -276,10 +275,8 @@ client.on('messageCreate', async message => {
                     await myEmoji(message);
                     break;
                 case '!myclass':
-                    await myClass(message);
-                    break;
                 case '!mycrit':
-                    await myCrit(message);
+                    await rdRole(message);
                     break;
                 case '!promote':
                 case '!advertise':
@@ -381,8 +378,7 @@ client.on('messageCreate', async message => {
             }
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
-                autoClass(message),
-                autoCrit(message),
+                autoRole(message),
                 solveMathEquation(message),
                 pokeballTrap(message),
                 oneMinute(message),
