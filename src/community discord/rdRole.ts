@@ -220,7 +220,7 @@ export async function autoRole(message: Message): Promise<void> {
     const matchResponseText = `the keyword${updatedBothRoles ? 's' : ''} ${
         updatedBothRoles
             ? `\`${matchCritInName?.[0]}\` and \`${matchClassInName?.[0]}\``
-            : `\`${matchClassInName?.[0] ?? matchCritInName?.[0]}\``
+            : `\`${matchClassInName?.[0] || matchCritInName?.[0]}\``
     }`;
 
     const updatedClassRoleText =
@@ -229,13 +229,13 @@ export async function autoRole(message: Message): Promise<void> {
         updatedCritRole && `your crit role to <@&${newCritRole}>`;
     const updatedResponseText = updatedBothRoles
         ? `${updatedClassRoleText} and ${updatedCritRoleText}`
-        : updatedClassRoleText ?? updatedCritRoleText;
+        : updatedClassRoleText || updatedCritRoleText;
 
     const useMyClass = updatedClassRole && `your class role using \`!myClass\``;
     const useMyCrit = updatedCritRole && `your crit role using \`!myCrit\``;
     const useResponseText = updatedBothRoles
         ? `${useMyClass} and ${useMyCrit}`
-        : useMyClass ?? useMyCrit;
+        : useMyClass || useMyCrit;
 
     await message.reply({
         content: `I have detected ${
