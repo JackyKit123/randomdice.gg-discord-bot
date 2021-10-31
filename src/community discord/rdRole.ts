@@ -109,9 +109,9 @@ export async function rdRole(message: Message): Promise<void> {
     const roleList = isMyClass ? classRoleIds : critRoleIds;
     const newRoleId = isMyClass
         ? getClassRoleId(args.join(' ') ?? '')
-        : getCritRoleId(member, Number(arg[0]));
+        : getCritRoleId(member, Number(args[0]));
 
-    if (!newRoleId || (!isMyClass && !Number.isInteger(Number(arg[0])))) {
+    if (!newRoleId || (!isMyClass && !Number.isInteger(Number(args[0])))) {
         await channel.send(
             isMyClass
                 ? `Unknown Class, possible values are ${flattened
