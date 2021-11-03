@@ -257,6 +257,7 @@ export default async function pickCoins(
                 !(
                     channel.messages.cache.some(
                         msg =>
+                            msg.author && // msg author is nullable
                             msg.author.id === member.id &&
                             sentMessage.createdTimestamp -
                                 msg.createdTimestamp <
@@ -266,7 +267,7 @@ export default async function pickCoins(
                     channel.messages.cache
                         .filter(
                             msg =>
-                                msg.author &&
+                                msg.author && // msg author is nullable
                                 !msg.author?.bot &&
                                 msg.createdTimestamp <
                                     sentMessage.createdTimestamp
