@@ -36,6 +36,14 @@ export default async function afk(message: Discord.Message): Promise<void> {
         return;
     }
 
+    if (member.user.id === '540380357342527498') {
+        await message.reply(
+            'You are banned from using this command.\n' +
+                'If you believe this is an error, please contact a staff member.'
+        );
+        return;
+    }
+
     if (
         await cooldown(message, '!afk', {
             default: 30 * 1000,
