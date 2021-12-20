@@ -151,6 +151,11 @@ export default async function multiplierConfig(
         return;
     }
 
+    if (!member.permissions.has('ADMINISTRATOR')) {
+        await message.reply('You do not have permission to use this command.');
+        return;
+    }
+
     const [, type, id1, id2, multi] = Array.from(regexMatchArr);
 
     if (
