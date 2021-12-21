@@ -11,7 +11,7 @@ import fetchMention from '../../util/fetchMention';
 import { duplicatedRoleMulti } from './chatCoins';
 
 export default async function Profile(message: Discord.Message): Promise<void> {
-    const { member, channel, guild, content } = message;
+    const { member, channel, guild, content, client } = message;
     const numberFormat = new Intl.NumberFormat();
 
     if (!member || !guild) return;
@@ -43,6 +43,39 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             .sort(([a], [b]) => Number(b) - Number(a))
             .find(([, roleId]) => target.roles.cache.has(roleId))?.[0] || 0
     );
+
+    const getPrestigeIcon = async (roleId: string) => {
+        const role = guild.roles.cache.get(roleId);
+        const devServer = client.guilds.cache.get(
+            process.env.DEV_SERVER_ID ?? ''
+        );
+        if (!role || !devServer) return '';
+        const prestigeRoleName = role.name;
+        const prestigeRoleIconEmoji = devServer.emojis.cache.find(
+            emoji => emoji.name === prestigeRoleName.replace(' ', '_')
+        );
+        return prestigeRoleIconEmoji?.toString();
+    };
+
+    const getOtherBadges = (): string =>
+        member.roles.cache
+            .sort((a, b) => b.position - a.position)
+            .map(role => {
+                const devServer = client.guilds.cache.get(
+                    process.env.DEV_SERVER_ID ?? ''
+                );
+                if (!devServer) return '';
+                const roleName = role.name;
+                if (roleName.includes('Prestige')) return '';
+                const roleIconEmoji = devServer.emojis.cache.find(
+                    emoji =>
+                        emoji.name ===
+                        roleName.replaceAll(' ', '_').replaceAll('$', '')
+                );
+                return roleIconEmoji?.toString();
+            })
+            .filter(Boolean)
+            .join('　');
 
     function cooldown(
         timestamp = 0,
@@ -120,11 +153,15 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const generalProfile = new Discord.MessageEmbed(embed)
         .setTitle('General Profile')
         .setDescription(
-            profile.prestige > 0
-                ? `**${guild.roles.cache
-                      .get(prestigeLevels[profile.prestige])
-                      ?.name.toUpperCase()}**`
-                : ' '
+            `${
+                profile.prestige > 0
+                    ? `**${guild.roles.cache
+                          .get(prestigeLevels[profile.prestige])
+                          ?.name.toUpperCase()}** ${await getPrestigeIcon(
+                          prestigeLevels[profile.prestige]
+                      )}`
+                    : ' '
+            }${getOtherBadges() ? `\n\n${getOtherBadges()}\n‎` : ''}`
         )
         .addField(
             'Balance',
