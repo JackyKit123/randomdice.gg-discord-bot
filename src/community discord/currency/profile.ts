@@ -58,7 +58,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     };
 
     const getOtherBadges = (): string =>
-        member.roles.cache
+        target.roles.cache
             .sort((a, b) => b.position - a.position)
             .map(role => {
                 const devServer = client.guilds.cache.get(
