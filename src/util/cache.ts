@@ -21,7 +21,14 @@ interface Alternatives {
 export interface Dice {
     id: number;
     name: string;
-    type: 'Physical' | 'Magic' | 'Buff' | 'Merge' | 'Transform';
+    type:
+        | 'Physical'
+        | 'Magic'
+        | 'Buff'
+        | 'Merge'
+        | 'Transform'
+        | 'Install'
+        | 'Debuff';
     desc: string;
     detail: string;
     img: string;

@@ -1,7 +1,10 @@
 import Discord from 'discord.js';
+import { promisify } from 'util';
 import fetchMentionString from '../../../util/fetchMention';
 import commandCost from './commandCost';
 import cooldown from '../../../util/cooldown';
+
+const wait = promisify(setTimeout);
 
 export default async function welcomerick(
     message: Discord.Message
@@ -76,5 +79,8 @@ export default async function welcomerick(
             if (!id || saidWelcome.includes(id)) return;
             saidWelcome.push(id);
             await collected.react('<a:Dice_TierX_RickCoin:827059872810008616>');
+            await collected.member.roles.add('892634239290445824');
+            await wait(5000);
+            await collected.member.roles.remove('892634239290445824');
         });
 }

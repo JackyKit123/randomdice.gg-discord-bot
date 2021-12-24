@@ -1,7 +1,10 @@
 import Discord from 'discord.js';
+import { promisify } from 'util';
 import { activeCoinbombInChannel } from '../coinbomb';
 import commandCost from './commandCost';
 import cooldown from '../../../util/cooldown';
+
+const wait = promisify(setTimeout);
 
 export default async function rickBomb(
     message: Discord.Message
@@ -152,6 +155,9 @@ export default async function rickBomb(
         if (collected.some(user => user.id === id)) return;
         collected.push(collect.author);
         await collect.react('<a:Dice_TierX_RickCoin:827059872810008616>');
+        await guild.members.cache.get(id)?.roles.add('892634239290445824');
+        await wait(5000);
+        await guild.members.cache.get(id)?.roles.remove('892634239290445824');
     });
     collector.on('end', async () => {
         activeCoinbombInChannel.set(channel.id, false);
