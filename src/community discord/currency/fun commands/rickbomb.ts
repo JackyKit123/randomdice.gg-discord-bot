@@ -156,7 +156,7 @@ export default async function rickBomb(
         collected.push(collect.author);
         await collect.react('<a:Dice_TierX_RickCoin:827059872810008616>');
         await guild.members.cache.get(id)?.roles.add('892634239290445824');
-        await wait(5000);
+        await wait(1000 * 60 * 5);
         await guild.members.cache.get(id)?.roles.remove('892634239290445824');
     });
     collector.on('end', async () => {

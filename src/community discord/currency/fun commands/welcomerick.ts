@@ -80,7 +80,7 @@ export default async function welcomerick(
             saidWelcome.push(id);
             await collected.react('<a:Dice_TierX_RickCoin:827059872810008616>');
             await collected.member.roles.add('892634239290445824');
-            await wait(5000);
+            await wait(1000 * 60 * 5);
             await collected.member.roles.remove('892634239290445824');
         });
 }
