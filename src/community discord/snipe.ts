@@ -72,11 +72,12 @@ export async function snipeListener(
 }
 
 export default async function snipe(message: Discord.Message): Promise<void> {
-    const { member, channel, content, author } = message;
+    const { member, channel, content, author, guild } = message;
     const [command, arg] = content.split(' ');
 
     if (
         !member ||
+        !guild ||
         (await cooldown(message, command, {
             default: 10 * 1000,
             donator: 2 * 1000,
@@ -166,7 +167,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         .setFooter(
             `snipedMessage by: ${author.username}#${author.discriminator}`
         )
-        .setTimestamp();
+        .setTimestamp(snipedMessage.createdAt);
 
     if (
         snipedMessage.member &&
@@ -182,7 +183,12 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         );
     }
 
-    await channel.send({
+    embed = embed.addField(
+        'Actions',
+        '❌ Press this button to delete this message\n🗑️ Press this button to permanently delete this message from the snipe list.'
+    );
+
+    const messageOption = {
         content: snipeIndexTooBig
             ? `The snipe index ${snipeIndex + 1} is too big, there are only ${
                   snipedList.length
@@ -190,5 +196,88 @@ export default async function snipe(message: Discord.Message): Promise<void> {
             : undefined,
         embeds: [embed],
         files: snipedAttachments,
-    });
+        components: [
+            new Discord.MessageActionRow().addComponents([
+                new Discord.MessageButton()
+                    .setEmoji('❌')
+                    .setCustomId('❌')
+                    .setStyle('DANGER'),
+                new Discord.MessageButton()
+                    .setEmoji('🗑️')
+                    .setCustomId('🗑️')
+                    .setStyle('DANGER'),
+            ]),
+        ],
+    };
+
+    const sentSnipe = await channel.send(messageOption);
+
+    sentSnipe
+        .createMessageComponentCollector()
+        .on('collect', async interaction => {
+            if (!interaction.isButton()) return;
+            const userCanManageMessage = !!guild.members.cache
+                .get(interaction.user.id)
+                ?.permissionsIn(channel as Discord.GuildChannel)
+                .has('MANAGE_MESSAGES');
+            const userIsSnipedMessageAuthor =
+                interaction.user.id === snipedMessage.author.id;
+            const userIsInteractionTrigger = interaction.user.id === author.id;
+
+            switch (interaction.customId) {
+                case 'delete':
+                    if (
+                        !userCanManageMessage &&
+                        !userIsSnipedMessageAuthor &&
+                        !userIsInteractionTrigger
+                    ) {
+                        await interaction.reply({
+                            content:
+                                'You do not have permission to delete this message.',
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    await sentSnipe.delete();
+                    break;
+                case '🗑️':
+                    if (!userCanManageMessage && !userIsSnipedMessageAuthor) {
+                        await interaction.reply({
+                            content:
+                                'You do not have permission to clear this message from snipe list.',
+                            ephemeral: true,
+                        });
+                        return;
+                    }
+                    await sentSnipe.delete();
+                    snipeStore[
+                        command?.toLowerCase().replace('!', '') as
+                            | 'snipe'
+                            | 'editsnipe'
+                    ].set(
+                        channel.id,
+                        snipeStore[
+                            command?.toLowerCase().replace('!', '') as
+                                | 'snipe'
+                                | 'editsnipe'
+                        ]
+                            .get(channel.id)
+                            ?.filter(
+                                ({ message: snipedStoreMessage }) =>
+                                    snipedStoreMessage.id !== snipedMessage.id
+                            ) ?? []
+                    );
+                    await channel.send(
+                        `${interaction.user}, sniped message removed from snipe list.`
+                    );
+                    break;
+                default:
+            }
+        })
+        .on('end', async () => {
+            messageOption.components = [];
+            if (sentSnipe.editable) {
+                await sentSnipe.edit(messageOption);
+            }
+        });
 }
