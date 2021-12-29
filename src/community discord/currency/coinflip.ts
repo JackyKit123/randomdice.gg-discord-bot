@@ -53,6 +53,19 @@ export default async function coinflip(
     let amount = Number(amountArg);
     if (typeof amountArg === 'undefined') {
         amount = 100;
+    } else if (member.roles.cache.has('809143588105486346')) {
+        if (
+            (!Number.isInteger(amount) && amountArg !== 'max') ||
+            Number(amountArg) < 100
+        ) {
+            await channel.send(
+                'You have to bet at least <:dicecoin:839981846419079178> 100 or `max`.'
+            );
+            return;
+        }
+        if (amountArg === 'max') {
+            amount = balance;
+        }
     } else if (
         !Number.isInteger(amount) ||
         Number(amountArg) < 100 ||
