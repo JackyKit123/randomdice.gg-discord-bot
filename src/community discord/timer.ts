@@ -62,11 +62,11 @@ function tickTimer(
                     });
                 }
             } else {
+                clearInterval(interval);
+                killTimerFromDB(key);
                 await message.edit({
                     embeds: [embed.setDescription('**Timer Ended**')],
                 });
-                clearInterval(interval);
-                killTimerFromDB(key);
                 const timerReact = reactions.cache.find(
                     reaction => reaction.emoji.id === '804524690440847381'
                 );
@@ -90,9 +90,9 @@ function tickTimer(
                         new MessageEmbed().setDescription(
                             `The [timer](https://discord.com/channels/${
                                 (guild as Guild).id
-                            }/${channel.id}/${id}) for **${
-                                embed.title || '"no title"'
-                            }** has ended.`
+                            }/${channel.id}/${id})${
+                                embed.title ? ` for **${embed.title}**` : ''
+                            } has ended.`
                         ),
                     ],
                 });
