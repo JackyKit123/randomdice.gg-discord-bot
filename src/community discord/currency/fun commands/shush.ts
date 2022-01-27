@@ -25,14 +25,14 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
     if (
         await cooldown(message, '!shush', {
-            default: 10 * 60 * 1000,
-            donator: 1 * 60 * 1000,
+            default: 60 * 1000,
+            donator: 10 * 1000,
         })
     ) {
         return;
     }
 
-    if (!(await commandCost(message, 500))) return;
+    if (!(await commandCost(message, 100))) return;
     if (target.user.bot) {
         await channel.send('You cannot trap a bot');
         return;
@@ -45,7 +45,7 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
     shushMember = [...shushMember, target.id];
     await channel.send(
-        `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 1 minute.`
+        `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 10 seconds.`
     );
     setTimeout(async () => {
         if (!target || !shushMember.includes(target?.id)) return;
@@ -57,9 +57,15 @@ export default async function shush(message: Discord.Message): Promise<void> {
 }
 
 export async function unShush(message: Discord.Message): Promise<void> {
-    const { content, guild, channel, author } = message;
+    const { content, guild, channel, author, member } = message;
 
-    if (!guild || author.id !== '195174308052467712') {
+    if (
+        !guild ||
+        !member ||
+        !(channel as Discord.GuildTextBasedChannel)
+            .permissionsFor(member)
+            .has('MANAGE_MESSAGES')
+    ) {
         await channel.send('You tried.');
         return;
     }
