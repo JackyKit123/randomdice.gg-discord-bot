@@ -108,6 +108,7 @@ function tickTimer(
                 throw new Error((err as DiscordAPIError).message);
         }
     };
+    tick();
 }
 
 export async function setTimer(
