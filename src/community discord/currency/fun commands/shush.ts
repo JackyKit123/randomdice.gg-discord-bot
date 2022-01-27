@@ -3,7 +3,7 @@ import commandCost from './commandCost';
 import cooldown from '../../../util/cooldown';
 import fetchMention from '../../../util/fetchMention';
 
-let shushMember: string[] = [];
+let shushMember: { by: Discord.User; victim: string }[] = [];
 export default async function shush(message: Discord.Message): Promise<void> {
     const { content, guild, member, channel, author } = message;
 
@@ -37,19 +37,19 @@ export default async function shush(message: Discord.Message): Promise<void> {
         await channel.send('You cannot trap a bot');
         return;
     }
-    if (shushMember.includes(target.id)) {
+    if (shushMember.some(m => m.victim === target?.id)) {
         await channel.send(
             `${target} has already been trapped inside <:pokeball:820533431217815573>.`
         );
         return;
     }
-    shushMember = [...shushMember, target.id];
+    shushMember = [...shushMember, { victim: target.id, by: author }];
     await channel.send(
         `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 10 seconds.`
     );
     setTimeout(async () => {
-        if (!target || !shushMember.includes(target?.id)) return;
-        shushMember = shushMember.filter(ids => ids !== target?.id);
+        if (!target || !shushMember.some(m => m.victim === target?.id)) return;
+        shushMember = shushMember.filter(m => m.victim !== target?.id);
         await channel.send(
             `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`
         );
@@ -57,7 +57,7 @@ export default async function shush(message: Discord.Message): Promise<void> {
 }
 
 export async function unShush(message: Discord.Message): Promise<void> {
-    const { content, guild, channel, author, member } = message;
+    const { content, guild, channel, member } = message;
 
     if (
         !guild ||
@@ -79,14 +79,15 @@ export async function unShush(message: Discord.Message): Promise<void> {
         await channel.send(`Unknown Target`);
         return;
     }
-    if (!shushMember.includes(target.id)) {
+    const shushed = shushMember.find(m => m.victim === target?.id);
+    if (!shushed) {
         await channel.send(`${target} is not shushed.`);
         return;
     }
-    shushMember = shushMember.filter(ids => ids !== target.id);
-    await channel.send(`Untrapped ${target}`);
+    shushMember = shushMember.filter(m => m.victim !== shushed.victim);
+    await channel.send(`Untrapped ${shushed.victim}`);
     await channel.send(
-        `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`
+        `${shushed.by}, your pokemon ${shushed.victim} has escaped from <:pokeball:820533431217815573>.`
     );
 }
 
@@ -94,7 +95,7 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
     const { member, deletable, channel, content, attachments, author, guild } =
         message;
 
-    if (!guild || !member || !shushMember.includes(member.id)) {
+    if (!guild || !member || !shushMember.some(m => m.victim === member.id)) {
         return;
     }
 
