@@ -8,8 +8,11 @@ import {
     TextBasedChannels,
 } from 'discord.js';
 import firebase from 'firebase-admin';
+import { promisify } from 'util';
 import cache from '../util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from '../util/parseMS';
+
+const wait = promisify(setTimeout);
 
 async function killTimerFromDB(timerKey: string): Promise<void> {
     try {
@@ -62,6 +65,7 @@ function tickTimer(
                     });
                 }
                 await wait(5000);
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 tick();
             } else {
                 killTimerFromDB(key);
@@ -103,7 +107,7 @@ function tickTimer(
             if ((err as DiscordAPIError).message !== 'Unknown Message')
                 throw new Error((err as DiscordAPIError).message);
         }
-    }
+    };
 }
 
 export async function setTimer(
