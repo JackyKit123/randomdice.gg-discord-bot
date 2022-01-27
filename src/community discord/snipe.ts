@@ -225,7 +225,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
             const userIsInteractionTrigger = interaction.user.id === author.id;
 
             switch (interaction.customId) {
-                case 'delete':
+                case '❌':
                     if (
                         !userCanManageMessage &&
                         !userIsSnipedMessageAuthor &&

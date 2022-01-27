@@ -51,7 +51,7 @@ function tickTimer(
         killTimerFromDB(key);
         return;
     }
-    const interval = setInterval(async () => {
+    const tick = async () => {
         const now = Date.now();
         try {
             if (now <= endTime) {
@@ -61,8 +61,9 @@ function tickTimer(
                         embeds: [embed.setDescription(newText)],
                     });
                 }
+                await wait(5000);
+                tick();
             } else {
-                clearInterval(interval);
                 killTimerFromDB(key);
                 await message.edit({
                     embeds: [embed.setDescription('**Timer Ended**')],
@@ -102,7 +103,7 @@ function tickTimer(
             if ((err as DiscordAPIError).message !== 'Unknown Message')
                 throw new Error((err as DiscordAPIError).message);
         }
-    }, 5 * 1000);
+    }
 }
 
 export async function setTimer(
