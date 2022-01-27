@@ -53,7 +53,7 @@ export default async function shush(message: Discord.Message): Promise<void> {
         await channel.send(
             `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`
         );
-    }, 1000 * 60 * 1);
+    }, 1000 * 10);
 }
 
 export async function unShush(message: Discord.Message): Promise<void> {
