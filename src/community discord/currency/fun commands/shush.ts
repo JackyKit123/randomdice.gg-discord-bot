@@ -38,21 +38,33 @@ export default async function shush(message: Discord.Message): Promise<void> {
         return;
     }
     if (shushMember.some(m => m.victim === target?.id)) {
-        await channel.send(
-            `${target} has already been trapped inside <:pokeball:820533431217815573>.`
-        );
+        await channel.send({
+            content: `${target} has already been trapped inside <:pokeball:820533431217815573>.`,
+            allowedMentions: {
+                parse: [],
+                users: [],
+            },
+        });
         return;
     }
     shushMember = [...shushMember, { victim: target.id, by: author }];
-    await channel.send(
-        `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 10 seconds.`
-    );
+    await channel.send({
+        content: `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 10 seconds.`,
+        allowedMentions: {
+            parse: [],
+            users: [],
+        },
+    });
     setTimeout(async () => {
         if (!target || !shushMember.some(m => m.victim === target?.id)) return;
         shushMember = shushMember.filter(m => m.victim !== target?.id);
-        await channel.send(
-            `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`
-        );
+        await channel.send({
+            content: `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`,
+            allowedMentions: {
+                parse: [],
+                users: [],
+            },
+        });
     }, 1000 * 10);
 }
 
@@ -85,10 +97,13 @@ export async function unShush(message: Discord.Message): Promise<void> {
         return;
     }
     shushMember = shushMember.filter(m => m.victim !== shushed.victim);
-    await channel.send(`Untrapped ${shushed.victim}`);
-    await channel.send(
-        `${shushed.by}, your pokemon ${shushed.victim} has escaped from <:pokeball:820533431217815573>.`
-    );
+    await channel.send({
+        content: `${shushed.by}, your pokemon <@${shushed.victim}> has been released from <:pokeball:820533431217815573>. by ${member}`,
+        allowedMentions: {
+            parse: [],
+            users: [],
+        },
+    });
 }
 
 export async function pokeballTrap(message: Discord.Message): Promise<void> {
