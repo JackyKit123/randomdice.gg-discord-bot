@@ -17,7 +17,7 @@ export default async function RandomDeck(
     }
     const emoji = cache['discord_bot/emoji'];
     const shuffleArray = Object.keys(emoji)
-        .filter(key => key !== '-1')
+        .filter(key => key !== '-1' && key !== '71')
         .map(key => Number(key)) as number[];
     shuffleArray.forEach((_, i) => {
         const random = Math.floor(Math.random() * i);
