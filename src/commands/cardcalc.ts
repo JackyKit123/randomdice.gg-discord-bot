@@ -1,4 +1,4 @@
-import Discord from 'discord.js'
+import Discord from 'discord.js';
 import cooldown from '../util/cooldown';
 
 export default async function cardcalc(message: Discord.Message) {
@@ -13,7 +13,7 @@ export default async function cardcalc(message: Discord.Message) {
     ) {
         return;
     }
-    
+
     if (
         !Number.isNaN(arg) &&
         Number.isInteger(Number(arg)) &&
@@ -45,6 +45,10 @@ export default async function cardcalc(message: Discord.Message) {
     }
 
     await channel.send(
-        `${cards} cards (${Math.round((cards / 40) * 1000) / 1000} chests, roughly ${Math.round(((cards / 40) * 0.01) * 1000) / 1000} legendaries)`
-    )
+        `${cards} cards (${
+            Math.round((cards / 40) * 1000) / 1000
+        } chests, roughly ${
+            Math.round((cards / 40) * 0.01 * 1000) / 1000
+        } legendaries)`
+    );
 }
