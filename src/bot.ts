@@ -103,6 +103,7 @@ import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 import cleverBot from './community discord/cleverbot';
 import afk, { afkResponse, removeAfkListener } from './community discord/afk';
+import cardcalc from './commands/cardcalc';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -147,9 +148,8 @@ client.on('ready', async () => {
     client.user?.setActivity('.gg help', {
         type: 'PLAYING',
     });
-    const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
-        process.env.NODE_ENV
-    }`;
+    const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${process.env.NODE_ENV
+        }`;
     try {
         await logMessage(client, bootMessage);
         // eslint-disable-next-line no-console
@@ -175,8 +175,7 @@ client.on('ready', async () => {
         try {
             await logMessage(
                 client,
-                `Oops, something went wrong in client#Ready : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
+                `Oops, something went wrong in client#Ready : ${(err as Error).stack ?? (err as Error).message ?? err
                 }`
             );
         } catch (criticalError) {
@@ -483,6 +482,10 @@ client.on('messageCreate', async message => {
                 await help(message);
                 break;
             }
+            case 'cardcalc': {
+                await cardcalc(message);
+                break;
+            }
             case 'website':
             case 'app':
             case 'invite':
@@ -572,10 +575,8 @@ client.on('messageCreate', async message => {
 
             await logMessage(
                 client,
-                `Oops, something went wrong in ${
-                    guild ? `server ${guild.name}` : `DM with <@${author.id}>`
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
+                `Oops, something went wrong in ${guild ? `server ${guild.name}` : `DM with <@${author.id}>`
+                } : ${(err as Error).stack ?? (err as Error).message ?? err
                 }\nCommand Attempting to execute:\`${content}\``
             );
         } catch (criticalError) {
@@ -607,10 +608,8 @@ client.on('messageReactionAdd', async (reaction, user) => {
         try {
             await logMessage(
                 client,
-                `Oops, something went wrong in ${
-                    guild ? `server ${guild.name}` : `DM with <@${user.id}>`
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
+                `Oops, something went wrong in ${guild ? `server ${guild.name}` : `DM with <@${user.id}>`
+                } : ${(err as Error).stack ?? (err as Error).message ?? err
                 }\n when handling message reaction.`
             );
         } catch (criticalError) {
@@ -631,14 +630,13 @@ client.on('messageDelete', async message => {
             await logMessage(
                 client,
                 `Oops, something went wrong ${
-                    // eslint-disable-next-line no-nested-ternary
-                    guild
-                        ? `in server ${guild.name}`
-                        : author
+                // eslint-disable-next-line no-nested-ternary
+                guild
+                    ? `in server ${guild.name}`
+                    : author
                         ? `in DM with <@${author.id}>`
                         : ''
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
+                } : ${(err as Error).stack ?? (err as Error).message ?? err
                 }\n when listening to message deletion.`
             );
         } catch (criticalError) {
@@ -659,14 +657,13 @@ client.on('messageUpdate', async message => {
             await logMessage(
                 client,
                 `Oops, something went wrong ${
-                    // eslint-disable-next-line no-nested-ternary
-                    guild
-                        ? `in server ${guild.name}`
-                        : author
+                // eslint-disable-next-line no-nested-ternary
+                guild
+                    ? `in server ${guild.name}`
+                    : author
                         ? `in DM with <@${author.id}>`
                         : ''
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
+                } : ${(err as Error).stack ?? (err as Error).message ?? err
                 }\n when listening to message edition.`
             );
         } catch (criticalError) {
@@ -686,8 +683,7 @@ client.on('typingStart', async typing => {
         try {
             await logMessage(
                 client,
-                `Oops, something went wrong when listening to typing start event ${
-                    (err as Error).stack ?? (err as Error).message ?? err
+                `Oops, something went wrong when listening to typing start event ${(err as Error).stack ?? (err as Error).message ?? err
                 }.`
             );
         } catch (criticalError) {
