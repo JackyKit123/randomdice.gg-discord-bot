@@ -79,7 +79,18 @@ function tickTimer(
                     ?.filter(user => !user.bot && user.id !== hostId)
                     .map(user => user.toString())
                     .join(' ');
-                await channel.send({
+                let originalMessage: Message | undefined;
+                try {
+                    originalMessage = await channel.messages.fetch(id);
+                } catch (err) {
+                    if (
+                        (err as DiscordAPIError).message !== 'Unknown Message'
+                    ) {
+                        throw err;
+                    }
+                }
+
+                const messageOption = {
                     content: `<@${hostId}> ${
                         // eslint-disable-next-line no-nested-ternary
                         userList
@@ -100,7 +111,12 @@ function tickTimer(
                             } has ended.`
                         ),
                     ],
-                });
+                };
+                if (originalMessage) {
+                    await originalMessage.reply(messageOption);
+                } else {
+                    await channel.send(messageOption);
+                }
             }
         } catch (err) {
             killTimerFromDB(key);
