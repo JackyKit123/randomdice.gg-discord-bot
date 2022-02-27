@@ -587,7 +587,7 @@ client.on('messageCreate', async message => {
 
 client.on('interactionCreate', async interaction => {
     const { guildId, user, channelId, guild } = interaction;
-    console.log(interaction);
+
     if (
         // ignoring other servers in development, ignoring dev channel in production
         (process.env.DEV_SERVER_ID &&
