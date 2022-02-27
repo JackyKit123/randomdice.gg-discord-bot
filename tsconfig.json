@@ -21,7 +21,13 @@
         "typeRoots": ["../node_modules/@types"]
     },
     "ts-node": {
-        "files": true
+        "files": true,
+        "transpileOnly": true,
+        "require": [
+            // set this so you dont need to use ts-node -r
+            "typescript-transform-paths/register",
+            "tsconfig-paths/register"
+        ]
     },
     "files": ["src/color-parser.d.ts"],
     "include": ["src", "src/color-parser.d.ts"],
