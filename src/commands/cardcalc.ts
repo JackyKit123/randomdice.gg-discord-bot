@@ -14,13 +14,10 @@ export default async function cardcalc(message: Discord.Message) {
         return;
     }
 
-    if (
-        !Number.isInteger(waves) ||
-        Number(waves) < 0
-    ) {
+    if (!Number.isInteger(waves) || Number(waves) < 0) {
         await channel.send('waves must be positive integer');
         return;
-    } 
+    }
 
     if (waves > 100000) {
         await channel.send('not feasible keep dreaming');
@@ -38,7 +35,7 @@ export default async function cardcalc(message: Discord.Message) {
     } else {
         cards = 72; // 72 cards for 45 waves (add 8 for every new boss)
         cards += Math.floor((waves - 45) / 2) * 8; // 8 cards per 2 waves
-        cards += ((waves - 45) % 2)*2; // 2 card for each non boss wave 
+        cards += ((waves - 45) % 2) * 2; // 2 card for each non boss wave
     }
 
     await channel.send(
