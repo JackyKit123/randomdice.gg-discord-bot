@@ -1,4 +1,9 @@
-import Discord from 'discord.js';
+import Discord, {
+    Interaction,
+    Message,
+    MessageActionRow,
+    MessageButton,
+} from 'discord.js';
 import firebase from 'firebase-admin';
 import * as randomstring from 'randomstring';
 import * as math from 'mathjs';
@@ -13,20 +18,29 @@ const wait = promisify(setTimeout);
 const ddIntervals = new Map<string, number[]>();
 const memberChallengeState = new Map<string, 'none' | 'challenging' | 'ban'>();
 export default async function drawDice(
-    message: Discord.Message
+    input: Discord.Interaction | Discord.Message
 ): Promise<void> {
     const app = firebase.app();
     const database = app.database();
-    const { member, channel, guild, author } = message;
-    if (!guild || !member) return;
+    const { member, channel, guild } = input;
+    const author =
+        (input as Discord.Interaction).user ||
+        (input as Discord.Message).author;
+    if (
+        !guild ||
+        !member ||
+        !channel ||
+        (input instanceof Interaction && !input.isButton())
+    )
+        return;
     const numberFormat = new Intl.NumberFormat();
-    const challenged = memberChallengeState.get(member.id) || 0;
+    const challenged = memberChallengeState.get(member.user.id) || 0;
     if (challenged === 'ban' || challenged === 'challenging') return;
-    const balance = await getBalanced(message, 'emit new member');
+    const balance = await getBalanced(input, 'emit new member');
     if (balance === false) return;
     const nextDD = channel.createMessageCollector({
         filter: awaited =>
-            awaited.author.id === member.id &&
+            awaited.author.id === member.user.id &&
             /^\w{5}$|^dd\b|^!drawdice\b|^!dicedraw\b/i.test(awaited.content),
         time: 10 * 10000,
         max: 1,
@@ -34,27 +48,27 @@ export default async function drawDice(
     const lastDDTime = Date.now();
     nextDD.on('collect', () => {
         const interval = Date.now() - lastDDTime;
-        const memberDDintervals = ddIntervals.get(member.id) || [];
+        const memberDDintervals = ddIntervals.get(member.user.id) || [];
         ddIntervals.set(
-            member.id,
+            member.user.id,
             interval > 10 * 1000 ? [] : [...memberDDintervals, interval]
         );
     });
     if (
-        await cooldown(message, `!drawdice`, {
+        await cooldown(input, `!drawdice`, {
             default: 3.5 * 1000,
             donator: 1 * 1000,
         })
     ) {
         return;
     }
-    const memberDDintervals = ddIntervals.get(member.id) || [];
+    const memberDDintervals = ddIntervals.get(member.user.id) || [];
     if (memberDDintervals.length >= 20) {
         if (math.std(memberDDintervals) > 100) {
-            ddIntervals.set(member.id, memberDDintervals.slice(1, 20));
+            ddIntervals.set(member.user.id, memberDDintervals.slice(1, 20));
         } else {
             const str = randomstring.generate(5);
-            memberChallengeState.set(member.id, 'challenging');
+            memberChallengeState.set(member.user.id, 'challenging');
             await channel.send({
                 content: `**ANTI-BOT Challenge**\nUnveil the spoiler in the embed and retype the string. Do not literally copy the text. Be aware that it is case sensitive.`,
                 embeds: [
@@ -67,7 +81,7 @@ export default async function drawDice(
                 ],
             });
             const collector = channel.createMessageCollector({
-                filter: awaited => awaited.author.id === member.id,
+                filter: awaited => awaited.author.id === member.user.id,
                 time: 30 * 10000,
             });
             let failure = 0;
@@ -93,17 +107,17 @@ export default async function drawDice(
             });
             collector.on('end', async () => {
                 if (failure > 0) {
-                    memberChallengeState.set(member.id, 'ban');
+                    memberChallengeState.set(member.user.id, 'ban');
                     await channel.send('You failed the verification.');
                 } else {
                     // no failure captcha detected, prob afk
-                    memberChallengeState.set(member.id, 'none');
-                    ddIntervals.set(member.id, []);
+                    memberChallengeState.set(member.user.id, 'none');
+                    ddIntervals.set(member.user.id, []);
                 }
             });
             setTimeout(async () => {
-                if (failure > 0)
-                    await message.reply({
+                if (failure > 0 && input instanceof Message)
+                    await input.reply({
                         content:
                             'You have 10 seconds left to complete your captcha',
                         embeds: [
@@ -122,7 +136,7 @@ export default async function drawDice(
     const emoji = cache['discord_bot/emoji'];
     let dice = [...cache.dice];
     let { diceDrawn, prestige } =
-        cache['discord_bot/community/currency'][member.id];
+        cache['discord_bot/community/currency'][member.user.id];
     const outcome: {
         reward: number;
         color: `#${string}`;
@@ -169,14 +183,16 @@ export default async function drawDice(
 
     outcome.reward *= isBotChannels(channel) ? 1 : -10;
     await database
-        .ref(`discord_bot/community/currency/${member.id}/diceDrawn`)
+        .ref(`discord_bot/community/currency/${member.user.id}/diceDrawn`)
         .set(diceDrawn);
     await database
-        .ref(`discord_bot/community/currency/${member.id}/balance`)
+        .ref(`discord_bot/community/currency/${member.user.id}/balance`)
         .set(balance + outcome.reward);
     let embed = new Discord.MessageEmbed()
         .setAuthor(
-            `${member.displayName}'s Dice Draw Game`,
+            `${
+                guild.members.cache.get(member.user.id)?.displayName ?? '???'
+            }'s Dice Draw Game`,
             author.avatarURL({ dynamic: true }) ?? undefined
         )
         .setDescription(`You earned <:dicecoin:839981846419079178> ????`)
@@ -184,7 +200,10 @@ export default async function drawDice(
             `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
             '<:Dice_TierX_Null:807019807312183366> '.repeat(prestige)
         );
-    const sentMessage = await channel.send({ embeds: [embed] });
+
+    const sentMessage = await (input instanceof Interaction
+        ? input.reply({ embeds: [embed] })
+        : channel.send({ embeds: [embed] }));
     await wait(1000);
     embed = embed
         .setDescription(
@@ -211,6 +230,25 @@ export default async function drawDice(
             inline: false,
         },
     ];
-    await sentMessage.edit({ embeds: [embed] });
-    await chatCoins(message, true);
+
+    const messageOption = {
+        embeds: [embed],
+        components: [
+            new MessageActionRow().addComponents([
+                new MessageButton()
+                    .setCustomId('dd')
+                    .setEmoji('<a:Dice_TierX_RandomLegend:867076479733334016>')
+                    .setStyle('PRIMARY')
+                    .setLabel('Draw Again'),
+            ]),
+        ],
+    };
+
+    if (sentMessage instanceof Message) {
+        await sentMessage.edit(messageOption);
+    } else if (input instanceof Interaction) {
+        await input.editReply(messageOption);
+    }
+
+    if (input instanceof Message) await chatCoins(input, true);
 }

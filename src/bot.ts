@@ -585,6 +585,48 @@ client.on('messageCreate', async message => {
     }
 });
 
+client.on('interactionCreate', async interaction => {
+    const { guildId, user, channelId, guild } = interaction;
+    console.log(interaction);
+    if (
+        // ignoring other servers in development, ignoring dev channel in production
+        (process.env.DEV_SERVER_ID &&
+            process.env.NODE_ENV === 'development' &&
+            guildId !== process.env.DEV_SERVER_ID &&
+            channelId !== '804640084007321600') ||
+        (process.env.NODE_ENV === 'production' &&
+            guildId === process.env.DEV_SERVER_ID)
+    ) {
+        return;
+    }
+
+    try {
+        if (interaction.isMessageComponent()) {
+            switch (interaction.customId) {
+                case 'dd':
+                    await drawDice(interaction);
+                    break;
+                default:
+                    break;
+            }
+        }
+    } catch (err) {
+        try {
+            await logMessage(
+                client,
+                `Oops, something went wrong in ${
+                    guild ? `server ${guild.name}` : `DM with <@${user.id}>`
+                } : ${
+                    (err as Error).stack ?? (err as Error).message ?? err
+                }\nwhen executing interaction`
+            );
+        } catch (criticalError) {
+            // eslint-disable-next-line no-console
+            console.error(criticalError);
+        }
+    }
+});
+
 client.on('guildCreate', guild => guildCreateHandler(guild));
 
 client.on('messageReactionAdd', async (reaction, user) => {

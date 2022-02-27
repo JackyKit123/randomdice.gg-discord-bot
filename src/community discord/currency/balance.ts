@@ -1,5 +1,5 @@
 import firebase from 'firebase-admin';
-import { GuildMember, Message, MessageEmbed } from 'discord.js';
+import { GuildMember, Interaction, Message, MessageEmbed } from 'discord.js';
 import cooldown from '../../util/cooldown';
 import fetchMention from '../../util/fetchMention';
 import cache from '../../util/cache';
@@ -18,18 +18,18 @@ const prestigeRoleIds = [
 ];
 
 export default async function balance(
-    message: Message,
+    input: Message | Interaction,
     output: 'silence' | 'emit' | 'emit new member',
     optionalTarget?: GuildMember
 ): Promise<number | false> {
     const app = firebase.app();
     const database = app.database();
     const numberFormat = new Intl.NumberFormat();
-    const { member, channel, guild, content, client } = message;
+    const { member, channel, guild, client } = input;
     if (!guild || !member) return false;
     if (output === 'emit') {
         if (
-            await cooldown(message, `!balance`, {
+            await cooldown(input, `!balance`, {
                 default: 10 * 1000,
                 donator: 2 * 1000,
             })
@@ -38,14 +38,19 @@ export default async function balance(
         }
     }
 
-    const memberArg = content.split(' ')[1];
-    let target = optionalTarget || member;
-    if (memberArg && !optionalTarget && output === 'emit') {
-        target =
-            (await fetchMention(memberArg, guild, {
-                content,
-                mentionIndex: 1,
-            })) || member;
+    let target = guild.members.cache.get(
+        optionalTarget?.id || member.user.id
+    ) as GuildMember;
+    if (input instanceof Message) {
+        const memberArg = input.content.split(' ')[1];
+
+        if (memberArg && !optionalTarget && output === 'emit') {
+            target =
+                (await fetchMention(memberArg, guild, {
+                    content: input.content,
+                    mentionIndex: 1,
+                })) || target;
+        }
     }
 
     if (!Object.keys(cache['discord_bot/community/currency']).length)
@@ -64,16 +69,15 @@ export default async function balance(
             }) ?? undefined
         )
         .setColor(target.displayHexColor)
-        .setTitle(`${target?.id === member.id ? 'Your' : 'Their'} Balance`)
+        .setTitle(`${target?.id === member.user.id ? 'Your' : 'Their'} Balance`)
         .setFooter(
             prestigeLevel > 0
-                ? member.guild.roles.cache.get(
-                      prestigeRoleIds[prestigeLevel - 1]
-                  )?.name ?? ''
+                ? guild.roles.cache.get(prestigeRoleIds[prestigeLevel - 1])
+                      ?.name ?? ''
                 : ''
         );
     if (!profile || !profile.initiated) {
-        if (target.id !== member.id && output !== 'silence') {
+        if (target.id !== member.user.id && output !== 'silence') {
             await channel?.send(
                 'They have not started using currency command yet.'
             );
@@ -86,7 +90,7 @@ export default async function balance(
             .ref(`discord_bot/community/currency/${target.id}/prestige`)
             .set(prestigeLevel);
         if (output === 'emit new member' || output === 'emit') {
-            await channel.send({
+            await (channel ?? client.users.cache.get(member.user.id))?.send({
                 content:
                     'Looks like you are the first time using server currency command, you have been granted **<:dicecoin:839981846419079178> 10,000** as a starter reward.',
                 embeds: [
@@ -100,14 +104,16 @@ export default async function balance(
             await database
                 .ref(`discord_bot/community/currency/${target.id}/initiated`)
                 .set(true);
-            client.emit('messageCreate', message);
+            if (input instanceof Message) {
+                client.emit('messageCreate', input);
+            }
         }
         return output === 'silence' ? Number(profile?.balance) || 10000 : false;
     }
     if (output !== 'emit') {
         return Number(profile.balance);
     }
-    await channel.send({
+    await (channel ?? client.users.cache.get(member.user.id))?.send({
         embeds: [
             embed.setDescription(
                 `<:dicecoin:839981846419079178> ${numberFormat.format(

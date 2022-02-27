@@ -4,14 +4,17 @@ import parseMsIntoReadableText from './parseMS';
 
 const commandCooldown = new Map<string, Map<string, number>>();
 export default async function Cooldown(
-    message: Discord.Message,
+    input: Discord.Message | Discord.Interaction,
     command: string,
     cooldown: {
         default: number;
         donator: number;
     }
 ): Promise<boolean> {
-    const { author, channel } = message;
+    const author =
+        (input as Discord.Interaction).user ||
+        (input as Discord.Message).author;
+    const { channel } = input;
 
     if (process.env.DEV_USERS_ID?.includes(author.id)) {
         return false;
@@ -33,7 +36,7 @@ export default async function Cooldown(
         (userIsDonator ? cooldown.donator : cooldown.default)
     ) {
         if (cooldown.donator === cooldown.default) {
-            await channel.send({
+            await (channel ?? author).send({
                 embeds: [
                     new Discord.MessageEmbed()
                         .setTitle('Slow Down!')
@@ -51,7 +54,7 @@ export default async function Cooldown(
                 ],
             });
         } else {
-            await channel.send({
+            await (channel ?? author).send({
                 embeds: [
                     new Discord.MessageEmbed()
                         .setTitle('Slow Down!')
