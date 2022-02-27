@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import axios from 'axios';
-import cooldown from '../util/cooldown';
-import { replaceAllMentionToText } from '../util/fetchMention';
+import cooldown from 'util/cooldown';
+import { replaceAllMentionToText } from 'util/fetchMention';
 
 const conversationTimeout = new Map<string, NodeJS.Timeout>();
 const conversationIds = new Map<string, string | null>();

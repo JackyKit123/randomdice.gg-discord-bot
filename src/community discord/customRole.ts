@@ -1,13 +1,13 @@
 import firebase from 'firebase-admin';
 import Discord from 'discord.js';
 import colorParser from 'color-parser';
-import cache from '../util/cache';
-import cooldown from '../util/cooldown';
+import cache from 'util/cache';
+import cooldown from 'util/cooldown';
 
 export default async function customRole(
-    message: Discord.Message,
-    database: firebase.database.Database
+    message: Discord.Message
 ): Promise<void> {
+    const database = firebase.database();
     const { guild, member, content, channel } = message;
     if (!member || !guild) {
         await channel.send('`This command is only available in a server.`');

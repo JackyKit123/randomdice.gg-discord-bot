@@ -1,8 +1,8 @@
 import firebase from 'firebase-admin';
 import Discord from 'discord.js';
-import getBalance from './balance';
-import cache from '../../util/cache';
-import cooldown from '../../util/cooldown';
+import cache from 'util/cache';
+import cooldown from 'util/cooldown';
+import getBalance from 'util/getBalance';
 import isBotChannels from '../isBotChannels';
 
 export default async function coinflip(

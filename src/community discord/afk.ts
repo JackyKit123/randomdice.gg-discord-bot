@@ -1,9 +1,9 @@
 import firebase from 'firebase-admin';
 import Discord from 'discord.js';
 import { promisify } from 'util';
-import cache from '../util/cache';
-import cooldown from '../util/cooldown';
-import parseMsIntoReadableText from '../util/parseMS';
+import cache from 'util/cache';
+import cooldown from 'util/cooldown';
+import parseMsIntoReadableText from 'util/parseMS';
 
 const wait = promisify(setTimeout);
 

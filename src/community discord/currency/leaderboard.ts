@@ -1,9 +1,9 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import logMessage from '../../dev-commands/logMessage';
-import cache, { MemberCurrency } from '../../util/cache';
-import cooldown from '../../util/cooldown';
-import getPaginationComponents from '../../util/paginationButtons';
+import logMessage from 'dev-commands/logMessage';
+import cache, { MemberCurrency } from 'util/cache';
+import cooldown from 'util/cooldown';
+import getPaginationComponents from 'util/paginationButtons';
 import { deleteCustomRole } from '../customRole';
 
 const numberFormat = new Intl.NumberFormat();

@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import cooldown from '../../util/cooldown';
-import cache from '../../util/cache';
+import cooldown from 'util/cooldown';
+import cache from 'util/cache';
 
 export default async function multiplierConfig(
     message: Discord.Message

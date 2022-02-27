@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import parseMsIntoReadableText from '../util/parseMS';
+import parseMsIntoReadableText from 'util/parseMS';
 
 export default async function announceLastToLeaveVC(
     message: Discord.Message

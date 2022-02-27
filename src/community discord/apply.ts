@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import cache from '../util/cache';
-import cooldown from '../util/cooldown';
+import cache from 'util/cache';
+import cooldown from 'util/cooldown';
 
 export default async function Apply(message: Discord.Message): Promise<void> {
     const { member, channel, guild, content, deletable } = message;

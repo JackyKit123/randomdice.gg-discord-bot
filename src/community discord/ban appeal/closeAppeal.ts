@@ -5,8 +5,8 @@ import {
     GuildMember,
     Message,
 } from 'discord.js';
-import cooldown from '../../util/cooldown';
-import fetchMentionString from '../../util/fetchMention';
+import cooldown from 'util/cooldown';
+import fetchMentionString from 'util/fetchMention';
 
 export default async function closeAppeal(message: Message): Promise<void> {
     const { client, content, member, guild, channel } = message;

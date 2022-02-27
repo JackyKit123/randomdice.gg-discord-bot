@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import getBalance from './balance';
+import getBalance from 'util/getBalance';
 
 const rapidSuccessJoin = new Map<string | undefined, number>();
 

@@ -1,8 +1,8 @@
 import Discord from 'discord.js';
 import { promisify } from 'util';
+import cooldown from 'util/cooldown';
 import { activeCoinbombInChannel } from '../coinbomb';
 import commandCost from './commandCost';
-import cooldown from '../../../util/cooldown';
 
 const wait = promisify(setTimeout);
 

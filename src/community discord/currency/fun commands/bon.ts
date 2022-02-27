@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
-import fetchMentionString from '../../../util/fetchMention';
+import fetchMentionString from 'util/fetchMention';
+import cooldown from 'util/cooldown';
 import commandCost from './commandCost';
-import cooldown from '../../../util/cooldown';
 
 export default async function bon(message: Discord.Message): Promise<void> {
     const { content, channel, guild, author } = message;

@@ -1,13 +1,11 @@
 /* eslint-disable no-console */
 import firebase from 'firebase-admin';
 import Discord from 'discord.js';
+import logMessage from 'dev-commands/logMessage';
 import * as post from '../commands/postNow';
-import logMessage from '../dev-commands/logMessage';
 
-export default function listener(
-    client: Discord.Client,
-    database: firebase.database.Database
-): void {
+export default function listener(client: Discord.Client): void {
+    const database = firebase.database();
     const posting = {
         guide: false,
         news: false,
@@ -28,7 +26,7 @@ export default function listener(
         if (!posting.guide) {
             posting.guide = true;
             try {
-                await post.postGuide(client, database, member, {
+                await post.postGuide(client, member, {
                     snapshot,
                     event,
                 });
@@ -69,7 +67,7 @@ export default function listener(
         if (!posting.news) {
             posting.news = true;
             try {
-                await post.postNews(client, database, guild);
+                await post.postNews(client, guild);
             } catch (err) {
                 try {
                     // eslint-disable-next-line no-unused-expressions

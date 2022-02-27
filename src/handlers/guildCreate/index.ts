@@ -1,7 +1,7 @@
-import Discord from 'discord.js';
-import logMessage from '../dev-commands/logMessage';
+import { Guild, TextChannel, VoiceChannel } from 'discord.js';
+import logMessage from 'dev-commands/logMessage';
 
-export default async function handler(guild: Discord.Guild): Promise<void> {
+export default async function handler(guild: Guild): Promise<void> {
     const { client, systemChannel, channels, name } = guild;
     const msgChannel =
         systemChannel ||
@@ -18,8 +18,8 @@ export default async function handler(guild: Discord.Guild): Promise<void> {
     if (
         !msgChannel ||
         !(
-            msgChannel instanceof Discord.TextChannel ||
-            msgChannel instanceof Discord.VoiceChannel
+            msgChannel instanceof TextChannel ||
+            msgChannel instanceof VoiceChannel
         )
     )
         return;

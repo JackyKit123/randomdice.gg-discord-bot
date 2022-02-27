@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import cooldown from '../util/cooldown';
+import cooldown from 'util/cooldown';
 
 export default async function ping(message: Discord.Message): Promise<void> {
     const { createdTimestamp, channel } = message;

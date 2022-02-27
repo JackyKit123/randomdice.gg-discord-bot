@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
+import cooldown from 'util/cooldown';
+import fetchMention from 'util/fetchMention';
 import commandCost from './commandCost';
-import cooldown from '../../../util/cooldown';
-import fetchMention from '../../../util/fetchMention';
 
 let shushMember: { by: Discord.User; victim: string }[] = [];
 export default async function shush(message: Discord.Message): Promise<void> {

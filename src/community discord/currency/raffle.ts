@@ -9,12 +9,13 @@ import {
     User,
 } from 'discord.js';
 import firebase from 'firebase-admin';
-import getBalance from './balance';
-import { parseStringIntoMs } from '../../util/parseMS';
-import cache from '../../util/cache';
-import cooldown from '../../util/cooldown';
+import getBalance from 'util/getBalance';
+import { parseStringIntoMs } from 'util/parseMS';
+import cache from 'util/cache';
+import cooldown from 'util/cooldown';
 
 const numberFormat = new Intl.NumberFormat();
+const database = firebase.database();
 
 async function host(
     duration: number,
@@ -23,7 +24,6 @@ async function host(
     guild: Guild,
     author: User
 ): Promise<MessageEmbed> {
-    const database = firebase.app().database();
     const ref = database.ref('discord_bot/community/raffle');
 
     await ref.set({
@@ -48,10 +48,7 @@ async function host(
         .setTimestamp(Date.now() + duration);
 }
 
-async function announceWinner(
-    guild: Guild,
-    database: firebase.database.Database
-): Promise<void> {
+async function announceWinner(guild: Guild): Promise<void> {
     const channel = guild.channels.cache.get('807229757049012266');
     const { client } = guild;
     const clientUser = client.user;
@@ -83,7 +80,7 @@ async function announceWinner(
                 ? [announceWinnerEmbed, newRaffleEmbed]
                 : [newRaffleEmbed],
         });
-        await announceWinner(guild, database);
+        await announceWinner(guild);
         return sentMessage;
     };
     if (!raffleInfo.hostId) {
@@ -182,7 +179,6 @@ export default async function raffle(message: Message): Promise<void> {
         return;
     }
 
-    const database = firebase.app().database();
     const balance = await getBalance(message, 'emit new member', member);
     if (balance === false) return;
     const ref = database.ref('discord_bot/community/raffle');
@@ -484,7 +480,7 @@ export default async function raffle(message: Message): Promise<void> {
                     await host(time, maxEntries, ticketCost, guild, author),
                 ],
             });
-            await announceWinner(guild, database);
+            await announceWinner(guild);
             return;
         }
         case 'cancel':
@@ -576,11 +572,8 @@ export default async function raffle(message: Message): Promise<void> {
     }
 }
 
-export async function setRaffleTimerOnBoot(
-    client: Client,
-    database: firebase.database.Database
-): Promise<void> {
+export async function setRaffleTimerOnBoot(client: Client): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
     if (!guild) return;
-    announceWinner(guild, database);
+    announceWinner(guild);
 }

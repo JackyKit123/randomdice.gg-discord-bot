@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import getBalance from './balance';
-import cache from '../../util/cache';
+import getBalance from 'util/getBalance';
+import cache from 'util/cache';
 
 export default async function voteReward(
     message: Discord.Message

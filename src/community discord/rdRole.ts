@@ -1,5 +1,5 @@
 import { GuildMember, Message } from 'discord.js';
-import cooldown from '../util/cooldown';
+import cooldown from 'util/cooldown';
 
 const critRoleIds = [
     '804404283205222441',

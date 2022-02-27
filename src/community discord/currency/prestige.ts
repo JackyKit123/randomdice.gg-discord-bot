@@ -1,8 +1,8 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import getBalance from './balance';
-import cooldown from '../../util/cooldown';
-import cache from '../../util/cache';
+import getBalance from 'util/getBalance';
+import cooldown from 'util/cooldown';
+import cache from 'util/cache';
 
 export default async function prestige(
     message: Discord.Message

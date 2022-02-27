@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 
-export default async function validate(
+export default async function oneWordStoryValidate(
     message: Discord.Message
 ): Promise<void> {
     const { content, channel } = message;

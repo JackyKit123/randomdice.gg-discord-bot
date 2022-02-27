@@ -2,8 +2,8 @@ import firebase from 'firebase-admin';
 import stringSimilarity from 'string-similarity';
 import Discord, { DiscordAPIError } from 'discord.js';
 import axios, { AxiosResponse } from 'axios';
-import cache from '../util/cache';
-import cooldown from '../util/cooldown';
+import cache from 'util/cache';
+import cooldown from 'util/cooldown';
 
 export default async function myEmoji(message: Discord.Message): Promise<void> {
     const database = firebase.app().database();

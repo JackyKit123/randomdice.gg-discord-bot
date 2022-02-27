@@ -8,10 +8,10 @@ import firebase from 'firebase-admin';
 import * as randomstring from 'randomstring';
 import * as math from 'mathjs';
 import { promisify } from 'util';
+import cooldown from 'util/cooldown';
+import cache, { Dice } from 'util/cache';
+import getBalanced from 'util/getBalance';
 import chatCoins from './chatCoins';
-import cooldown from '../../util/cooldown';
-import getBalanced from './balance';
-import cache, { Dice } from '../../util/cache';
 import isBotChannels from '../isBotChannels';
 
 const wait = promisify(setTimeout);

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import Discord from 'discord.js';
-import cooldown from '../util/cooldown';
+import cooldown from 'util/cooldown';
 
 const snipeStore = {
     snipe: new Map<

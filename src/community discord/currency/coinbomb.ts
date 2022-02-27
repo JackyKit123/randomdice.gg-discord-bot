@@ -14,15 +14,14 @@ import {
 } from 'discord.js';
 import firebase from 'firebase-admin';
 import { promisify } from 'util';
-import logMessage from '../../dev-commands/logMessage';
-import getBalance from './balance';
-import rickBomb from './fun commands/rickbomb';
+import logMessage from 'dev-commands/logMessage';
+import rickBomb from 'community discord/currency/fun commands/rickbomb';
+import getBalance from 'util/getBalance';
 
 const wait = promisify(setTimeout);
 const numberFormat = new Intl.NumberFormat();
 export const activeCoinbombInChannel = new Map<string, boolean>();
-let database: firebase.database.Database;
-
+const database = firebase.database();
 type BatchType = 'pick' | 'goldenPick' | 'small' | 'medium' | 'large';
 
 export default async function pickCoins(
@@ -405,11 +404,7 @@ export default async function pickCoins(
     }
 }
 
-export async function pickCoinsInit(
-    client: Client,
-    db: firebase.database.Database
-): Promise<void> {
-    database = db;
+export async function pickCoinsInit(client: Client): Promise<void> {
     const guild = await client.guilds.fetch(
         process.env.COMMUNITY_SERVER_ID || ''
     );

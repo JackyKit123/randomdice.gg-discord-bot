@@ -1,14 +1,15 @@
 // eslint-disable-next-line
 import Discord, { DiscordAPIError } from 'discord.js';
 import firebase from 'firebase-admin';
-import cache from '../util/cache';
-import parsedText from '../util/parseText';
-import logMessage from '../dev-commands/logMessage';
-import cooldown from '../util/cooldown';
+import cache from 'util/cache';
+import parsedText from 'util/parseText';
+import logMessage from 'dev-commands/logMessage';
+import cooldown from 'util/cooldown';
+
+const database = firebase.database();
 
 export async function postGuide(
     client: Discord.Client,
-    database: firebase.database.Database,
     member?: Discord.GuildMember,
     updateListener?: {
         snapshot: firebase.database.DataSnapshot;
@@ -326,7 +327,6 @@ export async function postGuide(
 
 export async function postNews(
     client: Discord.Client,
-    database: firebase.database.Database,
     guild?: Discord.Guild
 ): Promise<void> {
     const registeredGuilds = cache['discord_bot/registry'];
@@ -451,10 +451,7 @@ export async function postNews(
     );
 }
 
-export default async function postNow(
-    message: Discord.Message,
-    database: firebase.database.Database
-): Promise<void> {
+export default async function postNow(message: Discord.Message): Promise<void> {
     const type = message.content.split(' ')[2];
     const { member, guild, channel, client } = message;
     if (!member || !guild) {
@@ -487,7 +484,7 @@ export default async function postNow(
     const statusMessage = await channel.send(`Now posting ${type}...`);
     switch (type) {
         case 'guide':
-            await postGuide(client, database, member);
+            await postGuide(client, member);
             try {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } catch {
@@ -496,7 +493,7 @@ export default async function postNow(
             }
             return;
         case 'news':
-            await postNews(client, database, guild);
+            await postNews(client, guild);
             try {
                 await statusMessage.edit(`Finished Posting ${type}`);
             } catch {

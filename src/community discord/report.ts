@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
-import cooldown from '../util/cooldown';
-import parseMsIntoReadableText from '../util/parseMS';
+import cooldown from 'util/cooldown';
+import parseMsIntoReadableText from 'util/parseMS';
 
 async function closeReport(message: Discord.Message): Promise<void> {
     const { member, channel, guild, content } = message;

@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
-import cache from '../util/cache';
-import cooldown from '../util/cooldown';
+import cache from 'util/cache';
+import cooldown from 'util/cooldown';
 
 export default async function RandomDeck(
     message: Discord.Message

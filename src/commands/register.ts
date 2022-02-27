@@ -1,11 +1,12 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
+import cooldown from 'util/cooldown';
 import postNow from './postNow';
-import cooldown from '../util/cooldown';
+
+const database = firebase.database();
 
 async function checkRegistered(
-    guild: Discord.Guild,
-    database: firebase.database.Database
+    guild: Discord.Guild
 ): Promise<Discord.MessageEmbed | string> {
     const registeredChannel = (
         await database.ref(`/discord_bot/registry/${guild.id}`).once('value')
@@ -30,10 +31,7 @@ async function checkRegistered(
         );
 }
 
-export async function register(
-    message: Discord.Message,
-    database: firebase.database.Database
-): Promise<void> {
+export async function register(message: Discord.Message): Promise<void> {
     const { client, member, guild, content, mentions, channel } = message;
 
     if (
@@ -137,7 +135,7 @@ export async function register(
                         );
                 }
                 if (answeredYes) {
-                    await postNow(message, database);
+                    await postNow(message);
                 } else if (sentMessage.editable) {
                     await sentMessage.edit(
                         `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
@@ -147,7 +145,7 @@ export async function register(
             break;
         }
         case 'list': {
-            const checkedMessage = await checkRegistered(guild, database);
+            const checkedMessage = await checkRegistered(guild);
             await channel.send(
                 typeof checkedMessage === 'string'
                     ? { content: checkedMessage }
@@ -162,10 +160,7 @@ export async function register(
     }
 }
 
-export async function unregister(
-    message: Discord.Message,
-    database: firebase.database.Database
-): Promise<void> {
+export async function unregister(message: Discord.Message): Promise<void> {
     const { member, guild, content, channel } = message;
     if (!member || !guild) {
         await channel.send('You can only execute this command in a server.');

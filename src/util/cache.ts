@@ -285,9 +285,8 @@ const cacheData = {
 };
 export default cacheData;
 
-export async function fetchAll(
-    database: firebase.database.Database
-): Promise<void> {
+export async function fetchAll(): Promise<void> {
+    const database = firebase.database();
     await Promise.all(
         Object.keys(cacheData).map(async key => {
             const ref = database.ref(key);

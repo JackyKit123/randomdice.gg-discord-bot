@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import fetchMention from '../util/fetchMention';
+import fetchMention from 'util/fetchMention';
 
 export default async function banMessage(
     message: Discord.Message

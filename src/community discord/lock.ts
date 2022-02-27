@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import { promisify } from 'util';
-import cooldown from '../util/cooldown';
-import parseMsIntoReadableText, { parseStringIntoMs } from '../util/parseMS';
+import cooldown from 'util/cooldown';
+import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
 
 const wait = promisify(setTimeout);
 

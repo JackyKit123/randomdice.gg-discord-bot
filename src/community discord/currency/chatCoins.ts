@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import getBalance from './balance';
-import cache from '../../util/cache';
+import cache from 'util/cache';
+import getBalance from 'util/getBalance';
 
 export function duplicatedRoleMulti(member: Discord.GuildMember): number {
     const tier1roles = ['806312627877838878'];

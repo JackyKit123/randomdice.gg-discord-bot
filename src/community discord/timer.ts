@@ -9,8 +9,8 @@ import {
 } from 'discord.js';
 import firebase from 'firebase-admin';
 import { promisify } from 'util';
-import cache from '../util/cache';
-import parseMsIntoReadableText, { parseStringIntoMs } from '../util/parseMS';
+import cache from 'util/cache';
+import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
 
 const wait = promisify(setTimeout);
 

@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js';
-import logMessage from '../dev-commands/logMessage';
+import logMessage from 'dev-commands/logMessage';
 
 const bannedCache: string[] = [];
 

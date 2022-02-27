@@ -1,7 +1,7 @@
 import { Message, MessageActionRow, MessageButton } from 'discord.js';
 import firebase from 'firebase-admin';
-import getBalance from '../balance';
-import cache from '../../../util/cache';
+import cache from 'util/cache';
+import getBalance from 'util/getBalance';
 
 export default async function commandCost(
     message: Message,

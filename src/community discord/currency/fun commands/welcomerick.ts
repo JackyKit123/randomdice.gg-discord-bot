@@ -1,8 +1,8 @@
 import Discord from 'discord.js';
 import { promisify } from 'util';
-import fetchMentionString from '../../../util/fetchMention';
+import fetchMentionString from 'util/fetchMention';
+import cooldown from 'util/cooldown';
 import commandCost from './commandCost';
-import cooldown from '../../../util/cooldown';
 
 const wait = promisify(setTimeout);
 

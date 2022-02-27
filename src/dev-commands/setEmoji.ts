@@ -1,10 +1,11 @@
 import Discord from 'discord.js';
 import firebase from 'firebase-admin';
-import cache from '../util/cache';
+import cache from 'util/cache';
 
-export default async function updateEmoji(
-    message: Discord.Message,
-    database: firebase.database.Database
+const database = firebase.database();
+
+export default async function setEmoji(
+    message: Discord.Message
 ): Promise<void> {
     const { dice } = cache;
     const { client, content, channel } = message;
