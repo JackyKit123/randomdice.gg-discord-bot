@@ -8,14 +8,13 @@ import {
     MessageEmbed,
     User,
 } from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import getBalance from 'util/getBalance';
 import { parseStringIntoMs } from 'util/parseMS';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 
 const numberFormat = new Intl.NumberFormat();
-const database = firebase.database();
 
 async function host(
     duration: number,

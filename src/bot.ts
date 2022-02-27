@@ -1,5 +1,5 @@
 import { Client } from 'discord.js';
-import firebase from 'firebase-admin';
+import initFirebase from 'firebase';
 import logMessage from 'dev-commands/logMessage';
 import reboot from 'dev-commands/reboot';
 import botEventHandlers from 'handlers';
@@ -24,20 +24,8 @@ const client = new Client({
         'DIRECT_MESSAGE_TYPING',
     ],
 });
-firebase.initializeApp({
-    credential: firebase.credential.cert({
-        projectId: 'random-dice-web',
-        privateKey: (process.env.FIREBASE_ADMIN_PRIVATE_KEY || '').replace(
-            /\\n/g,
-            '\n'
-        ),
-        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-    }),
-    databaseURL: 'https://random-dice-web.firebaseio.com/',
-    databaseAuthVariableOverride: {
-        uid: 'discord-bot',
-    },
-});
+
+initFirebase();
 
 botEventHandlers(client);
 

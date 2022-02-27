@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import getBalance from 'util/getBalance';
 import cache from 'util/cache';
 
@@ -7,7 +7,6 @@ export default async function voteReward(
     message: Discord.Message
 ): Promise<void> {
     const { author, channel, embeds, guild } = message;
-    const database = firebase.app().database();
 
     if (
         author.id !== '479688142908162059' ||

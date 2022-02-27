@@ -4,7 +4,7 @@ import Discord, {
     MessageActionRow,
     MessageButton,
 } from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import * as randomstring from 'randomstring';
 import * as math from 'mathjs';
 import { promisify } from 'util';
@@ -20,8 +20,6 @@ const memberChallengeState = new Map<string, 'none' | 'challenging' | 'ban'>();
 export default async function drawDice(
     input: Discord.Interaction | Discord.Message
 ): Promise<void> {
-    const app = firebase.app();
-    const database = app.database();
     const { member, channel, guild } = input;
     const author =
         (input as Discord.Interaction).user ||

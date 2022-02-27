@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import getBalance from 'util/getBalance';
 import cooldown from 'util/cooldown';
 import cache from 'util/cache';
@@ -8,8 +8,6 @@ export default async function prestige(
     message: Discord.Message
 ): Promise<void> {
     const { member, channel, guild } = message;
-    const app = firebase.app();
-    const database = app.database();
     const numberFormat = new Intl.NumberFormat();
     if (
         await cooldown(message, `!prestige`, {

@@ -1,4 +1,4 @@
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import Discord from 'discord.js';
 import { promisify } from 'util';
 import cache from 'util/cache';
@@ -8,7 +8,6 @@ import parseMsIntoReadableText from 'util/parseMS';
 const wait = promisify(setTimeout);
 
 export default async function afk(message: Discord.Message): Promise<void> {
-    const database = firebase.app().database();
     const { member, content, channel, createdTimestamp } = message;
 
     if (!member) return;
@@ -86,8 +85,6 @@ async function afkHandler(
         createdTimestamp,
     }: { content?: string; createdTimestamp?: number } = {}
 ): Promise<void> {
-    const database = firebase.app().database();
-
     Object.entries(cache['discord_bot/community/afk'] || {}).forEach(
         async ([uid, { afkMessage, timestamp }]) => {
             if (uid === member.id) {

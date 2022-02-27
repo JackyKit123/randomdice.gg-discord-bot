@@ -1,4 +1,4 @@
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import Discord from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
@@ -8,8 +8,6 @@ import isBotChannels from '../isBotChannels';
 export default async function coinflip(
     message: Discord.Message
 ): Promise<void> {
-    const app = firebase.app();
-    const database = app.database();
     const numberFormat = new Intl.NumberFormat();
     if (
         await cooldown(message, '!coinflip', {

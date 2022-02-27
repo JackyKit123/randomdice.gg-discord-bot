@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 
@@ -231,7 +231,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
         ?.join(' ')
         .split('|')
         .map(e => e.trim());
-    const database = firebase.database();
+
     const ref = database.ref('discord_bot/community/applications');
     const existingApplications = cache['discord_bot/community/applications'];
 

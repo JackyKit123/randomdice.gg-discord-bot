@@ -1,9 +1,7 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cooldown from 'util/cooldown';
 import postNow from './postNow';
-
-const database = firebase.database();
 
 async function checkRegistered(
     guild: Discord.Guild

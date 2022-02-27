@@ -1,6 +1,6 @@
 import Discord from 'discord.js';
 import moment from 'moment';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cache from 'util/cache';
 import getBalance from 'util/getBalance';
 import parseMsIntoReadableText from 'util/parseMS';
@@ -11,8 +11,6 @@ export default async function timed(
     mode: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly'
 ): Promise<void> {
     const { member, channel } = message;
-    const app = firebase.app();
-    const database = app.database();
     const numberFormat = new Intl.NumberFormat();
 
     const balance = await getBalance(message, 'emit new member');

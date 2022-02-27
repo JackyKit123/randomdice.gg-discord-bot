@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import logMessage from 'dev-commands/logMessage';
 import cache, { MemberCurrency } from 'util/cache';
 import cooldown from 'util/cooldown';
@@ -77,7 +77,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
         );
         return;
     }
-    const database = firebase.app().database();
+
     const { weeklyWinners } = cache['discord_bot/community/currencyConfig'];
     const currencyList = cache['discord_bot/community/currency'];
 

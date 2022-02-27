@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import getBalance from 'util/getBalance';
 
 const rapidSuccessJoin = new Map<string | undefined, number>();
@@ -8,8 +8,6 @@ export default async function welcomeReward(
     message: Discord.Message
 ): Promise<void> {
     const { guild, embeds, channel } = message;
-    const app = firebase.app();
-    const database = app.database();
 
     if (!guild || channel.id !== '845448948474576946' /* #join-leave-log */)
         return;

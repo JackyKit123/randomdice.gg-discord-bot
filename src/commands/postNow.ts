@@ -1,12 +1,11 @@
 // eslint-disable-next-line
 import Discord, { DiscordAPIError } from 'discord.js';
 import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cache from 'util/cache';
 import parsedText from 'util/parseText';
 import logMessage from 'dev-commands/logMessage';
 import cooldown from 'util/cooldown';
-
-const database = firebase.database();
 
 export async function postGuide(
     client: Discord.Client,

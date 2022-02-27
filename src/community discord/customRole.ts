@@ -1,4 +1,4 @@
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import Discord from 'discord.js';
 import colorParser from 'color-parser';
 import cache from 'util/cache';
@@ -7,7 +7,6 @@ import cooldown from 'util/cooldown';
 export default async function customRole(
     message: Discord.Message
 ): Promise<void> {
-    const database = firebase.database();
     const { guild, member, content, channel } = message;
     if (!member || !guild) {
         await channel.send('`This command is only available in a server.`');
@@ -102,7 +101,6 @@ export default async function customRole(
 
 export async function deleteCustomRole(
     guild: Discord.Guild,
-    database: firebase.database.Database,
     memberId: string,
     reason?: string
 ): Promise<void> {
@@ -116,10 +114,7 @@ export async function deleteCustomRole(
         .set(null);
 }
 
-export async function manageLeave(
-    message: Discord.Message,
-    database: firebase.database.Database
-): Promise<void> {
+export async function manageLeave(message: Discord.Message): Promise<void> {
     const { webhookId, embeds, guild, channel } = message;
     const embed = embeds?.[0];
     if (
@@ -134,10 +129,5 @@ export async function manageLeave(
     if (title !== 'Member left') return;
     const id = footer?.text?.match(/^ID: (\d{18})$/)?.[1];
     if (!id) return;
-    await deleteCustomRole(
-        guild,
-        database,
-        id,
-        'custom role owner left the server'
-    );
+    await deleteCustomRole(guild, id, 'custom role owner left the server');
 }

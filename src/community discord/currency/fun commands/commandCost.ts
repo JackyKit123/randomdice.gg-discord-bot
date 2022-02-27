@@ -1,5 +1,5 @@
 import { Message, MessageActionRow, MessageButton } from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cache from 'util/cache';
 import getBalance from 'util/getBalance';
 
@@ -7,8 +7,6 @@ export default async function commandCost(
     message: Message,
     cost: number
 ): Promise<boolean> {
-    const app = firebase.app();
-    const database = app.database();
     const { author, channel, content } = message;
 
     const command = content.split(' ')[0] || '';

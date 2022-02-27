@@ -1,4 +1,4 @@
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import Discord from 'discord.js';
 import getBalance from 'util/getBalance';
 import cooldown from 'util/cooldown';
@@ -7,8 +7,6 @@ import fetchMentionString from 'util/fetchMention';
 export default async function currency(
     message: Discord.Message
 ): Promise<void> {
-    const app = firebase.app();
-    const database = app.database();
     const numberFormat = new Intl.NumberFormat();
     if (
         await cooldown(message, `!currency update`, {

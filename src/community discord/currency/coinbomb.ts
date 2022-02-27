@@ -12,7 +12,7 @@ import {
     NewsChannel,
     TextChannel,
 } from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import { promisify } from 'util';
 import logMessage from 'dev-commands/logMessage';
 import rickBomb from 'community discord/currency/fun commands/rickbomb';
@@ -21,7 +21,7 @@ import getBalance from 'util/getBalance';
 const wait = promisify(setTimeout);
 const numberFormat = new Intl.NumberFormat();
 export const activeCoinbombInChannel = new Map<string, boolean>();
-const database = firebase.database();
+
 type BatchType = 'pick' | 'goldenPick' | 'small' | 'medium' | 'large';
 
 export default async function pickCoins(

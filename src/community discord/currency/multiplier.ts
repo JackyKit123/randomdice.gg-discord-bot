@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cooldown from 'util/cooldown';
 import cache from 'util/cache';
 
@@ -7,7 +7,6 @@ export default async function multiplierConfig(
     message: Discord.Message
 ): Promise<void> {
     const { content, member, guild, channel } = message;
-    const database = firebase.app().database();
 
     if (!member || !guild) return;
 

@@ -7,7 +7,7 @@ import {
     MessageEmbed,
     TextBasedChannels,
 } from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
@@ -16,8 +16,7 @@ const wait = promisify(setTimeout);
 
 async function killTimerFromDB(timerKey: string): Promise<void> {
     try {
-        await firebase
-            .database()
+        await database
             .ref('discord_bot/community/timer')
             .child(timerKey)
             .set(null);
@@ -134,7 +133,7 @@ export async function setTimer(
     time: number
 ): Promise<void> {
     const endTime = Date.now() + time;
-    const database = firebase.database();
+
     const timerMessage = await channel.send({
         embeds: [
             new MessageEmbed()

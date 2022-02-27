@@ -1,4 +1,4 @@
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import { GuildMember, Interaction, Message, MessageEmbed } from 'discord.js';
 import cooldown from 'util/cooldown';
 import fetchMention from 'util/fetchMention';
@@ -22,8 +22,6 @@ export default async function balance(
     output: 'silence' | 'emit' | 'emit new member',
     optionalTarget?: GuildMember
 ): Promise<number | false> {
-    const app = firebase.app();
-    const database = app.database();
     const numberFormat = new Intl.NumberFormat();
     const { member, channel, guild, client } = input;
     if (!guild || !member) return false;

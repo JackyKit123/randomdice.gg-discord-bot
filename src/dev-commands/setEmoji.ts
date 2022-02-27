@@ -1,8 +1,6 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cache from 'util/cache';
-
-const database = firebase.database();
 
 export default async function setEmoji(
     message: Discord.Message

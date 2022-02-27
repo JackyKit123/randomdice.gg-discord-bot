@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import firebase from 'firebase-admin';
+import { database } from 'firebase';
 import cache from 'util/cache';
 import getBalance from 'util/getBalance';
 
@@ -41,7 +41,6 @@ export default async function chatCoins(
     message: Discord.Message,
     dd?: true
 ): Promise<void> {
-    const database = firebase.app().database();
     const { content, member, channel, author, client } = message;
 
     if (
