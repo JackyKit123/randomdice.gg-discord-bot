@@ -3,10 +3,10 @@ import cooldown from 'util/cooldown';
 
 export default async function cardcalc(message: Message): Promise<void> {
     const { channel, content } = message;
-    const [command, arg] = content.split(' ');
+    const arg = content.replace('.gg cardcalc', '').trim();
     const waves = Number(arg);
     if (
-        await cooldown(message, command, {
+        await cooldown(message, '.gg cardcalc', {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
@@ -15,12 +15,7 @@ export default async function cardcalc(message: Message): Promise<void> {
     }
 
     if (!Number.isInteger(waves) || Number(waves) < 0) {
-        await channel.send('waves must be positive integer');
-        return;
-    }
-
-    if (waves > 100000) {
-        await channel.send('not feasible keep dreaming');
+        await channel.send('Waves argument must be a positive integer.');
         return;
     }
 
