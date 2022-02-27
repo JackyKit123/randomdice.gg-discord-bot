@@ -103,6 +103,7 @@ import setChannel from './community discord/ban appeal/setChannel';
 import closeAppeal from './community discord/ban appeal/closeAppeal';
 import cleverBot from './community discord/cleverbot';
 import afk, { afkResponse, removeAfkListener } from './community discord/afk';
+import cardcalc from './commands/cardcalc';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -481,6 +482,10 @@ client.on('messageCreate', async message => {
             }
             case 'help': {
                 await help(message);
+                break;
+            }
+            case 'cardcalc': {
+                await cardcalc(message);
                 break;
             }
             case 'website':
