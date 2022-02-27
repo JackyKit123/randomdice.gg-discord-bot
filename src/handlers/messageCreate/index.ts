@@ -74,6 +74,7 @@ import setEmoji from 'dev-commands/setEmoji';
 import statistic from 'dev-commands/stat';
 import version from 'dev-commands/version';
 import cache from 'util/cache';
+import cardcalc from 'commands/cardcalc';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { content, channel, guild, author, member, client } = message;
@@ -358,6 +359,10 @@ export default async function messageCreate(message: Message): Promise<void> {
             }
             case 'news': {
                 await news(message);
+                break;
+            }
+            case 'cardcalc': {
+                await cardcalc(message);
                 break;
             }
             case 'drawuntil': {

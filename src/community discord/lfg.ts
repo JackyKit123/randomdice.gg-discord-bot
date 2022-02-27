@@ -35,7 +35,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
                     .setColor('#ff0000')
                     .setDescription(
                         'You need one of the following roles to use this command.\n' +
-                            '<@&805388604791586826> <@&804231753535193119> <@&804512584375599154> <@&805388604791586826>'
+                            '<@&805388604791586826> <@&804231753535193119> <@&804512584375599154> <@&806896328255733780>'
                     ),
             ],
         });
