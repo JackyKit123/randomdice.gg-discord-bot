@@ -56,7 +56,11 @@ export default async function bestMatchFollowUp(
                     (input as CommandInteraction).user
                 ).id
             ) {
-                collected.reply('You cannot use this button.');
+                collected.reply({
+                    content:
+                        'You cannot use this button because you did not initiate this command.',
+                    ephemeral: true,
+                });
                 return;
             }
             if (collected.customId === 'yes') {
