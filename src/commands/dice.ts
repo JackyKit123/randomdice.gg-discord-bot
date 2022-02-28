@@ -91,11 +91,11 @@ export default async function dice(
         }
         const dieClassArg =
             input instanceof CommandInteraction
-                ? input.options.getNumber('class')
+                ? input.options.getInteger('class')
                 : dieClassArgs[0]?.[1];
         const dieLevelArg =
             input instanceof CommandInteraction
-                ? input.options.getNumber('level')
+                ? input.options.getInteger('level')
                 : dieLevelArgs[0]?.[1];
         const dieClass = Number(dieClassArg || minClass);
         const dieLevel = Number(dieLevelArg || 1);
