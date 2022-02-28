@@ -1,5 +1,10 @@
 import { database } from 'firebase';
-import { GuildMember, Interaction, Message, MessageEmbed } from 'discord.js';
+import {
+    ButtonInteraction,
+    GuildMember,
+    Message,
+    MessageEmbed,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
 import fetchMention from 'util/fetchMention';
 import cache from 'util/cache';
@@ -18,7 +23,7 @@ const prestigeRoleIds = [
 ];
 
 export default async function balance(
-    input: Message | Interaction,
+    input: Message | ButtonInteraction,
     output: 'silence' | 'emit' | 'emit new member',
     optionalTarget?: GuildMember
 ): Promise<number | false> {
