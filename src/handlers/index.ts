@@ -1,5 +1,6 @@
 import { Client } from 'discord.js';
 import guildCreate from './guildCreate';
+import guildMemberAdd from './guildMemberAdd';
 import interactionCreate from './interactionCreate';
 import messageCreate from './messageCreate';
 import messageDelete from './messageDelete';
@@ -14,6 +15,7 @@ export default function botEventHandlers(client: Client): void {
         .on('messageCreate', messageCreate)
         .on('interactionCreate', interactionCreate)
         .on('guildCreate', guildCreate)
+        .on('guildMemberAdd', guildMemberAdd)
         .on('messageReactionAdd', messageReactionAdd)
         .on('messageDelete', messageDelete)
         .on('messageUpdate', messageUpdate)

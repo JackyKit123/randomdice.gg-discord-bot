@@ -48,7 +48,6 @@ import profile from 'community discord/currency/profile';
 import raffle from 'community discord/currency/raffle';
 import timed from 'community discord/currency/timed';
 import voteReward from 'community discord/currency/voteReward';
-import welcomeReward from 'community discord/currency/welcomeReward';
 import customRole from 'community discord/customRole';
 import eventPing from 'community discord/eventping';
 import gtn from 'community discord/gtn';
@@ -104,7 +103,6 @@ export default async function messageCreate(message: Message): Promise<void> {
         ) {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
-                welcomeReward(message),
                 oneWordStoryValidate(message),
                 voteReward(message),
                 banMessage(message),

@@ -1,39 +1,31 @@
-import Discord from 'discord.js';
+import { GuildMember, Message } from 'discord.js';
 import { database } from 'firebase';
 import getBalance from 'util/getBalance';
 
-const rapidSuccessJoin = new Map<string | undefined, number>();
+const rapidSuccessJoin = new Map<GuildMember, number>();
 
 export default async function welcomeReward(
-    message: Discord.Message
+    member: GuildMember
 ): Promise<void> {
-    const { guild, embeds, channel } = message;
-
-    if (!guild || channel.id !== '845448948474576946' /* #join-leave-log */)
-        return;
-    if (!embeds.some(embed => embed.title === 'Member joined')) return;
-    const joinedMember = embeds[0]?.description
-        ?.split(' ')?.[0]
-        ?.replace(/^<@!?/, '')
-        .replace(/>$/, '');
+    const general = member.guild.channels.cache.get('804222694488932364');
     const now = Date.now().valueOf();
-    if (now - (rapidSuccessJoin.get(joinedMember) || 0) <= 1000 * 60 * 60) {
+
+    if (
+        !general?.isText() ||
+        now - (rapidSuccessJoin.get(member) || 0) <= 1000 * 60 * 60
+    ) {
         return;
     }
-    rapidSuccessJoin.set(joinedMember, now);
+    rapidSuccessJoin.set(member, now);
 
-    const general = guild.channels.cache.get('804222694488932364') as
-        | Discord.TextChannel
-        | undefined;
-    if (general?.type !== 'GUILD_TEXT') return;
-    const saidWelcome: (string | undefined)[] = [joinedMember];
+    const saidWelcome: (string | undefined)[] = [member.id];
     general
         .createMessageCollector({
-            filter: (collected: Discord.Message) =>
+            filter: (collected: Message) =>
                 !collected.author.bot && /welcome/i.test(collected.content),
             time: 60 * 1000,
         })
-        .on('collect', async (collected: Discord.Message) => {
+        .on('collect', async (collected: Message) => {
             const id = collected.member?.id;
             if (!id || saidWelcome.includes(id)) return;
             saidWelcome.push(id);
