@@ -1,16 +1,15 @@
 import {
     CommandInteraction,
     Message,
-    MessageActionRow,
-    MessageButton,
     MessageEmbed,
     ReplyMessageOptions,
 } from 'discord.js';
-import * as stringSimilarity from 'string-similarity';
+
 import cache, { Dice } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { edit, reply } from 'util/typesafeReply';
+import { reply } from 'util/typesafeReply';
+import bestMatchFollowUp from 'util/bestMatchFollowUp';
 
 export default async function dice(
     input: Message | CommandInteraction
@@ -44,21 +43,9 @@ export default async function dice(
             command.toLowerCase().replace(/-.*/, '').trim() ===
             d.name.toLowerCase()
     );
-    const execute = async (
-        target: Dice,
-        buttonInteraction?: CommandInteraction | Message
-    ): Promise<void> => {
-        const response = (content: string | ReplyMessageOptions) => {
-            const messageOption =
-                typeof content === 'string'
-                    ? { content, components: [] }
-                    : { ...content, components: [], content: undefined };
-            return buttonInteraction
-                ? edit(buttonInteraction, messageOption)
-                : reply(input, messageOption);
-        };
-
+    const getDiceInfo = (target?: Dice): string | ReplyMessageOptions => {
         let minClass: number;
+        if (!target) return 'No dice found.';
         switch (target.rarity) {
             case 'Legendary':
                 minClass = 7;
@@ -82,12 +69,9 @@ export default async function dice(
                     .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
             ];
             if (otherArgs.length) {
-                await response(
-                    `Unknown arguments: ${otherArgs.map(
-                        ([arg]) => `\`${arg}\``
-                    )}. Acceptable arguments are \`--class\` \`--level\` or alias \`-c\` \`-l\``
-                );
-                return;
+                return `Unknown arguments: ${otherArgs.map(
+                    ([arg]) => `\`${arg}\``
+                )}. Acceptable arguments are \`--class\` \`--level\` or alias \`-c\` \`-l\``;
             }
         }
 
@@ -103,21 +87,16 @@ export default async function dice(
         ];
         if (dieClassArgs.length > 1 || dieLevelArgs.length > 1) {
             if (dieClassArgs.length > 1) {
-                await response(
-                    `Duplicated arguments for dice class: ${dieClassArgs
-                        .map(arg => `\`${arg?.[0]}\``)
-                        .join(' ')}`
-                );
+                return `Duplicated arguments for dice class: ${dieClassArgs
+                    .map(arg => `\`${arg?.[0]}\``)
+                    .join(' ')}`;
             }
 
             if (dieLevelArgs.length > 1) {
-                await response(
-                    `Duplicated arguments for dice level: ${dieLevelArgs
-                        .map(arg => `\`${arg?.[0]}\``)
-                        .join(' ')}`
-                );
+                return `Duplicated arguments for dice level: ${dieLevelArgs
+                    .map(arg => `\`${arg?.[0]}\``)
+                    .join(' ')}`;
             }
-            return;
         }
         const dieClassArg = dieClassArgs[0]?.[1];
         const dieLevelArg = dieLevelArgs[0]?.[1];
@@ -133,28 +112,20 @@ export default async function dice(
             dieLevel > 5
         ) {
             if (Number.isNaN(dieClass)) {
-                await response(
-                    `Invalid arguments for dice class, \`${dieClassArg}\` is not a number.`
-                );
-            } else if (dieClass < minClass) {
-                await response(
-                    `Invalid arguments for dice class, ${target.name} dice is in **${target.rarity} tier**, its minimum class is **${minClass}**.`
-                );
-            } else if (dieClass > 15) {
-                await response(
-                    `Invalid arguments for dice class, the maximum dice class is **15**.`
-                );
+                return `Invalid arguments for dice class, \`${dieClassArg}\` is not a number.`;
+            }
+            if (dieClass < minClass) {
+                return `Invalid arguments for dice class, ${target.name} dice is in **${target.rarity} tier**, its minimum class is **${minClass}**.`;
+            }
+            if (dieClass > 15) {
+                return `Invalid arguments for dice class, the maximum dice class is **15**.`;
             }
             if (Number.isNaN(dieLevel)) {
-                await response(
-                    `Invalid arguments for dice level, \`${dieLevelArg}\` is not a number.`
-                );
-            } else if (dieLevel < 1 || dieLevel > 5) {
-                await response(
-                    `Invalid arguments for dice level, dice level should be between **1 - 5**.`
-                );
+                return `Invalid arguments for dice level, \`${dieLevelArg}\` is not a number.`;
             }
-            return;
+            if (dieLevel < 1 || dieLevel > 5) {
+                return `Invalid arguments for dice level, dice level should be between **1 - 5**.`;
+            }
         }
         const atk =
             Math.round(
@@ -185,7 +156,7 @@ export default async function dice(
                     100
             ) / 100;
 
-        await response({
+        return {
             embeds: [
                 new MessageEmbed()
                     .setTitle(`${target.name} Dice`)
@@ -243,11 +214,11 @@ export default async function dice(
                         'https://randomdice.gg/android-chrome-512x512.png'
                     ),
             ],
-        });
+        };
     };
 
     if (die) {
-        await execute(die);
+        await reply(input, getDiceInfo(die));
         return;
     }
 
@@ -256,70 +227,12 @@ export default async function dice(
         firstOptionalArgs > -1
             ? command.slice(0, firstOptionalArgs).trim()
             : command;
-    const { bestMatch } = stringSimilarity.findBestMatch(
-        wrongDiceName,
-        diceList.map(d => d.name)
-    );
-    if (bestMatch.rating >= 0.3) {
-        const sentMessage = await reply(input, {
-            content: `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`,
-            components: [
-                new MessageActionRow().addComponents([
-                    new MessageButton()
-                        .setCustomId('yes')
-                        .setLabel('Yes')
-                        .setEmoji('✅')
-                        .setStyle('SUCCESS'),
-                    new MessageButton()
-                        .setCustomId('no')
-                        .setLabel('No')
-                        .setEmoji('❌')
-                        .setStyle('DANGER'),
-                ]),
-            ],
-        });
 
-        if (sentMessage instanceof Message) {
-            sentMessage
-                .createMessageComponentCollector({
-                    time: 60000,
-                })
-                .on('collect', async collected => {
-                    if (
-                        collected.user.id !==
-                        (
-                            (input as Message).author ||
-                            (input as CommandInteraction).user
-                        ).id
-                    ) {
-                        collected.reply('You cannot use this button.');
-                        return;
-                    }
-                    if (collected.customId === 'yes') {
-                        const newDice = diceList.find(
-                            d => d.name === bestMatch.target
-                        );
-                        if (newDice && collected.isButton())
-                            await execute(
-                                newDice,
-                                input instanceof CommandInteraction
-                                    ? input
-                                    : sentMessage
-                            );
-                    } else if (collected.customId === 'no') {
-                        await sentMessage.delete();
-                    }
-                })
-                .on('end', async () => {
-                    await edit(
-                        input instanceof CommandInteraction
-                            ? input
-                            : sentMessage,
-                        `\`${wrongDiceName}\` is not a valid dice`
-                    );
-                });
-        }
-    } else {
-        await reply(input, `\`${wrongDiceName}\` is not a valid dice.`);
-    }
+    await bestMatchFollowUp(
+        input,
+        wrongDiceName,
+        diceList.map(d => d.name),
+        ' is not a valid dice.',
+        newDie => getDiceInfo(diceList.find(d => d.name === newDie))
+    );
 }
