@@ -68,7 +68,7 @@ export default async function bestMatchFollowUp(
                         : {
                               ...newResponse,
                               components: [],
-                              content: undefined,
+                              content: '',
                           };
                 edit(
                     input instanceof CommandInteraction ? input : sentMessage,
