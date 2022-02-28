@@ -14,6 +14,7 @@ import { registerTimer } from 'community discord/timer';
 import logMessage from 'dev-commands/logMessage';
 import { fetchAll } from 'util/cache';
 import updateListener from 'util/updateListener';
+import registerSlashCommands from 'register/slashCommands';
 
 export default async function ready(client: Client<true>): Promise<void> {
     // eslint-disable-next-line no-unused-expressions
@@ -29,6 +30,7 @@ export default async function ready(client: Client<true>): Promise<void> {
         // eslint-disable-next-line no-console
         console.log(bootMessage);
         await Promise.all([
+            registerSlashCommands(client),
             purgeMoonedRoles(client),
             purgeClownRoles(client),
             fetchApps(client),

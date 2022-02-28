@@ -1,6 +1,7 @@
 import { Interaction } from 'discord.js';
 import drawDice from 'community discord/currency/drawDice';
 import logMessage from 'dev-commands/logMessage';
+import ping from 'commands/ping';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -27,6 +28,14 @@ export default async function interactionCreate(
                     break;
                 default:
                     break;
+            }
+        }
+        if (interaction.isCommand()) {
+            switch (interaction.commandName) {
+                case 'ping':
+                    await ping(interaction);
+                    break;
+                default:
             }
         }
     } catch (err) {

@@ -1,10 +1,15 @@
-import Discord from 'discord.js';
+import Discord, {
+    ButtonInteraction,
+    CommandInteraction,
+    Message,
+} from 'discord.js';
 import cache from './cache';
 import parseMsIntoReadableText from './parseMS';
+import { reply } from './typesafeReply';
 
 const commandCooldown = new Map<string, Map<string, number>>();
 export default async function Cooldown(
-    input: Discord.Message | Discord.ButtonInteraction,
+    input: Message | ButtonInteraction | CommandInteraction,
     command: string,
     cooldown: {
         default: number;
@@ -34,7 +39,7 @@ export default async function Cooldown(
         now - userCooldown <=
         (userIsDonator ? cooldown.donator : cooldown.default)
     ) {
-        await input.reply({
+        await reply(input, {
             embeds: [
                 new Discord.MessageEmbed()
                     .setTitle('Slow Down!')
