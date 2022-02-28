@@ -16,7 +16,7 @@ export default async function ping(
         return;
     }
 
-    await reply(input, {
+    const sent = await reply(input, {
         embeds: [
             new MessageEmbed()
                 .setTitle('Pong')
@@ -27,7 +27,7 @@ export default async function ping(
                 ),
         ],
     });
-    await edit(input, {
+    await edit(input instanceof CommandInteraction ? input : sent, {
         embeds: [
             new MessageEmbed()
                 .setTitle('Pong')
