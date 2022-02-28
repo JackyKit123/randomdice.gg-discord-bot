@@ -32,9 +32,19 @@ export default async function registerSlashCommands(
         },
     ];
 
-    await (process.env.NODE_ENV === 'development'
-        ? client.guilds.cache
-              .get(process.env.DEV_SERVER_ID ?? '')
-              ?.commands.set(commands)
-        : client.application?.commands.set(commands));
+    if (process.env.NODE_ENV === 'development') {
+        await client.guilds.cache
+            .get(process.env.DEV_SERVER_ID ?? '')
+            ?.commands.set(commands);
+    } else if (process.env.NODE_ENV === 'production') {
+        await Promise.all([
+            client.guilds.cache
+                .get(process.env.COMMUNITY_SERVER_ID ?? '')
+                ?.commands.set(commands),
+            client.guilds.cache
+                .get(process.env.COMMUNITY_APPEAL_SERVER_ID ?? '')
+                ?.commands.set(commands),
+            client.application?.commands.set(commands),
+        ]);
+    }
 }
