@@ -8,7 +8,7 @@ import {
     MessageEmbed,
     User,
 } from 'discord.js';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import getBalance from 'util/getBalance';
 import { parseStringIntoMs } from 'util/parseMS';
 import cache from 'util/cache';

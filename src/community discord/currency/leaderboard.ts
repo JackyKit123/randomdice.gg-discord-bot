@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import logMessage from 'dev-commands/logMessage';
 import cache, { MemberCurrency } from 'util/cache';
 import cooldown from 'util/cooldown';

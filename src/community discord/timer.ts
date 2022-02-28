@@ -7,7 +7,7 @@ import {
     MessageEmbed,
     TextBasedChannels,
 } from 'discord.js';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';

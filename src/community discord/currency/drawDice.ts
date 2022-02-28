@@ -4,7 +4,7 @@ import Discord, {
     MessageActionRow,
     MessageButton,
 } from 'discord.js';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import * as randomstring from 'randomstring';
 import * as math from 'mathjs';
 import { promisify } from 'util';

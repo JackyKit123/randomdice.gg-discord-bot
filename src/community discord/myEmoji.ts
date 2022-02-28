@@ -1,4 +1,4 @@
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import stringSimilarity from 'string-similarity';
 import Discord, { DiscordAPIError } from 'discord.js';
 import axios, { AxiosResponse } from 'axios';

@@ -1,5 +1,5 @@
 import { Client } from 'discord.js';
-import initFirebase from 'firebase';
+import initFirebase from 'register/firebase';
 import logMessage from 'dev-commands/logMessage';
 import reboot from 'dev-commands/reboot';
 import botEventHandlers from 'handlers';

@@ -1,5 +1,5 @@
 import firebase from 'firebase-admin';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 
 export interface News {
     game: string;

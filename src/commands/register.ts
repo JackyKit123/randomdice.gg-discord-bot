@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import cooldown from 'util/cooldown';
 import postNow from './postNow';
 

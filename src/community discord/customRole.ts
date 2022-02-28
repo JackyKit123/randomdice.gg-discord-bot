@@ -1,4 +1,4 @@
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import Discord from 'discord.js';
 import colorParser from 'color-parser';
 import cache from 'util/cache';

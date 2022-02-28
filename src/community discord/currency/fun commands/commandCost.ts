@@ -1,5 +1,5 @@
 import { Message, MessageActionRow, MessageButton } from 'discord.js';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import cache from 'util/cache';
 import getBalance from 'util/getBalance';
 

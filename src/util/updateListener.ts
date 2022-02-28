@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import firebase from 'firebase-admin';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import Discord from 'discord.js';
 import logMessage from 'dev-commands/logMessage';
 import * as post from '../commands/postNow';

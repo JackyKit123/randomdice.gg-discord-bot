@@ -1,4 +1,4 @@
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import {
     ButtonInteraction,
     GuildMember,

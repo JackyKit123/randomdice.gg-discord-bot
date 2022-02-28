@@ -1,4 +1,4 @@
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import Discord from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';

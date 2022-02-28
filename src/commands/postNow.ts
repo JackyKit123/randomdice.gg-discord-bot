@@ -1,7 +1,7 @@
 // eslint-disable-next-line
 import Discord, { DiscordAPIError } from 'discord.js';
 import firebase from 'firebase-admin';
-import { database } from 'firebase';
+import { database } from 'register/firebase';
 import cache from 'util/cache';
 import parsedText from 'util/parseText';
 import logMessage from 'dev-commands/logMessage';
