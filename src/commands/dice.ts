@@ -1,22 +1,39 @@
-import Discord from 'discord.js';
+import {
+    CommandInteraction,
+    Message,
+    MessageActionRow,
+    MessageButton,
+    MessageEmbed,
+    ReplyMessageOptions,
+} from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
 import cache, { Dice } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
+import { edit, reply } from 'util/typesafeReply';
 
-export default async function dice(message: Discord.Message): Promise<void> {
-    const { channel, content } = message;
+export default async function dice(
+    input: Message | CommandInteraction
+): Promise<void> {
     if (
-        await cooldown(message, '.gg dice', {
+        await cooldown(input, '.gg dice', {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
     ) {
         return;
     }
-    const command = content.replace(/^\\?\.gg dice ?/i, '');
+
+    const command =
+        input instanceof Message
+            ? input.content.replace(/^\.gg dice ?/i, '')
+            : `${input.options.getString('die') ?? ''} -c ${
+                  input.options.getInteger('class') ?? '1'
+              } -l ${input.options.getInteger('level') ?? '1'}`;
+
     if (!command || command.startsWith('-')) {
-        await channel.send(
+        await reply(
+            input,
             'Please include the dice name in the first parameter after `.gg dice`.'
         );
         return;
@@ -27,7 +44,20 @@ export default async function dice(message: Discord.Message): Promise<void> {
             command.toLowerCase().replace(/-.*/, '').trim() ===
             d.name.toLowerCase()
     );
-    const execute = async (target: Dice): Promise<void> => {
+    const execute = async (
+        target: Dice,
+        buttonInteraction?: CommandInteraction | Message
+    ): Promise<void> => {
+        const response = (content: string | ReplyMessageOptions) => {
+            const messageOption =
+                typeof content === 'string'
+                    ? { content, components: [] }
+                    : { ...content, components: [], content: undefined };
+            return buttonInteraction
+                ? edit(buttonInteraction, messageOption)
+                : reply(input, messageOption);
+        };
+
         let minClass: number;
         switch (target.rarity) {
             case 'Legendary':
@@ -52,7 +82,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
                     .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
             ];
             if (otherArgs.length) {
-                await channel.send(
+                await response(
                     `Unknown arguments: ${otherArgs.map(
                         ([arg]) => `\`${arg}\``
                     )}. Acceptable arguments are \`--class\` \`--level\` or alias \`-c\` \`-l\``
@@ -73,7 +103,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
         ];
         if (dieClassArgs.length > 1 || dieLevelArgs.length > 1) {
             if (dieClassArgs.length > 1) {
-                await channel.send(
+                await response(
                     `Duplicated arguments for dice class: ${dieClassArgs
                         .map(arg => `\`${arg?.[0]}\``)
                         .join(' ')}`
@@ -81,7 +111,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
             }
 
             if (dieLevelArgs.length > 1) {
-                await channel.send(
+                await response(
                     `Duplicated arguments for dice level: ${dieLevelArgs
                         .map(arg => `\`${arg?.[0]}\``)
                         .join(' ')}`
@@ -103,24 +133,24 @@ export default async function dice(message: Discord.Message): Promise<void> {
             dieLevel > 5
         ) {
             if (Number.isNaN(dieClass)) {
-                await channel.send(
+                await response(
                     `Invalid arguments for dice class, \`${dieClassArg}\` is not a number.`
                 );
             } else if (dieClass < minClass) {
-                await channel.send(
+                await response(
                     `Invalid arguments for dice class, ${target.name} dice is in **${target.rarity} tier**, its minimum class is **${minClass}**.`
                 );
             } else if (dieClass > 15) {
-                await channel.send(
+                await response(
                     `Invalid arguments for dice class, the maximum dice class is **15**.`
                 );
             }
             if (Number.isNaN(dieLevel)) {
-                await channel.send(
+                await response(
                     `Invalid arguments for dice level, \`${dieLevelArg}\` is not a number.`
                 );
             } else if (dieLevel < 1 || dieLevel > 5) {
-                await channel.send(
+                await response(
                     `Invalid arguments for dice level, dice level should be between **1 - 5**.`
                 );
             }
@@ -155,9 +185,9 @@ export default async function dice(message: Discord.Message): Promise<void> {
                     100
             ) / 100;
 
-        await channel.send({
+        await response({
             embeds: [
-                new Discord.MessageEmbed()
+                new MessageEmbed()
                     .setTitle(`${target.name} Dice`)
                     .setDescription(parsedText(target.detail))
                     .setThumbnail(target.img)
@@ -231,37 +261,65 @@ export default async function dice(message: Discord.Message): Promise<void> {
         diceList.map(d => d.name)
     );
     if (bestMatch.rating >= 0.3) {
-        const sentMessage = await channel.send(
-            `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`? You may answer \`Yes\` to display the dice info.`
-        );
-        let answeredYes = false;
-        try {
-            const awaitedMessage = await channel.awaitMessages({
-                filter: (newMessage: Discord.Message) =>
-                    newMessage.author === message.author &&
-                    !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                time: 60000,
-                max: 1,
-                errors: ['time'],
-            });
-            if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
-                answeredYes = true;
-            }
-        } catch {
-            if (sentMessage.editable)
-                await sentMessage.edit(
-                    `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
-                );
-        }
-        if (answeredYes) {
-            const newDice = diceList.find(d => d.name === bestMatch.target);
-            if (newDice) await execute(newDice);
-        } else if (sentMessage.editable) {
-            await sentMessage.edit(
-                `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`
-            );
+        const sentMessage = await reply(input, {
+            content: `\`${wrongDiceName}\` is not a valid dice. Did you mean \`${bestMatch.target}\`?`,
+            components: [
+                new MessageActionRow().addComponents([
+                    new MessageButton()
+                        .setCustomId('yes')
+                        .setLabel('Yes')
+                        .setEmoji('✅')
+                        .setStyle('SUCCESS'),
+                    new MessageButton()
+                        .setCustomId('no')
+                        .setLabel('No')
+                        .setEmoji('❌')
+                        .setStyle('DANGER'),
+                ]),
+            ],
+        });
+
+        if (sentMessage instanceof Message) {
+            sentMessage
+                .createMessageComponentCollector({
+                    time: 60000,
+                })
+                .on('collect', async collected => {
+                    if (
+                        collected.user.id !==
+                        (
+                            (input as Message).author ||
+                            (input as CommandInteraction).user
+                        ).id
+                    ) {
+                        collected.reply('You cannot use this button.');
+                        return;
+                    }
+                    if (collected.customId === 'yes') {
+                        const newDice = diceList.find(
+                            d => d.name === bestMatch.target
+                        );
+                        if (newDice && collected.isButton())
+                            await execute(
+                                newDice,
+                                input instanceof CommandInteraction
+                                    ? input
+                                    : sentMessage
+                            );
+                    } else if (collected.customId === 'no') {
+                        await sentMessage.delete();
+                    }
+                })
+                .on('end', async () => {
+                    await edit(
+                        input instanceof CommandInteraction
+                            ? input
+                            : sentMessage,
+                        `\`${wrongDiceName}\` is not a valid dice`
+                    );
+                });
         }
     } else {
-        await channel.send(`\`${wrongDiceName}\` is not a valid dice.`);
+        await reply(input, `\`${wrongDiceName}\` is not a valid dice.`);
     }
 }
