@@ -26,17 +26,8 @@ export default async function dice(
     const command =
         input instanceof Message
             ? input.content.replace(/^\.gg dice ?/i, '')
-            : `${input.options.getString('die') ?? ''} -c ${
-                  input.options.getInteger('class') ?? '1'
-              } -l ${input.options.getInteger('level') ?? '1'}`;
+            : input.options.getString('die') ?? '';
 
-    if (!command || command.startsWith('-')) {
-        await reply(
-            input,
-            'Please include the dice name in the first parameter after `.gg dice`.'
-        );
-        return;
-    }
     const diceList = cache.dice;
     const die = diceList.find(
         d =>
@@ -98,8 +89,14 @@ export default async function dice(
                     .join(' ')}`;
             }
         }
-        const dieClassArg = dieClassArgs[0]?.[1];
-        const dieLevelArg = dieLevelArgs[0]?.[1];
+        const dieClassArg =
+            input instanceof CommandInteraction
+                ? input.options.getNumber('class')
+                : dieClassArgs[0]?.[1];
+        const dieLevelArg =
+            input instanceof CommandInteraction
+                ? input.options.getNumber('level')
+                : dieLevelArgs[0]?.[1];
         const dieClass = Number(dieClassArg || minClass);
         const dieLevel = Number(dieLevelArg || 1);
 
