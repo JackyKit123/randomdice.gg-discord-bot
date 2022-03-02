@@ -92,7 +92,7 @@ export default async function Apply(message: Discord.Message): Promise<void> {
         .setColor(member.displayHexColor)
         .setAuthor(
             `${member.user.username}#${member.user.discriminator}`,
-            member.user.displayAvatarURL({ dynamic: true })
+            member.displayAvatarURL({ dynamic: true })
         )
         .setFooter(
             'React to ✅ when finished, react to ❌ to cancel your application.'
@@ -282,7 +282,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     .setColor(member.displayHexColor)
                     .setAuthor(
                         `${member.user.username}#${member.user.discriminator}`,
-                        member.user.displayAvatarURL({ dynamic: true })
+                        member.displayAvatarURL({ dynamic: true })
                     )
                     .setFooter(
                         'React to ✅ when finished, react to ❌ to cancel your application.'
@@ -364,7 +364,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     .setColor(member.displayHexColor)
                     .setAuthor(
                         `${member.user.username}#${member.user.discriminator}`,
-                        member.user.displayAvatarURL({ dynamic: true })
+                        member.displayAvatarURL({ dynamic: true })
                     )
                     .setFooter(
                         'React to ✅ when finished, react to ❌ to cancel your application.'
@@ -448,7 +448,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     .setColor(member.displayHexColor)
                     .setAuthor(
                         `${member.user.username}#${member.user.discriminator}`,
-                        member.user.displayAvatarURL({ dynamic: true })
+                        member.displayAvatarURL({ dynamic: true })
                     )
                     .setFooter(
                         'React to ✅ when finished, react to ❌ to cancel your application.'
@@ -554,7 +554,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                                 .setColor(member.displayHexColor)
                                 .setAuthor(
                                     `${member.user.username}#${member.user.discriminator}`,
-                                    member.user.displayAvatarURL({
+                                    member.displayAvatarURL({
                                         dynamic: true,
                                     })
                                 )
@@ -578,7 +578,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                         .setColor(member.displayHexColor)
                         .setAuthor(
                             `${member.user.username}#${member.user.discriminator}`,
-                            member.user.displayAvatarURL({ dynamic: true })
+                            member.displayAvatarURL({ dynamic: true })
                         )
                         .setFooter(
                             `Application publicity: ${
@@ -610,7 +610,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
                                 .setColor(member.displayHexColor)
                                 .setAuthor(
                                     `${member.user.username}#${member.user.discriminator}`,
-                                    member.user.displayAvatarURL({
+                                    member.displayAvatarURL({
                                         dynamic: true,
                                     })
                                 )

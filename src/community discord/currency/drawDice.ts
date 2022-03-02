@@ -187,12 +187,14 @@ export default async function drawDice(
         .ref(`discord_bot/community/currency/${member.user.id}/balance`)
         .set(balance + outcome.reward);
     let embed = new Discord.MessageEmbed()
-        .setAuthor(
-            `${
+        .setAuthor({
+            name: `${
                 guild.members.cache.get(member.user.id)?.displayName ?? '???'
             }'s Dice Draw Game`,
-            author.avatarURL({ dynamic: true }) ?? undefined
-        )
+            iconURL: guild.members.cache.get(member.user.id)?.displayAvatarURL({
+                dynamic: true,
+            }),
+        })
         .setDescription(`You earned <:dicecoin:839981846419079178> ????`)
         .addField(
             `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,

@@ -74,12 +74,12 @@ async function closeReport(message: Discord.Message): Promise<void> {
             .setFooter('Report Closed at')
             .setTimestamp();
         if (reportMember) {
-            embed = embed.setAuthor(
-                `${reportMember.user.username}#${reportMember.user.discriminator}`,
-                reportMember.user.displayAvatarURL({
+            embed = embed.setAuthor({
+                name: reportMember.user.tag,
+                iconURL: reportMember.displayAvatarURL({
                     dynamic: true,
-                })
-            );
+                }),
+            });
             embed.addField(
                 'Report Member',
                 `**Name:** ${reportMember.user.username}#${
@@ -163,12 +163,12 @@ async function closeReport(message: Discord.Message): Promise<void> {
             new Discord.MessageEmbed()
                 .setTitle('Report Closed')
                 .setColor('#6ba4a5')
-                .setAuthor(
-                    `Moderator: ${member.user.username}#${member.user.discriminator}`,
-                    member.user.displayAvatarURL({
+                .setAuthor({
+                    name: `Moderator: ${member.user.tag}`,
+                    iconURL: member.displayAvatarURL({
                         dynamic: true,
-                    })
-                )
+                    }),
+                })
                 .setDescription(content.replace('!closereport', ''))
                 .setFooter('Report closed at')
                 .setTimestamp(),
@@ -214,10 +214,10 @@ export default async function report(message: Discord.Message): Promise<void> {
     const lastMessage = channel.lastMessageId;
     const memberMentions = mentions.members;
     let embed = new Discord.MessageEmbed()
-        .setAuthor(
-            `${author.username}#${author.discriminator}`,
-            author.displayAvatarURL({ dynamic: true })
-        )
+        .setAuthor({
+            name: author.tag,
+            iconURL: member.displayAvatarURL({ dynamic: true }),
+        })
         .setTitle('New Report')
         .setColor('#00ff00')
         .setDescription(args.join(' '))

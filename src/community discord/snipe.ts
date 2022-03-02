@@ -157,12 +157,14 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     ];
 
     let embed = new Discord.MessageEmbed()
-        .setAuthor(
-            `${snipedMessage.author.username}#${snipedMessage.author.discriminator}`,
-            snipedMessage.author.displayAvatarURL({
+        .setAuthor({
+            name: snipedMessage.author.tag,
+            iconURL: (
+                snipedMessage.member ?? snipedMessage.author
+            ).displayAvatarURL({
                 dynamic: true,
-            })
-        )
+            }),
+        })
         .setDescription(snipedMessage.content)
         .setFooter(
             `snipedMessage by: ${author.username}#${author.discriminator}`

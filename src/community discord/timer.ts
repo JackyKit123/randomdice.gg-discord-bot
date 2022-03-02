@@ -137,12 +137,10 @@ export async function setTimer(
     const timerMessage = await channel.send({
         embeds: [
             new MessageEmbed()
-                .setAuthor(
-                    `Timer by ${member.displayName}`,
-                    member.user.displayAvatarURL(
-                        { dynamic: true } ?? member.user.defaultAvatarURL
-                    )
-                )
+                .setAuthor({
+                    name: `${member.displayName}'s Timer`,
+                    iconURL: member.displayAvatarURL({ dynamic: true }),
+                })
                 .setTitle(title)
                 .setColor(member.displayHexColor)
                 .setFooter(

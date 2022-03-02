@@ -108,12 +108,10 @@ export default async function coinflip(
     await channel.send({
         embeds: [
             new Discord.MessageEmbed()
-                .setAuthor(
-                    `${author.username}#${author.discriminator}`,
-                    author.avatarURL({
-                        dynamic: true,
-                    }) ?? undefined
-                )
+                .setAuthor({
+                    name: `${author.username}#${author.discriminator}`,
+                    iconURL: member.displayAvatarURL({ dynamic: true }),
+                })
                 .setColor(won ? '#99ff00' : '#ff0000')
                 .setTitle(
                     `It is ${flip.toUpperCase()}!!! You ${

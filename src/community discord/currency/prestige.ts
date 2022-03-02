@@ -56,7 +56,7 @@ export default async function prestige(
                 new Discord.MessageEmbed()
                     .setAuthor(
                         `${member.user.username}#${member.user.discriminator}`,
-                        member.user.avatarURL({
+                        member.displayAvatarURL({
                             dynamic: true,
                         }) ?? undefined
                     )

@@ -58,10 +58,10 @@ async function createPromotion(
     }
 
     let embed = new Discord.MessageEmbed()
-        .setAuthor(
-            `${user.username}#${user.discriminator}`,
-            user.displayAvatarURL()
-        )
+        .setAuthor({
+            name: user.tag,
+            iconURL: user.displayAvatarURL({ format: 'png' }),
+        })
         .setTitle(`Promotion of ${promotionType}`)
         .setFooter(user.id)
         .setTimestamp();

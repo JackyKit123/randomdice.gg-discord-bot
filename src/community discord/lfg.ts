@@ -57,7 +57,7 @@ export default async function LFG(message: Discord.Message): Promise<void> {
     let embed = new Discord.MessageEmbed()
         .setAuthor(
             `${member.user.username}#${member.user.discriminator}`,
-            member.user.displayAvatarURL({
+            member.displayAvatarURL({
                 dynamic: true,
             })
         )

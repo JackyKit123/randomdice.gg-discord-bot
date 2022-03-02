@@ -67,7 +67,7 @@ export default async function balance(
     const embed = new MessageEmbed()
         .setAuthor(
             `${target.user.username}#${target.user.discriminator}`,
-            target.user.avatarURL({
+            target.displayAvatarURL({
                 dynamic: true,
             }) ?? undefined
         )

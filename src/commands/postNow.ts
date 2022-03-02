@@ -225,7 +225,7 @@ export async function postGuide(
                                 ? 'Last Updated Timestamp'
                                 : `Requested by ${member?.user.username}#${member?.user.discriminator}`,
                             iconURL:
-                                member?.avatarURL({ dynamic: true }) ??
+                                member?.displayAvatarURL({ dynamic: true }) ??
                                 'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Dice%20Images%2FTime?alt=media&token=5c459fc5-4059-4099-b93d-f4bc86debf6d',
                         }),
                 ],

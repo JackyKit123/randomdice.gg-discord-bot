@@ -125,11 +125,12 @@ export default async function Profile(message: Discord.Message): Promise<void> {
     const nextPrestigeLevel = currentPrestigeLevel + 1;
     const progress = balance / (nextPrestigeLevel * 250000);
     const embed = new Discord.MessageEmbed()
-        .setAuthor(
-            `${target.displayName}'s Profile`,
-            target.user.avatarURL({ dynamic: true }) ??
-                target.user.defaultAvatarURL
-        )
+        .setAuthor({
+            name: `${target.displayName}'s Profile`,
+            iconURL: member.displayAvatarURL({
+                dynamic: true,
+            }),
+        })
         .setColor(
             // eslint-disable-next-line no-nested-ternary
             target.displayHexColor

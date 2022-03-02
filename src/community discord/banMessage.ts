@@ -38,12 +38,9 @@ export default async function banMessage(
                                 'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
                             )
                             .setThumbnail(
-                                user.displayAvatarURL({ dynamic: true }) ??
-                                    user.defaultAvatarURL
+                                user.displayAvatarURL({ dynamic: true })
                             )
-                            .setTitle(
-                                `${user.username}#${user.discriminator} Got banned`
-                            )
+                            .setTitle(`${user.tag} Got banned`)
                             .setColor('#ff0000')
                             .setDescription(
                                 `${user} got banned by ${moderator} for ||${reason}||`

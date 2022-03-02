@@ -37,8 +37,9 @@ export default async function bon(message: Discord.Message): Promise<void> {
                         'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
                     )
                     .setThumbnail(
-                        target.user.displayAvatarURL({ dynamic: true }) ??
-                            target.user.defaultAvatarURL
+                        target.displayAvatarURL({
+                            dynamic: true,
+                        })
                     )
                     .setTitle(
                         `${target.user.username}#${target.user.discriminator} Got bonned`
