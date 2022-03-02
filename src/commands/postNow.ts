@@ -14,6 +14,7 @@ import cooldown from 'util/cooldown';
 import { edit, reply } from 'util/typesafeReply';
 import { getNewsInfo } from './news';
 import { getGuideData } from './guide';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export async function postGuide(
     client: Discord.Client,
@@ -115,8 +116,7 @@ export async function postGuide(
             await channel.bulkDelete(fetched);
             const statusMessage = await channel.send({
                 embeds: [
-                    new Discord.MessageEmbed()
-                        .setColor('#6ba4a5')
+                    getBrandingEmbed()
                         .setTimestamp()
                         .setTitle(
                             `${
@@ -130,11 +130,6 @@ export async function postGuide(
                                       }.`
                                     : `\`.gg postnow guide\` is executed.`
                             } Refreshing all deck guides.`
-                        )
-                        .setAuthor(
-                            'Random Dice Community Website',
-                            'https://randomdice.gg/android-chrome-512x512.png',
-                            'https://randomdice.gg/'
                         )
                         .setDescription(`Requested By: ${member?.toString()}`),
                 ],
@@ -174,19 +169,12 @@ export async function postGuide(
                     })
                 )
             ).filter(msg => msg.isTitle);
-            const guideListEmbed = new Discord.MessageEmbed()
-                .setColor('#6ba4a5')
+            const guideListEmbed = getBrandingEmbed('/decks/guide')
                 .setTimestamp()
                 .setTitle('Deck Guide List')
                 .setDescription(
                     'Click on the url for quick navigation to a guide'
                 )
-                .setAuthor(
-                    'Random Dice Community Website',
-                    'https://randomdice.gg/android-chrome-512x512.png',
-                    'https://randomdice.gg/'
-                )
-                .setURL(`https://randomdice.gg/decks/guide/}`)
                 .addFields(
                     ['PvP', 'Co-op', 'Crew']
                         .flatMap(type =>
@@ -208,8 +196,7 @@ export async function postGuide(
 
             await channel.send({
                 embeds: [
-                    new Discord.MessageEmbed()
-                        .setColor('#6ba4a5')
+                    getBrandingEmbed()
                         .setTimestamp()
                         .setTitle(
                             updateListener
@@ -233,18 +220,14 @@ export async function postGuide(
                                   }).`
                                 : `Navigate to the list of guides for quick navigation by [clicking here](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}).`
                         )
-                        .setAuthor(
-                            'Random Dice Community Website',
-                            'https://randomdice.gg/android-chrome-512x512.png',
-                            'https://randomdice.gg/'
-                        )
-                        .setFooter(
-                            updateListener
+                        .setFooter({
+                            text: updateListener
                                 ? 'Last Updated Timestamp'
                                 : `Requested by ${member?.user.username}#${member?.user.discriminator}`,
-                            member?.user.avatarURL({ dynamic: true }) ||
-                                'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Dice%20Images%2FTime?alt=media&token=5c459fc5-4059-4099-b93d-f4bc86debf6d'
-                        ),
+                            iconURL:
+                                member?.avatarURL({ dynamic: true }) ??
+                                'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Dice%20Images%2FTime?alt=media&token=5c459fc5-4059-4099-b93d-f4bc86debf6d',
+                        }),
                 ],
             });
         })

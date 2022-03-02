@@ -2,7 +2,6 @@ import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
     Message,
-    MessageEmbed,
     WebhookEditMessageOptions,
 } from 'discord.js';
 
@@ -10,8 +9,9 @@ import cache, { Dice } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
-import bestMatchFollowUp from 'util/bestMatchFollowUp';
 import { getAscendingNumberArray, mapChoices } from 'register/slashCommands';
+import bestMatchFollowUp from './util/bestMatchFollowUp';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function dice(
     input: Message | CommandInteraction
@@ -158,17 +158,10 @@ export default async function dice(
 
         return {
             embeds: [
-                new MessageEmbed()
+                getBrandingEmbed('/wiki/dice_mechanics')
                     .setTitle(`${target.name} Dice`)
                     .setDescription(parsedText(target.detail))
                     .setThumbnail(target.img)
-                    .setAuthor(
-                        'Random Dice Community Website',
-                        'https://randomdice.gg/android-chrome-512x512.png',
-                        'https://randomdice.gg/'
-                    )
-                    .setColor('#6ba4a5')
-                    .setURL(`https://randomdice.gg/wiki/dice_mechanics`)
                     .addFields([
                         {
                             name: 'Attack Damage',
@@ -208,11 +201,7 @@ export default async function dice(
                                       inline: true,
                                   },
                               ]),
-                    ])
-                    .setFooter(
-                        'randomdice.gg Dice Information',
-                        'https://randomdice.gg/android-chrome-512x512.png'
-                    ),
+                    ]),
             ],
         };
     };

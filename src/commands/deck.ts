@@ -1,4 +1,4 @@
-import Discord, {
+import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
     Message,
@@ -7,6 +7,7 @@ import cache, { Deck } from 'util/cache';
 import cooldown from 'util/cooldown';
 import getPaginationComponents from 'util/paginationButtons';
 import { reply } from 'util/typesafeReply';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function decklist(
     input: Message | CommandInteraction
@@ -183,21 +184,16 @@ export default async function decklist(
     const embeds = Array(pageNumbers)
         .fill('')
         .map((_, i) =>
-            new Discord.MessageEmbed()
-                .setColor('#6ba4a5')
+            getBrandingEmbed(`/decks/${deckType}`)
                 .setTitle(`Random Dice ${deckType} Deck List`)
-                .setAuthor(
-                    'Random Dice Community Website',
-                    'https://randomdice.gg/android-chrome-512x512.png',
-                    'https://randomdice.gg/'
-                )
-                .setURL(`https://randomdice.gg/decks/${deckType}`)
                 .setDescription('Each deck is listed below with a rating.')
                 .addFields(fields.slice(i * 10, i * 10 + 10))
-                .setFooter(
-                    `randomdice.gg Deck List #page ${i + 1}/${pageNumbers}`,
-                    'https://randomdice.gg/android-chrome-512x512.png'
-                )
+                .setFooter({
+                    text: `randomdice.gg Deck List #page ${
+                        i + 1
+                    }/${pageNumbers}`,
+                    iconURL: 'https://randomdice.gg/android-chrome-512x512.png',
+                })
         );
 
     const { components, collectorHandler } = getPaginationComponents(

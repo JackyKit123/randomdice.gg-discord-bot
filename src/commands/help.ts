@@ -2,11 +2,11 @@ import {
     ApplicationCommandData,
     CommandInteraction,
     Message,
-    MessageEmbed,
 } from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function help(
     input: Message | CommandInteraction,
@@ -22,14 +22,8 @@ export default async function help(
     ) {
         return;
     }
-    const helpMessage = new MessageEmbed()
+    const helpMessage = getBrandingEmbed()
         .setTitle('List of Commands')
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/android-chrome-512x512.png',
-            'https://randomdice.gg/'
-        )
-        .setColor('#6ba4a5')
         .setDescription(
             'Here is a list of commands, randomdice.gg bot suffix is `.gg`'
         )
@@ -44,13 +38,8 @@ export default async function help(
                     .join('\n'),
             }))
         );
-    const communityHelpMessage = new MessageEmbed()
+    const communityHelpMessage = getBrandingEmbed()
         .setTitle('Community Server Specific Commands')
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/android-chrome-512x512.png',
-            'https://randomdice.gg/'
-        )
         .setDescription(
             'Here is a list of commands, random dice community discord specific commands suffix is `!`'
         )

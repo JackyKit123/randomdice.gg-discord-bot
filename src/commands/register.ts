@@ -14,6 +14,7 @@ import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
 import yesNoButton from 'util/yesNoButton';
 import postNow from './postNow';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 async function checkRegistered(guild: Guild): Promise<MessageEmbed | string> {
     const registeredChannel = (
@@ -22,15 +23,9 @@ async function checkRegistered(guild: Guild): Promise<MessageEmbed | string> {
     if (!registeredChannel) {
         return 'You have no registered channel. Start registering channel by doing `.gg register`';
     }
-    return new MessageEmbed()
+    return getBrandingEmbed()
         .setTitle('Registered Channels')
         .setDescription('Here is the list of registered channel for the type')
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/android-chrome-512x512.png',
-            'https://randomdice.gg/'
-        )
-        .setColor('#6ba4a5')
         .addFields(
             Object.entries(registeredChannel).map(([type, channelId]) => ({
                 name: type,

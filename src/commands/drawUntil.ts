@@ -1,4 +1,4 @@
-import Discord, {
+import {
     ApplicationCommandData,
     CommandInteraction,
     Message,
@@ -7,6 +7,7 @@ import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { edit, reply } from 'util/typesafeReply';
 import { getAscendingNumberArray } from 'register/slashCommands';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function drawUntil(
     input: Message | CommandInteraction
@@ -133,20 +134,10 @@ export default async function drawUntil(
             ]
     );
 
-    const messageEmbed = new Discord.MessageEmbed()
+    const messageEmbed = getBrandingEmbed()
         .setTitle(`Legendary Draw Simulation`)
         .setDescription(
             `For a pool of ${legendaryPoolSize} Legendary. This is the result for the mean number of draws to achieve legendary class ${targetClass} after running ${simulationRuns} simulations.\n*Note: it runs a simulation instead of actual math equation, the result may differ slightly each time*`
-        )
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/android-chrome-512x512.png',
-            'https://randomdice.gg/'
-        )
-        .setColor('#6ba4a5')
-        .setFooter(
-            'randomdice.gg Draws Simulation',
-            'https://randomdice.gg/android-chrome-512x512.png'
         )
         .addField(
             `For first class ${targetClass} (from Legend Box / King's Legacy):`,

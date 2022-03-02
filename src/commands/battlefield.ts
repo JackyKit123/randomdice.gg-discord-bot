@@ -2,15 +2,15 @@ import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
     Message,
-    MessageEmbed,
     ReplyMessageOptions,
 } from 'discord.js';
 import cache, { Battlefield } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
-import bestMatchFollowUp from 'util/bestMatchFollowUp';
 import { getAscendingNumberArray, mapChoices } from 'register/slashCommands';
+import bestMatchFollowUp from './util/bestMatchFollowUp';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function dice(
     input: Message | CommandInteraction
@@ -86,7 +86,7 @@ export default async function dice(
 
         return {
             embeds: [
-                new MessageEmbed()
+                getBrandingEmbed(`/wiki/battlefield#${encodeURI(target.name)}`)
                     .setTitle(target.name)
                     .setImage(target.img)
                     .setDescription(desc)
@@ -100,22 +100,7 @@ export default async function dice(
                             ) / 100
                         }${target.buffUnit}`
                     )
-                    .addField('Obtained From', target.source)
-                    .setAuthor(
-                        'Random Dice Community Website',
-                        'https://randomdice.gg/android-chrome-512x512.png',
-                        'https://randomdice.gg/'
-                    )
-                    .setColor('#6ba4a5')
-                    .setURL(
-                        `https://randomdice.gg/wiki/battlefield#${encodeURI(
-                            target.name
-                        )}`
-                    )
-                    .setFooter(
-                        'randomdice.gg Battlefield Information',
-                        'https://randomdice.gg/android-chrome-512x512.png'
-                    ),
+                    .addField('Obtained From', target.source),
             ],
         };
     };

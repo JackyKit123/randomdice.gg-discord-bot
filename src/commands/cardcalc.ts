@@ -5,6 +5,7 @@ import {
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function cardcalc(
     input: Message | CommandInteraction
@@ -42,14 +43,24 @@ export default async function cardcalc(
         cards += ((waves - 45) % 2) * 2; // 2 card for each non boss wave
     }
 
-    await reply(
-        input,
-        `${cards} cards (${
-            Math.round((cards / 40) * 1000) / 1000
-        } chests, roughly ${
-            Math.round((cards / 40) * 0.01 * 1000) / 1000
-        } legendaries)`
-    );
+    await reply(input, {
+        embeds: [
+            getBrandingEmbed()
+                .setThumbnail(
+                    'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Box%20Images%2FCard%20Box?alt=media&token=19c0a784-306d-4cd9-9b6e-4985384796aa'
+                )
+                .addField('Cards earned', String(cards), true)
+                .addField(
+                    'Chests Obtained',
+                    String(Math.floor(cards / 40)),
+                    true
+                )
+                .addField(
+                    'Estimated Amount of Legendary Dice found',
+                    String(Math.round(cards / 40) * 0.01)
+                ),
+        ],
+    });
 }
 
 export const commandData: ApplicationCommandDataResolvable = {

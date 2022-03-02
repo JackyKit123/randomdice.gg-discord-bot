@@ -8,6 +8,7 @@ import cache from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export const getNewsInfo = (): {
     ytUrl: string | undefined;
@@ -26,21 +27,10 @@ export const getNewsInfo = (): {
             name: i === 0 ? 'News' : '‎',
             value,
         }));
-    let embed = new MessageEmbed()
-        .setColor('#6ba4a5')
+    let embed = getBrandingEmbed()
         .setTitle('Random Dice news')
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/android-chrome-512x512.png',
-            'https://randomdice.gg/'
-        )
-        .setURL('https://randomdice.gg/')
         .addFields(fields)
-        .setTimestamp()
-        .setFooter(
-            'randomdice.gg News Update',
-            'https://randomdice.gg/android-chrome-512x512.png'
-        );
+        .setTimestamp();
     if (imgUrl) {
         embed = embed.setImage(imgUrl);
     }

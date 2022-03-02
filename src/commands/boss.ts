@@ -1,4 +1,4 @@
-import Discord, {
+import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
     Message,
@@ -8,8 +8,9 @@ import cache, { Boss } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
-import bestMatchFollowUp from 'util/bestMatchFollowUp';
 import { mapChoices } from 'register/slashCommands';
+import bestMatchFollowUp from './util/bestMatchFollowUp';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function boss(
     input: Message | CommandInteraction
@@ -50,25 +51,12 @@ export default async function boss(
 
         return {
             embeds: [
-                new Discord.MessageEmbed()
+                getBrandingEmbed(
+                    `/wiki/boss_mechanics#${encodeURI(target.name)}`
+                )
                     .setTitle(target.name)
                     .setThumbnail(target.img)
-                    .setAuthor(
-                        'Random Dice Community Website',
-                        'https://randomdice.gg/android-chrome-512x512.png',
-                        'https://randomdice.gg/'
-                    )
-                    .setColor('#6ba4a5')
-                    .setURL(
-                        `https://randomdice.gg/wiki/boss_mechanics#${encodeURI(
-                            target.name
-                        )}`
-                    )
-                    .addFields(embedFields)
-                    .setFooter(
-                        'randomdice.gg Boos Information',
-                        'https://randomdice.gg/android-chrome-512x512.png'
-                    ),
+                    .addFields(embedFields),
             ],
         };
     };

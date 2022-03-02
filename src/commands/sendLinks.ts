@@ -3,10 +3,10 @@ import {
     ClientUser,
     CommandInteraction,
     Message,
-    MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function sendLinks(
     input: Message | CommandInteraction
@@ -54,14 +54,8 @@ export default async function sendLinks(
         case 'support':
             await reply(input, {
                 embeds: [
-                    new MessageEmbed()
+                    getBrandingEmbed()
                         .setTitle('Support Us')
-                        .setAuthor(
-                            'Random Dice Community Website',
-                            'https://randomdice.gg/android-chrome-512x512.png',
-                            'https://randomdice.gg/'
-                        )
-                        .setColor('#6ba4a5')
                         .setDescription(
                             'You can support randomdice.gg by funding in patreon or contributing on github.'
                         )

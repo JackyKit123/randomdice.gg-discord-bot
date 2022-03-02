@@ -2,10 +2,10 @@ import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
     Message,
-    MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 import { reply, edit } from 'util/typesafeReply';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function ping(
     input: Message | CommandInteraction
@@ -21,26 +21,17 @@ export default async function ping(
         return;
     }
 
+    const embed = getBrandingEmbed()
+        .setThumbnail('https://randomdice.gg/android-chrome-512x512.png')
+        .setAuthor(null)
+        .setTitle('Pong!');
+
     const sent = await reply(input, {
-        embeds: [
-            new MessageEmbed()
-                .setTitle('Pong')
-                .setDescription(`Time elapsed: ...ms`)
-                .setColor('#6ba4a5')
-                .setThumbnail(
-                    'https://randomdice.gg/android-chrome-512x512.png'
-                ),
-        ],
+        embeds: [embed.setDescription(`Time elapsed: ...ms`)],
     });
     await edit(input instanceof CommandInteraction ? input : sent, {
         embeds: [
-            new MessageEmbed()
-                .setTitle('Pong')
-                .setDescription(`Time elapsed: ${Date.now() - timestamp}ms`)
-                .setColor('#6ba4a5')
-                .setThumbnail(
-                    'https://randomdice.gg/android-chrome-512x512.png'
-                ),
+            embed.setDescription(`Time elapsed: ${Date.now() - timestamp}ms`),
         ],
     });
 }

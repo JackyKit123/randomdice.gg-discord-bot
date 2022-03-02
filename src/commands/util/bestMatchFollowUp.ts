@@ -1,13 +1,11 @@
-import logMessage from 'dev-commands/logMessage';
 import {
     CommandInteraction,
-    DiscordAPIError,
     Message,
     WebhookEditMessageOptions,
 } from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
-import { edit, reply } from './typesafeReply';
-import yesNoButton from './yesNoButton';
+import { edit, reply } from 'util/typesafeReply';
+import yesNoButton from 'util/yesNoButton';
 
 export default async function bestMatchFollowUp<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,28 +43,10 @@ export default async function bestMatchFollowUp<
                           components: [],
                           content: undefined,
                       };
-
-            try {
-                await edit(
-                    input instanceof CommandInteraction ? input : sentMessage,
-                    messageOption
-                );
-            } catch (err) {
-                await reply(
-                    input instanceof CommandInteraction ? input : sentMessage,
-                    `Oops! Something went wrong: ${
-                        (err as DiscordAPIError).message
-                    }`
-                );
-                await logMessage(
-                    input.client,
-                    `Oops, something went wrong in while collecting message component.<#${
-                        input.channelId
-                    }> : ${
-                        (err as Error).stack ?? (err as Error).message ?? err
-                    }\n `
-                );
-            }
+            await edit(
+                input instanceof CommandInteraction ? input : sentMessage,
+                messageOption
+            );
         }
     );
 }

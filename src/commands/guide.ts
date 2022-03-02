@@ -8,7 +8,9 @@ import cache, { DeckGuide } from 'util/cache';
 import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
-import bestMatchFollowUp from 'util/bestMatchFollowUp';
+import { mapChoices } from 'register/slashCommands';
+import bestMatchFollowUp from './util/bestMatchFollowUp';
+import getBrandingEmbed from './util/getBrandingEmbed';
 
 export const getGuideData = (
     target?: DeckGuide
@@ -49,30 +51,18 @@ export const getGuideData = (
         embeds: new Array(Math.ceil(embedFields.length / 16))
             .fill(0)
             .map((_, i, arr) => {
-                let embed = new MessageEmbed()
-                    .setColor('#6ba4a5')
-                    .addFields(embedFields.slice(i * 16, i * 16 + 16));
+                let embed = getBrandingEmbed(
+                    `/decks/guide/${encodeURI(name)}`
+                ).addFields(embedFields.slice(i * 16, i * 16 + 16));
                 if (i === 0) {
-                    embed = embed
-                        .setTitle(
-                            `${name} (${type})${archived ? '**ARCHIVED**' : ''}`
-                        )
-                        .setAuthor(
-                            'Random Dice Community Website',
-                            'https://randomdice.gg/android-chrome-512x512.png',
-                            'https://randomdice.gg/'
-                        )
-                        .setURL(
-                            `https://randomdice.gg/decks/guide/${encodeURI(
-                                name
-                            )}`
-                        );
-                }
-                if (i === arr.length - 1) {
-                    embed = embed.setFooter(
-                        'randomdice.gg Decks Guide',
-                        'https://randomdice.gg/android-chrome-512x512.png'
+                    embed = embed.setTitle(
+                        `${name} (${type})${archived ? '**ARCHIVED**' : ''}`
                     );
+                } else {
+                    embed = embed.setAuthor(null);
+                }
+                if (i !== arr.length - 1) {
+                    embed = embed.setFooter(null);
                 }
                 return embed;
             }),
@@ -102,15 +92,8 @@ export default async function deckGuide(
         return;
     }
     const guides = cache.decks_guide;
-    const guideList = new MessageEmbed()
-        .setColor('#6ba4a5')
+    const guideList = getBrandingEmbed('/decks/guide')
         .setTitle('Random Dice Deck Guides List')
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/android-chrome-512x512.png',
-            'https://randomdice.gg/'
-        )
-        .setURL(`https://randomdice.gg/decks/guide/}`)
         .addFields(
             ['PvP', 'Co-op', 'Crew'].map(type => ({
                 name: `${type} Guides`,
@@ -155,13 +138,7 @@ export const commandData = (guides: DeckGuide[]): ApplicationCommandData => ({
             description:
                 'the name of the deck, use /guide list to see all deck guides',
             required: true,
-            choices:
-                guides.length > 25
-                    ? [{ name: 'list', value: 'list' }]
-                    : guides.map(g => ({
-                          name: g.name,
-                          value: g.name,
-                      })),
+            choices: mapChoices(guides),
         },
     ],
 });
