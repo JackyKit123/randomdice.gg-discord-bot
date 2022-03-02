@@ -1,4 +1,9 @@
-import { CommandInteraction, Message, MessageEmbed } from 'discord.js';
+import {
+    ApplicationCommandDataResolvable,
+    CommandInteraction,
+    Message,
+    MessageEmbed,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
 import { reply, edit } from 'util/typesafeReply';
 
@@ -39,3 +44,8 @@ export default async function ping(
         ],
     });
 }
+
+export const commandData: ApplicationCommandDataResolvable = {
+    name: 'ping',
+    description: 'ping the bot to see if it is online',
+};

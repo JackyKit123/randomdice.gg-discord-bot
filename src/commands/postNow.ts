@@ -1,11 +1,19 @@
 // eslint-disable-next-line
-import Discord, { DiscordAPIError } from 'discord.js';
+import Discord, {
+    ApplicationCommandDataResolvable,
+    CommandInteraction,
+    DiscordAPIError,
+    Message,
+    MessageEmbed,
+} from 'discord.js';
 import firebase from 'firebase-admin';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
-import parsedText from 'util/parseText';
 import logMessage from 'dev-commands/logMessage';
 import cooldown from 'util/cooldown';
+import { edit, reply } from 'util/typesafeReply';
+import { getNewsInfo } from './news';
+import { getGuideData } from './guide';
 
 export async function postGuide(
     client: Discord.Client,
@@ -52,96 +60,15 @@ export async function postGuide(
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
-    const [guides, battlefields, emojiList] = [
-        cache.decks_guide,
-        cache['wiki/battlefield'],
-        cache['discord_bot/emoji'],
-    ];
-    const embeds = (
-        await Promise.all(
-            ['PvP', 'Co-op', 'Crew']
-                .flatMap(type =>
-                    guides.filter(
-                        guide => guide.type === type && !guide.archived
-                    )
-                )
-                .map(async guide => {
-                    const { type, name, battlefield } = guide;
-                    const diceList = await Promise.all(
-                        guide.diceList.map(async list =>
-                            Promise.all(list.map(async die => emojiList[die]))
-                        )
-                    );
-                    const paragraph = parsedText(guide.guide).split('\n');
-                    return {
-                        name,
-                        type,
-                        diceList,
-                        paragraph,
-                        battlefield,
-                    };
-                })
+    const guides = cache.decks_guide;
+
+    const embeds = ['PvP', 'Co-op', 'Crew']
+        .flatMap(type =>
+            guides.filter(guide => guide.type === type && !guide.archived)
         )
-    )
-        .map((parsedData): Discord.MessageEmbed[] => {
-            const fields = [
-                ...parsedData.diceList.map((list, i, decks) => ({
-                    // eslint-disable-next-line no-nested-ternary
-                    name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '‎',
-                    value: list.join(' '),
-                })),
-                ...(parsedData.battlefield > -1 && parsedData.type !== 'Crew'
-                    ? [
-                          {
-                              name: 'Battlefield',
-                              value:
-                                  battlefields.find(
-                                      battlefield =>
-                                          battlefield.id ===
-                                          parsedData.battlefield
-                                  )?.name || '*not found*',
-                          },
-                      ]
-                    : []),
-                ...parsedData.paragraph
-                    .filter(p => p !== '')
-                    .map((p, i) => ({
-                        name: i === 0 ? 'Guide' : '‎',
-                        value: p,
-                    })),
-            ];
-            return new Array(Math.ceil(fields.length / 16))
-                .fill('')
-                .map((_, i, arr) => {
-                    let embed = new Discord.MessageEmbed()
-                        .setColor('#6ba4a5')
-                        .addFields(fields.slice(i * 16, i * 16 + 16));
-                    if (i === 0) {
-                        embed = embed
-                            .setTitle(`${parsedData.name} (${parsedData.type})`)
-                            .setAuthor(
-                                'Random Dice Community Website',
-                                'https://randomdice.gg/android-chrome-512x512.png',
-                                'https://randomdice.gg/'
-                            )
-                            .setURL(
-                                `https://randomdice.gg/decks/guide/${encodeURI(
-                                    parsedData.name
-                                )}`
-                            );
-                    }
-                    if (i === arr.length - 1) {
-                        embed = embed
-                            .setTimestamp()
-                            .setFooter(
-                                'randomdice.gg Decks Guide',
-                                'https://randomdice.gg/android-chrome-512x512.png'
-                            );
-                    }
-                    return embed;
-                });
-        })
-        .flat();
+        .flatMap(
+            guide => (getGuideData(guide) as { embeds: MessageEmbed[] }).embeds
+        );
     await Promise.all(
         registeredChannels.map(async channel => {
             const channelPermission = channel.permissionsFor(
@@ -365,38 +292,8 @@ export async function postNews(
                 })
         )
     ).filter(channel => channel) as Discord.TextChannel[];
-    const data = cache.news;
 
-    const ytUrl = data.game.match(
-        /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/
-    )?.[0];
-    const news = parsedText(data.game);
-    const imgUrl = news.match(/{img}((?!.*{img}).*){\/img}/)?.[1];
-    const fields = news
-        .replace(/{img}((?!.*{img}).*){\/img}/g, '')
-        .split('\n\n')
-        .map((value, i) => ({
-            name: i === 0 ? 'News' : '‎',
-            value,
-        }));
-    let embed = new Discord.MessageEmbed()
-        .setColor('#6ba4a5')
-        .setTitle('Random Dice news')
-        .setAuthor(
-            'Random Dice Community Website',
-            'https://randomdice.gg/android-chrome-512x512.png',
-            'https://randomdice.gg/'
-        )
-        .setURL('https://randomdice.gg/')
-        .addFields(fields)
-        .setTimestamp()
-        .setFooter(
-            'randomdice.gg News Update',
-            'https://randomdice.gg/android-chrome-512x512.png'
-        );
-    if (imgUrl) {
-        embed = embed.setImage(imgUrl);
-    }
+    const { ytUrl, embed } = getNewsInfo();
 
     await Promise.all(
         registeredChannels.map(async channel => {
@@ -450,15 +347,17 @@ export async function postNews(
     );
 }
 
-export default async function postNow(message: Discord.Message): Promise<void> {
-    const type = message.content.split(' ')[2];
-    const { member, guild, channel, client } = message;
+export default async function postNow(
+    input: Message | CommandInteraction,
+    typeArg?: string
+): Promise<void> {
+    const { member, guild, client } = input;
     if (!member || !guild) {
         return;
     }
 
     if (
-        await cooldown(message, '.gg postnow', {
+        await cooldown(input, '.gg postnow', {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
@@ -466,44 +365,85 @@ export default async function postNow(message: Discord.Message): Promise<void> {
         return;
     }
 
-    if (!member.permissions.has('MANAGE_MESSAGES')) {
-        await channel.send(
-            'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`'
-        );
+    if (
+        !guild.members.cache
+            .get(member.user.id)
+            ?.permissions.has('MANAGE_MESSAGES')
+    ) {
+        await reply(input, {
+            content:
+                'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`',
+            components: [],
+        });
         return;
     }
 
+    // eslint-disable-next-line no-param-reassign
+    const type =
+        typeArg ??
+        (input instanceof Message
+            ? input.content.split(' ')[2]
+            : input.options.getString('type') ?? '');
     if (!type) {
-        await channel.send(
+        await reply(
+            input,
             `Usage of the command: \`\`\`.gg postnow <guide|news>\`\`\``
         );
         return;
     }
 
-    const statusMessage = await channel.send(`Now posting ${type}...`);
-    switch (type) {
-        case 'guide':
-            await postGuide(client, member);
-            try {
-                await statusMessage.edit(`Finished Posting ${type}`);
-            } catch {
-                if (!statusMessage.editedAt)
-                    await channel.send(`Finished Posting ${type}`);
+    if (type === 'guide' || type === 'news') {
+        const statusMessage = await (typeArg ? edit : reply)(input, {
+            content: `Now posting ${type}...`,
+            components: [],
+        });
+
+        try {
+            if (type === 'guide') {
+                await postGuide(
+                    client,
+                    guild.members.cache.get(member.user.id)
+                );
+            } else if (type === 'news') {
+                await postNews(client, guild);
             }
-            return;
-        case 'news':
-            await postNews(client, guild);
-            try {
-                await statusMessage.edit(`Finished Posting ${type}`);
-            } catch {
-                if (!statusMessage.editedAt)
-                    await channel.send(`Finished Posting ${type}`);
-            }
-            return;
-        default:
-            if (statusMessage.deletable) await statusMessage.delete();
-            await channel.send(
-                `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``
+        } catch {
+            // do nothing
+        } finally {
+            await edit(
+                input instanceof Message ? statusMessage : input,
+                `Finished Posting ${type}`
             );
+        }
+        return;
     }
+
+    await reply(input, {
+        content: `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``,
+        components: [],
+    });
 }
+
+export const commandData: ApplicationCommandDataResolvable = {
+    name: 'post-now',
+    description: 'Posts the latest news or guide to the registered channels',
+    options: [
+        {
+            type: 3,
+            name: 'type',
+            description: 'The type of post to post, either `guide` or `news`',
+            required: true,
+            choices: [
+                {
+                    name: 'guide',
+                    value: 'guide',
+                },
+
+                {
+                    name: 'news',
+                    value: 'news',
+                },
+            ],
+        },
+    ],
+};

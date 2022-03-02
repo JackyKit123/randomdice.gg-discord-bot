@@ -1,83 +1,103 @@
-import Discord from 'discord.js';
+import Discord, {
+    ApplicationCommandDataResolvable,
+    CommandInteraction,
+    Message,
+} from 'discord.js';
 import cache, { Deck } from 'util/cache';
 import cooldown from 'util/cooldown';
 import getPaginationComponents from 'util/paginationButtons';
+import { reply } from 'util/typesafeReply';
 
 export default async function decklist(
-    message: Discord.Message
+    input: Message | CommandInteraction
 ): Promise<void> {
-    const { content, channel, author } = message;
-
     if (
-        await cooldown(message, '.gg deck', {
+        await cooldown(input, '.gg deck', {
             default: 30 * 1000,
             donator: 5 * 1000,
         })
     ) {
         return;
     }
-    const command = content.replace(/^\\?\.gg deck ?/i, '');
-    const type = command.split(' ')[0];
-    if (!type.match(/^(pvp|co-op|coop|crew)$/i)) {
-        await channel.send(
-            `${
-                type ? `\`${type}\` is not a valid deck type, p` : 'P'
-            }lease specify deck type in: \`PvP\` \`Co-op\` \`Crew\``
-        );
-        return;
-    }
 
-    const firstArgs = command.replace(/^co-op ?/i, '').indexOf('-');
-    if (firstArgs > -1) {
-        const otherArgs = [
-            ...command
-                .replace(/^co-op ?/i, '')
-                .slice(firstArgs, command.length)
-                .replace(/(?:-l|--legendary|-p|--page)[=| +]\w+/gi, '')
-                .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
-        ];
-        if (otherArgs.length) {
-            await channel.send(
-                `Unknown arguments: ${otherArgs.map(
-                    ([arg]) => `\`${arg}\``
-                )}. Acceptable arguments are \`--legendary\` \`--page\` or alias \`-l\` \`-p\``
+    let type = 'pvp';
+    let legendaryClassArgs: RegExpMatchArray[] = [];
+    let pageArgs: RegExpMatchArray[] = [];
+
+    if (input instanceof Message) {
+        const command = input.content.replace(/^\\?\.gg deck ?/i, '');
+        type = command.split(' ')?.[0];
+        if (!type.match(/^(pvp|co-op|coop|crew)$/i)) {
+            await reply(
+                input,
+                `${
+                    type ? `\`${type}\` is not a valid deck type, p` : 'P'
+                }lease specify deck type in: \`PvP\` \`Co-op\` \`Crew\``
             );
+            return;
+        }
+
+        const firstArgs = command.replace(/^co-op ?/i, '').indexOf('-');
+        if (firstArgs > -1) {
+            const otherArgs = [
+                ...command
+                    .replace(/^co-op ?/i, '')
+                    .slice(firstArgs, command.length)
+                    .replace(/(?:-l|--legendary|-p|--page)[=| +]\w+/gi, '')
+                    .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
+            ];
+            if (otherArgs.length) {
+                await reply(
+                    input,
+                    `Unknown arguments: ${otherArgs.map(
+                        ([arg]) => `\`${arg}\``
+                    )}. Acceptable arguments are \`--legendary\` \`--page\` or alias \`-l\` \`-p\``
+                );
+                return;
+            }
+        }
+
+        legendaryClassArgs = [
+            ...command
+                .slice(firstArgs, command.length)
+                .matchAll(/(?:-l|--legendary)[=| +](\w+)/gi),
+        ];
+        pageArgs = [
+            ...command
+                .slice(firstArgs, command.length)
+                .matchAll(/(?:-p|--page)[=| +](\w+)/gi),
+        ];
+
+        if (legendaryClassArgs.length > 1 || pageArgs.length > 1) {
+            if (legendaryClassArgs.length > 1) {
+                await reply(
+                    input,
+                    `Duplicated arguments for legendary class settings: ${legendaryClassArgs
+                        .map(arg => `\`${arg?.[0]}\``)
+                        .join(' ')}`
+                );
+            }
+
+            if (pageArgs.length > 1) {
+                await reply(
+                    input,
+                    `Duplicated arguments for page: ${pageArgs
+                        .map(arg => `\`${arg?.[0]}\``)
+                        .join(' ')}`
+                );
+            }
             return;
         }
     }
 
-    const legendaryClassArgs = [
-        ...command
-            .slice(firstArgs, command.length)
-            .matchAll(/(?:-l|--legendary)[=| +](\w+)/gi),
-    ];
-    const pageArgs = [
-        ...command
-            .slice(firstArgs, command.length)
-            .matchAll(/(?:-p|--page)[=| +](\w+)/gi),
-    ];
-
-    if (legendaryClassArgs.length > 1 || pageArgs.length > 1) {
-        if (legendaryClassArgs.length > 1) {
-            await channel.send(
-                `Duplicated arguments for legendary class settings: ${legendaryClassArgs
-                    .map(arg => `\`${arg?.[0]}\``)
-                    .join(' ')}`
-            );
-        }
-
-        if (pageArgs.length > 1) {
-            await channel.send(
-                `Duplicated arguments for page: ${pageArgs
-                    .map(arg => `\`${arg?.[0]}\``)
-                    .join(' ')}`
-            );
-        }
-        return;
-    }
-
-    const legendaryClassArg = legendaryClassArgs[0]?.[1];
-    const pageArg = pageArgs[0]?.[1];
+    const legendaryClassArg =
+        input instanceof CommandInteraction
+            ? input.options.getString('legendary-class') ?? ''
+            : legendaryClassArgs[0]?.[1];
+    const pageArg =
+        input instanceof CommandInteraction
+            ? input.options.getInteger('page') ?? 1
+            : pageArgs[0]?.[1];
     let legendaryClass = legendaryClassArg || 'default';
     const page = Number(pageArg || 1);
 
@@ -87,17 +107,20 @@ export default async function decklist(
         page < 1
     ) {
         if (Number.isNaN(page)) {
-            await channel.send(
+            await reply(
+                input,
                 `Invalid arguments for page, \`${pageArg}\` is not a number.`
             );
         } else if (page < 1) {
-            await channel.send(
+            await reply(
+                input,
                 `Invalid arguments for page, page number \`${page}\` should be at least 1.`
             );
         }
 
         if (!legendaryClass.match('(c7|c8|c9|c10|default|7|8|9|10)')) {
-            await channel.send(
+            await reply(
+                input,
                 `Invalid arguments for legendary class setting, \`${pageArg}\` is not a acceptable. You may specify \`c7\` \`c8\` \`c9\` \`c10\``
             );
         }
@@ -181,10 +204,70 @@ export default async function decklist(
         pageNumbers,
         currentPage
     );
-    const sentMessage = await channel.send({
+    const sentMessage = await reply(input, {
         embeds: [embeds[currentPage]],
         components,
     });
 
-    collectorHandler(sentMessage, author, embeds);
+    collectorHandler(
+        sentMessage,
+        (input as Message).author ?? (input as CommandInteraction).user,
+        embeds
+    );
 }
+
+export const commandData: ApplicationCommandDataResolvable = {
+    name: 'deck',
+    description: 'retrieve the deck list',
+    options: [
+        {
+            type: 3,
+            name: 'deck-type',
+            description: 'the type of deck',
+            required: true,
+            choices: [
+                {
+                    name: 'PvP',
+                    value: 'PvP',
+                },
+                {
+                    name: 'Co-op',
+                    value: 'Co-op',
+                },
+                {
+                    name: 'Crew',
+                    value: 'Crew',
+                },
+            ],
+        },
+        {
+            type: 3,
+            name: 'legendary-class',
+            description: 'the legendary class of the deck',
+            choices: [
+                {
+                    name: 'Class 7',
+                    value: 'c7',
+                },
+                {
+                    name: 'Class 8',
+                    value: 'c8',
+                },
+                {
+                    name: 'Class 9',
+                    value: 'c9',
+                },
+                {
+                    name: 'Class 10+',
+                    value: 'c10',
+                },
+            ],
+        },
+        {
+            type: 4,
+            name: 'page',
+            description: 'the page number',
+            minValue: 1,
+        },
+    ],
+};

@@ -1,12 +1,21 @@
-import { Message } from 'discord.js';
+import {
+    ApplicationCommandDataResolvable,
+    CommandInteraction,
+    Message,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
 
-export default async function cardcalc(message: Message): Promise<void> {
-    const { channel, content } = message;
-    const arg = content.replace('.gg cardcalc', '').trim();
+export default async function cardcalc(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const arg =
+        input instanceof Message
+            ? input.content.replace('.gg cardcalc', '').trim()
+            : input.options.getInteger('waves') ?? 0;
     const waves = Number(arg);
     if (
-        await cooldown(message, '.gg cardcalc', {
+        await cooldown(input, '.gg cardcalc', {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
@@ -15,7 +24,7 @@ export default async function cardcalc(message: Message): Promise<void> {
     }
 
     if (!Number.isInteger(waves) || Number(waves) < 0) {
-        await channel.send('Waves argument must be a positive integer.');
+        await reply(input, 'Waves argument must be a positive integer.');
         return;
     }
 
@@ -33,7 +42,8 @@ export default async function cardcalc(message: Message): Promise<void> {
         cards += ((waves - 45) % 2) * 2; // 2 card for each non boss wave
     }
 
-    await channel.send(
+    await reply(
+        input,
         `${cards} cards (${
             Math.round((cards / 40) * 1000) / 1000
         } chests, roughly ${
@@ -41,3 +51,17 @@ export default async function cardcalc(message: Message): Promise<void> {
         } legendaries)`
     );
 }
+
+export const commandData: ApplicationCommandDataResolvable = {
+    name: 'cardcalc',
+    description: 'calculate the amount of cards at certain waves count',
+    options: [
+        {
+            type: 4,
+            name: 'waves',
+            description: 'the waves count',
+            required: true,
+            minValue: 1,
+        },
+    ],
+};

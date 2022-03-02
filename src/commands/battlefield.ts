@@ -1,34 +1,47 @@
-import Discord from 'discord.js';
-import * as stringSimilarity from 'string-similarity';
+import {
+    ApplicationCommandDataResolvable,
+    CommandInteraction,
+    Message,
+    MessageEmbed,
+    ReplyMessageOptions,
+} from 'discord.js';
 import cache, { Battlefield } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
+import bestMatchFollowUp from 'util/bestMatchFollowUp';
 
-export default async function dice(message: Discord.Message): Promise<void> {
-    const { channel, content } = message;
-
+export default async function dice(
+    input: Message | CommandInteraction
+): Promise<void> {
     if (
-        await cooldown(message, '.gg battlefield', {
+        await cooldown(input, '.gg battlefield', {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
     ) {
         return;
     }
-    const command = content.replace(/^\\?\.gg battlefield ?/i, '');
-    if (!command || command.startsWith('-')) {
-        await channel.send(
-            'Please include the battlefield name in the first parameter after `.gg battlefield`.'
-        );
+    const command =
+        input instanceof Message
+            ? input.content.replace(/^\.gg battlefield ?/i, '')
+            : input.options.getString('battlefield') ?? '';
+
+    const battlefieldList = cache['wiki/battlefield'];
+    const battlefieldName = command.toLowerCase();
+    if (!battlefieldName) {
+        await reply(input, 'Please specify a battlefield name.');
         return;
     }
-    const battlefieldList = cache['wiki/battlefield'];
     const battlefield = battlefieldList.find(b =>
-        command.toLowerCase().startsWith(b.name.toLowerCase())
+        battlefieldName.startsWith(b.name.toLowerCase())
     );
 
-    const execute = async (target: Battlefield): Promise<void> => {
+    const getBattlefieldInfo = (
+        target?: Battlefield
+    ): string | ReplyMessageOptions => {
         const firstArgs = command.indexOf('-');
+        if (!target) return 'No battlefield found.';
         if (firstArgs > -1) {
             const otherArgs = [
                 ...command
@@ -37,12 +50,9 @@ export default async function dice(message: Discord.Message): Promise<void> {
                     .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
             ];
             if (otherArgs.length) {
-                await channel.send(
-                    `Unknown arguments: ${otherArgs.map(
-                        ([arg]) => `\`${arg}\``
-                    )}. Acceptable arguments are \`--level\` or alias \`-l\``
-                );
-                return;
+                return `Unknown arguments: ${otherArgs.map(
+                    ([arg]) => `\`${arg}\``
+                )}. Acceptable arguments are \`--level\` or alias \`-l\``;
             }
         }
 
@@ -53,37 +63,29 @@ export default async function dice(message: Discord.Message): Promise<void> {
         ];
 
         if (battlefieldLevelArgs.length > 1) {
-            await channel.send(
-                `Duplicated arguments for battlefield level: ${battlefieldLevelArgs
-                    .map(arg => `\`${arg?.[0]}\``)
-                    .join(' ')}`
-            );
-            return;
+            return `Duplicated arguments for battlefield level: ${battlefieldLevelArgs
+                .map(arg => `\`${arg?.[0]}\``)
+                .join(' ')}`;
         }
 
-        const battlefieldLevelArg = battlefieldLevelArgs[0]?.[1];
+        const battlefieldLevelArg =
+            input instanceof CommandInteraction
+                ? input.options.getInteger('level')
+                : battlefieldLevelArgs[0]?.[1];
         const battlefieldLevel = Number(battlefieldLevelArg || 0);
 
         if (Number.isNaN(battlefieldLevel)) {
-            await channel.send(
-                `Invalid arguments for battlefield level, \`${battlefieldLevelArg}\` is not a number.`
-            );
-
-            return;
+            return `Invalid arguments for battlefield level, \`${battlefieldLevelArg}\` is not a number.`;
         }
         if (battlefieldLevel < 0 || battlefieldLevel > 20) {
-            await channel.send(
-                `Invalid arguments for battlefield level, battlefield level should be between **0 - 20**.`
-            );
-
-            return;
+            return `Invalid arguments for battlefield level, battlefield level should be between **0 - 20**.`;
         }
 
         const desc = parsedText(target.desc);
 
-        await channel.send({
+        return {
             embeds: [
-                new Discord.MessageEmbed()
+                new MessageEmbed()
                     .setTitle(target.name)
                     .setImage(target.img)
                     .setDescription(desc)
@@ -114,11 +116,11 @@ export default async function dice(message: Discord.Message): Promise<void> {
                         'https://randomdice.gg/android-chrome-512x512.png'
                     ),
             ],
-        });
+        };
     };
 
     if (battlefield) {
-        await execute(battlefield);
+        await reply(input, getBattlefieldInfo(battlefield));
         return;
     }
 
@@ -127,46 +129,35 @@ export default async function dice(message: Discord.Message): Promise<void> {
         firstOptionalArgs > -1
             ? command.slice(0, firstOptionalArgs).trim()
             : command;
-    const { bestMatch } = stringSimilarity.findBestMatch(
+    await bestMatchFollowUp(
+        input,
         wrongBattlefieldName,
-        battlefieldList.map(b => b.name)
+        battlefieldList,
+        ' is not a valid battlefield.',
+        getBattlefieldInfo
     );
-    if (bestMatch.rating >= 0.3) {
-        const sentMessage = await channel.send(
-            `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`? You may answer \`Yes\` to display the battlefield info.`
-        );
-        let answeredYes = false;
-        try {
-            const awaitedMessage = await channel.awaitMessages({
-                filter: (newMessage: Discord.Message) =>
-                    newMessage.author === message.author &&
-                    !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                time: 60000,
-                max: 1,
-                errors: ['time'],
-            });
-            if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
-                answeredYes = true;
-            }
-        } catch {
-            if (sentMessage.editable)
-                await sentMessage.edit(
-                    `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`?`
-                );
-        }
-        if (answeredYes) {
-            const newBattlefield = battlefieldList.find(
-                b => b.name === bestMatch.target
-            );
-            if (newBattlefield) await execute(newBattlefield);
-        } else if (sentMessage.editable) {
-            await sentMessage.edit(
-                `\`${wrongBattlefieldName}\` is not a valid battlefield. Did you mean \`${bestMatch.target}\`?`
-            );
-        }
-    } else {
-        await channel.send(
-            `\`${wrongBattlefieldName}\` is not a valid battlefield.`
-        );
-    }
 }
+
+export const commandData: ApplicationCommandDataResolvable = {
+    name: 'battlefield',
+    description: 'get the information about a battlefield',
+    options: [
+        {
+            type: 3,
+            name: 'battlefield',
+            description: 'the name of the battlefield',
+            required: true,
+        },
+        {
+            type: 4,
+            name: 'level',
+            description: 'the level of the battlefield',
+            minValue: 1,
+            maxValue: 20,
+            choices: Array.from({ length: 20 }, (_, i) => ({
+                name: `Level ${i + 1}`,
+                value: i + 1,
+            })),
+        },
+    ],
+};

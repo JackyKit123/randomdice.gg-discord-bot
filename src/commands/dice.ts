@@ -1,8 +1,9 @@
 import {
+    ApplicationCommandDataResolvable,
     CommandInteraction,
     Message,
     MessageEmbed,
-    ReplyMessageOptions,
+    WebhookEditMessageOptions,
 } from 'discord.js';
 
 import cache, { Dice } from 'util/cache';
@@ -29,12 +30,13 @@ export default async function dice(
             : input.options.getString('die') ?? '';
 
     const diceList = cache.dice;
-    const die = diceList.find(
-        d =>
-            command.toLowerCase().replace(/-.*/, '').trim() ===
-            d.name.toLowerCase()
-    );
-    const getDiceInfo = (target?: Dice): string | ReplyMessageOptions => {
+    const dieName = command.toLowerCase().replace(/-.*/, '').trim();
+    if (!dieName) {
+        await reply(input, 'Please specify a die name.');
+        return;
+    }
+    const die = diceList.find(d => dieName === d.name.toLowerCase());
+    const getDiceInfo = (target?: Dice): string | WebhookEditMessageOptions => {
         let minClass: number;
         if (!target) return 'No dice found.';
         switch (target.rarity) {
@@ -228,8 +230,43 @@ export default async function dice(
     await bestMatchFollowUp(
         input,
         wrongDiceName,
-        diceList.map(d => d.name),
+        diceList,
         ' is not a valid dice.',
-        newDie => getDiceInfo(diceList.find(d => d.name === newDie))
+        getDiceInfo
     );
 }
+
+export const commandData: ApplicationCommandDataResolvable = {
+    name: 'dice',
+    description: 'get the information about a die',
+    options: [
+        {
+            type: 3,
+            name: 'die',
+            description: 'the name of the die',
+            required: true,
+        },
+        {
+            type: 4,
+            name: 'class',
+            description: 'the class of the die',
+            minValue: 1,
+            maxValue: 15,
+            choices: Array.from({ length: 15 }, (_, i) => ({
+                name: `Class ${i + 1}`,
+                value: i + 1,
+            })),
+        },
+        {
+            type: 4,
+            name: 'level',
+            description: 'the level of the die',
+            minValue: 1,
+            maxValue: 5,
+            choices: Array.from({ length: 5 }, (_, i) => ({
+                name: `Level ${i + 1}`,
+                value: i + 1,
+            })),
+        },
+    ],
+};

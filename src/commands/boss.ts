@@ -1,33 +1,44 @@
-import Discord from 'discord.js';
-import * as stringSimilarity from 'string-similarity';
+import Discord, {
+    ApplicationCommandDataResolvable,
+    CommandInteraction,
+    Message,
+    ReplyMessageOptions,
+} from 'discord.js';
 import cache, { Boss } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
+import bestMatchFollowUp from 'util/bestMatchFollowUp';
 
-export default async function dice(message: Discord.Message): Promise<void> {
-    const { channel, content } = message;
-
+export default async function boss(
+    input: Message | CommandInteraction
+): Promise<void> {
     if (
-        await cooldown(message, '.gg boss', {
+        await cooldown(input, '.gg boss', {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
     ) {
         return;
     }
-    const bossName = content.replace(/^\\?\.gg boss ?/, '');
+    const bossName =
+        input instanceof Message
+            ? input.content.replace(/^\\?\.gg boss ?/, '')
+            : input.options.getString('boss') ?? '';
     if (!bossName) {
-        await channel.send(
+        await reply(
+            input,
             'Please include the boss name in command parameter.'
         );
         return;
     }
     const bossList = cache['wiki/boss'];
-    const boss = bossList.find(
+    const bossInfo = bossList.find(
         b => b.name.toLowerCase() === bossName.toLowerCase()
     );
 
-    const execute = async (target: Boss): Promise<void> => {
+    const getBossInfo = (target?: Boss): string | ReplyMessageOptions => {
+        if (!target) return 'No boss found.';
         const embedFields = parsedText(target.desc)
             .split('\n')
             .filter(p => p !== '')
@@ -36,7 +47,7 @@ export default async function dice(message: Discord.Message): Promise<void> {
                 value: desc,
             }));
 
-        await channel.send({
+        return {
             embeds: [
                 new Discord.MessageEmbed()
                     .setTitle(target.name)
@@ -58,51 +69,32 @@ export default async function dice(message: Discord.Message): Promise<void> {
                         'https://randomdice.gg/android-chrome-512x512.png'
                     ),
             ],
-        });
+        };
     };
 
-    if (boss) {
-        await execute(boss);
+    if (bossInfo) {
+        await reply(input, getBossInfo(bossInfo));
         return;
     }
 
-    const { bestMatch } = stringSimilarity.findBestMatch(
+    await bestMatchFollowUp(
+        input,
         bossName,
-        bossList.map(b => b.name)
+        bossList,
+        ' is not a valid boss.',
+        getBossInfo
     );
-    if (bestMatch.rating >= 0.3) {
-        const sentMessage = await channel.send(
-            `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`? You may answer \`Yes\` to display the boss info.`
-        );
-        let answeredYes = false;
-        try {
-            const awaitedMessage = await channel.awaitMessages({
-                filter: (newMessage: Discord.Message) =>
-                    newMessage.author === message.author &&
-                    !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
-                time: 60000,
-                max: 1,
-                errors: ['time'],
-            });
-            if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
-                answeredYes = true;
-            }
-        } catch {
-            if (sentMessage.editable)
-                await sentMessage.edit(
-                    `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
-                );
-        }
-        if (answeredYes) {
-            const newBoss = bossList.find(b => b.name === bestMatch.target);
-            if (newBoss) await execute(newBoss);
-        }
-        if (sentMessage.editable) {
-            await sentMessage.edit(
-                `\`${bossName}\` is not a valid boss. Did you mean \`${bestMatch.target}\`?`
-            );
-        }
-    } else {
-        await channel.send(`\`${bossName}\` is not a valid boss.`);
-    }
 }
+
+export const commandData: ApplicationCommandDataResolvable = {
+    name: 'boss',
+    description: 'get the information about a boss',
+    options: [
+        {
+            type: 3,
+            name: 'boss',
+            description: 'the name of the boss',
+            required: true,
+        },
+    ],
+};

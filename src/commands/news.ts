@@ -1,21 +1,18 @@
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    Message,
+    MessageEmbed,
+} from 'discord.js';
 import cache from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
 
-export default async function sendNews(
-    message: Discord.Message
-): Promise<void> {
-    const { channel } = message;
-
-    if (
-        await cooldown(message, '.gg news', {
-            default: 60 * 1000,
-            donator: 10 * 1000,
-        })
-    ) {
-        return;
-    }
+export const getNewsInfo = (): {
+    ytUrl: string | undefined;
+    embed: MessageEmbed;
+} => {
     const newsData = cache.news;
     const ytUrl = newsData.game.match(
         /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-_]*)(&(amp;)?[\w?=]*)?/
@@ -29,7 +26,7 @@ export default async function sendNews(
             name: i === 0 ? 'News' : '‎',
             value,
         }));
-    let embed = new Discord.MessageEmbed()
+    let embed = new MessageEmbed()
         .setColor('#6ba4a5')
         .setTitle('Random Dice news')
         .setAuthor(
@@ -48,8 +45,33 @@ export default async function sendNews(
         embed = embed.setImage(imgUrl);
     }
 
-    await channel.send({ embeds: [embed] });
+    return {
+        ytUrl,
+        embed,
+    };
+};
+
+export default async function sendNews(
+    input: Message | CommandInteraction
+): Promise<void> {
+    if (
+        await cooldown(input, '.gg news', {
+            default: 60 * 1000,
+            donator: 10 * 1000,
+        })
+    ) {
+        return;
+    }
+
+    const { ytUrl, embed } = getNewsInfo();
+
+    await reply(input, { embeds: [embed] });
     if (ytUrl) {
-        await channel.send(ytUrl);
+        await input?.channel?.send(ytUrl);
     }
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'news',
+    description: 'Get the latest news for Random Dice.',
+};

@@ -1,36 +1,108 @@
-import Discord from 'discord.js';
-import * as stringSimilarity from 'string-similarity';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    Message,
+    MessageEmbed,
+} from 'discord.js';
 import cache, { DeckGuide } from 'util/cache';
 import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
+import bestMatchFollowUp from 'util/bestMatchFollowUp';
+
+export const getGuideData = (
+    target?: DeckGuide
+): { embeds: MessageEmbed[] } | string => {
+    const [battlefields, emojiList] = [
+        cache['wiki/battlefield'],
+        cache['discord_bot/emoji'],
+    ];
+    if (!target) return 'No guide found.';
+    const { diceList, name, type, guide, archived, battlefield } = target;
+    const emojiDiceList = diceList.map(list => list.map(die => emojiList[die]));
+
+    const paragraph = parseText(guide).split('\n');
+    const embedFields = [
+        ...emojiDiceList.map((list, i, decks) => ({
+            // eslint-disable-next-line no-nested-ternary
+            name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '‎',
+            value: list.join(' '),
+        })),
+        ...(battlefield > -1 && type !== 'Crew'
+            ? [
+                  {
+                      name: 'Battlefield',
+                      value:
+                          battlefields.find(b => b.id === battlefield)?.name ||
+                          '*not found*',
+                  },
+              ]
+            : []),
+        ...paragraph
+            .filter(p => p !== '')
+            .map((p, i) => ({
+                name: i === 0 ? 'Guide' : '‎',
+                value: p,
+            })),
+    ];
+    return {
+        embeds: new Array(Math.ceil(embedFields.length / 16))
+            .fill(0)
+            .map((_, i, arr) => {
+                let embed = new MessageEmbed()
+                    .setColor('#6ba4a5')
+                    .addFields(embedFields.slice(i * 16, i * 16 + 16));
+                if (i === 0) {
+                    embed = embed
+                        .setTitle(
+                            `${name} (${type})${archived ? '**ARCHIVED**' : ''}`
+                        )
+                        .setAuthor(
+                            'Random Dice Community Website',
+                            'https://randomdice.gg/android-chrome-512x512.png',
+                            'https://randomdice.gg/'
+                        )
+                        .setURL(
+                            `https://randomdice.gg/decks/guide/${encodeURI(
+                                name
+                            )}`
+                        );
+                }
+                if (i === arr.length - 1) {
+                    embed = embed.setFooter(
+                        'randomdice.gg Decks Guide',
+                        'https://randomdice.gg/android-chrome-512x512.png'
+                    );
+                }
+                return embed;
+            }),
+    };
+};
 
 export default async function deckGuide(
-    message: Discord.Message
+    input: Message | CommandInteraction
 ): Promise<void> {
-    const { channel, content } = message;
-
     if (
-        await cooldown(message, '.gg guide', {
+        await cooldown(input, '.gg guide', {
             default: 30 * 1000,
             donator: 5 * 1000,
         })
     ) {
         return;
     }
-    const guideName = content.replace(/^\\?\.gg guide ?/i, '');
+    const guideName =
+        input instanceof Message
+            ? input.content.replace(/^\\?\.gg guide ?/i, '')
+            : input.options.getString('deck-name') ?? '';
     if (!guideName) {
-        await channel.send(
+        await reply(
+            input,
             'Please include the guide name or use parameter `list` to list guides'
         );
         return;
     }
-    const [guides, battlefields, emojiList] = [
-        cache.decks_guide,
-        cache['wiki/battlefield'],
-        cache['discord_bot/emoji'],
-    ];
-
-    const guideList = new Discord.MessageEmbed()
+    const guides = cache.decks_guide;
+    const guideList = new MessageEmbed()
         .setColor('#6ba4a5')
         .setTitle('Random Dice Deck Guides List')
         .setAuthor(
@@ -50,130 +122,37 @@ export default async function deckGuide(
         );
 
     if (guideName === 'list') {
-        await channel.send({ embeds: [guideList] });
+        await reply(input, { embeds: [guideList] });
         return;
     }
     const guideData = guides.find(
         g => g.name.toLowerCase() === guideName.toLowerCase()
     );
 
-    const execute = async (target: DeckGuide): Promise<void> => {
-        const { diceList, name, type, guide, archived, battlefield } = target;
-        const emojiDiceList = diceList.map(list =>
-            list.map(die => emojiList[die])
-        );
-
-        const paragraph = parseText(guide).split('\n');
-        const embedFields = [
-            ...emojiDiceList.map((list, i, decks) => ({
-                // eslint-disable-next-line no-nested-ternary
-                name: i === 0 ? (decks.length > 1 ? 'Decks' : 'Deck') : '‎',
-                value: list.join(' '),
-            })),
-            ...(battlefield > -1 && type !== 'Crew'
-                ? [
-                      {
-                          name: 'Battlefield',
-                          value:
-                              battlefields.find(b => b.id === battlefield)
-                                  ?.name || '*not found*',
-                      },
-                  ]
-                : []),
-            ...paragraph
-                .filter(p => p !== '')
-                .map((p, i) => ({
-                    name: i === 0 ? 'Guide' : '‎',
-                    value: p,
-                })),
-        ];
-        await Promise.all(
-            new Array(Math.ceil(embedFields.length / 16))
-                .fill(0)
-                .map((_, i, arr) => {
-                    let embed = new Discord.MessageEmbed()
-                        .setColor('#6ba4a5')
-                        .addFields(embedFields.slice(i * 16, i * 16 + 16));
-                    if (i === 0) {
-                        embed = embed
-                            .setTitle(
-                                `${name} (${type})${
-                                    archived ? '**ARCHIVED**' : ''
-                                }`
-                            )
-                            .setAuthor(
-                                'Random Dice Community Website',
-                                'https://randomdice.gg/android-chrome-512x512.png',
-                                'https://randomdice.gg/'
-                            )
-                            .setURL(
-                                `https://randomdice.gg/decks/guide/${encodeURI(
-                                    name
-                                )}`
-                            );
-                    }
-                    if (i === arr.length - 1) {
-                        embed = embed.setFooter(
-                            'randomdice.gg Decks Guide',
-                            'https://randomdice.gg/android-chrome-512x512.png'
-                        );
-                    }
-                    return channel.send({ embeds: [embed] });
-                })
-        );
-    };
-
     if (guideData) {
-        await execute(guideData);
+        await reply(input, getGuideData(guideData));
         return;
     }
 
-    const { bestMatch } = stringSimilarity.findBestMatch(
+    await bestMatchFollowUp(
+        input,
         guideName,
-        guides.map(g => g.name)
+        guides,
+        ' is not a guide written.',
+        getGuideData
     );
-    const bestMatchGuide = guides.find(
-        guide => guide.name === bestMatch.target
-    );
-    const sentMessage = await channel.send({
-        content:
-            bestMatch.rating > 0.3
-                ? `Guide \`${guideName}\` not found. Did you mean \`${bestMatchGuide?.type} Deck: ${bestMatchGuide?.name}\`? You may answer \`Yes\` to display the guide, or you can lookup a list guide here and display the guide with \`.gg guide <guide name>\`.`
-                : `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
-        embeds: [guideList],
-    });
-    if (bestMatch.rating <= 0.3) {
-        return;
-    }
-    let answeredYes = false;
-    try {
-        const awaitedMessage = await channel.awaitMessages({
-            filter: (newMessage: Discord.Message) =>
-                newMessage.author === message.author &&
-                !!newMessage.content.match(/^(y(es)?|no?|\\?\.gg ?)/i),
-            time: 60000,
-            max: 1,
-            errors: ['time'],
-        });
-        const response = awaitedMessage.first()?.content;
-        if (response?.match(/^y(es)?/i)) {
-            answeredYes = true;
-        }
-    } catch {
-        if (sentMessage.editable) {
-            await sentMessage.edit({
-                content: `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
-                embeds: [guideList],
-            });
-        }
-    }
-    if (answeredYes) {
-        const newGuide = guides.find(g => g.name === bestMatch.target);
-        if (newGuide) await execute(newGuide);
-    } else if (sentMessage.editable) {
-        await sentMessage.edit({
-            content: `Guide \`${guideName}\` not found. Here is a list of deck guides that we have created.`,
-            embeds: [guideList],
-        });
-    }
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'guide',
+    description: 'get the guide for a deck',
+    options: [
+        {
+            type: 3,
+            name: 'deck-name',
+            description:
+                'the name of the deck, use /guide list to see all deck guides',
+            required: true,
+        },
+    ],
+};

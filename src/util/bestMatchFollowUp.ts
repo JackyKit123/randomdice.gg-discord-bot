@@ -1,24 +1,28 @@
 import logMessage from 'dev-commands/logMessage';
 import {
     CommandInteraction,
+    DiscordAPIError,
     Message,
-    MessageActionRow,
-    MessageButton,
-    ReplyMessageOptions,
+    WebhookEditMessageOptions,
 } from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
 import { edit, reply } from './typesafeReply';
+import yesNoButton from './yesNoButton';
 
-export default async function bestMatchFollowUp(
+export default async function bestMatchFollowUp<
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TValue extends { name: string } & Record<string, any>
+>(
     input: Message | CommandInteraction,
     originalValue: string,
-    allPossibleValues: string[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    listOfValues: TValue[],
     invalidMessage: string,
-    newMatch: (match: string) => string | ReplyMessageOptions
+    followUp: (target?: TValue) => string | WebhookEditMessageOptions
 ): Promise<void> {
     const { bestMatch } = stringSimilarity.findBestMatch(
         originalValue,
-        allPossibleValues
+        listOfValues.map(({ name }) => name)
     );
 
     if (bestMatch.rating < 0.3) {
@@ -26,110 +30,43 @@ export default async function bestMatchFollowUp(
         return;
     }
 
-    const sentMessage = await reply(input, {
-        content: `${originalValue}${invalidMessage} Did you mean \`${bestMatch.target}\`?`,
-        components: [
-            new MessageActionRow().addComponents([
-                new MessageButton()
-                    .setCustomId('yes')
-                    .setLabel('Yes')
-                    .setEmoji('✅')
-                    .setStyle('SUCCESS'),
-                new MessageButton()
-                    .setCustomId('no')
-                    .setLabel('No')
-                    .setEmoji('❌')
-                    .setStyle('DANGER'),
-            ]),
-        ],
-    });
+    await yesNoButton(
+        input,
+        `${originalValue}${invalidMessage} Did you mean \`${bestMatch.target}\`?`,
+        async sentMessage => {
+            const newResponse = followUp(
+                listOfValues.find(value => value.name === bestMatch.target)
+            );
+            const messageOption: WebhookEditMessageOptions =
+                typeof newResponse === 'string'
+                    ? { content: newResponse, components: [] }
+                    : {
+                          ...newResponse,
+                          components: [],
+                          content: undefined,
+                      };
 
-    let answeredYes = false;
-
-    sentMessage
-        .createMessageComponentCollector({
-            time: 60000,
-        })
-        .on('collect', async collected => {
             try {
-                if (
-                    collected.user.id !==
-                    (
-                        (input as Message).author ||
-                        (input as CommandInteraction).user
-                    ).id
-                ) {
-                    collected.reply({
-                        content:
-                            'You cannot use this button because you did not initiate this command.',
-                        ephemeral: true,
-                    });
-                    return;
-                }
-                if (collected.customId === 'yes') {
-                    answeredYes = true;
-                    const newResponse = newMatch(bestMatch.target);
-                    const messageOption =
-                        typeof newResponse === 'string'
-                            ? { content: newResponse, components: [] }
-                            : {
-                                  ...newResponse,
-                                  components: [],
-                                  content: undefined,
-                              };
-                    await edit(
-                        input instanceof CommandInteraction
-                            ? input
-                            : sentMessage,
-                        messageOption
-                    );
-                } else if (collected.customId === 'no') {
-                    await sentMessage.delete();
-                }
+                await edit(
+                    input instanceof CommandInteraction ? input : sentMessage,
+                    messageOption
+                );
             } catch (err) {
-                try {
-                    await logMessage(
-                        input.client,
-                        `Oops, something went wrong in <#${
-                            input.channelId
-                        }> : ${
-                            (err as Error).stack ??
-                            (err as Error).message ??
-                            err
-                        }\n while collecting message component.`
-                    );
-                } catch (criticalError) {
-                    // eslint-disable-next-line no-console
-                    console.error(criticalError);
-                }
+                await reply(
+                    input instanceof CommandInteraction ? input : sentMessage,
+                    `Oops! Something went wrong: ${
+                        (err as DiscordAPIError).message
+                    }`
+                );
+                await logMessage(
+                    input.client,
+                    `Oops, something went wrong in while collecting message component.<#${
+                        input.channelId
+                    }> : ${
+                        (err as Error).stack ?? (err as Error).message ?? err
+                    }\n `
+                );
             }
-        })
-        .on('end', async () => {
-            if (!answeredYes) {
-                try {
-                    await edit(
-                        input instanceof CommandInteraction
-                            ? input
-                            : sentMessage,
-                        invalidMessage
-                    );
-                } catch (err) {
-                    try {
-                        await logMessage(
-                            input.client,
-                            `Oops, something went wrong in <#${
-                                input.channelId
-                            }> : ${
-                                (err as Error).stack ??
-                                (err as Error).message ??
-                                err
-                            }\n while collecting message component.`
-                        );
-                    } catch (criticalError) {
-                        // eslint-disable-next-line no-console
-                        console.error(criticalError);
-                    }
-                }
-            }
-        });
+        }
+    );
 }

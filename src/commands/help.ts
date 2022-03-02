@@ -1,22 +1,28 @@
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    Message,
+    MessageEmbed,
+} from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
 
 export default async function help(
-    message: Discord.Message,
+    input: Message | CommandInteraction,
     communityHelpOnly?: true
 ): Promise<void> {
-    const { channel, author, guild } = message;
+    const { guild } = input;
 
     if (
-        await cooldown(message, '.gg help', {
+        await cooldown(input, '.gg help', {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
     ) {
         return;
     }
-    const helpMessage = new Discord.MessageEmbed()
+    const helpMessage = new MessageEmbed()
         .setTitle('List of Commands')
         .setAuthor(
             'Random Dice Community Website',
@@ -38,7 +44,7 @@ export default async function help(
                     .join('\n'),
             }))
         );
-    const communityHelpMessage = new Discord.MessageEmbed()
+    const communityHelpMessage = new MessageEmbed()
         .setTitle('Community Server Specific Commands')
         .setAuthor(
             'Random Dice Community Website',
@@ -61,19 +67,23 @@ export default async function help(
         );
 
     if (communityHelpOnly) {
-        await author.send({ embeds: [communityHelpMessage] });
-    } else {
-        await author.send({ embeds: [helpMessage] });
-        if (guild?.id === '804222694488932362') {
-            await author.send({
+        await reply(input, { embeds: [communityHelpMessage] }, true);
+    } else if (guild?.id === '804222694488932362') {
+        await reply(
+            input,
+            {
                 content:
                     'It looks like you are requesting the help message from the community discord. Here is the list of fun commands specific towards the community discord only.',
-                embeds: [communityHelpMessage],
-            });
-        }
-    }
-    if (channel.type !== 'DM')
-        await channel.send(
-            'The list of commands has been sent to your via DM.'
+                embeds: [helpMessage, communityHelpMessage],
+            },
+            true
         );
+    } else {
+        await reply(input, { embeds: [helpMessage] }, true);
+    }
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'help',
+    description: 'get the list of commands',
+};

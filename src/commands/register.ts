@@ -1,18 +1,28 @@
-import Discord from 'discord.js';
+import {
+    AnyChannel,
+    ApplicationCommandData,
+    ClientUser,
+    CommandInteraction,
+    Guild,
+    GuildChannel,
+    Message,
+    MessageEmbed,
+    TextBasedChannel,
+} from 'discord.js';
 import { database } from 'register/firebase';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
+import yesNoButton from 'util/yesNoButton';
 import postNow from './postNow';
 
-async function checkRegistered(
-    guild: Discord.Guild
-): Promise<Discord.MessageEmbed | string> {
+async function checkRegistered(guild: Guild): Promise<MessageEmbed | string> {
     const registeredChannel = (
         await database.ref(`/discord_bot/registry/${guild.id}`).once('value')
     ).val();
     if (!registeredChannel) {
         return 'You have no registered channel. Start registering channel by doing `.gg register`';
     }
-    return new Discord.MessageEmbed()
+    return new MessageEmbed()
         .setTitle('Registered Channels')
         .setDescription('Here is the list of registered channel for the type')
         .setAuthor(
@@ -29,11 +39,13 @@ async function checkRegistered(
         );
 }
 
-export async function register(message: Discord.Message): Promise<void> {
-    const { client, member, guild, content, mentions, channel } = message;
+export async function register(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { client, member, guild } = input;
 
     if (
-        await cooldown(message, '.gg register', {
+        await cooldown(input, '.gg register', {
             default: 5 * 1000,
             donator: 1 * 1000,
         })
@@ -41,110 +53,106 @@ export async function register(message: Discord.Message): Promise<void> {
         return;
     }
     if (!member || !guild) {
-        await channel.send('You can only execute this command in a server.');
+        await reply(input, 'You can only execute this command in a server.');
         return;
     }
-    const args = content.split(' ');
-    const type = args[2];
-    const targetedChannel =
-        mentions.channels.first() || client.channels.cache.get(args[3] || '');
 
-    if (!member.permissions.has('MANAGE_CHANNELS')) {
-        await channel.send(
+    let type = '';
+    let channel:
+        | ReturnType<CommandInteraction['options']['getChannel']>
+        | AnyChannel
+        | undefined = null;
+    if (input instanceof Message) {
+        const args = input.content.split(' ');
+        [, , type] = args;
+        channel =
+            input.mentions.channels.first() ||
+            client.channels.cache.get(args[3] || '');
+    } else {
+        type = input.options.getString('type') ?? '';
+        channel = input.options.getChannel('channel');
+    }
+
+    if (
+        !guild.members.cache
+            .get(member.user.id)
+            ?.permissions.has('MANAGE_CHANNELS')
+    ) {
+        await reply(
+            input,
             'You lack permission to execute this command, required permission: `MANAGE_CHANNELS`'
         );
         return;
     }
 
+    const channelIsValid = (c: typeof channel): c is TextBasedChannel =>
+        !!(c && guild.channels.cache.get(c.id)?.isText());
+
     switch (type) {
         case 'guide':
         case 'news': {
-            if (!targetedChannel) {
-                await channel.send(
-                    `Please mention a channel as in \`.gg register ${type.toLowerCase()} #channel\` that you would like to register ${type} in.`
+            if (!channelIsValid(channel)) {
+                await reply(
+                    input,
+                    `Please mention a text channel that you would like to register ${type} in.`
                 );
-            } else {
-                const registry = (
-                    await database
-                        .ref(`/discord_bot/registry/${guild.id}`)
-                        .once('value')
-                ).val();
-                const channelRegistered = Object.entries(registry || {}).find(
-                    ([registeredType, registeredChannelId]) =>
-                        registeredChannelId === targetedChannel.id &&
-                        registeredType !== type
-                );
-                if (channelRegistered) {
-                    await channel.send(
-                        'You cannot register 2 categories into the same channel, please register another channel.'
-                    );
-                    return;
-                }
-                const missingPermissions = (
-                    targetedChannel as Discord.GuildChannel
-                )
-                    .permissionsFor(client.user as Discord.ClientUser)
-                    ?.missing([
-                        'VIEW_CHANNEL',
-                        'SEND_MESSAGES',
-                        'MANAGE_MESSAGES',
-                        'READ_MESSAGE_HISTORY',
-                    ]);
-                if (missingPermissions?.length) {
-                    await channel.send(
-                        `Registered failed:\nI do not have ${missingPermissions
-                            .map(perm => `\`${perm}\``)
-                            .join(
-                                ' '
-                            )} permission in ${targetedChannel.toString()}. Please enable this missing permission for ${client.user?.toString()} in ${targetedChannel.toString()}.`
-                    );
-                    return;
-                }
-                await Promise.all([
-                    database
-                        .ref(`/discord_bot/registry/${guild.id}/${type}`)
-                        .set(targetedChannel.id),
-                    database
-                        .ref('/last_updated/discord_bot')
-                        .set(new Date().toISOString()),
-                ]);
-                const sentMessage = await channel.send(
-                    `Registered Channel ${targetedChannel.toString()} to provide ${type}. Post information for ${type} in ${targetedChannel.toString()} now? You may answer \`yes\` to post information now.`
-                );
-                let answeredYes = false;
-                try {
-                    const awaitedMessage = await channel.awaitMessages({
-                        filter: (newMessage: Discord.Message) =>
-                            newMessage.author === message.author &&
-                            !!newMessage.content.match(
-                                /^(y(es)?|no?|\\?\.gg ?)/i
-                            ),
-                        time: 60000,
-                        max: 1,
-                        errors: ['time'],
-                    });
-                    if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
-                        answeredYes = true;
-                    }
-                } catch {
-                    if (sentMessage.editable)
-                        await sentMessage.edit(
-                            `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
-                        );
-                }
-                if (answeredYes) {
-                    await postNow(message);
-                } else if (sentMessage.editable) {
-                    await sentMessage.edit(
-                        `Registered Channel ${targetedChannel.toString()} to provide ${type}.`
-                    );
-                }
+                return;
             }
+            const registry = (
+                await database
+                    .ref(`/discord_bot/registry/${guild.id}`)
+                    .once('value')
+            ).val();
+            const channelRegistered = Object.entries(registry || {}).find(
+                ([registeredType, registeredChannelId]) =>
+                    registeredChannelId === channel?.id &&
+                    registeredType !== type
+            );
+            if (channelRegistered) {
+                await reply(
+                    input,
+                    'You cannot register 2 categories into the same channel, please register another channel.'
+                );
+                return;
+            }
+            const missingPermissions = (channel as GuildChannel)
+                .permissionsFor(client.user as ClientUser)
+                ?.missing([
+                    'VIEW_CHANNEL',
+                    'SEND_MESSAGES',
+                    'MANAGE_MESSAGES',
+                    'READ_MESSAGE_HISTORY',
+                ]);
+            if (missingPermissions?.length) {
+                await reply(
+                    input,
+                    `Registered failed:\nI do not have ${missingPermissions
+                        .map(perm => `\`${perm}\``)
+                        .join(
+                            ' '
+                        )} permission in ${channel}. Please enable this missing permission for me in ${channel}.`
+                );
+                return;
+            }
+            await Promise.all([
+                database
+                    .ref(`/discord_bot/registry/${guild.id}/${type}`)
+                    .set(channel.id),
+                database
+                    .ref('/last_updated/discord_bot')
+                    .set(new Date().toISOString()),
+            ]);
+            yesNoButton(
+                input,
+                `Registered Channel ${channel} to provide ${type}. Post ${type} in ${channel} now?`,
+                () => postNow(input, type)
+            );
             break;
         }
         case 'list': {
             const checkedMessage = await checkRegistered(guild);
-            await channel.send(
+            await reply(
+                input,
                 typeof checkedMessage === 'string'
                     ? { content: checkedMessage }
                     : { embeds: [checkedMessage] }
@@ -152,28 +160,40 @@ export async function register(message: Discord.Message): Promise<void> {
             break;
         }
         default:
-            await channel.send(
+            await reply(
+                input,
                 'Targeted type not found, supported type: `guide` `news`. The correct command format is `.gg register <guide|news> #channel-mention` or list all registered channel with `.gg register list`'
             );
     }
 }
 
-export async function unregister(message: Discord.Message): Promise<void> {
-    const { member, guild, content, channel } = message;
+export async function unregister(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { member, guild } = input;
     if (!member || !guild) {
-        await channel.send('You can only execute this command in a server.');
+        await reply(input, 'You can only execute this command in a server.');
         return;
     }
 
-    if (!member.permissions.has('MANAGE_CHANNELS')) {
-        await channel.send(
+    if (
+        !guild.members.cache
+            .get(member.user.id)
+            ?.permissions.has('MANAGE_CHANNELS')
+    ) {
+        await reply(
+            input,
             'You lack permission to execute this command, required permission: `MANAGE_CHANNELS`'
         );
         return;
     }
-    const type = content.split(' ')[2];
+    const type =
+        input instanceof Message
+            ? input.content.split(' ')[2]
+            : input.options.getString('type');
     if (!type?.toLowerCase().match(/^(?:guide|news)$/)) {
-        await channel.send(
+        await reply(
+            input,
             `\`${type}\` is an invalid type to unregister. You can only unregister \`news\` or \`guide\``
         );
         return;
@@ -184,7 +204,8 @@ export async function unregister(message: Discord.Message): Promise<void> {
             .once('value')
     ).val();
     if (!registerChannel) {
-        await channel.send(
+        await reply(
+            input,
             `There is no registered channel for \`${type}\`, you do not need to unregister`
         );
         return;
@@ -193,7 +214,62 @@ export async function unregister(message: Discord.Message): Promise<void> {
         database.ref(`/discord_bot/registry/${guild.id}/${type}`).set(null),
         database.ref('/last_updated/discord_bot').set(new Date().toISOString()),
     ]);
-    await channel.send(
+    await reply(
+        input,
         `Unregistered channel <#${registerChannel}> for \`${type}\`, the previous ${type} information in <#${registerChannel}> stays but will not no longer auto update.`
     );
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'register',
+        description:
+            'Register a channel to sync news or guide from the website to your server.',
+        options: [
+            {
+                name: 'type',
+                description: 'Either guide or news',
+                required: true,
+                type: 3,
+                choices: [
+                    {
+                        name: 'guide',
+                        value: 'guide',
+                    },
+                    {
+                        name: 'news',
+                        value: 'news',
+                    },
+                ],
+            },
+            {
+                name: 'channel',
+                description: 'The channel to register',
+                required: true,
+                type: 7,
+            },
+        ],
+    },
+    {
+        name: 'unregister',
+        description: 'Unregister a channel to provide news or guide',
+        options: [
+            {
+                name: 'type',
+                description: 'Either guide or news',
+                required: true,
+                type: 3,
+                choices: [
+                    {
+                        name: 'guide',
+                        value: 'guide',
+                    },
+                    {
+                        name: 'news',
+                        value: 'news',
+                    },
+                ],
+            },
+        ],
+    },
+];
