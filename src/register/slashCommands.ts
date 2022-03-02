@@ -72,17 +72,13 @@ export const getAscendingNumberArray = (
 
 export const mapChoices = (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: ({ name: string } & Record<string, any>)[],
-    withListCommand?: boolean
+    data: ({ name: string } & Record<string, any>)[]
 ): {
     name: string;
     value: string;
 }[] =>
-    // eslint-disable-next-line no-nested-ternary
     data.length > 25
-        ? withListCommand
-            ? [{ name: 'list', value: 'list' }]
-            : []
+        ? []
         : data.map(({ name }) => ({
               name,
               value: name,
