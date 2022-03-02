@@ -11,10 +11,16 @@ export default async function log(
 
     if (logChannel?.isText()) {
         return logChannel.send({
+            content:
+                Array.from(message.matchAll(/<@!?(\d{18})>/g)).join('') ||
+                undefined,
             embeds: [
                 getBrandingEmbed()
                     .setDescription(message)
-                    .addField('env', String(process.env.NODE_ENV)),
+                    .setAuthor(null)
+                    .setFooter({
+                        text: `env: ${process.env.NODE_ENV}`,
+                    }),
             ],
         });
     }
