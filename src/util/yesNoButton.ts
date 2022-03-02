@@ -54,7 +54,7 @@ export default async function yesNoButton(
                 }
                 if (collected.customId === 'yes') {
                     answeredYes = true;
-                    onYes(sentMessage);
+                    await onYes(sentMessage);
                 } else if (collected.customId === 'no') {
                     if (input instanceof Message) {
                         await sentMessage.delete();
