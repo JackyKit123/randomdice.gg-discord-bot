@@ -21,9 +21,6 @@ export default async function drawDice(
     input: Discord.Interaction | Discord.Message
 ): Promise<void> {
     const { member, channel, guild } = input;
-    const author =
-        (input as Discord.Interaction).user ||
-        (input as Discord.Message).author;
     if (
         !guild ||
         !member ||
