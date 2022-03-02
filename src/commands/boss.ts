@@ -9,6 +9,7 @@ import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
 import bestMatchFollowUp from 'util/bestMatchFollowUp';
+import { mapChoices } from 'register/slashCommands';
 
 export default async function boss(
     input: Message | CommandInteraction
@@ -86,7 +87,9 @@ export default async function boss(
     );
 }
 
-export const commandData: ApplicationCommandDataResolvable = {
+export const commandData = (
+    bossData: Boss[]
+): ApplicationCommandDataResolvable => ({
     name: 'boss',
     description: 'get the information about a boss',
     options: [
@@ -95,6 +98,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             name: 'boss',
             description: 'the name of the boss',
             required: true,
+            choices: mapChoices(bossData),
         },
     ],
-};
+});

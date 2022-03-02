@@ -143,16 +143,25 @@ export default async function deckGuide(
     );
 }
 
-export const commandData: ApplicationCommandData = {
+export const commandData = (guides: DeckGuide[]): ApplicationCommandData => ({
     name: 'guide',
     description: 'get the guide for a deck',
     options: [
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         {
             type: 3,
             name: 'deck-name',
             description:
                 'the name of the deck, use /guide list to see all deck guides',
             required: true,
+            choices:
+                guides.length > 25
+                    ? [{ name: 'list', value: 'list' }]
+                    : guides.map(g => ({
+                          name: g.name,
+                          value: g.name,
+                      })),
         },
     ],
-};
+});

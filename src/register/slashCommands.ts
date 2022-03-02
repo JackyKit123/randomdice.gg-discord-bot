@@ -14,19 +14,20 @@ import { commandData as contact } from 'commands/sendContact';
 import { commandData as postNow } from 'commands/postNow';
 import { commandData as register } from 'commands/register';
 import { commandData as links } from 'commands/sendLinks';
+import cacheData from 'util/cache';
 
 export default async function registerSlashCommands(
     client: Client
 ): Promise<void> {
     const commands: ApplicationCommandDataResolvable[] = [
-        boss,
-        battlefield,
+        boss(cacheData['wiki/boss']),
+        battlefield(cacheData['wiki/battlefield']),
         cardcalc,
         deck,
-        dice,
+        dice(cacheData.dice),
         ping,
-        drawUntil,
-        guide,
+        drawUntil(),
+        guide(cacheData.decks_guide),
         help,
         news,
         randomDeck,
@@ -55,3 +56,34 @@ export default async function registerSlashCommands(
         ]);
     }
 }
+
+export const getAscendingNumberArray = (
+    length: number,
+    text: string,
+    start = 1
+): {
+    name: string;
+    value: number;
+}[] =>
+    Array.from({ length }, (_, i) => ({
+        name: `${text} ${start + i}`,
+        value: start + i,
+    }));
+
+export const mapChoices = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: ({ name: string } & Record<string, any>)[],
+    withListCommand?: boolean
+): {
+    name: string;
+    value: string;
+}[] =>
+    // eslint-disable-next-line no-nested-ternary
+    data.length > 25
+        ? withListCommand
+            ? [{ name: 'list', value: 'list' }]
+            : []
+        : data.map(({ name }) => ({
+              name,
+              value: name,
+          }));

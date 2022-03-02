@@ -6,6 +6,7 @@ import Discord, {
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { edit, reply } from 'util/typesafeReply';
+import { getAscendingNumberArray } from 'register/slashCommands';
 
 export default async function drawUntil(
     input: Message | CommandInteraction
@@ -177,7 +178,7 @@ export default async function drawUntil(
     });
 }
 
-export const commandData: ApplicationCommandData = {
+export const commandData = (): ApplicationCommandData => ({
     name: 'draw-until',
     description:
         'simulate a draw until a certain legendary class die is earned',
@@ -189,10 +190,7 @@ export const commandData: ApplicationCommandData = {
             required: true,
             minValue: 7,
             maxValue: 15,
-            choices: Array.from({ length: 9 }, (_, i) => ({
-                name: `Class ${i + 7}`,
-                value: i + 7,
-            })),
+            choices: getAscendingNumberArray(9, 'Level', 7),
         },
     ],
-};
+});

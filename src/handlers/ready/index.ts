@@ -30,7 +30,6 @@ export default async function ready(client: Client<true>): Promise<void> {
         // eslint-disable-next-line no-console
         console.log(bootMessage);
         await Promise.all([
-            registerSlashCommands(client),
             purgeMoonedRoles(client),
             purgeClownRoles(client),
             fetchApps(client),
@@ -40,7 +39,9 @@ export default async function ready(client: Client<true>): Promise<void> {
             fetchSpyLogOnBoot(client),
             fetchAll(),
         ]);
+        // call these after database ready
         await Promise.all([
+            registerSlashCommands(client),
             setRaffleTimerOnBoot(client),
             weeklyAutoReset(client),
             registerTimer(client),

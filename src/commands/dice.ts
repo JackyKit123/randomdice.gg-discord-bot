@@ -11,6 +11,7 @@ import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
 import bestMatchFollowUp from 'util/bestMatchFollowUp';
+import { getAscendingNumberArray, mapChoices } from 'register/slashCommands';
 
 export default async function dice(
     input: Message | CommandInteraction
@@ -236,7 +237,9 @@ export default async function dice(
     );
 }
 
-export const commandData: ApplicationCommandDataResolvable = {
+export const commandData = (
+    diceList: Dice[]
+): ApplicationCommandDataResolvable => ({
     name: 'dice',
     description: 'get the information about a die',
     options: [
@@ -245,6 +248,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             name: 'die',
             description: 'the name of the die',
             required: true,
+            choices: mapChoices(diceList),
         },
         {
             type: 4,
@@ -252,10 +256,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             description: 'the class of the die',
             minValue: 1,
             maxValue: 15,
-            choices: Array.from({ length: 15 }, (_, i) => ({
-                name: `Class ${i + 1}`,
-                value: i + 1,
-            })),
+            choices: getAscendingNumberArray(15, 'Class'),
         },
         {
             type: 4,
@@ -263,10 +264,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             description: 'the level of the die',
             minValue: 1,
             maxValue: 5,
-            choices: Array.from({ length: 5 }, (_, i) => ({
-                name: `Level ${i + 1}`,
-                value: i + 1,
-            })),
+            choices: getAscendingNumberArray(5, 'Level'),
         },
     ],
-};
+});

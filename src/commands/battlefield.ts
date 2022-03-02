@@ -10,6 +10,7 @@ import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
 import bestMatchFollowUp from 'util/bestMatchFollowUp';
+import { getAscendingNumberArray, mapChoices } from 'register/slashCommands';
 
 export default async function dice(
     input: Message | CommandInteraction
@@ -138,7 +139,9 @@ export default async function dice(
     );
 }
 
-export const commandData: ApplicationCommandDataResolvable = {
+export const commandData = (
+    battlefield: Battlefield[]
+): ApplicationCommandDataResolvable => ({
     name: 'battlefield',
     description: 'get the information about a battlefield',
     options: [
@@ -147,6 +150,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             name: 'battlefield',
             description: 'the name of the battlefield',
             required: true,
+            choices: mapChoices(battlefield),
         },
         {
             type: 4,
@@ -154,10 +158,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             description: 'the level of the battlefield',
             minValue: 1,
             maxValue: 20,
-            choices: Array.from({ length: 20 }, (_, i) => ({
-                name: `Level ${i + 1}`,
-                value: i + 1,
-            })),
+            choices: getAscendingNumberArray(20, 'Level'),
         },
     ],
-};
+});
