@@ -27,7 +27,12 @@ export async function reply(
     messageOptions: ReplyMessageOptions | string
 ): Promise<Message<boolean>> {
     if (input instanceof Message) {
-        return input.reply(messageOptions);
+        return input.reply({
+            ...(typeof messageOptions === 'string'
+                ? { content: messageOptions }
+                : messageOptions),
+            allowedMentions: { repliedUser: false },
+        });
     }
 
     await input.deferReply();
