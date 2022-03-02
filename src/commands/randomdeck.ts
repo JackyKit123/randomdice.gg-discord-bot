@@ -15,8 +15,8 @@ export default async function RandomDeck(
 ): Promise<void> {
     if (
         await cooldown(input, '.gg randomdeck', {
-            default: 10 * 1000,
-            donator: 2 * 1000,
+            default: 20 * 1000,
+            donator: 5 * 1000,
         })
     ) {
         return;
@@ -32,23 +32,29 @@ export default async function RandomDeck(
             shuffleArray[i],
         ];
     });
-    const pick5dice = shuffleArray
-        .slice(0, 5)
-        .map(id => emoji[id])
-        .join('');
-    const diceList = cache.dice;
-    const shuffleAnimation = shuffleArray
-        .slice(0, 5)
-        .map(id =>
-            diceList.find(d => d.id === id)?.rarity === 'Legendary'
-                ? '<a:Dice_TierX_RandomLegend:867076479733334016>'
-                : '<a:Dice_TierX_RandomCommon:830670733004242974>'
-        )
-        .join('');
+    const pick5dice = shuffleArray.slice(0, 5).map(id => emoji[id]);
 
-    const sentMessage = await reply(input, shuffleAnimation);
-    await wait(1000);
-    await edit(input instanceof Message ? sentMessage : input, pick5dice);
+    const getShuffleAnimation = () =>
+        Array(5)
+            .fill(0)
+            .map(() =>
+                Math.random() > 0.5
+                    ? '<a:Dice_TierX_RandomLegend:867076479733334016>'
+                    : '<a:Dice_TierX_RandomCommon:830670733004242974>'
+            );
+
+    const sentMessage = await reply(input, getShuffleAnimation().join(''));
+    for (let x = 1; x <= 5; x += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        await wait(300);
+        // eslint-disable-next-line no-await-in-loop
+        await edit(
+            input instanceof Message ? sentMessage : input,
+            [...pick5dice.slice(0, x), ...getShuffleAnimation().slice(x)].join(
+                ''
+            )
+        );
+    }
 }
 
 export const commandData: ApplicationCommandData = {
