@@ -24,11 +24,11 @@ async function transformApiMessage(
     return message;
 }
 
-export async function reply(
+export async function reply<TEphemeral extends true | undefined = undefined>(
     input: Message | ButtonInteraction | CommandInteraction,
     messageOptions: ReplyMessageOptions | string,
-    ephemeral?: boolean
-): Promise<Message<boolean>> {
+    ephemeral?: TEphemeral
+): Promise<TEphemeral extends true ? void : Message<boolean>> {
     const finalOption = {
         ephemeral,
         ...(typeof messageOptions === 'string'
@@ -51,12 +51,23 @@ export async function reply(
                     );
                 }
             }
+        } else {
+            return input.reply(finalOption) as Promise<
+                TEphemeral extends true ? undefined : Message<boolean>
+            >;
         }
-        return input.reply(finalOption);
+    } else if (ephemeral) {
+        await input.reply({ ...finalOption, ephemeral: true });
+    } else {
+        await input.deferReply();
+        return transformApiMessage(
+            input,
+            await input.followUp(finalOption)
+        ) as Promise<TEphemeral extends true ? undefined : Message<boolean>>;
     }
-
-    await input.deferReply();
-    return transformApiMessage(input, await input.followUp(finalOption));
+    return new Promise(r =>
+        r(undefined as TEphemeral extends true ? undefined : Message<boolean>)
+    );
 }
 
 export async function edit(
