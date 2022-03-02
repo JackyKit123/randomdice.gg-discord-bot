@@ -1,5 +1,5 @@
 import { database } from 'register/firebase';
-import Discord from 'discord.js';
+import Discord, { TextBasedChannel } from 'discord.js';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
@@ -134,7 +134,7 @@ export async function afkResponse(message: Discord.Message): Promise<void> {
 }
 
 export async function removeAfkListener(
-    arg: Discord.TextBasedChannels | Discord.MessageReaction,
+    arg: TextBasedChannel | Discord.MessageReaction,
     user: Discord.User | Discord.PartialUser
 ): Promise<void> {
     const channel =

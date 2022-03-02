@@ -255,16 +255,17 @@ export default async function leaderboard(
                         ? 'Biggest Gambler of all time'
                         : `Richest People in the Server`
                 )
-                .setAuthor(
-                    'Randomdice.gg Server',
-                    guild.iconURL({
-                        dynamic: true,
-                    }) ?? undefined,
-                    `https://discord.gg/randomdice`
-                )
+                .setAuthor({
+                    name: 'Randomdice.gg Server',
+                    iconURL:
+                        guild.iconURL({
+                            dynamic: true,
+                        }) ?? undefined,
+                    url: 'https://discord.gg/randomdice',
+                })
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setTimestamp()
-                .setFooter(`Showing page ${i + 1} of ${pageNumbers}.`)
+                .setFooter({ text: `Showing page ${i + 1} of ${pageNumbers}.` })
         );
 
     const { components, collectorHandler } = getPaginationComponents(

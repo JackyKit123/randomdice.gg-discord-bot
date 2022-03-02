@@ -64,10 +64,10 @@ export default async function spy(message: Discord.Message): Promise<void> {
             content.slice(1024),
         ];
         let embed = new Discord.MessageEmbed()
-            .setAuthor(
-                `${author.username}#${author.discriminator}`,
-                author.displayAvatarURL({ dynamic: true })
-            )
+            .setAuthor({
+                name: author.tag,
+                iconURL: author.displayAvatarURL({ dynamic: true }),
+            })
             .setTitle('Hack Discord Spied Message')
             .addField('User', `${author}\nID: ${author.id}`)
             .addField('User has been banned', isBanned ? '✔️' : '❌');
@@ -82,10 +82,10 @@ export default async function spy(message: Discord.Message): Promise<void> {
                 'In Channel',
                 `#${(channel as Discord.GuildChannel).name}`
             )
-            .setFooter(
-                guild.name,
-                guild.iconURL({ dynamic: true }) ?? undefined
-            )
+            .setFooter({
+                text: guild.name,
+                iconURL: guild.iconURL({ dynamic: true }) ?? undefined,
+            })
             .setTimestamp();
         if (!isBanned) {
             if (triggered.length) {

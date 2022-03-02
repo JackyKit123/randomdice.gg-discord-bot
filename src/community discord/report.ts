@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { TextBasedChannel } from 'discord.js';
 import cooldown from 'util/cooldown';
 import parseMsIntoReadableText from 'util/parseMS';
 
@@ -71,7 +71,7 @@ async function closeReport(message: Discord.Message): Promise<void> {
                     '\n' +
                     `**ID:** ${member.user.id}`
             )
-            .setFooter('Report Closed at')
+            .setFooter({ text: 'Report Closed at' })
             .setTimestamp();
         if (reportMember) {
             embed = embed.setAuthor({
@@ -241,7 +241,7 @@ export default async function report(message: Discord.Message): Promise<void> {
                     channel.id
                 }/${lastMessage})`
         )
-        .setFooter(`Report ID: ${message.id}`)
+        .setFooter({ text: `Report ID: ${message.id}` })
         .setTimestamp(createdTimestamp);
     Array.from(memberMentions || []).forEach(([, m], i) => {
         embed = embed.addField(
@@ -274,7 +274,7 @@ export default async function report(message: Discord.Message): Promise<void> {
     if (logChannel?.isText()) {
         await logChannel.send({ embeds: [embed.setTitle('Member Report')] });
     }
-    const reportRoom = await guild.channels.create(
+    const reportRoom = (await guild.channels.create(
         `${author.username}-${author.discriminator}-report-room`,
         {
             parent: supportCategory,
@@ -298,7 +298,7 @@ export default async function report(message: Discord.Message): Promise<void> {
                 },
             ],
         }
-    );
+    )) as TextBasedChannel;
     const initMessage = await reportRoom.send({
         content: `${author.toString()}, please wait patiently for our ${modRole} ${tModRole} team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
         embeds: [embed],

@@ -1,4 +1,4 @@
-import Discord from 'discord.js';
+import Discord, { TextBasedChannel } from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
@@ -67,7 +67,7 @@ export default async function Apply(message: Discord.Message): Promise<void> {
     }
 
     const applicationCategory = guild.channels.cache.get('807183574645735474');
-    const newChannel = await guild.channels.create(
+    const newChannel = (await guild.channels.create(
         `${member.user.username}-${member.user.discriminator}-${application.position}-application`,
         {
             parent:
@@ -86,17 +86,17 @@ export default async function Apply(message: Discord.Message): Promise<void> {
                 },
             ],
         }
-    );
+    )) as TextBasedChannel;
     let applicationEmbed = new Discord.MessageEmbed()
         .setTitle(`${application.position} Application`)
         .setColor(member.displayHexColor)
-        .setAuthor(
-            `${member.user.username}#${member.user.discriminator}`,
-            member.displayAvatarURL({ dynamic: true })
-        )
-        .setFooter(
-            'React to ✅ when finished, react to ❌ to cancel your application.'
-        )
+        .setAuthor({
+            name: member.user.tag,
+            iconURL: member.displayAvatarURL({ dynamic: true }),
+        })
+        .setFooter({
+            text: 'React to ✅ when finished, react to ❌ to cancel your application.',
+        })
         .setTimestamp();
     application.questions.forEach((question, i) => {
         applicationEmbed = applicationEmbed.addField(
@@ -280,13 +280,13 @@ export async function configApps(message: Discord.Message): Promise<void> {
                 let applicationEmbed = new Discord.MessageEmbed()
                     .setTitle(`${position} Application`)
                     .setColor(member.displayHexColor)
-                    .setAuthor(
-                        `${member.user.username}#${member.user.discriminator}`,
-                        member.displayAvatarURL({ dynamic: true })
-                    )
-                    .setFooter(
-                        'React to ✅ when finished, react to ❌ to cancel your application.'
-                    )
+                    .setAuthor({
+                        name: member.user.tag,
+                        iconURL: member.displayAvatarURL({ dynamic: true }),
+                    })
+                    .setFooter({
+                        text: 'React to ✅ when finished, react to ❌ to cancel your application.',
+                    })
                     .setTimestamp();
                 arg?.split('\n').forEach((question, i) => {
                     applicationEmbed = applicationEmbed.addField(
@@ -362,13 +362,13 @@ export async function configApps(message: Discord.Message): Promise<void> {
                 let applicationEmbed = new Discord.MessageEmbed()
                     .setTitle(`${position} Application`)
                     .setColor(member.displayHexColor)
-                    .setAuthor(
-                        `${member.user.username}#${member.user.discriminator}`,
-                        member.displayAvatarURL({ dynamic: true })
-                    )
-                    .setFooter(
-                        'React to ✅ when finished, react to ❌ to cancel your application.'
-                    )
+                    .setAuthor({
+                        name: member.user.tag,
+                        iconURL: member.displayAvatarURL({ dynamic: true }),
+                    })
+                    .setFooter({
+                        text: 'React to ✅ when finished, react to ❌ to cancel your application.',
+                    })
                     .setTimestamp();
                 arg?.split('\n').forEach((question, i) => {
                     applicationEmbed = applicationEmbed.addField(
@@ -552,12 +552,12 @@ export async function configApps(message: Discord.Message): Promise<void> {
                             new Discord.MessageEmbed()
                                 .setTitle(`All Applications`)
                                 .setColor(member.displayHexColor)
-                                .setAuthor(
-                                    `${member.user.username}#${member.user.discriminator}`,
-                                    member.displayAvatarURL({
+                                .setAuthor({
+                                    name: member.user.tag,
+                                    iconURL: member.displayAvatarURL({
                                         dynamic: true,
-                                    })
-                                )
+                                    }),
+                                })
                                 .setDescription(
                                     existingApplications
                                         .map(
@@ -576,15 +576,17 @@ export async function configApps(message: Discord.Message): Promise<void> {
                     let applicationEmbed = new Discord.MessageEmbed()
                         .setTitle(`${target.position} Application`)
                         .setColor(member.displayHexColor)
-                        .setAuthor(
-                            `${member.user.username}#${member.user.discriminator}`,
-                            member.displayAvatarURL({ dynamic: true })
-                        )
-                        .setFooter(
-                            `Application publicity: ${
+                        .setAuthor({
+                            name: member.user.tag,
+                            iconURL: member.displayAvatarURL({
+                                dynamic: true,
+                            }),
+                        })
+                        .setFooter({
+                            text: `Application publicity: ${
                                 target.isOpen ? 'opened' : 'closed'
-                            } for application`
-                        )
+                            } for application`,
+                        })
                         .setTimestamp();
                     target.questions.forEach((question, i) => {
                         applicationEmbed = applicationEmbed.addField(
@@ -608,12 +610,12 @@ export async function configApps(message: Discord.Message): Promise<void> {
                             new Discord.MessageEmbed()
                                 .setTitle(`All Applications`)
                                 .setColor(member.displayHexColor)
-                                .setAuthor(
-                                    `${member.user.username}#${member.user.discriminator}`,
-                                    member.displayAvatarURL({
+                                .setAuthor({
+                                    name: member.user.tag,
+                                    iconURL: member.displayAvatarURL({
                                         dynamic: true,
-                                    })
-                                )
+                                    }),
+                                })
                                 .setDescription(
                                     existingApplications
                                         .map(

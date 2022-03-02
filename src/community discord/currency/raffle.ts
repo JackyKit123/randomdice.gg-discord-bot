@@ -32,10 +32,10 @@ async function host(
         ticketCost,
     });
     return new MessageEmbed()
-        .setAuthor(
-            'randomdice.gg Server',
-            guild.iconURL({ dynamic: true }) ?? undefined
-        )
+        .setAuthor({
+            name: 'randomdice.gg Server',
+            iconURL: guild.iconURL({ dynamic: true }) ?? undefined,
+        })
         .setColor('#00ff00')
         .setTitle('New Dice Coins Raffle')
         .addField(
@@ -43,7 +43,7 @@ async function host(
             `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
         )
         .addField('Hosted by', `${author}`)
-        .setFooter('Raffle ends at')
+        .setFooter({ text: 'Raffle ends at' })
         .setTimestamp(Date.now() + duration);
 }
 
@@ -104,10 +104,10 @@ async function announceWinner(guild: Guild): Promise<void> {
 
             const amount = entries.length * raffleInfo.ticketCost;
             const announceWinnerEmbed = new MessageEmbed()
-                .setAuthor(
-                    'randomdice.gg Server',
-                    guild.iconURL({ dynamic: true }) ?? undefined
-                )
+                .setAuthor({
+                    name: 'randomdice.gg Server',
+                    iconURL: guild.iconURL({ dynamic: true }) ?? undefined,
+                })
                 .setColor('#800080')
                 .setTitle('Dice Coins Raffle')
                 .setDescription(
@@ -121,7 +121,9 @@ async function announceWinner(guild: Guild): Promise<void> {
                               amount
                           )}**. Congratulations!`
                 )
-                .setFooter('A new round of raffle will be hosted very soon');
+                .setFooter({
+                    text: 'A new round of raffle will be hosted very soon',
+                });
 
             const ref = database.ref('discord_bot/community/raffle');
             await ref.set({
@@ -252,11 +254,12 @@ export default async function raffle(message: Message): Promise<void> {
                     await channel.send({
                         embeds: [
                             new MessageEmbed()
-                                .setAuthor(
-                                    'randomdice.gg Server',
-                                    guild.iconURL({ dynamic: true }) ??
-                                        undefined
-                                )
+                                .setAuthor({
+                                    name: 'randomdice.gg Server',
+                                    iconURL:
+                                        guild.iconURL({ dynamic: true }) ??
+                                        undefined,
+                                })
                                 .setColor('#ff0000')
                                 .setTitle('Dice Coins Raffle')
                                 .setDescription(

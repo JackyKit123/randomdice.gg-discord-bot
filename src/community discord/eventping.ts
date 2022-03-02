@@ -31,14 +31,15 @@ export default async function eventPing(
     }
 
     let embed = new Discord.MessageEmbed()
-        .setAuthor(
-            'Event Time WOO HOO!!!',
-            guild.iconURL({
-                dynamic: true,
-            }) ?? undefined
-        )
+        .setAuthor({
+            name: 'Event Time WOO HOO!!!',
+            iconURL:
+                guild.iconURL({
+                    dynamic: true,
+                }) ?? undefined,
+        })
         .setColor(member.displayHexColor)
-        .setFooter('Enjoy the event!')
+        .setFooter({ text: 'Enjoy the event!' })
         .addField('Hosted by', member.toString());
 
     if (msg.length > 1024) {

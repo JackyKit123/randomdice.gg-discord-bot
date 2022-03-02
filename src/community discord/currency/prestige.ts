@@ -54,12 +54,12 @@ export default async function prestige(
         await channel.send({
             embeds: [
                 new Discord.MessageEmbed()
-                    .setAuthor(
-                        `${member.user.username}#${member.user.discriminator}`,
-                        member.displayAvatarURL({
+                    .setAuthor({
+                        name: member.user.tag,
+                        iconURL: member.user.displayAvatarURL({
                             dynamic: true,
-                        }) ?? undefined
-                    )
+                        }),
+                    })
                     .setColor(member.displayHexColor)
                     .setTitle('Prestige Progress')
                     .setDescription(

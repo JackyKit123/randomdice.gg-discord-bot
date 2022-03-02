@@ -5,7 +5,7 @@ import {
     GuildMember,
     Message,
     MessageEmbed,
-    TextBasedChannels,
+    TextBasedChannel,
 } from 'discord.js';
 import { database } from 'register/firebase';
 import { promisify } from 'util';
@@ -127,7 +127,7 @@ function tickTimer(
 }
 
 export async function setTimer(
-    channel: TextBasedChannels,
+    channel: TextBasedChannel,
     member: GuildMember,
     title: string,
     time: number

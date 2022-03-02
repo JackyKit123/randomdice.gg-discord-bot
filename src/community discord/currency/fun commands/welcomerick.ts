@@ -48,11 +48,12 @@ export default async function welcomerick(
         embeds: [
             new Discord.MessageEmbed()
                 .setImage('https://i.imgur.com/WGTxs0m.gif')
-                .setAuthor(
-                    'Rick Astley',
-                    'https://media3.giphy.com/media/5kq0GCjHA8Rwc/giphy.gif',
-                    'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-                )
+                .setAuthor({
+                    name: 'Rick Astley',
+                    iconURL:
+                        'https://media3.giphy.com/media/5kq0GCjHA8Rwc/giphy.gif',
+                    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                })
                 .setTitle(`Not A Member!!`)
                 .setColor(3669760)
                 .setDescription(
@@ -62,7 +63,7 @@ export default async function welcomerick(
                     'Meme Created at',
                     '1987 debut album Whenever You Need Somebody.'
                 )
-                .setFooter('Get rick rolled'),
+                .setFooter({ text: 'Get rick rolled' }),
         ],
     });
     const general = guild.channels.cache.get('804222694488932364');

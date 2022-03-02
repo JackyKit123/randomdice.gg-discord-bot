@@ -5,6 +5,7 @@ import {
     GuildMember,
     Message,
     MessageEmbed,
+    TextChannel,
 } from 'discord.js';
 import { setTimer } from '../timer';
 
@@ -65,7 +66,7 @@ export default async function setChannel(message: Message): Promise<void> {
         }
     }
     const appealRoomCat = guild.channels.cache.get('805035618765242369');
-    const appealRoom = await guild.channels.create(
+    const appealRoom = (await guild.channels.create(
         `${member.user.username}${member.user.discriminator}`,
         {
             parent:
@@ -73,7 +74,7 @@ export default async function setChannel(message: Message): Promise<void> {
                     ? appealRoomCat
                     : undefined,
         }
-    );
+    )) as TextChannel;
     await appealRoom.permissionOverwrites.edit(member, {
         VIEW_CHANNEL: true,
     });

@@ -92,11 +92,11 @@ export default async function timed(
         .setColor('#ffff00');
     if (multiplier > 1) {
         multiplier -= 1;
-        embed = embed.setFooter(
-            `+extra ${multiplier * 100}% for being $${
+        embed = embed.setFooter({
+            text: `+extra ${multiplier * 100}% for being $${
                 multiplier * 10
-            } Patreon donator`
-        );
+            } Patreon donator`,
+        });
     }
 
     if (mode === 'hourly') {

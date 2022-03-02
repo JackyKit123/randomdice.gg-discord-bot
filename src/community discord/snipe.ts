@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Discord from 'discord.js';
+import Discord, { GuildChannelResolvable } from 'discord.js';
 import cooldown from 'util/cooldown';
 
 const snipeStore = {
@@ -220,7 +220,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
             if (!interaction.isButton()) return;
             const userCanManageMessage = !!guild.members.cache
                 .get(interaction.user.id)
-                ?.permissionsIn(channel as Discord.GuildChannel)
+                ?.permissionsIn(channel as GuildChannelResolvable)
                 .has('MANAGE_MESSAGES');
             const userIsSnipedMessageAuthor =
                 interaction.user.id === snipedMessage.author.id;
