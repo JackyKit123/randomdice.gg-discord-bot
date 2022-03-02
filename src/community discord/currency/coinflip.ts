@@ -109,7 +109,7 @@ export default async function coinflip(
         embeds: [
             new Discord.MessageEmbed()
                 .setAuthor({
-                    name: `${author.username}#${author.discriminator}`,
+                    name: author.tag,
                     iconURL: member.displayAvatarURL({ dynamic: true }),
                 })
                 .setColor(won ? '#99ff00' : '#ff0000')

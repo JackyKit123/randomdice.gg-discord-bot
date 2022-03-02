@@ -169,7 +169,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
                         await deleteCustomRole(
                             guild,
                             m.id,
-                            `${m.user.username}#${m.user.discriminator} lost weekly top 5 role and does not have another tier 2 perk`
+                            `${m.user.tag} lost weekly top 5 role and does not have another tier 2 perk`
                         );
                     }
                 } catch {

@@ -81,7 +81,7 @@ export default async function customRole(
         if (role) {
             await role.edit(
                 manageRoleOptions,
-                `!customrole update for ${member.user.username}#${member.user.discriminator}`
+                `!customrole update for ${member.user.tag}`
             );
             await channel.send(`Updated ${role}.`);
             return;
@@ -89,7 +89,7 @@ export default async function customRole(
     }
     const role = await guild.roles.create({
         ...manageRoleOptions,
-        reason: `!customrole creation for  ${member.user.username}#${member.user.discriminator}`,
+        reason: `!customrole creation for  ${member.user.tag}`,
     });
     await database
         .ref('discord_bot/community/customroles')

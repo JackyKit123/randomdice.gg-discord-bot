@@ -166,9 +166,9 @@ export default async function snipe(message: Discord.Message): Promise<void> {
             }),
         })
         .setDescription(snipedMessage.content)
-        .setFooter(
-            `snipedMessage by: ${author.username}#${author.discriminator}`
-        )
+        .setFooter({
+            text: `snipedMessage by: ${author.tag}`,
+        })
         .setTimestamp(snipedMessage.createdAt);
 
     if (

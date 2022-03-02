@@ -446,13 +446,13 @@ export async function configApps(message: Discord.Message): Promise<void> {
                 let applicationEmbed = new Discord.MessageEmbed()
                     .setTitle(`${target.position} Application`)
                     .setColor(member.displayHexColor)
-                    .setAuthor(
-                        `${member.user.username}#${member.user.discriminator}`,
-                        member.displayAvatarURL({ dynamic: true })
-                    )
-                    .setFooter(
-                        'React to ✅ when finished, react to ❌ to cancel your application.'
-                    )
+                    .setAuthor({
+                        name: member.user.tag,
+                        iconURL: member.displayAvatarURL({ dynamic: true }),
+                    })
+                    .setFooter({
+                        text: 'React to ✅ when finished, react to ❌ to cancel your application.',
+                    })
                     .setTimestamp();
                 target.questions.forEach((question, i) => {
                     applicationEmbed = applicationEmbed.addField(

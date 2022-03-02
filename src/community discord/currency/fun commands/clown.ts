@@ -1,4 +1,7 @@
-import Discord from 'discord.js';
+import Discord, {
+    GuildAuditLogsEntry,
+    GuildAuditLogsResolvable,
+} from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import fetchMention from 'util/fetchMention';
@@ -139,49 +142,49 @@ export async function purgeRolesOnReboot(
 ): Promise<void> {
     const guild = await client.guilds.fetch('804222694488932362');
     if (!client.user) return;
-    const logs = await guild.fetchAuditLogs({
+    const roleUpdateLog = await guild.fetchAuditLogs({
         user: client.user,
+        type: 'MEMBER_ROLE_UPDATE',
     });
-    logs.entries.forEach(async entry => {
-        if (Date.now() - entry.createdTimestamp <= 1000 * 60 * 10) {
+    const nickUpdateLog = await guild.fetchAuditLogs({
+        user: client.user,
+        type: 'MEMBER_UPDATE',
+    });
+    const getLast10Minutes = <T extends GuildAuditLogsResolvable = 'ALL'>(
+        entry: GuildAuditLogsEntry<T>
+    ) => Date.now() - entry.createdTimestamp <= 1000 * 60 * 10;
+
+    await Promise.all([
+        ...roleUpdateLog.entries.filter(getLast10Minutes).map(async entry => {
+            if (!entry.target) return;
+            const member = await guild.members.fetch(entry.target.id);
+            if (member.roles.cache.has('845530033695096853'))
+                await member.roles.remove('845530033695096853');
+        }),
+        ...nickUpdateLog.entries.filter(getLast10Minutes).map(async entry => {
             const memberNicknameUpdated: string[] = [];
-            if (!(entry.target instanceof Discord.User)) return;
-            try {
-                const member = await guild.members.fetch({
-                    user: entry.target,
-                });
-                if (
-                    entry.action === 'MEMBER_ROLE_UPDATE' &&
-                    member.roles.cache.has('845530033695096853')
-                ) {
-                    await member.roles.remove('845530033695096853');
-                } else if (entry.action === 'MEMBER_UPDATE') {
-                    entry.changes?.forEach(async change => {
-                        if (change.key === 'nick') {
-                            if (
-                                typeof change.new === 'string' &&
-                                /^\u{1F921}{1,10}$/u.test(change.new)
-                            ) {
-                                if (
-                                    typeof change.old === 'string' &&
-                                    /^\u{1F921}{1,10}$/u.test(change.old) &&
-                                    memberNicknameUpdated.includes(member.id)
-                                ) {
-                                    return;
-                                }
-                                await member.setNickname(
-                                    typeof change.old === 'string'
-                                        ? change.old
-                                        : null
-                                );
-                                memberNicknameUpdated.push(member.id);
-                            }
+            if (!entry.target) return;
+            const member = await guild.members.fetch(entry.target.id);
+            entry.changes?.forEach(async change => {
+                if (change.key === 'nick') {
+                    if (
+                        typeof change.new === 'string' &&
+                        /^\u{1F921}{1,10}$/u.test(change.new)
+                    ) {
+                        if (
+                            typeof change.old === 'string' &&
+                            /^\u{1F921}{1,10}$/u.test(change.old) &&
+                            memberNicknameUpdated.includes(member.id)
+                        ) {
+                            return;
                         }
-                    });
+                        await member.setNickname(
+                            typeof change.old === 'string' ? change.old : null
+                        );
+                        memberNicknameUpdated.push(member.id);
+                    }
                 }
-            } catch (err) {
-                // nothing
-            }
-        }
-    });
+            });
+        }),
+    ]);
 }

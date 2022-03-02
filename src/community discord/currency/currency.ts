@@ -68,7 +68,7 @@ export default async function currency(
     const amount = Number(amountArg);
     if (Number.isNaN(amount) || !targets.length) {
         await channel.send(
-            'Usage of the command `!currency <amount> <member | member member member...>`, example```!currency +5000 @JackyKit#0333 @fun guy#0069 @MoonGirl#0135\n!currency -5000 I am a weird nickname```'
+            'Usage of the command `!currency <amount> <member | member member member...>`, example```!currency +5000 @JackyKit#0333 @fun guy#0069\n!currency -5000 I am a weird nickname```'
         );
         return;
     }

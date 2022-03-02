@@ -48,7 +48,7 @@ export default async function closeAppeal(message: Message): Promise<void> {
             await channel.send(
                 `Accepted appeal for ${
                     target instanceof GuildMember
-                        ? `**${target.user.username}#${target.user.discriminator}**`
+                        ? `**${target.user.tag}**`
                         : `<@${target}>`
                 }.`
             );
@@ -66,7 +66,7 @@ export default async function closeAppeal(message: Message): Promise<void> {
             await channel.send(
                 `Rejected appeal for ${
                     target instanceof GuildMember
-                        ? `**${target.user.username}#${target.user.discriminator}**`
+                        ? `**${target.user.tag}**`
                         : `<@${target}>`
                 }.`
             );
@@ -93,7 +93,7 @@ export default async function closeAppeal(message: Message): Promise<void> {
             await channel.send(
                 `Closed appeal for ${
                     target instanceof GuildMember
-                        ? `**${target.user.username}#${target.user.discriminator}**`
+                        ? `**${target.user.tag}**`
                         : `<@${target}>`
                 }. User is clean.`
             );

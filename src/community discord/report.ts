@@ -65,9 +65,7 @@ async function closeReport(message: Discord.Message): Promise<void> {
             .setDescription(content.replace('!closereport', ''))
             .addField(
                 'Report Closed By',
-                `**Name:** ${member.user.username}#${
-                    member.user.discriminator
-                } ${member.toString()}` +
+                `**Name:** ${member.user.tag} ${member.toString()}` +
                     '\n' +
                     `**ID:** ${member.user.id}`
             )
@@ -82,8 +80,8 @@ async function closeReport(message: Discord.Message): Promise<void> {
             });
             embed.addField(
                 'Report Member',
-                `**Name:** ${reportMember.user.username}#${
-                    reportMember.user.discriminator
+                `**Name:** ${
+                    reportMember.user.tag
                 } ${reportMember.toString()}` +
                     '\n' +
                     `**Reported At**: ${parseMsIntoReadableText(

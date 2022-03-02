@@ -41,9 +41,7 @@ export default async function bon(message: Discord.Message): Promise<void> {
                             dynamic: true,
                         })
                     )
-                    .setTitle(
-                        `${target.user.username}#${target.user.discriminator} Got bonned`
-                    )
+                    .setTitle(`${target.user.tag} Got bonned`)
                     .setColor('#ff0000')
                     .setDescription(
                         `${target} got bonned by ${author} for ||${reason}||`

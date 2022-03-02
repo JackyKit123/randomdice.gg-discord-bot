@@ -78,7 +78,7 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
         alienEmojiBinary.data,
         author.username.replaceAll(/[^\d\w_]/g, ''),
         {
-            reason: `!customreaction command used by ${author.username}#${author.discriminator}`,
+            reason: `!customreaction command used by ${author.tag}`,
         }
     );
     if (userCustomReact) {

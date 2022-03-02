@@ -29,8 +29,7 @@ export default async function fetchMentionString(
         : guild.members.cache.find(
               m =>
                   m.user.username.toLowerCase() === str.toLowerCase() ||
-                  `${m.user.username}#${m.user.discriminator}`.toLowerCase() ===
-                      str.toLowerCase() ||
+                  `${m.user.tag}`.toLowerCase() === str.toLowerCase() ||
                   (m.nickname !== null &&
                       typeof matchNickName !== 'undefined' &&
                       matchNickName.content

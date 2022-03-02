@@ -65,19 +65,24 @@ export default async function balance(
         if (target.roles.cache.has(id)) prestigeLevel += 1;
     });
     const embed = new MessageEmbed()
-        .setAuthor(
-            `${target.user.username}#${target.user.discriminator}`,
-            target.displayAvatarURL({
-                dynamic: true,
-            }) ?? undefined
-        )
+        .setAuthor({
+            name: target.user.tag,
+            iconURL:
+                target.displayAvatarURL({
+                    dynamic: true,
+                }) ?? undefined,
+        })
         .setColor(target.displayHexColor)
         .setTitle(`${target?.id === member.user.id ? 'Your' : 'Their'} Balance`)
         .setFooter(
             prestigeLevel > 0
-                ? guild.roles.cache.get(prestigeRoleIds[prestigeLevel - 1])
-                      ?.name ?? ''
-                : ''
+                ? {
+                      text:
+                          guild.roles.cache.get(
+                              prestigeRoleIds[prestigeLevel - 1]
+                          )?.name ?? '',
+                  }
+                : null
         );
     if (!profile || !profile.initiated) {
         if (target.id !== member.user.id && output !== 'silence') {
