@@ -12,6 +12,7 @@ export default async function handler(guild: Guild): Promise<void> {
 
     logMessage(
         client,
+        'info',
         `Timestamp: ${new Date().toTimeString()}, bot is invited to ${name}`
     );
 
@@ -27,6 +28,7 @@ export default async function handler(guild: Guild): Promise<void> {
     const invite = await msgChannel.createInvite();
     logMessage(
         client,
+        'info',
         `Invite link to the server https://discord.gg/${invite.code}`
     );
 

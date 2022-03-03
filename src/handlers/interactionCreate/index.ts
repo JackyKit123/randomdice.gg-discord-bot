@@ -117,18 +117,12 @@ export default async function interactionCreate(
             }
         }
     } catch (err) {
-        try {
-            await logMessage(
-                client,
-                `Oops, something went wrong in ${
-                    guild ? `server ${guild.name}` : `DM with <@${user.id}>`
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
-                }\nwhen executing interaction`
-            );
-        } catch (criticalError) {
-            // eslint-disable-next-line no-console
-            console.error(criticalError);
-        }
+        await logMessage(
+            client,
+            'warning',
+            `Oops, something went wrong when executing interaction in ${
+                guild ? `server ${guild.name}` : `DM with <@${user.id}>`
+            } : ${(err as Error).stack ?? (err as Error).message ?? err}`
+        );
     }
 }

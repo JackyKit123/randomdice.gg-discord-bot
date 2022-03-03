@@ -457,22 +457,15 @@ export default async function messageCreate(message: Message): Promise<void> {
         }
         await Promise.all(asyncPromisesCapturer);
     } catch (err) {
-        try {
-            await channel.send(
-                `Oops, something went wrong: ${(err as Error).message}`
-            );
-
-            await logMessage(
-                client,
-                `Oops, something went wrong in ${
-                    guild ? `server ${guild.name}` : `DM with <@${author.id}>`
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
-                }\nCommand Attempting to execute:\`${content}\``
-            );
-        } catch (criticalError) {
-            // eslint-disable-next-line no-console
-            console.error(criticalError);
-        }
+        await logMessage(
+            client,
+            'warning',
+            `Oops, something went wrong when attempting to execute:\`${content}\` in ${
+                guild ? `server ${guild.name}` : `DM with <@${author.id}>`
+            } : ${(err as Error).stack ?? (err as Error).message ?? err}`
+        );
+        await channel.send(
+            `Oops, something went wrong: ${(err as Error).message}`
+        );
     }
 }

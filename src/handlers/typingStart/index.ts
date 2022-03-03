@@ -9,16 +9,12 @@ export default async function typingStart(typing: Typing): Promise<void> {
             removeAfkListener(channel, user);
         }
     } catch (err) {
-        try {
-            await logMessage(
-                client,
-                `Oops, something went wrong when listening to typing start event ${
-                    (err as Error).stack ?? (err as Error).message ?? err
-                }.`
-            );
-        } catch (criticalError) {
-            // eslint-disable-next-line no-console
-            console.error(criticalError);
-        }
+        await logMessage(
+            client,
+            'warning',
+            `Oops, something went wrong when listening to typing start event ${
+                (err as Error).stack ?? (err as Error).message ?? err
+            }.`
+        );
     }
 }

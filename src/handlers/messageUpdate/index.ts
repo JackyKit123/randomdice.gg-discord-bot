@@ -11,23 +11,17 @@ export default async function messageUpdate(
             await snipeListener('edit', message);
         }
     } catch (err) {
-        try {
-            await logMessage(
-                client,
-                `Oops, something went wrong ${
-                    // eslint-disable-next-line no-nested-ternary
-                    guild
-                        ? `in server ${guild.name}`
-                        : author
-                        ? `in DM with <@${author.id}>`
-                        : ''
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
-                }\n when listening to message edition.`
-            );
-        } catch (criticalError) {
-            // eslint-disable-next-line no-console
-            console.error(criticalError);
-        }
+        await logMessage(
+            client,
+            'warning',
+            `Oops, something went wrong when listening to message edition. ${
+                // eslint-disable-next-line no-nested-ternary
+                guild
+                    ? `in server ${guild.name}`
+                    : author
+                    ? `in DM with <@${author.id}>`
+                    : ''
+            } : ${(err as Error).stack ?? (err as Error).message ?? err}`
+        );
     }
 }

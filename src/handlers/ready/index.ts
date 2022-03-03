@@ -26,7 +26,7 @@ export default async function ready(client: Client<true>): Promise<void> {
     }`;
     try {
         updateListener(client);
-        await logMessage(client, bootMessage);
+        await logMessage(client, 'info', bootMessage);
         // eslint-disable-next-line no-console
         console.log(bootMessage);
         await Promise.all([
@@ -49,16 +49,12 @@ export default async function ready(client: Client<true>): Promise<void> {
         ]);
         await infoVC(client);
     } catch (err) {
-        try {
-            await logMessage(
-                client,
-                `Oops, something went wrong in client#Ready : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
-                }`
-            );
-        } catch (criticalError) {
-            // eslint-disable-next-line no-console
-            console.error(criticalError);
-        }
+        await logMessage(
+            client,
+            'warning',
+            `Oops, something went wrong in client#Ready : ${
+                (err as Error).stack ?? (err as Error).message ?? err
+            }`
+        );
     }
 }

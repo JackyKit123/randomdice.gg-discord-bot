@@ -63,6 +63,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
     if (!guild) {
         await logMessage(
             client,
+            'warning',
             `Unable to get guild ${
                 process.env.COMMUNITY_SERVER_ID || '804222694488932362'
             } when resetting weekly.`
@@ -73,6 +74,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
     if (!channel?.isText()) {
         await logMessage(
             client,
+            'warning',
             'Unable to get text channel 805388492174655488 when resetting weekly.'
         );
         return;

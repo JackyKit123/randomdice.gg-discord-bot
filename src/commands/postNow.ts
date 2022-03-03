@@ -83,18 +83,21 @@ export async function postGuide(
                 if (cantViewChannel) {
                     await logMessage(
                         client,
+                        'info',
                         `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
                     );
                 }
                 if (cantSendMessage) {
                     await logMessage(
                         client,
+                        'info',
                         `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
                     );
                 }
                 if (cantDeleteMessage) {
                     await logMessage(
                         client,
+                        'info',
                         `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
                     );
                 }
@@ -291,18 +294,21 @@ export async function postNews(
                 if (cantViewChannel) {
                     await logMessage(
                         client,
+                        'info',
                         `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
                     );
                 }
                 if (cantSendMessage) {
                     await logMessage(
                         client,
+                        'info',
                         `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
                     );
                 }
                 if (cantDeleteMessage) {
                     await logMessage(
                         client,
+                        'info',
                         `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
                     );
                 }

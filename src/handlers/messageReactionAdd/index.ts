@@ -29,18 +29,12 @@ export default async function messageReactionAdd(
             removeAfkListener(nonPartialReaction, user);
         }
     } catch (err) {
-        try {
-            await logMessage(
-                client,
-                `Oops, something went wrong in ${
-                    guild ? `server ${guild.name}` : `DM with <@${user.id}>`
-                } : ${
-                    (err as Error).stack ?? (err as Error).message ?? err
-                }\n when handling message reaction.`
-            );
-        } catch (criticalError) {
-            // eslint-disable-next-line no-console
-            console.error(criticalError);
-        }
+        await logMessage(
+            client,
+            'warning',
+            `Oops, something went wrong when handling message reaction in ${
+                guild ? `server ${guild.name}` : `DM with <@${user.id}>`
+            } : ${(err as Error).stack ?? (err as Error).message ?? err}`
+        );
     }
 }

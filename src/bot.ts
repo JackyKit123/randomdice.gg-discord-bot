@@ -36,23 +36,22 @@ process.on('uncaughtException', async error => {
     try {
         await logMessage(
             client,
+            'error',
             `${process.env.DEV_USERS_ID?.split(',').map(
                 uid => `<@${uid}>`
             )}\n**__Critical Error__**\n**Unhandled Exception**\n${error.stack}`
         );
-    } catch (networkError) {
-        // eslint-disable-next-line no-console
-        console.error(networkError);
     } finally {
         try {
             await logMessage(
                 client,
+                'info',
                 'Self rebooting due to unhandled exception.'
             );
             client.destroy();
             await reboot();
         } catch {
-            process.exit();
+            process.exit(1);
         }
     }
 });

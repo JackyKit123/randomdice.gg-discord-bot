@@ -64,21 +64,15 @@ export default async function yesNoButton(
                     }
                 }
             } catch (err) {
-                try {
-                    await logMessage(
-                        input.client,
-                        `Oops, something went wrong in <#${
-                            input.channelId
-                        }> : ${
-                            (err as Error).stack ??
-                            (err as Error).message ??
-                            err
-                        }\n while collecting message component.`
-                    );
-                } catch (criticalError) {
-                    // eslint-disable-next-line no-console
-                    console.error(criticalError);
-                }
+                await logMessage(
+                    input.client,
+                    'warning',
+                    `Oops, something went wrong while collecting message component in <#${
+                        input.channelId
+                    }> : ${
+                        (err as Error).stack ?? (err as Error).message ?? err
+                    }`
+                );
             }
         })
         .on('end', async (_, reason) => {
@@ -91,21 +85,17 @@ export default async function yesNoButton(
                         promptQuestion
                     );
                 } catch (err) {
-                    try {
-                        await logMessage(
-                            input.client,
-                            `Oops, something went wrong in <#${
-                                input.channelId
-                            }> : ${
-                                (err as Error).stack ??
-                                (err as Error).message ??
-                                err
-                            }\n while collecting message component.`
-                        );
-                    } catch (criticalError) {
-                        // eslint-disable-next-line no-console
-                        console.error(criticalError);
-                    }
+                    await logMessage(
+                        input.client,
+                        'warning',
+                        `Oops, something went wrong while collecting message component in <#${
+                            input.channelId
+                        }> : ${
+                            (err as Error).stack ??
+                            (err as Error).message ??
+                            err
+                        }`
+                    );
                 }
             }
         });

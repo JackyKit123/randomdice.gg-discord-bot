@@ -400,7 +400,7 @@ export default async function pickCoins(
                 .on('end', () => onEnd());
         }
     } catch (err) {
-        await logMessage(client, (err as DiscordAPIError).stack);
+        await logMessage(client, 'warning', (err as DiscordAPIError).stack);
     }
 }
 

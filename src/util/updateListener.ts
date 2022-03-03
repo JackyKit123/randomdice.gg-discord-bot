@@ -31,17 +31,13 @@ export default function listener(client: Discord.Client): void {
                     event,
                 });
             } catch (err) {
-                try {
-                    // eslint-disable-next-line no-unused-expressions
-                    logMessage(
-                        client,
-                        `Error encountered when posting guide: ${
-                            (err as Error).stack
-                        }`
-                    );
-                } catch (criticalError) {
-                    console.error(criticalError);
-                }
+                await logMessage(
+                    client,
+                    'warning',
+                    `Error encountered when posting guide: ${
+                        (err as Error).stack
+                    }`
+                );
             } finally {
                 posting.guide = false;
             }
@@ -69,17 +65,13 @@ export default function listener(client: Discord.Client): void {
             try {
                 await post.postNews(client, guild);
             } catch (err) {
-                try {
-                    // eslint-disable-next-line no-unused-expressions
-                    logMessage(
-                        client,
-                        `Error encountered when posting news: ${
-                            (err as Error).stack
-                        }`
-                    );
-                } catch (criticalError) {
-                    console.error(criticalError);
-                }
+                await logMessage(
+                    client,
+                    'warning',
+                    `Error encountered when posting news: ${
+                        (err as Error).stack
+                    }`
+                );
             } finally {
                 posting.news = false;
             }
