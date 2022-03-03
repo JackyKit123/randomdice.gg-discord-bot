@@ -99,39 +99,47 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
     const lowerCased = content.toLowerCase();
     const words = lowerCased.split(' ');
     if (!guild) return;
-    Object.entries(cache['discord_bot/community/customreact'] || {}).forEach(
-        async ([uid, emojiID]) => {
-            const member = guild.members.cache.get(uid);
-            if (!member) return;
-            const username = member.user.username.toLowerCase();
-            const displayName = member.displayName.toLowerCase();
+    await Promise.all(
+        Object.entries(cache['discord_bot/community/customreact'] || {}).map(
+            async ([uid, emojiID]) => {
+                const member = guild.members.cache.get(uid);
+                if (!member) return;
+                const username = member.user.username.toLowerCase();
+                const displayName = member.displayName.toLowerCase();
 
-            const match = (str: string, i: number): boolean => {
-                const substring = words
-                    .slice(i, i + str.split(' ').length)
-                    .join(' ');
-                if (substring.length < 3) return false;
-                return (
-                    (stringSimilarity.compareTwoStrings(str, substring) >=
-                        0.5 &&
-                        str.startsWith(substring)) ||
-                    stringSimilarity.compareTwoStrings(str, substring) >= 0.7
-                );
-            };
-            try {
-                if (
-                    content.includes(uid) ||
-                    words.some(
-                        (_, i) => match(username, i) || match(displayName, i)
+                const match = (str: string, i: number): boolean => {
+                    const substring = words
+                        .slice(i, i + str.split(' ').length)
+                        .join(' ');
+                    if (substring.length < 3) return false;
+                    return (
+                        (stringSimilarity.compareTwoStrings(str, substring) >=
+                            0.5 &&
+                            str.startsWith(substring)) ||
+                        stringSimilarity.compareTwoStrings(str, substring) >=
+                            0.7
+                    );
+                };
+                try {
+                    if (
+                        content.includes(uid) ||
+                        words.some(
+                            (_, i) =>
+                                match(username, i) || match(displayName, i)
+                        )
                     )
-                )
-                    await message.react(emojiID);
-            } catch (err) {
-                if ((err as DiscordAPIError).message === 'Unknown Message')
-                    return;
-                throw err;
+                        await message.react(emojiID);
+                } catch (err) {
+                    switch ((err as DiscordAPIError).message) {
+                        case 'Reaction Blocked':
+                        case 'Unknown Message':
+                            return;
+                        default:
+                            throw err;
+                    }
+                }
             }
-        }
+        )
     );
 }
 
@@ -146,8 +154,15 @@ export async function fetchAutoReactionRegistry(
             async uid => {
                 try {
                     await guild.members.fetch(uid);
-                } catch {
-                    // do nothing
+                } catch (err) {
+                    if ((err as DiscordAPIError).message === 'Unknown Member') {
+                        await database
+                            .ref('discord_bot/community/customreact')
+                            .child(uid)
+                            .remove();
+                    } else {
+                        throw err;
+                    }
                 }
             }
         )
