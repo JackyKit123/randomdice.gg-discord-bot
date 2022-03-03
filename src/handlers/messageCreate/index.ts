@@ -1,19 +1,6 @@
 import { Message } from 'discord.js';
 import stringSimilarity from 'string-similarity';
-import battlefield from 'commands/battlefield';
-import boss from 'commands/boss';
-import deck from 'commands/deck';
-import dice from 'commands/dice';
-import drawUntil from 'commands/drawUntil';
-import guide from 'commands/guide';
 import help from 'commands/help';
-import news from 'commands/news';
-import ping from 'commands/ping';
-import postNow from 'commands/postNow';
-import randomdeck from 'commands/randomdeck';
-import { register, unregister } from 'commands/register';
-import sendContact from 'commands/sendContact';
-import sendLinks from 'commands/sendLinks';
 import eightBall from 'community discord/8ball';
 import afk, { afkResponse } from 'community discord/afk';
 import apply, { configApps } from 'community discord/apply';
@@ -73,7 +60,9 @@ import setEmoji from 'dev-commands/setEmoji';
 import statistic from 'dev-commands/stat';
 import version from 'dev-commands/version';
 import cache from 'util/cache';
-import cardcalc from 'commands/cardcalc';
+import { baseCommands } from 'register/commandCase';
+import yesNoButton from 'util/yesNoButton';
+import { reply } from 'util/typesafeReply';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { content, channel, guild, author, member, client } = message;
@@ -318,141 +307,42 @@ export default async function messageCreate(message: Message): Promise<void> {
                 default:
             }
         }
-        switch (command?.toLowerCase()) {
-            case 'ping': {
-                await ping(message);
-                break;
-            }
-            case 'register': {
-                await register(message);
-                break;
-            }
-            case 'unregister': {
-                await unregister(message);
-                break;
-            }
-            case 'postnow': {
-                await postNow(message);
-                break;
-            }
-            case 'dice': {
-                await dice(message);
-                break;
-            }
-            case 'guide': {
-                await guide(message);
-                break;
-            }
-            case 'deck': {
-                await deck(message);
-                break;
-            }
-            case 'boss': {
-                await boss(message);
-                break;
-            }
-            case 'battlefield': {
-                await battlefield(message);
-                break;
-            }
-            case 'news': {
-                await news(message);
-                break;
-            }
-            case 'cardcalc': {
-                await cardcalc(message);
-                break;
-            }
-            case 'drawuntil': {
-                await drawUntil(message);
-                break;
-            }
-            case 'randomdeck': {
-                await randomdeck(message);
-                break;
-            }
-            case 'help': {
-                await help(message);
-                break;
-            }
-            case 'website':
-            case 'app':
-            case 'invite':
-            case 'support':
-                await sendLinks(message);
-                break;
-            case 'contact':
-                await sendContact(message);
-                break;
-            case undefined:
-            case '':
-                await channel.send(
-                    'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'
-                );
-                break;
-            default: {
-                const listOfCommands = Object.values(
-                    cache['discord_bot/help']
-                ).flatMap(category =>
-                    category.commands.map(cmd => cmd.command.split(' ')[1])
-                );
-                const { bestMatch } = stringSimilarity.findBestMatch(
-                    command,
-                    listOfCommands
-                );
-                if (bestMatch.rating >= 0.5) {
-                    const sentMessage = await channel.send({
-                        content: `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`? You may answer \`Yes\` to execute the new command.`,
-                        allowedMentions: {
-                            parse: [],
-                            users: [],
-                            roles: [],
-                        },
-                    });
-                    let answeredYes = false;
-                    try {
-                        const awaitedMessage = await channel.awaitMessages({
-                            filter: (newMessage: Message) =>
-                                newMessage.author === message.author &&
-                                !!newMessage.content.match(
-                                    /^(y(es)?|no?|\\?\.gg ?)/i
-                                ),
-                            time: 60000,
-                            max: 1,
-                            errors: ['time'],
-                        });
-                        if (awaitedMessage.first()?.content.match(/^y(es)?/i)) {
-                            answeredYes = true;
-                        }
-                    } catch {
-                        if (sentMessage.editable)
-                            await sentMessage.edit(
-                                `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`
-                            );
-                    }
-                    if (answeredYes) {
+        if (!command?.toLowerCase()) {
+            await reply(
+                message,
+                'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'
+            );
+        } else if (!(await baseCommands(message, command?.toLowerCase()))) {
+            const listOfCommands = Object.values(
+                cache['discord_bot/help']
+            ).flatMap(category =>
+                category.commands.map(cmd => cmd.command.split(' ')[1])
+            );
+            const { bestMatch } = stringSimilarity.findBestMatch(
+                command,
+                listOfCommands
+            );
+            const warningString = `Hi! I am awake. But \`${command}\` is not a command.`;
+            if (bestMatch.rating >= 0.5) {
+                await yesNoButton(
+                    message,
+                    `${warningString} Did you mean to do \`.gg ${bestMatch.target}\`?`,
+                    async sentMessage => {
                         const editedCommandString = content.replace(
                             `.gg ${command}`,
                             `.gg ${bestMatch.target}`
                         );
                         // eslint-disable-next-line no-param-reassign
                         message.content = editedCommandString;
+                        await sentMessage.delete();
                         client.emit('messageCreate', message);
-                    } else if (sentMessage.editable) {
-                        await sentMessage.edit(
-                            `Hi! I am awake. But I don't understand your command for \`${command}\`. Did you mean to do \`.gg ${bestMatch.target}\`?`
-                        );
                     }
-                } else {
-                    await channel.send({
-                        content: `Hi! I am awake. But I don't understand your command for \`${command}\`. Need help? type \`.gg help\``,
-                        allowedMentions: {
-                            parse: [],
-                            users: [],
-                            roles: [],
-                        },
-                    });
-                }
+                );
+            } else {
+                await reply(
+                    message,
+                    `${warningString} Need help? type \`.gg help\``
+                );
             }
         }
         await Promise.all(asyncPromisesCapturer);
@@ -464,7 +354,8 @@ export default async function messageCreate(message: Message): Promise<void> {
                 guild ? `server ${guild.name}` : `DM with <@${author.id}>`
             } : ${(err as Error).stack ?? (err as Error).message ?? err}`
         );
-        await channel.send(
+        await reply(
+            message,
             `Oops, something went wrong: ${(err as Error).message}`
         );
     }
