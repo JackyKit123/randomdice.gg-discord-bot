@@ -12,13 +12,12 @@ export default async function log(
         process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
     );
 
+    const pingDevs = process.env.DEV_USERS_ID?.split(',')
+        .map(id => `<@${id}>`)
+        .join(' ');
+
     const messageOption = {
-        content:
-            severity === 'error'
-                ? `${process.env.DEV_USERS_ID?.split(',')
-                      .map(id => `<@${id}>`)
-                      .join(' ')} ${message}`
-                : undefined,
+        content: severity === 'error' ? pingDevs : '',
         embeds: [
             getBrandingEmbed()
                 .setDescription(message)
@@ -53,9 +52,7 @@ export default async function log(
     } catch (networkError) {
         try {
             return webhookLogging.send({
-                content: `⚠️⚠️⚠️⚠️⚠️\n${process.env.DEV_USERS_ID?.split('').map(
-                    uid => `<@${uid}>`
-                )}\nNormal logging has failed. This message is being sent using the webhook instead.\n⚠️⚠️⚠️⚠️⚠️`,
+                content: `⚠️⚠️⚠️⚠️⚠️\n${pingDevs}\nNormal logging has failed. This message is being sent using the webhook instead.\n⚠️⚠️⚠️⚠️⚠️`,
                 embeds: [
                     new MessageEmbed()
                         .setColor('#ff0000')
