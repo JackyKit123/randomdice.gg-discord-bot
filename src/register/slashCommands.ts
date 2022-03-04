@@ -48,12 +48,7 @@ export default async function registerSlashCommands(
     if (process.env.NODE_ENV === 'development') {
         await setCommands(process.env.DEV_SERVER_ID);
     } else if (process.env.NODE_ENV === 'production') {
-        await Promise.all([
-            setCommands(process.env.DEV_SERVER_ID),
-            setCommands(process.env.COMMUNITY_SERVER_ID ?? ''),
-            setCommands(process.env.COMMUNITY_APPEAL_SERVER_ID ?? ''),
-            setCommands(),
-        ]);
+        await setCommands();
     }
 }
 
