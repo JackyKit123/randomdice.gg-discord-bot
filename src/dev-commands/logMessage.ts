@@ -17,7 +17,7 @@ export default async function log(
         .join(' ');
 
     const messageOption = {
-        content: severity === 'error' ? pingDevs : '',
+        content: severity === 'error' ? pingDevs : undefined,
         embeds: [
             getBrandingEmbed()
                 .setDescription(message)
