@@ -140,7 +140,13 @@ export async function register(
             yesNoButton(
                 input,
                 `Registered Channel ${channel} to provide ${type}. Post ${type} in ${channel} now?`,
-                () => postNow(input, type)
+                async sentMessage =>
+                    postNow(
+                        input instanceof CommandInteraction
+                            ? input
+                            : sentMessage,
+                        type
+                    )
             );
             break;
         }
