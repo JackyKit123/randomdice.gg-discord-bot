@@ -11,15 +11,13 @@ export default async function interactionCreate(
     const { user, guild, client, channel } = interaction;
 
     if (
-        !(
-            (process.env.DEV_SERVER_ID &&
-                process.env.NODE_ENV === 'development' &&
-                guild?.id !== process.env.DEV_SERVER_ID &&
-                channel?.id !== '804640084007321600') ||
-            (process.env.NODE_ENV === 'production' &&
-                (guild?.id === process.env.DEV_SERVER_ID ||
-                    channel?.id === '804640084007321600'))
-        )
+        (process.env.NODE_ENV === 'development' &&
+            guild &&
+            guild.id !== process.env.DEV_SERVER_ID &&
+            channel?.id !== '804640084007321600') ||
+        (process.env.NODE_ENV === 'production' &&
+            (guild?.id === process.env.DEV_SERVER_ID ||
+                channel?.id === '804640084007321600'))
     )
         return;
 
