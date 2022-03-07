@@ -354,7 +354,7 @@ export default async function wordle(
                 `${Object.entries(guessRecord.get(channel.id) ?? {})
                     .filter(
                         ([, record]) =>
-                            record.length && !record.includes(randomWord)
+                            record.length < 6 && !record.includes(randomWord)
                     )
                     .map(([user]) => `<@${user}>`)
                     .join(' ')}\nThe game has ${timeLeft} minute${
