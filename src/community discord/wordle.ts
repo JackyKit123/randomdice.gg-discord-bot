@@ -117,7 +117,7 @@ async function endGame(
 
     const leastGuesses = flatten.sort(
         ([, recordA], [, recordB]) => recordA.length - recordB.length
-    )[0]?.length;
+    )[1]?.length;
     const leastGuessesWinners = flatten
         .filter(([, record]) => record.length === leastGuesses)
         .map(([authorId]) => `<@${authorId}>`);
