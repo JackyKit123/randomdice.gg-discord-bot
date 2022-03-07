@@ -78,7 +78,10 @@ export default async function messageCreate(message: Message): Promise<void> {
         ) {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
-                communityServerCommands(message, suffix.replace(/^!/, '')),
+                communityServerCommands(
+                    message,
+                    suffix.replace(/^!/, '').toLowerCase()
+                ),
                 autoRole(message),
                 solveMathEquation(message),
                 pokeballTrap(message),
