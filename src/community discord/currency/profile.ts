@@ -4,10 +4,10 @@ import Discord, {
     MessageButton,
 } from 'discord.js';
 import moment from 'moment';
-import getBalance from 'util/getBalance';
 import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
 import fetchMention from 'util/fetchMention';
+import getBalance from './balance';
 import { duplicatedRoleMulti } from './chatCoins';
 
 export default async function Profile(message: Discord.Message): Promise<void> {

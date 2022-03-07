@@ -9,10 +9,10 @@ import {
     User,
 } from 'discord.js';
 import { database } from 'register/firebase';
-import getBalance from 'util/getBalance';
 import { parseStringIntoMs } from 'util/parseMS';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import getBalance from './balance';
 
 const numberFormat = new Intl.NumberFormat();
 

@@ -10,7 +10,7 @@ import * as math from 'mathjs';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import cache, { Dice } from 'util/cache';
-import getBalanced from 'util/getBalance';
+import getBalanced from './balance';
 import chatCoins from './chatCoins';
 import isBotChannels from '../isBotChannels';
 

@@ -1,6 +1,6 @@
 import { GuildMember, Message } from 'discord.js';
 import { database } from 'register/firebase';
-import getBalance from 'util/getBalance';
+import getBalance from './balance';
 
 const rapidSuccessJoin = new Map<GuildMember, number>();
 

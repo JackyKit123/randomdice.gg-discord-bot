@@ -1,8 +1,8 @@
 import { database } from 'register/firebase';
 import Discord from 'discord.js';
-import getBalance from 'util/getBalance';
 import cooldown from 'util/cooldown';
 import fetchMentionString from 'util/fetchMention';
+import getBalance from './balance';
 
 export default async function currency(
     message: Discord.Message

@@ -2,8 +2,8 @@ import Discord from 'discord.js';
 import moment from 'moment';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
-import getBalance from 'util/getBalance';
 import parseMsIntoReadableText from 'util/parseMS';
+import getBalance from './balance';
 import isBotChannels from '../isBotChannels';
 
 export default async function timed(

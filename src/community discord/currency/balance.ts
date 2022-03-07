@@ -1,9 +1,12 @@
 import { database } from 'register/firebase';
 import {
+    ApplicationCommandData,
     ButtonInteraction,
+    CommandInteraction,
     GuildMember,
     Message,
     MessageEmbed,
+    UserContextMenuInteraction,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 import fetchMention from 'util/fetchMention';
@@ -23,7 +26,11 @@ const prestigeRoleIds = [
 ];
 
 export default async function balance(
-    input: Message | ButtonInteraction,
+    input:
+        | Message
+        | ButtonInteraction
+        | CommandInteraction
+        | UserContextMenuInteraction,
     output: 'silence' | 'emit' | 'emit new member',
     optionalTarget?: GuildMember
 ): Promise<number | false> {
@@ -132,3 +139,21 @@ export default async function balance(
     });
     return false;
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'balance',
+        description: "Check your or another user's balance.",
+        options: [
+            {
+                name: 'user',
+                description: 'The user to check the balance of.',
+                type: 6,
+            },
+        ],
+    },
+    {
+        name: 'Check Balance',
+        type: 'USER',
+    },
+];

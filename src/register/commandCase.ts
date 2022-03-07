@@ -27,7 +27,7 @@ import myEmoji from 'community discord/myEmoji';
 import { rdRole } from 'community discord/rdRole';
 import advertise from 'community discord/promote';
 import drawDice from 'community discord/currency/drawDice';
-import balance from 'util/getBalance';
+import balance from 'community discord/currency/balance';
 import profile from 'community discord/currency/profile';
 import coinflip from 'community discord/currency/coinflip';
 import leaderboard from 'community discord/currency/leaderboard';
