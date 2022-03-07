@@ -87,7 +87,13 @@ const guessedWords = (word: string, guesses: string[]): string[] => {
                 word.includes(guesses[i][j]) &&
                 checks[guesses[i][j]] !== '🟩'
             ) {
-                checks[guesses[i][j]] = '🟨';
+                checks[guesses[i][j]] =
+                    word
+                        .split('')
+                        .some((char, k) => j !== k && char === guesses[i][k]) &&
+                    word[j] !== guesses[i][j]
+                        ? '🔳'
+                        : '🟨';
             } else if (checks[guesses[i][j]] === '⬛') {
                 checks[guesses[i][j]] = '🔳';
             }
@@ -310,7 +316,7 @@ export default async function wordle(
 
     const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
 
-    activeWordleGame.set(channel.id, 'sheet');
+    activeWordleGame.set(channel.id, randomWord);
 
     await reply(
         input,
