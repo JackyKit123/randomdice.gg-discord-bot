@@ -92,7 +92,7 @@ export async function rdRole(
     const critArg =
         input instanceof Message
             ? Number(args[0])
-            : input.options.getInteger('crit', true);
+            : input.options.getInteger('crit') ?? 0;
     const newRoleId = isMyClass
         ? getClassRoleId(
               input instanceof Message
