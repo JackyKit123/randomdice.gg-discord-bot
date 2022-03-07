@@ -97,7 +97,9 @@ const guessedWords = (word: string, guesses: string[]): string[] => {
                 checks[guesses[i][j]] !== '🟩'
             ) {
                 checks[guesses[i][j]] = '🟨';
-            } else {
+            } else if (
+                check[guessed[i][j]] === '⬛'
+            ) {
                 checks[guesses[i][j]] = '🔳';
             }
         }
