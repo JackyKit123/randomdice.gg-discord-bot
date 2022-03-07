@@ -8,19 +8,20 @@ import { report } from 'community discord/report';
 export default async function interactionCreate(
     interaction: Interaction
 ): Promise<void> {
-    const { guildId, user, channelId, guild, client } = interaction;
+    const { user, guild, client, channel } = interaction;
 
     if (
-        // ignoring other servers in development, ignoring dev channel in production
-        (process.env.DEV_SERVER_ID &&
-            process.env.NODE_ENV === 'development' &&
-            guildId !== process.env.DEV_SERVER_ID &&
-            channelId !== '804640084007321600') ||
-        (process.env.NODE_ENV === 'production' &&
-            guildId === process.env.DEV_SERVER_ID)
-    ) {
+        !(
+            (process.env.DEV_SERVER_ID &&
+                process.env.NODE_ENV === 'development' &&
+                guild?.id !== process.env.DEV_SERVER_ID &&
+                channel?.id !== '804640084007321600') ||
+            (process.env.NODE_ENV === 'production' &&
+                (guild?.id === process.env.DEV_SERVER_ID ||
+                    channel?.id === '804640084007321600'))
+        )
+    )
         return;
-    }
 
     try {
         if (interaction.isButton()) {
