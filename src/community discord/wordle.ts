@@ -66,10 +66,16 @@ const verifyGuess = (word: string, guess: string): string[] => {
         '🔳',
     ];
     for (let i = 0; i < word.length; i += 1) {
-        if (word[i] === guess[i]) {
+        const char = guess[i];
+        if (word[i] === char) {
             result[i] = '🟩';
-        } else if (word.includes(guess[i])) {
-            result[i] = '🟨';
+        } else if (word.includes(char)) {
+            result[i] = word
+                .split('')
+                .filter((letter, j) => letter !== guess[j])
+                .includes(char)
+                ? '🟨'
+                : '🔳';
         }
     }
     return result;
@@ -80,22 +86,15 @@ const guessedWords = (word: string, guesses: string[]): string[] => {
         'abcdefghijklmnopqrstuvwxyz'.split('').map(char => [char, '⬛'])
     );
     for (let i = guesses.length - 1; i >= 0; i -= 1) {
-        for (let j = 0; j < guesses[i].length; j += 1) {
-            if (word[j] === guesses[i][j]) {
-                checks[guesses[i][j]] = '🟩';
-            } else if (
-                word.includes(guesses[i][j]) &&
-                checks[guesses[i][j]] !== '🟩'
-            ) {
-                checks[guesses[i][j]] =
-                    word
-                        .split('')
-                        .some((char, k) => j !== k && char === guesses[i][k]) &&
-                    word[j] !== guesses[i][j]
-                        ? '🔳'
-                        : '🟨';
-            } else if (checks[guesses[i][j]] === '⬛') {
-                checks[guesses[i][j]] = '🔳';
+        const guess = guesses[i];
+        for (let j = 0; j < guess.length; j += 1) {
+            const char = guess[j];
+            if (word[j] === char) {
+                checks[char] = '🟩';
+            } else if (word.includes(char) && checks[char] !== '🟩') {
+                checks[char] = '🟨';
+            } else if (checks[char] === '⬛') {
+                checks[char] = '🔳';
             }
         }
     }
@@ -326,7 +325,7 @@ export default async function wordle(
     const timeLimit =
         (input instanceof Message
             ? Number(input.content.split(' ')[2])
-            : input.options.getInteger('time-limit')) ?? 5;
+            : input.options.getInteger('time-limit')) || 5;
 
     for (let timeLeft = timeLimit - 1; timeLeft > 0; timeLeft -= 1) {
         /* eslint-disable no-await-in-loop */
