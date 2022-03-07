@@ -64,7 +64,7 @@ export default async function registerSlashCommands(
         customRole,
         myEmoji,
         ...rdRole,
-        wordle(),
+        wordle,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {

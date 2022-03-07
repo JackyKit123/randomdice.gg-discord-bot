@@ -4,7 +4,6 @@ import logMessage from 'dev-commands/logMessage';
 import { baseCommands, communityServerCommands } from 'register/commandCase';
 import { closeApplication } from 'community discord/apply';
 import { report } from 'community discord/report';
-import wordle from 'community discord/wordle';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -20,9 +19,6 @@ export default async function interactionCreate(
         (process.env.NODE_ENV === 'production' &&
             guildId === process.env.DEV_SERVER_ID)
     ) {
-        if (interaction.isCommand() && interaction.commandName === 'wordle') {
-            await wordle(interaction);
-        }
         return;
     }
 

@@ -1,8 +1,6 @@
 import {
     ApplicationCommandData,
-    ApplicationCommandOptionData,
     CommandInteraction,
-    GuildTextBasedChannel,
     Message,
     TextBasedChannel,
 } from 'discord.js';
@@ -13,8 +11,10 @@ const activeWordleGame = new Map<string, string>();
 const guessRecord = new Map<string, { [authorId: string]: string[] }>();
 const firstWinner = new Map<string, string>();
 
-export const commandData = (enabledGuess = false): ApplicationCommandData => {
-    const options: ApplicationCommandOptionData[] = [
+export const commandData: ApplicationCommandData = {
+    name: 'wordle',
+    description: 'Wordle game',
+    options: [
         {
             name: 'start',
             description: 'Start a wordle game',
@@ -31,14 +31,6 @@ export const commandData = (enabledGuess = false): ApplicationCommandData => {
             ],
         },
         {
-            name: 'help',
-            description: 'Show this help message',
-            type: 1,
-        },
-    ];
-
-    if (enabledGuess) {
-        options.push({
             name: 'guess',
             description: 'Guess a word',
             type: 1,
@@ -50,14 +42,13 @@ export const commandData = (enabledGuess = false): ApplicationCommandData => {
                     required: true,
                 },
             ],
-        });
-    }
-
-    return {
-        name: 'wordle',
-        description: 'Wordle game',
-        options,
-    };
+        },
+        {
+            name: 'help',
+            description: 'Show this help message',
+            type: 1,
+        },
+    ],
 };
 
 const emojiFy = (word: string): string =>
@@ -97,9 +88,7 @@ const guessedWords = (word: string, guesses: string[]): string[] => {
                 checks[guesses[i][j]] !== '🟩'
             ) {
                 checks[guesses[i][j]] = '🟨';
-            } else if (
-                checks[guesses[i][j]] === '⬛'
-            ) {
+            } else if (checks[guesses[i][j]] === '⬛') {
                 checks[guesses[i][j]] = '🔳';
             }
         }
@@ -117,7 +106,7 @@ async function endGame(
 
     const leastGuesses = flatten.sort(
         ([, recordA], [, recordB]) => recordA.length - recordB.length
-    )[1]?.length;
+    )[0]?.[1]?.length;
     const leastGuessesWinners = flatten
         .filter(([, record]) => record.length === leastGuesses)
         .map(([authorId]) => `<@${authorId}>`);
@@ -153,10 +142,6 @@ async function endGame(
     activeWordleGame.delete(channel.id);
     guessRecord.delete(channel.id);
     firstWinner.delete(channel.id);
-
-    await (channel as GuildTextBasedChannel).guild?.commands.cache
-        .get('wordle')
-        ?.edit(commandData(false));
 }
 
 async function guessWord(input: CommandInteraction): Promise<void> {
@@ -325,16 +310,12 @@ export default async function wordle(
 
     const randomWord = wordList[Math.floor(Math.random() * wordList.length)];
 
-    activeWordleGame.set(channel.id, randomWord);
+    activeWordleGame.set(channel.id, 'sheet');
 
     await reply(
         input,
         `${author} is starting a wordle game, use \`/wordle guess <word>\` to starting guessing`
     );
-
-    await guild.commands.cache
-        .find(({ name }) => name === 'wordle')
-        ?.edit(commandData(true));
 
     const timeLimit =
         (input instanceof Message
