@@ -5,7 +5,6 @@ import {
     User,
 } from 'discord.js';
 import { removeAfkListener } from 'community discord/afk';
-import { closeApplication } from 'community discord/apply';
 import { spyLogBanHandler } from 'community discord/spy';
 import logMessage from 'dev-commands/logMessage';
 
@@ -24,7 +23,6 @@ export default async function messageReactionAdd(
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            closeApplication(nonPartialReaction, user);
             spyLogBanHandler(nonPartialReaction, user);
             removeAfkListener(nonPartialReaction, user);
         }

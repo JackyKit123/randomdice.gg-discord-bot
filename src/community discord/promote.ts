@@ -1,10 +1,20 @@
-import Discord, { DiscordAPIError } from 'discord.js';
+import { tier4RoleIds } from 'config/roleId';
+import {
+    CommandInteraction,
+    DiscordAPIError,
+    GuildMember,
+    Message,
+    MessageAttachment,
+    MessageEmbed,
+} from 'discord.js';
+import { reply } from 'util/typesafeReply';
+import checkPermission from './util/checkPermissions';
 
 const activePromotionCreation = new Map<string, boolean>();
 
 async function createPromotion(
-    member: Discord.GuildMember
-): Promise<Discord.MessageEmbed | false> {
+    member: GuildMember
+): Promise<MessageEmbed | false> {
     const { user } = member;
     const { channel } = await user.send(
         'What type of content do you wish to promote? (e.g. YouTube, Discord Server, Random Dice Crew)'
@@ -57,13 +67,13 @@ async function createPromotion(
         return false;
     }
 
-    let embed = new Discord.MessageEmbed()
+    let embed = new MessageEmbed()
         .setAuthor({
             name: user.tag,
             iconURL: user.displayAvatarURL({ format: 'png' }),
         })
         .setTitle(`Promotion of ${promotionType}`)
-        .setFooter(user.id)
+        .setFooter({ text: user.id })
         .setTimestamp();
 
     if (member.displayColor) {
@@ -77,7 +87,7 @@ async function createPromotion(
     }
     if (image.attachments.first()) {
         embed = embed.setImage(
-            (image.attachments.first() as Discord.MessageAttachment).url
+            (image.attachments.first() as MessageAttachment).url
         );
     }
     await user.send({
@@ -102,27 +112,20 @@ async function createPromotion(
     return false;
 }
 
-export default async function promote(message: Discord.Message): Promise<void> {
-    const { author, member, channel, guild } = message;
+export default async function advertise(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { guild } = input;
 
-    if (!member || !guild) return;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    const author = member?.user;
     if (
-        !member.roles.cache.has('804513079319592980') &&
-        !member.roles.cache.has('809143588105486346')
-    ) {
-        await channel.send({
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle('Unable to cast command')
-                    .setColor('#ff0000')
-                    .setDescription(
-                        'You need one of the following roles to use this command.\n' +
-                            '<@&804513079319592980> <@&809143588105486346>'
-                    ),
-            ],
-        });
+        !author ||
+        !member ||
+        !guild ||
+        !(await checkPermission(input, ...tier4RoleIds))
+    )
         return;
-    }
 
     const promotionChannel = guild.channels.cache.get('860114325007237120');
     if (!promotionChannel?.isText()) {
@@ -135,7 +138,8 @@ export default async function promote(message: Discord.Message): Promise<void> {
             promotion.createdTimestamp + 1000 * 60 * 60 * 24 > Date.now()
     );
     if (activePromotionCreation.get(author.id)) {
-        await channel.send(
+        await reply(
+            input,
             'Please first finish previous the promotion creation or exit it.'
         );
         return;
@@ -151,7 +155,7 @@ export default async function promote(message: Discord.Message): Promise<void> {
                         : ''
                 }`
             );
-            await channel.send('Please proceed in DM channel.');
+            await reply(input, 'Please proceed in DM channel.');
         } catch (err) {
             if (
                 (err as DiscordAPIError).message ===
@@ -169,8 +173,8 @@ export default async function promote(message: Discord.Message): Promise<void> {
                 max: 1,
             }),
         ]);
-        const isEmbed = (arg: typeof item): arg is Discord.MessageEmbed =>
-            arg instanceof Discord.MessageEmbed;
+        const isEmbed = (arg: typeof item): arg is MessageEmbed =>
+            arg instanceof MessageEmbed;
         if (!isEmbed(item)) {
             activePromotionCreation.set(author.id, false);
             return;

@@ -1,7 +1,10 @@
 import { Interaction } from 'discord.js';
 import drawDice from 'community discord/currency/drawDice';
 import logMessage from 'dev-commands/logMessage';
-import { baseCommands } from 'register/commandCase';
+import { baseCommands, communityServerCommands } from 'register/commandCase';
+import { closeApplication } from 'community discord/apply';
+import { report } from 'community discord/report';
+import wordle from 'community discord/wordle';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -17,29 +20,60 @@ export default async function interactionCreate(
         (process.env.NODE_ENV === 'production' &&
             guildId === process.env.DEV_SERVER_ID)
     ) {
+        if (interaction.isCommand() && interaction.commandName === 'wordle') {
+            await wordle(interaction);
+        }
         return;
     }
 
     try {
-        if (interaction.isMessageComponent()) {
+        if (interaction.isButton()) {
             switch (interaction.customId) {
                 case 'dd':
                     await drawDice(interaction);
                     break;
-                default:
+                case 'application-submit':
+                case 'application-cancel':
+                    await closeApplication(interaction);
                     break;
+                default:
             }
         }
         if (interaction.isCommand()) {
-            await baseCommands(interaction, interaction.commandName);
+            await Promise.all([
+                baseCommands(interaction, interaction.commandName),
+                communityServerCommands(interaction, interaction.commandName),
+            ]);
+        }
+        if (interaction.isContextMenu()) {
+            switch (interaction.commandName) {
+                case 'Report this message':
+                    await report(interaction);
+                    break;
+                default:
+            }
         }
     } catch (err) {
-        await logMessage(
-            client,
-            'warning',
-            `Oops, something went wrong when executing interaction in ${
-                guild ? `server ${guild.name}` : `DM with <@${user.id}>`
-            } : ${(err as Error).stack ?? (err as Error).message ?? err}`
-        );
+        try {
+            if (
+                interaction.isButton() ||
+                interaction.isCommand() ||
+                interaction.isContextMenu()
+            ) {
+                await interaction.reply(
+                    `Oops, something went wrong:\n${
+                        (err as Error).message ?? err
+                    }`
+                );
+            }
+        } finally {
+            await logMessage(
+                client,
+                'warning',
+                `Oops, something went wrong when executing interaction in ${
+                    guild ? `server ${guild.name}` : `DM with <@${user.id}>`
+                } : ${(err as Error).stack ?? (err as Error).message ?? err}`
+            );
+        }
     }
 }

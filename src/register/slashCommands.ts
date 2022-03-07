@@ -14,12 +14,27 @@ import { commandData as contact } from 'commands/sendContact';
 import { commandData as postNow } from 'commands/postNow';
 import { commandData as register } from 'commands/register';
 import { commandData as links } from 'commands/sendLinks';
+
+import { commandData as report } from 'community discord/report';
+import { commandData as snipe } from 'community discord/snipe';
+import { commandData as lock } from 'community discord/lock';
+import { commandData as apply } from 'community discord/apply';
+import { commandData as timer } from 'community discord/timer';
+import { commandData as lfg } from 'community discord/lfg';
+import { commandData as gtn } from 'community discord/gtn';
+import { commandData as eventPing } from 'community discord/eventping';
+import { commandData as customRole } from 'community discord/customRole';
+import { commandData as myEmoji } from 'community discord/myEmoji';
+import { commandData as rdRole } from 'community discord/rdRole';
+import { commandData as wordle } from 'community discord/wordle';
+
 import cacheData from 'util/cache';
+import setCommandPermissions from './commandPermissions';
 
 export default async function registerSlashCommands(
     client: Client
 ): Promise<void> {
-    const commands: ApplicationCommandDataResolvable[] = [
+    const baseCommands: ApplicationCommandDataResolvable[] = [
         boss(cacheData['wiki/boss']),
         battlefield(cacheData['wiki/battlefield']),
         cardcalc,
@@ -37,7 +52,22 @@ export default async function registerSlashCommands(
         ...links,
     ];
 
-    const setCommands = async (guildId = '') => {
+    const communityCommands: ApplicationCommandDataResolvable[] = [
+        ...report,
+        ...snipe,
+        ...lock,
+        ...apply(cacheData['discord_bot/community/applications']),
+        timer,
+        lfg,
+        gtn,
+        eventPing,
+        customRole,
+        myEmoji,
+        ...rdRole,
+        wordle(),
+    ];
+
+    const setCommands = async (guildId = '', commands = baseCommands) => {
         if (guildId) {
             const guild = client.guilds.cache.get(guildId);
             if (guild) return guild.commands.set(commands);
@@ -45,10 +75,29 @@ export default async function registerSlashCommands(
         return client.application?.commands.set(commands);
     };
 
+    let communityServerCommandsManager;
     if (process.env.NODE_ENV === 'development') {
-        await setCommands(process.env.DEV_SERVER_ID);
+        [, communityServerCommandsManager] = await Promise.all([
+            setCommands(process.env.DEV_SERVER_ID),
+            setCommands(
+                process.env.COMMUNITY_SERVER_ID ?? '',
+                communityCommands
+            ),
+        ]);
     } else if (process.env.NODE_ENV === 'production') {
-        await setCommands();
+        [, communityServerCommandsManager] = await Promise.all([
+            setCommands(process.env.DEV_SERVER_ID),
+            setCommands(process.env.COMMUNITY_SERVER_ID ?? ''),
+            setCommands(
+                process.env.COMMUNITY_SERVER_ID ?? '',
+                communityCommands
+            ),
+            setCommands(process.env.COMMUNITY_APPEAL_SERVER_ID ?? ''),
+            setCommands(),
+        ]);
+    }
+    if (communityServerCommandsManager) {
+        await setCommandPermissions(communityServerCommandsManager);
     }
 }
 

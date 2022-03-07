@@ -1,6 +1,7 @@
 import {
     ButtonInteraction,
     CommandInteraction,
+    ContextMenuInteraction,
     DiscordAPIError,
     Message,
     ReplyMessageOptions,
@@ -9,7 +10,11 @@ import {
 import { APIMessage } from 'discord.js/node_modules/discord-api-types';
 
 async function transformApiMessage(
-    input: Message | ButtonInteraction | CommandInteraction,
+    input:
+        | Message
+        | ButtonInteraction
+        | CommandInteraction
+        | ContextMenuInteraction,
     message: Message | APIMessage
 ): Promise<Message> {
     if (!(message instanceof Message)) {
@@ -25,7 +30,11 @@ async function transformApiMessage(
 }
 
 export async function reply<TEphemeral extends true | undefined = undefined>(
-    input: Message | ButtonInteraction | CommandInteraction,
+    input:
+        | Message
+        | ButtonInteraction
+        | CommandInteraction
+        | ContextMenuInteraction,
     messageOptions: ReplyMessageOptions | string,
     ephemeral?: TEphemeral
 ): Promise<TEphemeral extends true ? void : Message<boolean>> {
@@ -59,7 +68,7 @@ export async function reply<TEphemeral extends true | undefined = undefined>(
     } else if (ephemeral) {
         await input.reply({ ...finalOption, ephemeral: true });
     } else {
-        await input.deferReply();
+        if (!input.deferred) await input.deferReply();
         return transformApiMessage(
             input,
             await input.followUp(finalOption)

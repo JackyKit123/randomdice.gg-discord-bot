@@ -1,63 +1,59 @@
 import { database } from 'register/firebase';
-import Discord from 'discord.js';
+import Discord, {
+    ApplicationCommandData,
+    CommandInteraction,
+    GuildMember,
+    Message,
+    PartialGuildMember,
+} from 'discord.js';
 import colorParser from 'color-parser';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
+import { tier2RoleIds } from 'config/roleId';
+import checkPermission from './util/checkPermissions';
 
 export default async function customRole(
-    message: Discord.Message
+    input: Message | CommandInteraction
 ): Promise<void> {
-    const { guild, member, content, channel } = message;
-    if (!member || !guild) {
-        await channel.send('`This command is only available in a server.`');
-        return;
-    }
+    const { guild, channel } = input;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    if (!member || !guild || !channel) return;
 
-    if (
-        !(
-            member.roles.cache.has('804512584375599154') ||
-            member.roles.cache.has('804231753535193119') ||
-            member.roles.cache.has('806896328255733780') ||
-            member.roles.cache.has('805388604791586826')
-        )
-    ) {
-        await channel.send({
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle('Unable to cast command')
-                    .setColor('#ff0000')
-                    .setDescription(
-                        'You need one of the following roles to use this command.\n' +
-                            '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
-                    ),
-            ],
-        });
-        return;
-    }
+    if (!(await checkPermission(input, ...tier2RoleIds))) return;
 
-    const colorArg = content.split(' ')[1];
+    const colorArg =
+        input instanceof Message
+            ? input.content.split(' ')[1]
+            : input.options.getString('color', true);
     if (!colorArg) {
-        await channel.send(
+        await reply(
+            input,
             'Usage of the command. `!customrole <color> <role Name>`'
         );
         return;
     }
     const color = colorParser(colorArg);
-    const roleName = content.split(' ').slice(2).join(' ').trim();
+    const roleName =
+        input instanceof Message
+            ? input.content.split(' ').slice(2).join(' ').trim()
+            : input.options.getString('role-name', true);
     if (!color) {
-        await channel.send(
+        await reply(
+            input,
             `\`${colorArg}\` is not a valid color. Please include a valid color in the first command parameter.`
         );
         return;
     }
     if (!roleName) {
-        await channel.send(
+        await reply(
+            input,
             `Please include a role name for your custom role after color.`
         );
         return;
     }
     if (
-        await cooldown(message, '!customrole', {
+        await cooldown(input, '!customrole', {
             default: 1000 * 60 * 60,
             donator: 1000 * 60 * 10,
         })
@@ -83,7 +79,7 @@ export default async function customRole(
                 manageRoleOptions,
                 `!customrole update for ${member.user.tag}`
             );
-            await channel.send(`Updated ${role}.`);
+            await reply(input, `Updated ${role}.`);
             return;
         }
     }
@@ -96,7 +92,7 @@ export default async function customRole(
         .child(member.id)
         .set(role.id);
     await member.roles.add(role);
-    await channel.send(`Added ${role} to you.`);
+    await reply(input, `Added ${role} to you.`);
 }
 
 export async function deleteCustomRole(
@@ -114,20 +110,31 @@ export async function deleteCustomRole(
         .set(null);
 }
 
-export async function manageLeave(message: Discord.Message): Promise<void> {
-    const { webhookId, embeds, guild, channel } = message;
-    const embed = embeds?.[0];
-    if (
-        channel.id !== '845448948474576946' /* #join-leave-log */ ||
-        !webhookId ||
-        !embed ||
-        !guild
-    ) {
-        return;
-    }
-    const { title, footer } = embed;
-    if (title !== 'Member left') return;
-    const id = footer?.text?.match(/^ID: (\d{18})$/)?.[1];
-    if (!id) return;
-    await deleteCustomRole(guild, id, 'custom role owner left the server');
+export async function deleteCustomRoleOnGuildLeave(
+    member: GuildMember | PartialGuildMember
+): Promise<void> {
+    await deleteCustomRole(
+        member.guild,
+        member.id,
+        'custom role owner left the server'
+    );
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'customrole',
+    description: 'Creates a custom role for you.',
+    options: [
+        {
+            name: 'color',
+            description: 'The color of the custom role.',
+            type: 3,
+            required: true,
+        },
+        {
+            name: 'role-name',
+            description: 'The name of the custom role.',
+            type: 3,
+            required: true,
+        },
+    ],
+};

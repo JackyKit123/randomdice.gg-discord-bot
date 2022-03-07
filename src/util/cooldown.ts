@@ -2,6 +2,7 @@ import Discord, {
     ButtonInteraction,
     CommandInteraction,
     Message,
+    ContextMenuInteraction,
 } from 'discord.js';
 import cache from './cache';
 import parseMsIntoReadableText from './parseMS';
@@ -9,7 +10,11 @@ import { reply } from './typesafeReply';
 
 const commandCooldown = new Map<string, Map<string, number>>();
 export default async function Cooldown(
-    input: Message | ButtonInteraction | CommandInteraction,
+    input:
+        | Message
+        | ButtonInteraction
+        | CommandInteraction
+        | ContextMenuInteraction,
     command: string,
     cooldown: {
         default: number;

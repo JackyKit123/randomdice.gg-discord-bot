@@ -1,54 +1,31 @@
-import { GuildMember, Message } from 'discord.js';
+import roleIds from 'config/roleId';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    GuildMember,
+    Message,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
 
-const critRoleIds = [
-    '804404283205222441',
-    '804404336193044541',
-    '804404370120638516',
-    '804404612450615346',
-    '844412148561739786',
-];
+const critRoleIds = Object.entries(roleIds)
+    .filter(([roleName]) => roleName.endsWith('Crit'))
+    .map(([, roleId]) => roleId)
+    .sort((a, b) => Number(a) - Number(b));
 
-const classRoles = {
-    1: '892923729787641917',
-    2: '892923725429743647',
-    3: '892923718676934696',
-    4: '892923484097900586',
-    5: '892923475906424873',
-    6: '892923470139252767',
-    7: '892923106467909632',
-    8: '892923095051034674',
-    9: '892923086079393803',
-    10: '892922719916658768',
-    11: '892922713612623942',
-    12: '892922708747247677',
-    13: '892922574995066951',
-    14: '892922435073114182',
-    15: '892922010257199105',
-    16: '892921881747943444',
-    17: '892921760775802890',
-    18: '892921633164099634',
-    19: '892921274739867698',
-    20: '804404086622781481',
-    'Grand 1': '892926128140996719',
-    'Grand 2': '892926124345159701',
-    'Grand 3': '844363924576141322',
-    'Master 1': '892925710417670184',
-    'Master 2': '892925705418072105',
-    'Master 3': '844364171147476992',
-    'Challenger 1': '892924562642198549',
-    'Challenger 2': '892924559156707398',
-    'Challenger 3': '844364197592694805',
-    'Champion 1': '892925074234028073',
-    'Champion 2': '892925069586743316',
-    'Champion 3': '857459958685499423',
-};
-
-const flattened = Object.entries(classRoles);
-const classRoleIds = flattened.map(([, roleId]) => roleId);
+const classRoles = Object.entries(roleIds)
+    .filter(
+        ([roleName]) =>
+            roleName.startsWith('Class') || roleName.startsWith('Golden Class')
+    )
+    .map(([roleName, roleId]) => [
+        roleName.replace('Golden ', '').replace('Class ', ''),
+        roleId,
+    ]);
+const classRoleIds = classRoles.map(([, roleId]) => roleId);
 
 const getClassRoleId = (string: string): string | undefined =>
-    flattened.find(
+    classRoles.find(
         ([roleName]) => roleName.toLowerCase() === string.toLowerCase()
     )?.[1];
 
@@ -98,23 +75,37 @@ const hasRole = (
             critRoleId === roleId && member.roles.cache.has(critRoleId)
     );
 
-export async function rdRole(message: Message): Promise<void> {
-    const { member, content, channel } = message;
+export async function rdRole(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const member = input.guild?.members.cache.get(input.member?.user.id ?? '');
 
     if (!member) return;
 
-    const [command, ...args] = content.split(' ');
+    const [command, ...args] =
+        input instanceof Message
+            ? input.content.split(' ')
+            : [input.commandName];
 
-    const isMyClass = command.toLowerCase() === '!myclass';
+    const isMyClass = command.replace('!', '').toLowerCase() === 'myclass';
     const roleList = isMyClass ? classRoleIds : critRoleIds;
+    const critArg =
+        input instanceof Message
+            ? Number(args[0])
+            : input.options.getInteger('crit', true);
     const newRoleId = isMyClass
-        ? getClassRoleId(args.join(' ') ?? '')
-        : getCritRoleId(member, Number(args[0]));
+        ? getClassRoleId(
+              input instanceof Message
+                  ? args.join(' ') ?? ''
+                  : input.options.getString('class', true)
+          )
+        : getCritRoleId(member, critArg);
 
-    if (!newRoleId || (!isMyClass && !Number.isInteger(Number(args[0])))) {
-        await channel.send(
+    if (!newRoleId || (!isMyClass && !Number.isInteger(critArg))) {
+        await reply(
+            input,
             isMyClass
-                ? `Unknown Class, possible values are ${flattened
+                ? `Unknown Class, possible values are ${classRoles
                       .map(([roleName]) => `\`${roleName}\``)
                       .join(' ')}`
                 : 'You need to enter your crit%, example: `!myCrit 1337`'
@@ -123,7 +114,7 @@ export async function rdRole(message: Message): Promise<void> {
     }
 
     if (
-        await cooldown(message, command, {
+        await cooldown(input, command, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
@@ -132,7 +123,7 @@ export async function rdRole(message: Message): Promise<void> {
     }
 
     if (hasRole(roleList, member, newRoleId)) {
-        await channel.send({
+        await reply(input, {
             content: `You already have <@&${newRoleId}> role`,
             allowedMentions: {
                 users: [],
@@ -149,7 +140,7 @@ export async function rdRole(message: Message): Promise<void> {
         ? hasAnyRole(critRoleIds, member)
         : hasAnyRole(classRoleIds, member);
 
-    await channel.send({
+    await reply(input, {
         content: `Updated your ${
             isMyClass ? 'class' : 'crit'
         } role to be <@&${newRoleId}>${
@@ -183,7 +174,7 @@ export async function autoRole(message: Message): Promise<void> {
 
     const matchCritInName = member.displayName.match(/\b([1-9]\d{2,3}) ?%/);
 
-    const hasAnyClassRole = flattened.some(([, roleId]) =>
+    const hasAnyClassRole = classRoles.some(([, roleId]) =>
         member.roles.cache.has(roleId)
     );
 
@@ -250,3 +241,31 @@ export async function autoRole(message: Message): Promise<void> {
         },
     });
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'myclass',
+        description: 'Get or update your random dice class role',
+        options: [
+            {
+                name: 'class',
+                description: 'Class name',
+                type: 3,
+                required: true,
+            },
+        ],
+    },
+    {
+        name: 'mycrit',
+        description: 'Get or update your random dice crit role',
+        options: [
+            {
+                name: 'crit',
+                description: 'Crit percentage',
+                type: 4,
+                required: true,
+                minValue: 111,
+            },
+        ],
+    },
+];

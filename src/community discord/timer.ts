@@ -1,5 +1,7 @@
 import {
+    ApplicationCommandData,
     Client,
+    CommandInteraction,
     DiscordAPIError,
     Guild,
     GuildMember,
@@ -11,6 +13,7 @@ import { database } from 'register/firebase';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
+import { reply } from 'util/typesafeReply';
 
 const wait = promisify(setTimeout);
 
@@ -143,10 +146,11 @@ export async function setTimer(
                 })
                 .setTitle(title)
                 .setColor(member.displayHexColor)
-                .setFooter(
-                    'Timer ends at',
-                    'https://cdn.discordapp.com/emojis/804524690440847381.png?v=1'
-                )
+                .setFooter({
+                    text: 'Timer ends at',
+                    iconURL:
+                        'https://cdn.discordapp.com/emojis/804524690440847381.png?v=1',
+                })
                 .setTimestamp(endTime)
                 .setDescription(parseTimeText(time)),
         ],
@@ -163,32 +167,44 @@ export async function setTimer(
     await timerMessage.react('<:Dice_Tier4_Time:804524690440847381>');
 }
 
-export default async function timerCommand(message: Message): Promise<void> {
-    const { guild, content, member, channel } = message;
-    const [, arg1, ...args] = content.split(' ');
-    if (!member || !guild) {
+export default async function timerCommand(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { guild, channel } = input;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+
+    if (!member || !guild || !channel) {
         return;
     }
-    if (arg1?.toLowerCase() === 'cancel') {
-        const timerId = args[0];
+
+    if (
+        input instanceof Message
+            ? input.content.startsWith('!timer cancel')
+            : input.options.getSubcommand(true) === 'cancel'
+    ) {
+        const timerId =
+            input instanceof Message
+                ? input.content.replace(/^!timer cancel ?/, '')[0]
+                : input.options.getString('message-id', true);
         const existingTimer = Object.entries(
             cache['discord_bot/community/timer']
         ).find(([, timer]) => timer.messageId === timerId);
         if (!existingTimer) {
-            await channel.send('No active timer found.');
+            await reply(input, 'No active timer found.');
             return;
         }
         const [key, timer] = existingTimer;
         const timerChannel = guild.channels.cache.get(timer.channelId);
         if (!timerChannel?.isText()) {
-            await channel.send('No active timer found.');
+            await reply(input, 'No active timer found.');
             return;
         }
         if (
             !timerChannel.permissionsFor(member)?.has('MANAGE_MESSAGES') &&
             existingTimer?.[1].hostId !== member.id
         ) {
-            await channel.send(
+            await reply(
+                input,
                 `You do not have permission to end that timer. You need to either be the one started that timer or have \`MANAGE_MESSAGE\` permission in <#${timer.channelId}>`
             );
             return;
@@ -204,15 +220,23 @@ export default async function timerCommand(message: Message): Promise<void> {
                 throw err;
             }
         }
-        await channel.send('Killed timer.');
+        await reply(input, 'Killed timer.');
         return;
     }
 
-    const time = parseStringIntoMs(arg1);
-    const msg = args.join(' ');
+    const [, timeString, ...msgArg] =
+        input instanceof Message
+            ? input.content.split(' ')
+            : [
+                  null,
+                  input.options.getString('time', true),
+                  input.options.getString('title'),
+              ];
+    const time = parseStringIntoMs(timeString);
+    const msg = msgArg.join(' ');
 
     if (!time) {
-        await channel.send({
+        await reply(input, {
             embeds: [
                 new MessageEmbed()
                     .setTitle('Command Parse Error')
@@ -227,6 +251,9 @@ export default async function timerCommand(message: Message): Promise<void> {
         return;
     }
     await setTimer(channel, member, msg, time);
+    if (input instanceof CommandInteraction) {
+        await reply(input, 'A timer has been started.', true);
+    }
 }
 
 export async function registerTimer(client: Client): Promise<void> {
@@ -258,7 +285,10 @@ export async function registerTimer(client: Client): Promise<void> {
     });
 }
 
-export async function hackwarnTimer(message: Message): Promise<void> {
+export async function hackwarnTimer(
+    message: Message | CommandInteraction
+): Promise<void> {
+    if (message instanceof CommandInteraction) return;
     const { guild, channel, member } = message;
 
     if (!guild || !member) return;
@@ -286,3 +316,41 @@ export async function hackwarnTimer(message: Message): Promise<void> {
         1000 * 60 * 60 * 24
     );
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'timer',
+    description: 'timer',
+    options: [
+        {
+            name: 'set',
+            description: 'Set a timer',
+            type: 1,
+            options: [
+                {
+                    name: 'time',
+                    description: 'The time string to set the timer for',
+                    required: true,
+                    type: 3,
+                },
+                {
+                    name: 'title',
+                    description: 'The title of the timer',
+                    type: 3,
+                },
+            ],
+        },
+        {
+            name: 'cancel',
+            description: 'Cancel a timer',
+            type: 1,
+            options: [
+                {
+                    name: 'message-id',
+                    description: 'The message id of the timer to cancel',
+                    required: true,
+                    type: 3,
+                },
+            ],
+        },
+    ],
+};

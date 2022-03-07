@@ -1,19 +1,158 @@
-import Discord, { TextBasedChannel } from 'discord.js';
+import roleIds from 'config/roleId';
+import {
+    ApplicationCommandData,
+    ButtonInteraction,
+    CategoryChannel,
+    Client,
+    CommandInteraction,
+    DiscordAPIError,
+    Message,
+    MessageActionRow,
+    MessageButton,
+    MessageEmbed,
+    TextChannel,
+} from 'discord.js';
+import { argDependencies } from 'mathjs';
 import { database } from 'register/firebase';
-import cache from 'util/cache';
+import cache, { CommunityDiscordApplication } from 'util/cache';
 import cooldown from 'util/cooldown';
+import { edit, reply } from 'util/typesafeReply';
+import yesNoButton from 'util/yesNoButton';
+import checkPermission from './util/checkPermissions';
 
-export default async function Apply(message: Discord.Message): Promise<void> {
-    const { member, channel, guild, content, deletable } = message;
+export const commandData = (
+    apps: CommunityDiscordApplication[]
+): ApplicationCommandData[] => {
+    const allPositions = apps.map(({ position }) => ({
+        name: position,
+        value: position,
+    }));
+    const openedPositionOptions = apps
+        .filter(({ isOpen }) => isOpen)
+        .map(({ position }) => ({
+            name: position,
+            value: position,
+        }));
+
+    const getPositionCommandData = (
+        description: string,
+        choices: typeof allPositions = [],
+        required?: boolean
+    ) => ({
+        name: 'position',
+        description,
+        type: 3,
+        required: required ?? choices.length > 0,
+        choices,
+    });
+
+    const questionCommandData = {
+        name: 'questions',
+        description: 'the questions to ask, separate each question with |',
+        type: 3,
+        required: true,
+    };
+    return [
+        {
+            name: 'apply',
+            description: 'start an application for a server position',
+            options: [
+                getPositionCommandData(
+                    'the position you want to apply for',
+                    openedPositionOptions,
+                    true
+                ),
+            ],
+            defaultPermission: openedPositionOptions.length > 0,
+        },
+        {
+            name: 'application',
+            description: 'manage applications',
+            defaultPermission: false,
+            options: [
+                {
+                    type: 1,
+                    name: 'add',
+                    description: 'add a new application',
+                    options: [
+                        getPositionCommandData(
+                            'the name of the position to create',
+                            [],
+                            true
+                        ),
+                        questionCommandData,
+                    ],
+                },
+                {
+                    type: 1,
+                    name: 'edit',
+                    description: 'edit an existing application',
+                    options: [
+                        getPositionCommandData(
+                            'the name of the position to edit',
+                            allPositions,
+                            true
+                        ),
+                        questionCommandData,
+                    ],
+                },
+                {
+                    type: 1,
+                    name: 'delete',
+                    description: 'delete an existing application',
+                    options: [
+                        getPositionCommandData(
+                            'the name of the position to delete',
+                            allPositions
+                        ),
+                    ],
+                },
+                {
+                    type: 1,
+                    name: 'toggle',
+                    description: 'toggle accepting applications',
+                    options: [
+                        getPositionCommandData(
+                            'the name of the position to toggle',
+                            allPositions
+                        ),
+                    ],
+                },
+                {
+                    type: 1,
+                    name: 'show',
+                    description:
+                        'show all applications, or specific application',
+                    options: [
+                        getPositionCommandData(
+                            'the name of the position to show',
+                            allPositions,
+                            false
+                        ),
+                    ],
+                },
+            ],
+        },
+    ];
+};
+
+export default async function Apply(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { guild } = input;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
 
     if (!member || !guild) {
         return;
     }
 
-    const [, ...args] = content.split(' ');
+    const arg =
+        input instanceof Message
+            ? input.content.split(' ').slice(1).join(' ')
+            : input.options.getString('position');
 
     if (
-        await cooldown(message, '!apply', {
+        await cooldown(input, '!apply', {
             default: 1000 * 60 * 10,
             donator: 1000 * 60 * 10,
         })
@@ -21,13 +160,13 @@ export default async function Apply(message: Discord.Message): Promise<void> {
         return;
     }
     try {
-        if (deletable) await message.delete();
-    } catch {
-        // suppress error;
+        if (input instanceof Message) await input.delete();
+    } catch (err) {
+        if ((err as DiscordAPIError).message !== 'Unknown Message') throw err;
     }
     const applications = cache['discord_bot/community/applications'];
     const openedApplications = applications.filter(app => app.isOpen);
-    const openedApplicationsEmbed = new Discord.MessageEmbed()
+    const openedApplicationsEmbed = new MessageEmbed()
         .setTitle('Command Parse Error')
         .setColor('#ff0000')
         .addField(
@@ -35,9 +174,11 @@ export default async function Apply(message: Discord.Message): Promise<void> {
             openedApplications.map(app => `\`${app.position}\``).join('\n') ||
                 '*none*'
         )
-        .setFooter(`Opened Application Count: ${openedApplications.length}`);
-    if (!args.join(' ')) {
-        await channel.send({
+        .setFooter({
+            text: `Opened Application Count: ${openedApplications.length}`,
+        });
+    if (!arg) {
+        await reply(input, {
             embeds: [
                 openedApplicationsEmbed.setDescription(
                     `Please specify an application you are applying for.\`\`\`!apply <position>\`\`\``
@@ -48,18 +189,14 @@ export default async function Apply(message: Discord.Message): Promise<void> {
     }
 
     const application = applications.find(
-        app =>
-            args.join(' ').toLowerCase() === app.position.toLowerCase() &&
-            app.isOpen
+        app => arg.toLowerCase() === app.position.toLowerCase() && app.isOpen
     );
 
     if (!application) {
-        await channel.send({
+        await reply(input, {
             embeds: [
                 openedApplicationsEmbed.setDescription(
-                    `\`${args.join(
-                        ' '
-                    )}\` is not a currently opened application.`
+                    `\`${argDependencies}\` is not a currently opened application.`
                 ),
             ],
         });
@@ -71,7 +208,7 @@ export default async function Apply(message: Discord.Message): Promise<void> {
         `${member.user.username}-${member.user.discriminator}-${application.position}-application`,
         {
             parent:
-                applicationCategory instanceof Discord.CategoryChannel
+                applicationCategory instanceof CategoryChannel
                     ? applicationCategory
                     : undefined,
             reason: 'Member Application',
@@ -86,8 +223,8 @@ export default async function Apply(message: Discord.Message): Promise<void> {
                 },
             ],
         }
-    )) as TextBasedChannel;
-    let applicationEmbed = new Discord.MessageEmbed()
+    )) as TextChannel;
+    let applicationEmbed = new MessageEmbed()
         .setTitle(`${application.position} Application`)
         .setColor(member.displayHexColor)
         .setAuthor({
@@ -95,7 +232,7 @@ export default async function Apply(message: Discord.Message): Promise<void> {
             iconURL: member.displayAvatarURL({ dynamic: true }),
         })
         .setFooter({
-            text: 'React to ✅ when finished, react to ❌ to cancel your application.',
+            text: 'Click ✅ when finished, and ❌ to cancel your application.',
         })
         .setTimestamp();
     application.questions.forEach((question, i) => {
@@ -104,28 +241,51 @@ export default async function Apply(message: Discord.Message): Promise<void> {
             question
         );
     });
-    const applicationMessage = await newChannel.send({
+    await newChannel.send({
         content: member.toString(),
         embeds: [applicationEmbed],
+        components: [
+            new MessageActionRow().addComponents([
+                new MessageButton()
+                    .setCustomId('application-submit')
+                    .setEmoji('✅')
+                    .setLabel('Submit')
+                    .setStyle('SUCCESS'),
+                new MessageButton()
+                    .setCustomId('application-cancel')
+                    .setEmoji('❌')
+                    .setLabel('Cancel')
+                    .setStyle('DANGER'),
+            ]),
+        ],
     });
-    await applicationMessage.react('✅');
-    await applicationMessage.react('❌');
+    if (input instanceof CommandInteraction) {
+        await input.reply(
+            `Your application channel has been created ${newChannel}`
+        );
+    }
 }
 
 export async function closeApplication(
-    reaction: Discord.MessageReaction,
-    user: Discord.User | Discord.PartialUser
+    interaction: ButtonInteraction
 ): Promise<void> {
-    const { message } = reaction;
     const {
+        message,
         channel,
-        author,
-        embeds,
         guild,
         client: { user: clientUser },
-    } = message;
+        user,
+        customId,
+    } = interaction;
+    const { embeds } = channel?.messages.cache.get(message.id) ?? {};
 
-    if (!guild || guild.id !== process.env.COMMUNITY_SERVER_ID || !clientUser) {
+    if (
+        !guild ||
+        guild.id !== process.env.COMMUNITY_SERVER_ID ||
+        !clientUser ||
+        !embeds ||
+        !channel
+    ) {
         return;
     }
 
@@ -135,7 +295,7 @@ export async function closeApplication(
     if (
         channel.type !== 'GUILD_TEXT' ||
         !channel.name.match(/^.{2,32}-\d{4}-.+-application$/) ||
-        author?.id !== clientUser.id ||
+        message.author.id !== clientUser.id ||
         !applicationName
     ) {
         return;
@@ -149,20 +309,11 @@ export async function closeApplication(
         return;
     }
 
-    if (reaction.emoji.name === '✅') {
-        await channel.send(
-            '✅ Please type `submit` to confirm your submission and notify the Admins.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.'
-        );
-        try {
-            const awaitedMessage = await channel.awaitMessages({
-                filter: (newMessage: Discord.Message) =>
-                    newMessage.author.id === user.id &&
-                    newMessage.content.toLowerCase() === 'submit',
-                time: 60000,
-                max: 1,
-                errors: ['time'],
-            });
-            if (awaitedMessage.first()?.content.toLowerCase() === 'submit') {
+    if (customId === 'application-submit') {
+        await yesNoButton(
+            interaction,
+            'Please confirm again that you are ready to submit.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.',
+            async () => {
                 await channel.permissionOverwrites.edit(
                     guild.roles.everyone,
                     {
@@ -172,46 +323,29 @@ export async function closeApplication(
                         reason: 'Application Submit',
                     }
                 );
-                await message.reactions.removeAll();
                 await channel.send(`Locked down ${channel}`);
                 await channel.send(
                     `<@&804223328709115944>, ${user} has submitted the ${applicationName.toLowerCase()}.`
                 );
             }
-        } catch {
-            await channel.send("You didn't say `submit` in time.");
-            await reaction.users.remove(user.id);
-        }
-    }
-    if (reaction.emoji.name === '❌') {
-        await channel.send(
-            '❌ Please type `cancel` to cancel your application.\n⚠️ Warning, once you confirm cancel, the channel will be deleted, this action cannot be undone.'
         );
-        try {
-            const awaitedMessage = await channel.awaitMessages({
-                filter: (newMessage: Discord.Message) =>
-                    newMessage.author.id === user.id &&
-                    newMessage.content.toLowerCase() === 'cancel',
-                time: 60000,
-                max: 1,
-                errors: ['time'],
-            });
-            if (awaitedMessage.first()?.content.toLowerCase() === 'cancel') {
-                await channel.delete();
-            }
-        } catch {
-            await channel.send("You didn't say `cancel` in time.");
-            await reaction.users.remove(user.id);
-        }
+    }
+    if (customId === 'application-cancel') {
+        await yesNoButton(
+            interaction,
+            'Please confirm again that you are cancelling application.\n⚠️ Warning, once you confirm cancel, the channel will be deleted, this action cannot be undone.',
+            async () => channel.delete()
+        );
     }
 }
 
-export async function fetchApps(client: Discord.Client): Promise<void> {
+// TODO: check if this is still needed after changing reaction trigger to button
+export async function fetchApps(client: Client): Promise<void> {
     const guild = await client.guilds.fetch(
         process.env.COMMUNITY_SERVER_ID as string
     );
     const applications = guild.channels.cache.get('807183574645735474');
-    if (applications instanceof Discord.CategoryChannel) {
+    if (applications instanceof CategoryChannel) {
         applications.children.forEach(async child => {
             if (child.isText()) {
                 await child.messages.fetch(
@@ -223,12 +357,24 @@ export async function fetchApps(client: Discord.Client): Promise<void> {
     }
 }
 
-export async function configApps(message: Discord.Message): Promise<void> {
-    const { member, guild, content, channel } = message;
+export async function configApps(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { guild } = input;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
 
-    const [, subcommand, ...args] = content.split(' ');
-    const [position, arg] = args
-        ?.join(' ')
+    const [, subcommand, ...args] =
+        input instanceof Message
+            ? input.content.split(' ')
+            : [
+                  null,
+                  input.options.getSubcommand(true),
+                  input.options.getString('position', true),
+                  '|',
+                  input.options.getString('questions') ?? '',
+              ];
+    const [position, ...questionsArgs] = args
+        .join(' ')
         .split('|')
         .map(e => e.trim());
 
@@ -240,7 +386,7 @@ export async function configApps(message: Discord.Message): Promise<void> {
     }
 
     if (
-        await cooldown(message, '!application', {
+        await cooldown(input, '!application', {
             default: 5 * 1000,
             donator: 5 * 1000,
         })
@@ -248,355 +394,249 @@ export async function configApps(message: Discord.Message): Promise<void> {
         return;
     }
 
-    if (!member.permissions.has('ADMINISTRATOR')) {
-        await channel.send({
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle('Command Parse Error')
-                    .setColor('#ff0000')
-                    .setDescription(
-                        'You need `ADMINISTRATOR` permission to use this command.'
-                    ),
-            ],
+    if (!(await checkPermission(input, roleIds.Admin))) return;
+
+    const getApplicationEmbed = (
+        questions: string[],
+        showPublicityInFooter?: boolean
+    ) => {
+        let applicationEmbed = new MessageEmbed()
+            .setTitle(`${position} Application`)
+            .setColor(member.displayHexColor)
+            .setAuthor({
+                name: member.user.tag,
+                iconURL: member.displayAvatarURL({ dynamic: true }),
+            })
+            .setFooter({
+                text:
+                    typeof showPublicityInFooter === 'boolean'
+                        ? `Application for ${position} is now ${
+                              showPublicityInFooter ? 'opened' : 'closed'
+                          }.`
+                        : 'React to ✅ when finished, react to ❌ to cancel your application.',
+            })
+            .setTimestamp();
+        questions.forEach((question, i) => {
+            applicationEmbed = applicationEmbed.addField(
+                `Question ${i + 1}`,
+                question
+            );
         });
-        return;
-    }
+        return applicationEmbed;
+    };
+
+    const existedApp = existingApplications.find(
+        app => app.position.toLowerCase() === position.toLowerCase()
+    );
+
+    const updateCommandOptions = async () =>
+        Promise.all([
+            guild.commands.cache
+                .find(({ name }) => name === 'apply')
+                ?.edit(
+                    commandData(cache['discord_bot/community/applications'])[0]
+                ),
+            guild.commands.cache
+                .find(({ name }) => name === 'application')
+                ?.edit(
+                    commandData(cache['discord_bot/community/applications'])[1]
+                ),
+        ]);
 
     switch (subcommand?.toLowerCase()) {
         case 'add':
-            {
-                if (
-                    existingApplications.find(
-                        app =>
-                            app.position.toLowerCase() ===
-                            position.toLowerCase()
-                    )
-                ) {
-                    await channel.send(
-                        `Application for ${position} already exist, use \`edit\` to edit the questions instead`
-                    );
-                    return;
-                }
-                let applicationEmbed = new Discord.MessageEmbed()
-                    .setTitle(`${position} Application`)
-                    .setColor(member.displayHexColor)
-                    .setAuthor({
-                        name: member.user.tag,
-                        iconURL: member.displayAvatarURL({ dynamic: true }),
-                    })
-                    .setFooter({
-                        text: 'React to ✅ when finished, react to ❌ to cancel your application.',
-                    })
-                    .setTimestamp();
-                arg?.split('\n').forEach((question, i) => {
-                    applicationEmbed = applicationEmbed.addField(
-                        `Question ${i + 1}`,
-                        question
-                    );
-                });
-                const applicationMessage = await channel.send({
-                    content: `${member} Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel`,
-                    embeds: [applicationEmbed],
-                });
-                await applicationMessage.react('✅');
-                await applicationMessage.react('❌');
-                try {
-                    const collector =
-                        applicationMessage.createReactionCollector({
-                            filter: (
-                                reaction: Discord.MessageReaction,
-                                user: Discord.User
-                            ) =>
-                                (reaction.emoji.name === '✅' ||
-                                    reaction.emoji.name === '❌') &&
-                                user.id === member.id,
-                            time: 60 * 1000,
-                        });
-                    collector.on('collect', async collection => {
-                        if (collection.emoji.name === '✅') {
-                            collector.stop();
-                            await ref.set(
-                                existingApplications.concat({
-                                    isOpen: true,
-                                    position,
-                                    questions: arg.split('\n'),
-                                })
-                            );
-                            await channel.send(
-                                `Added ${position} application and it's opened for application.`
-                            );
-                        }
-                        if (collection.emoji.name === '❌') {
-                            try {
-                                collector.stop();
-                                await applicationMessage.delete();
-                                await channel.send('Cancel request.');
-                            } finally {
-                                //
-                            }
-                        }
-                    });
-                } catch {
-                    try {
-                        await applicationMessage.delete();
-                    } finally {
-                        await channel.send('You did not react in time.');
-                    }
-                }
+            if (existedApp) {
+                await reply(
+                    input,
+                    `Application for ${position} already exist, use \`edit\` to edit the questions instead`
+                );
+                return;
             }
+
+            await yesNoButton(
+                input,
+                {
+                    content:
+                        "Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel",
+                    embeds: [getApplicationEmbed(questionsArgs)],
+                },
+                async sentMessage => {
+                    await ref.set(
+                        existingApplications.concat({
+                            isOpen: true,
+                            position,
+                            questions: questionsArgs,
+                        })
+                    );
+                    await updateCommandOptions();
+                    await edit(
+                        input instanceof CommandInteraction
+                            ? input
+                            : sentMessage,
+                        {
+                            content: `Added ${position} application and it's opened for application.`,
+                            embeds: [],
+                            components: [],
+                        }
+                    );
+                }
+            );
+
             break;
         case 'edit':
-            {
-                if (
-                    !existingApplications.find(
-                        app =>
-                            app.position.toLowerCase() ===
-                            position.toLowerCase()
-                    )
-                ) {
-                    await channel.send(
-                        `Application for ${position} does not exist, use \`add\` to add a new application.`
-                    );
-                    return;
-                }
-                let applicationEmbed = new Discord.MessageEmbed()
-                    .setTitle(`${position} Application`)
-                    .setColor(member.displayHexColor)
-                    .setAuthor({
-                        name: member.user.tag,
-                        iconURL: member.displayAvatarURL({ dynamic: true }),
-                    })
-                    .setFooter({
-                        text: 'React to ✅ when finished, react to ❌ to cancel your application.',
-                    })
-                    .setTimestamp();
-                arg?.split('\n').forEach((question, i) => {
-                    applicationEmbed = applicationEmbed.addField(
-                        `Question ${i + 1}`,
-                        question
-                    );
-                });
-                const applicationMessage = await channel.send({
-                    content: `${member} Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel`,
-                    embeds: [applicationEmbed],
-                });
-                await applicationMessage.react('✅');
-                await applicationMessage.react('❌');
-                try {
-                    const collector =
-                        applicationMessage.createReactionCollector({
-                            filter: (
-                                reaction: Discord.MessageReaction,
-                                user: Discord.User
-                            ) =>
-                                (reaction.emoji.name === '✅' ||
-                                    reaction.emoji.name === '❌') &&
-                                user.id === member.id,
-                            time: 60 * 1000,
-                        });
-                    collector.on('collect', async collection => {
-                        if (collection.emoji.name === '✅') {
-                            collector.stop();
-                            await ref.set(
-                                existingApplications.map(app => {
-                                    if (
-                                        app.position.toLowerCase() ===
-                                        position.toLowerCase()
-                                    ) {
-                                        // eslint-disable-next-line no-param-reassign
-                                        app.questions = arg.split('\n');
-                                    }
-                                    return app;
-                                })
-                            );
-                            await channel.send(
-                                `Edited ${position} application.`
-                            );
-                        }
-                        if (collection.emoji.name === '❌') {
-                            try {
-                                collector.stop();
-                                await applicationMessage.delete();
-                                await channel.send('Cancel request.');
-                            } finally {
-                                //
-                            }
-                        }
-                    });
-                } catch {
-                    try {
-                        await applicationMessage.delete();
-                    } finally {
-                        await channel.send('You did not react in time.');
-                    }
-                }
+            if (!existedApp) {
+                await reply(
+                    input,
+                    `Application for ${position} does not exist, use \`add\` to add a new application.`
+                );
+                return;
             }
+            await yesNoButton(
+                input,
+                {
+                    content:
+                        "Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel",
+                    embeds: [getApplicationEmbed(questionsArgs)],
+                },
+                async sentMessage => {
+                    await ref.set(
+                        existingApplications.map(app => {
+                            if (
+                                app.position.toLowerCase() ===
+                                position.toLowerCase()
+                            ) {
+                                // eslint-disable-next-line no-param-reassign
+                                app.questions = questionsArgs;
+                            }
+                            return app;
+                        })
+                    );
+                    await edit(
+                        input instanceof CommandInteraction
+                            ? input
+                            : sentMessage,
+                        {
+                            content: `Edited ${position} application.`,
+                            embeds: [],
+                            components: [],
+                        }
+                    );
+                }
+            );
             break;
         case 'delete':
-            {
-                const target = existingApplications.find(
-                    app => app.position.toLowerCase() === position.toLowerCase()
+            if (!existedApp) {
+                await reply(
+                    input,
+                    `Application for ${position} does not exist.`
                 );
-                if (!target) {
-                    await channel.send(
-                        `Application for ${position} does not exist.`
-                    );
-                    return;
-                }
-                let applicationEmbed = new Discord.MessageEmbed()
-                    .setTitle(`${target.position} Application`)
-                    .setColor(member.displayHexColor)
-                    .setAuthor({
-                        name: member.user.tag,
-                        iconURL: member.displayAvatarURL({ dynamic: true }),
-                    })
-                    .setFooter({
-                        text: 'React to ✅ when finished, react to ❌ to cancel your application.',
-                    })
-                    .setTimestamp();
-                target.questions.forEach((question, i) => {
-                    applicationEmbed = applicationEmbed.addField(
-                        `Question ${i + 1}`,
-                        question
-                    );
-                });
-                const applicationMessage = await channel.send({
-                    content: `${member} You are about to delete this application, react to ✅ in 1 minute to confirm delete, react to ❌ to cancel`,
-                    embeds: [applicationEmbed],
-                });
-                await applicationMessage.react('✅');
-                await applicationMessage.react('❌');
-                try {
-                    const collector =
-                        applicationMessage.createReactionCollector({
-                            filter: (
-                                reaction: Discord.MessageReaction,
-                                user: Discord.User
-                            ) =>
-                                (reaction.emoji.name === '✅' ||
-                                    reaction.emoji.name === '❌') &&
-                                user.id === member.id,
-                            time: 60 * 1000,
-                        });
-                    collector.on('collect', async collection => {
-                        if (collection.emoji.name === '✅') {
-                            collector.stop();
-                            await ref.set(
-                                existingApplications.filter(
-                                    app =>
-                                        app.position.toLowerCase() !==
-                                        position.toLowerCase()
-                                )
-                            );
-                            await channel.send(
-                                `Removed ${position} application.`
-                            );
-                        }
-                        if (collection.emoji.name === '❌') {
-                            try {
-                                collector.stop();
-                                await applicationMessage.delete();
-                                await channel.send('Cancel request.');
-                            } finally {
-                                //
-                            }
-                        }
-                    });
-                } catch {
-                    try {
-                        await applicationMessage.delete();
-                    } finally {
-                        await channel.send('You did not react in time.');
-                    }
-                }
+                return;
             }
+
+            await yesNoButton(
+                input,
+                {
+                    content: `${member} You are about to delete this application, react to ✅ in 1 minute to confirm delete, react to ❌ to cancel`,
+                    embeds: [
+                        getApplicationEmbed(
+                            existedApp.questions,
+                            existedApp.isOpen
+                        ),
+                    ],
+                },
+                async sentMessage => {
+                    await ref.set(
+                        existingApplications.map(app => {
+                            if (
+                                app.position.toLowerCase() ===
+                                position.toLowerCase()
+                            ) {
+                                // eslint-disable-next-line no-param-reassign
+                                app.questions = questionsArgs;
+                            }
+                            return app;
+                        })
+                    );
+                    await updateCommandOptions();
+                    await ref.set(
+                        existingApplications.filter(
+                            app =>
+                                app.position.toLowerCase() !==
+                                position.toLowerCase()
+                        )
+                    );
+                    await edit(
+                        input instanceof CommandInteraction
+                            ? input
+                            : sentMessage,
+                        {
+                            content: `Removed ${position} application.`,
+                            embeds: [],
+                            components: [],
+                        }
+                    );
+                }
+            );
+
             break;
         case 'toggle':
-            {
-                const target = existingApplications.find(
-                    app => app.position.toLowerCase() === position.toLowerCase()
+            if (!existedApp) {
+                await reply(
+                    input,
+                    `Application for ${position} does not exist.`
                 );
-                if (!target) {
-                    await channel.send(
-                        `Application for ${position} does not exist.`
-                    );
-                    return;
-                }
-                await ref.set(
-                    existingApplications.map(app => {
-                        if (
-                            app.position.toLowerCase() ===
-                            position.toLowerCase()
-                        ) {
-                            // eslint-disable-next-line no-param-reassign
-                            app.isOpen = !app.isOpen;
-                        }
-                        return app;
-                    })
-                );
-                await channel.send(
-                    `Application for ${position} is now ${
-                        target.isOpen ? 'opened' : 'closed'
-                    }.`
-                );
+                return;
             }
+            await ref.set(
+                existingApplications.map(app => {
+                    if (app.position.toLowerCase() === position.toLowerCase()) {
+                        // eslint-disable-next-line no-param-reassign
+                        app.isOpen = !app.isOpen;
+                    }
+                    return app;
+                })
+            );
+            await updateCommandOptions();
+            await reply(
+                input,
+                `Application for ${position} is now ${
+                    existedApp.isOpen ? 'opened' : 'closed'
+                }.`
+            );
+
             break;
         case 'show':
-            {
-                const target = existingApplications.find(
-                    app => app.position.toLowerCase() === position.toLowerCase()
-                );
-                if (!target) {
-                    await channel.send({
-                        embeds: [
-                            new Discord.MessageEmbed()
-                                .setTitle(`All Applications`)
-                                .setColor(member.displayHexColor)
-                                .setAuthor({
-                                    name: member.user.tag,
-                                    iconURL: member.displayAvatarURL({
-                                        dynamic: true,
-                                    }),
-                                })
-                                .setDescription(
-                                    existingApplications
-                                        .map(
-                                            app =>
-                                                `${
-                                                    app.isOpen
-                                                        ? 'opened'
-                                                        : 'closed'
-                                                } \`${app.position}\``
-                                        )
-                                        .join('\n')
-                                ),
-                        ],
-                    });
-                } else {
-                    let applicationEmbed = new Discord.MessageEmbed()
-                        .setTitle(`${target.position} Application`)
-                        .setColor(member.displayHexColor)
-                        .setAuthor({
-                            name: member.user.tag,
-                            iconURL: member.displayAvatarURL({
-                                dynamic: true,
-                            }),
-                        })
-                        .setFooter({
-                            text: `Application publicity: ${
-                                target.isOpen ? 'opened' : 'closed'
-                            } for application`,
-                        })
-                        .setTimestamp();
-                    target.questions.forEach((question, i) => {
-                        applicationEmbed = applicationEmbed.addField(
-                            `Question ${i + 1}`,
-                            question
-                        );
-                    });
-                    await channel.send({ embeds: [applicationEmbed] });
-                }
-            }
+            await reply(input, {
+                embeds: [
+                    !existedApp
+                        ? new MessageEmbed()
+                              .setTitle(`All Applications`)
+                              .setColor(member.displayHexColor)
+                              .setAuthor({
+                                  name: member.user.tag,
+                                  iconURL: member.displayAvatarURL({
+                                      dynamic: true,
+                                  }),
+                              })
+                              .setDescription(
+                                  existingApplications
+                                      .map(
+                                          app =>
+                                              `${
+                                                  app.isOpen
+                                                      ? 'opened'
+                                                      : 'closed'
+                                              } \`${app.position}\``
+                                      )
+                                      .join('\n')
+                              )
+                        : getApplicationEmbed(
+                              existedApp.questions,
+                              existedApp.isOpen
+                          ),
+                ],
+            });
+
             break;
         case 'export':
         case 'exports':
@@ -604,45 +644,44 @@ export async function configApps(message: Discord.Message): Promise<void> {
                 const target = existingApplications.find(
                     app => app.position.toLowerCase() === position.toLowerCase()
                 );
-                if (!target) {
-                    await channel.send({
-                        embeds: [
-                            new Discord.MessageEmbed()
-                                .setTitle(`All Applications`)
-                                .setColor(member.displayHexColor)
-                                .setAuthor({
-                                    name: member.user.tag,
-                                    iconURL: member.displayAvatarURL({
-                                        dynamic: true,
-                                    }),
-                                })
-                                .setDescription(
-                                    existingApplications
-                                        .map(
-                                            app =>
-                                                `${
-                                                    app.isOpen
-                                                        ? 'opened'
-                                                        : 'closed'
-                                                } \`${app.position}\``
-                                        )
-                                        .join('\n')
-                                ),
-                        ],
-                    });
-                } else {
-                    await channel.send(
-                        `\`\`\`${target.position} | ${target.questions.join(
-                            '\n'
-                        )}\`\`\``
-                    );
-                }
+                await reply(
+                    input,
+                    !target
+                        ? {
+                              embeds: [
+                                  new MessageEmbed()
+                                      .setTitle(`All Applications`)
+                                      .setColor(member.displayHexColor)
+                                      .setAuthor({
+                                          name: member.user.tag,
+                                          iconURL: member.displayAvatarURL({
+                                              dynamic: true,
+                                          }),
+                                      })
+                                      .setDescription(
+                                          existingApplications
+                                              .map(
+                                                  app =>
+                                                      `${
+                                                          app.isOpen
+                                                              ? 'opened'
+                                                              : 'closed'
+                                                      } \`${app.position}\``
+                                              )
+                                              .join('\n')
+                                      ),
+                              ],
+                          }
+                        : `\`\`\`${target.position} | ${target.questions.join(
+                              ' | '
+                          )}\`\`\``
+                );
             }
             break;
         default:
-            await channel.send({
+            await reply(input, {
                 embeds: [
-                    new Discord.MessageEmbed()
+                    new MessageEmbed()
                         .setTitle('Command Parse Error')
                         .setColor('#ff0000')
                         .setDescription('usage of the command')
@@ -650,13 +689,13 @@ export async function configApps(message: Discord.Message): Promise<void> {
                             'Adding new application',
                             '`!application add <position> | <questions separated with linebreaks>`' +
                                 '\n' +
-                                'Example```!application add ADMIN | Why do you want to be admin?\nHow will you do your admin task?\nHow active are you?```'
+                                'Example```!application add ADMIN | Why do you want to be admin? | How will you do your admin task? | How active are you?```'
                         )
                         .addField(
                             'Editing existing application',
                             '`!application edit <position> | <questions separated with linebreaks>`' +
                                 '\n' +
-                                'Example```!application edit ADMIN | Why do you want to be admin?\nHow will you do your admin task?\nHow active are you?```'
+                                'Example```!application edit ADMIN | Why do you want to be admin? | How will you do your admin task? | How active are you?```'
                         )
                         .addField(
                             'Deleting existing application',

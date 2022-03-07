@@ -1,23 +1,32 @@
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    GuildBasedChannel,
+    Message,
+} from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
+import { edit, reply } from 'util/typesafeReply';
 
 const wait = promisify(setTimeout);
 
 export default async function lockUnlock(
-    message: Discord.Message
+    input: Message | CommandInteraction
 ): Promise<void> {
-    const { member, channel, content, guild, author } = message;
+    const { channel, guild } = input;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
 
-    const [command, ...args] = content.split(' ');
+    const command = (
+        input instanceof Message
+            ? input.content.split(' ')[0]?.replace('!', '')
+            : input.commandName
+    ) as 'lock' | 'unlock';
 
-    if (!(command === '!lock' || command === '!unlock') || !member || !guild) {
-        return;
-    }
+    if (!member || !guild || !channel || channel.type === 'DM') return;
 
     if (
-        await cooldown(message, '!lock', {
+        await cooldown(input, '!lock', {
             default: 2 * 1000,
             donator: 2 * 1000,
         })
@@ -25,158 +34,172 @@ export default async function lockUnlock(
         return;
     }
 
-    const channelRegex = /^(?:<#(\d{18})>|(\d{18}))$/;
-    const anotherChannelArg = args?.[0]?.match(channelRegex);
-    let timer =
-        parseStringIntoMs(args?.[0]) ?? parseStringIntoMs(args?.[1]) ?? 0;
+    let timer = 0;
+    let target: GuildBasedChannel = channel;
+    if (input instanceof Message) {
+        const args = input.content.split(' ').slice(1);
+        const channelRegex = /^(?:<#(\d{18})>|(\d{18}))$/;
+        const anotherChannelArg = args?.[0]?.match(channelRegex);
+        timer =
+            parseStringIntoMs(args?.[0]) ?? parseStringIntoMs(args?.[1]) ?? 0;
 
-    const target = guild.channels.cache.get(
-        anotherChannelArg?.[1] || anotherChannelArg?.[2] || channel.id
-    ) as Discord.GuildChannel;
+        target =
+            guild.channels.cache.get(
+                anotherChannelArg?.[1] || anotherChannelArg?.[2] || channel.id
+            ) ?? target;
+    } else {
+        target =
+            guild.channels.cache.get(
+                input.options.getChannel('channel')?.id ?? target.id
+            ) ?? target;
+        timer = parseStringIntoMs(input.options.getString('time') ?? '') ?? 0;
+    }
 
     const { everyone } = guild.roles;
-    async function lock(): Promise<void> {
-        if (target.type === 'GUILD_VOICE') {
-            if (
-                target.permissionsFor(everyone.id)?.serialize().CONNECT ===
-                false
-            ) {
-                await channel.send(`${target} is already locked.`);
-                return;
-            }
-
-            target.permissionOverwrites.edit(everyone, {
-                CONNECT: false,
-            });
-        } else if (
-            target.type === 'GUILD_TEXT' ||
-            target.type === 'GUILD_NEWS'
-        ) {
-            if (
-                target.permissionsFor(everyone.id)?.serialize()
-                    .SEND_MESSAGES === false
-            ) {
-                await channel.send(`${target} is already locked.`);
-                return;
-            }
-
-            target.permissionOverwrites.edit(everyone, {
-                SEND_MESSAGES: false,
-            });
-        }
-        if (
-            channel.id !== target.id &&
-            (target.type === 'GUILD_TEXT' || target.type === 'GUILD_NEWS')
-        ) {
-            await (target as Discord.TextChannel).send(
-                `Locked down ${target}${
-                    timer > 0
-                        ? ` for **${parseMsIntoReadableText(timer)}**`
-                        : ''
-                }.`
+    async function updateChannelPermission(
+        action: 'lock' | 'unlock',
+        replyAction: typeof reply | typeof edit
+    ): Promise<void> {
+        const permissionForEveryone = target?.permissionsFor(everyone.id);
+        const isAlreadyLocked = async () =>
+            (input instanceof Message ? reply : replyAction)(
+                input,
+                `${target} is already ${action}ed.`
             );
+        if (target?.isVoice()) {
+            if (
+                (action === 'lock' &&
+                    permissionForEveryone?.serialize().CONNECT === false) ||
+                (action === 'unlock' && permissionForEveryone?.has('CONNECT'))
+            ) {
+                await isAlreadyLocked();
+                return;
+            }
+
+            await target.permissionOverwrites.edit(everyone, {
+                CONNECT: action === 'lock' ? false : null,
+            });
         }
-        await channel.send(
-            `Locked down ${target}${
-                timer > 0 ? ` for **${parseMsIntoReadableText(timer)}**` : ''
-            }.`
+        if (target && target.isText() && !target.isThread()) {
+            if (
+                (action === 'lock' &&
+                    permissionForEveryone?.serialize().SEND_MESSAGES ===
+                        false) ||
+                (action === 'unlock' &&
+                    permissionForEveryone?.has('SEND_MESSAGES'))
+            ) {
+                await isAlreadyLocked();
+                return;
+            }
+
+            await target.permissionOverwrites.edit(everyone, {
+                SEND_MESSAGES: action === 'lock' ? false : null,
+                SEND_MESSAGES_IN_THREADS: action === 'lock' ? false : null,
+            });
+        }
+        if (target.isThread() && target.parent) {
+            if (
+                (action === 'lock' &&
+                    permissionForEveryone?.serialize()
+                        .SEND_MESSAGES_IN_THREADS === false) ||
+                (action === 'unlock' &&
+                    permissionForEveryone?.has('SEND_MESSAGES_IN_THREADS'))
+            ) {
+                await isAlreadyLocked();
+                return;
+            }
+
+            await target.parent.permissionOverwrites.edit(everyone, {
+                SEND_MESSAGES_IN_THREADS: action === 'lock' ? false : null,
+            });
+        }
+        const statusMessage = `${
+            action === 'lock' ? 'Locked down' : 'Unlocked'
+        } ${target}${
+            timer > 0 ? ` for **${parseMsIntoReadableText(timer)}**` : ''
+        }.`;
+        if (channel?.id !== target.id && target.isText()) {
+            await target.send(statusMessage);
+        }
+        await (input instanceof Message ? reply : replyAction)(
+            input,
+            statusMessage
         );
     }
 
-    async function unlock(): Promise<void> {
-        if (target.type === 'GUILD_VOICE') {
-            if (target.permissionsFor(everyone.id)?.has('CONNECT')) {
-                await channel.send(`${target} is already unlocked.`);
-                return;
-            }
-            target.permissionOverwrites.edit(everyone, {
-                CONNECT: null,
-            });
-        } else if (
-            target.type === 'GUILD_TEXT' ||
-            target.type === 'GUILD_NEWS'
-        ) {
-            if (target.permissionsFor(everyone.id)?.has('SEND_MESSAGES')) {
-                await channel.send(`${target} is already unlocked.`);
-                return;
-            }
-            target.permissionOverwrites.edit(everyone, {
-                SEND_MESSAGES: null,
-                CONNECT: null,
-            });
-        }
-
-        if (
-            channel.id !== target.id &&
-            (target.type === 'GUILD_TEXT' || target.type === 'GUILD_NEWS')
-        ) {
-            await (target as Discord.TextChannel).send(
-                `Unlocked channel ${target}${
-                    timer > 0
-                        ? ` for **${parseMsIntoReadableText(timer)}**`
-                        : ''
-                }.`
-            );
-        }
-        await channel.send(
-            `Unlocked channel ${target}${
-                timer > 0 ? ` for **${parseMsIntoReadableText(timer)}**` : ''
-            }.`
-        );
-    }
     if (
-        (target.permissionsFor(member)?.has('MANAGE_ROLES') &&
-            target.permissionOverwrites.cache.some(
+        !(
+            target?.permissionsFor(member)?.has('MANAGE_ROLES') ||
+            (target.isThread()
+                ? target.parent
+                : target
+            )?.permissionOverwrites.cache.some(
                 perm =>
                     perm.allow.has(
                         target.type === 'GUILD_VOICE'
                             ? 'CONNECT'
                             : 'SEND_MESSAGES'
                     ) &&
-                    (member.roles.cache.has(perm.id) || author.id === perm.id)
-            )) ||
-        member.permissions.has('ADMINISTRATOR')
+                    (member.roles.cache.has(perm.id) || member.id === perm.id)
+            ) ||
+            member.permissions.has('ADMINISTRATOR')
+        )
     ) {
-        if (command === '!lock') {
-            if (timer > 2147483647 || timer <= 3000) {
-                if (timer === 0) {
-                    lock();
-                    return;
-                }
-                await channel.send(
-                    `Delay **${parseMsIntoReadableText(timer)}** is too ${
-                        timer <= 3000 ? 'short' : 'long'
-                    }.`
-                );
-            } else {
-                lock();
-                await wait(timer);
-                timer = 0;
-                unlock();
-            }
-            return;
-        }
-        if (command === '!unlock') {
-            if (timer > 2147483647 || timer <= 3000) {
-                if (timer === 0) {
-                    unlock();
-                    return;
-                }
-                await channel.send(
-                    `Delay **${parseMsIntoReadableText(timer)}** is too ${
-                        timer <= 3000 ? 'short' : 'long'
-                    }.`
-                );
-            } else {
-                unlock();
-                await wait(timer);
-                timer = 0;
-                lock();
-            }
-            return;
-        }
+        reply(
+            input,
+            `You don't have permission to ${command.replace('!', '')} ${target}`
+        );
+        return;
     }
-    await channel.send(
-        `You don't have permission to ${command.replace('!', '')} ${target}`
-    );
+
+    if (timer !== 0 && (timer > 2147483647 || timer <= 3000)) {
+        await reply(
+            input,
+            `Delay **${parseMsIntoReadableText(timer)}** is too ${
+                timer <= 3000 ? 'short' : 'long'
+            }.`
+        );
+        return;
+    }
+
+    await updateChannelPermission(command, reply);
+    if (timer === 0) return;
+    await wait(timer);
+    timer = 0;
+    await updateChannelPermission(command === 'lock' ? 'unlock' : 'lock', edit);
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'lock',
+        description: 'Locks a channel',
+        options: [
+            {
+                name: 'time',
+                description: 'Time string, leave blank for permanent lock',
+                type: 3,
+            },
+            {
+                name: 'channel',
+                description: 'The channel to lock',
+                type: 7,
+            },
+        ],
+    },
+    {
+        name: 'unlock',
+        description: 'Unlocks a channel',
+        options: [
+            {
+                name: 'time',
+                description: 'Time string, leave blank for permanent unlock',
+                type: 3,
+            },
+            {
+                name: 'channel',
+                description: 'The channel to unlock',
+                type: 7,
+            },
+        ],
+    },
+];

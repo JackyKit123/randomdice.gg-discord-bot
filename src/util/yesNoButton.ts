@@ -1,19 +1,23 @@
 import logMessage from 'dev-commands/logMessage';
 import {
+    ButtonInteraction,
     CommandInteraction,
     Message,
     MessageActionRow,
     MessageButton,
+    ReplyMessageOptions,
 } from 'discord.js';
 import { edit, reply } from './typesafeReply';
 
 export default async function yesNoButton(
-    input: Message | CommandInteraction,
-    promptQuestion: string,
+    input: Message | CommandInteraction | ButtonInteraction,
+    promptQuestion: string | ReplyMessageOptions,
     onYes: (sentMessage: Message) => unknown
 ): Promise<void> {
     const sentMessage = await reply(input, {
-        content: promptQuestion,
+        ...(typeof promptQuestion === 'string'
+            ? { content: promptQuestion }
+            : promptQuestion),
         components: [
             new MessageActionRow().addComponents([
                 new MessageButton()

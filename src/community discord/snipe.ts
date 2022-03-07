@@ -1,14 +1,27 @@
 import axios from 'axios';
-import Discord, { GuildChannelResolvable } from 'discord.js';
+import { tier2RoleIds, tier3RoleIds } from 'config/roleId';
+import {
+    ApplicationCommandData,
+    BufferResolvable,
+    CommandInteraction,
+    GuildChannelResolvable,
+    Message,
+    MessageActionRow,
+    MessageButton,
+    MessageEmbed,
+    PartialMessage,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
+import { reply } from 'util/typesafeReply';
+import checkPermission from './util/checkPermissions';
 
 const snipeStore = {
     snipe: new Map<
         string,
         {
-            message: Discord.Message;
+            message: Message;
             attachments: {
-                attachment: Discord.BufferResolvable;
+                attachment: BufferResolvable;
                 name?: string;
             }[];
         }[]
@@ -16,9 +29,9 @@ const snipeStore = {
     editsnipe: new Map<
         string,
         {
-            message: Discord.Message;
+            message: Message;
             attachments: {
-                attachment: Discord.BufferResolvable;
+                attachment: BufferResolvable;
                 name?: string;
             }[];
         }[]
@@ -27,7 +40,7 @@ const snipeStore = {
 
 export async function snipeListener(
     type: 'edit' | 'delete',
-    message: Discord.Message | Discord.PartialMessage
+    message: Message | PartialMessage
 ): Promise<void> {
     if (message.partial) {
         if (type === 'delete') {
@@ -44,7 +57,7 @@ export async function snipeListener(
     }
 
     const attachments: {
-        attachment: Discord.BufferResolvable;
+        attachment: BufferResolvable;
         name?: string;
     }[] = [];
     if (type === 'delete') {
@@ -71,14 +84,21 @@ export async function snipeListener(
     }
 }
 
-export default async function snipe(message: Discord.Message): Promise<void> {
-    const { member, channel, content, author, guild } = message;
-    const [command, arg] = content.split(' ');
+export default async function snipe(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { guild, channel } = input;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    const [command, arg] =
+        input instanceof Message
+            ? input.content.split(' ')
+            : [input.commandName, input.options.getInteger('index')];
 
     if (
-        !member ||
         !guild ||
-        (await cooldown(message, command, {
+        !member ||
+        !channel ||
+        (await cooldown(input, '!snipe', {
             default: 10 * 1000,
             donator: 2 * 1000,
         }))
@@ -86,27 +106,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         return;
     }
 
-    if (
-        !(
-            member.roles.cache.has('804512584375599154') ||
-            member.roles.cache.has('804231753535193119') ||
-            member.roles.cache.has('806896328255733780') ||
-            member.roles.cache.has('805388604791586826')
-        )
-    ) {
-        await channel.send({
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle(`You cannot use ${command?.toLowerCase()}`)
-                    .setColor('#ff0000')
-                    .setDescription(
-                        'You need one of the following roles to use this command.\n' +
-                            '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
-                    ),
-            ],
-        });
-        return;
-    }
+    if (!(await checkPermission(input, ...tier2RoleIds))) return;
 
     let snipeIndex = 0;
     if (
@@ -117,16 +117,10 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         snipeIndex = Number(arg) - 1;
     }
 
-    if (
-        snipeIndex &&
-        !(
-            member.roles.cache.has('804512584375599154') ||
-            member.roles.cache.has('809142956715671572')
-        )
-    ) {
-        await channel.send({
+    if (snipeIndex && !tier3RoleIds.some(id => member.roles.cache.has(id))) {
+        await reply(input, {
             embeds: [
-                new Discord.MessageEmbed()
+                new MessageEmbed()
                     .setTitle(
                         `You cannot use enhanced ${command?.toLowerCase()} with snipe index.`
                     )
@@ -146,7 +140,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
     ].get(channel.id);
 
     if (!snipedList?.length) {
-        await channel.send("There's nothing to snipe here");
+        await reply(input, "There's nothing to snipe here");
         return;
     }
     const snipeIndexTooBig = typeof snipedList[snipeIndex] === 'undefined';
@@ -156,7 +150,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         sniped.attachments,
     ];
 
-    let embed = new Discord.MessageEmbed()
+    let embed = new MessageEmbed()
         .setAuthor({
             name: snipedMessage.author.tag,
             iconURL: (
@@ -167,7 +161,7 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         })
         .setDescription(snipedMessage.content)
         .setFooter({
-            text: `snipedMessage by: ${author.tag}`,
+            text: `snipedMessage by: ${member.user.tag}`,
         })
         .setTimestamp(snipedMessage.createdAt);
 
@@ -199,20 +193,22 @@ export default async function snipe(message: Discord.Message): Promise<void> {
         embeds: [embed],
         files: snipedAttachments,
         components: [
-            new Discord.MessageActionRow().addComponents([
-                new Discord.MessageButton()
+            new MessageActionRow().addComponents([
+                new MessageButton()
                     .setEmoji('❌')
-                    .setCustomId('❌')
+                    .setCustomId('Delete')
+                    .setLabel('Delete')
                     .setStyle('DANGER'),
-                new Discord.MessageButton()
+                new MessageButton()
                     .setEmoji('🗑️')
-                    .setCustomId('🗑️')
+                    .setCustomId('Trash')
+                    .setLabel('Trash')
                     .setStyle('DANGER'),
             ]),
         ],
     };
 
-    const sentSnipe = await channel.send(messageOption);
+    const sentSnipe = await reply(input, messageOption);
 
     sentSnipe
         .createMessageComponentCollector()
@@ -224,7 +220,8 @@ export default async function snipe(message: Discord.Message): Promise<void> {
                 .has('MANAGE_MESSAGES');
             const userIsSnipedMessageAuthor =
                 interaction.user.id === snipedMessage.author.id;
-            const userIsInteractionTrigger = interaction.user.id === author.id;
+            const userIsInteractionTrigger =
+                interaction.user.id === member.user.id;
 
             switch (interaction.customId) {
                 case '❌':
@@ -240,7 +237,9 @@ export default async function snipe(message: Discord.Message): Promise<void> {
                         });
                         return;
                     }
-                    await sentSnipe.delete();
+                    await (input instanceof Message
+                        ? sentSnipe.delete()
+                        : input.deleteReply());
                     break;
                 case '🗑️':
                     if (!userCanManageMessage && !userIsSnipedMessageAuthor) {
@@ -251,7 +250,9 @@ export default async function snipe(message: Discord.Message): Promise<void> {
                         });
                         return;
                     }
-                    await sentSnipe.delete();
+                    await (input instanceof Message
+                        ? sentSnipe.delete()
+                        : input.deleteReply());
                     snipeStore[
                         command?.toLowerCase().replace('!', '') as
                             | 'snipe'
@@ -283,3 +284,28 @@ export default async function snipe(message: Discord.Message): Promise<void> {
             }
         });
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'snipe',
+        description: 'Snipe a deleted message',
+        options: [
+            {
+                name: 'index',
+                type: 3,
+                description: 'The index of the deleted message stored to snipe',
+            },
+        ],
+    },
+    {
+        name: 'editsnipe',
+        description: 'Snipe an edited message',
+        options: [
+            {
+                name: 'index',
+                type: 3,
+                description: 'The index of the edited message stored to snipe',
+            },
+        ],
+    },
+];

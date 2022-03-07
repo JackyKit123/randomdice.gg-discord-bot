@@ -1,34 +1,37 @@
 import { database } from 'register/firebase';
 import stringSimilarity from 'string-similarity';
-import Discord, { DiscordAPIError } from 'discord.js';
+import {
+    ApplicationCommandData,
+    Client,
+    CommandInteraction,
+    DiscordAPIError,
+    Message,
+} from 'discord.js';
 import axios, { AxiosResponse } from 'axios';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import { tier3RoleIds } from 'config/roleId';
+import { reply } from 'util/typesafeReply';
+import checkPermission from './util/checkPermissions';
 
-export default async function myEmoji(message: Discord.Message): Promise<void> {
-    const { member, guild, content, channel, author, attachments } = message;
+export default async function myEmoji(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { guild } = input;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
     if (!member || !guild) return;
 
-    if (
-        !member.roles.cache.has('804512584375599154') &&
-        !member.roles.cache.has('809142956715671572')
-    ) {
-        await channel.send({
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle(`You cannot use custom emoji command.`)
-                    .setColor('#ff0000')
-                    .setDescription(
-                        'You need one of the following roles to use this command.\n' +
-                            '<@&804512584375599154> <@&809142956715671572>\n'
-                    ),
-            ],
-        });
-        return;
-    }
-    const attachment = attachments.first();
-    const emojiArg = content.split(' ')[1];
+    if (!(await checkPermission(input, ...tier3RoleIds))) return;
+    const attachment =
+        input instanceof Message ? input.attachments.first() : undefined;
+    const emojiArg =
+        input instanceof Message
+            ? input.content.split(' ')[1]
+            : input.options.getString('emoji', true);
     const emojiRegexMatch = emojiArg?.match(/^<(a)?:[\w\d_]+:(\d{18})>$/);
+    const urlRegexMatch = emojiArg?.match(
+        /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w\-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[.!/\\\w]*))?)/
+    );
     const userCustomReact =
         cache['discord_bot/community/customreact']?.[member.id];
 
@@ -38,9 +41,11 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
         const guildEmoji = guild.emojis.cache.get(emojiID);
         if (guildEmoji && userCustomReact === guildEmoji.id) {
             const nameBeforeEdit = guildEmoji.name;
-            const nameAfterEdit = (await guildEmoji.setName(author.username))
-                .name;
-            await channel.send(
+            const nameAfterEdit = (
+                await guildEmoji.setName(member.user.username)
+            ).name;
+            await reply(
+                input,
                 nameBeforeEdit === nameAfterEdit
                     ? `You already have ${guildEmoji} as your custom emoji.`
                     : `Updated the name of ${guildEmoji} to match your current username.`
@@ -56,18 +61,23 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
                 responseType: 'arraybuffer',
             }
         );
-    } else if (attachment) {
-        alienEmojiBinary = await axios.get<Buffer>(attachment.url, {
-            responseType: 'arraybuffer',
-        });
+    } else if (attachment || urlRegexMatch) {
+        if (input instanceof CommandInteraction) await input.deferReply();
+        alienEmojiBinary = await axios.get<Buffer>(
+            attachment?.url ?? emojiArg,
+            {
+                responseType: 'arraybuffer',
+            }
+        );
     } else {
-        await channel.send(
+        await reply(
+            input,
             'Usage of command\n`!myEmoji <emoji>`\nor\n`!myEmoji` with an image attachment'
         );
         return;
     }
     if (
-        await cooldown(message, '!myEmoji', {
+        await cooldown(input, '!myEmoji', {
             default: 10 * 60 * 1000,
             donator: 60 * 1000,
         })
@@ -76,9 +86,9 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
     }
     const newEmoji = await guild.emojis.create(
         alienEmojiBinary.data,
-        author.username.replaceAll(/[^\d\w_]/g, ''),
+        member.user.username.replaceAll(/[^\d\w_]/g, ''),
         {
-            reason: `!customreaction command used by ${author.tag}`,
+            reason: `!customreaction command used by ${member.user.tag}`,
         }
     );
     if (userCustomReact) {
@@ -89,12 +99,13 @@ export default async function myEmoji(message: Discord.Message): Promise<void> {
         .ref('discord_bot/community/customreact')
         .child(member.id)
         .set(newEmoji.id);
-    await channel.send(
+    await reply(
+        input,
         `Uploaded ${newEmoji} as your custom emoji and auto reaction.`
     );
 }
 
-export async function autoReaction(message: Discord.Message): Promise<void> {
+export async function autoReaction(message: Message): Promise<void> {
     const { guild, content } = message;
     const lowerCased = content.toLowerCase();
     const words = lowerCased.split(' ');
@@ -143,9 +154,7 @@ export async function autoReaction(message: Discord.Message): Promise<void> {
     );
 }
 
-export async function fetchAutoReactionRegistry(
-    client: Discord.Client
-): Promise<void> {
+export async function fetchAutoReactionRegistry(client: Client): Promise<void> {
     const guild = await client.guilds.fetch(
         process.env.COMMUNITY_SERVER_ID || ''
     );
@@ -168,3 +177,16 @@ export async function fetchAutoReactionRegistry(
         )
     );
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'myemoji',
+    description: 'upload your own custom emoji',
+    options: [
+        {
+            name: 'emoji',
+            description: 'the emoji to use, either an url, or the emoji itself',
+            type: 3,
+            required: true,
+        },
+    ],
+};

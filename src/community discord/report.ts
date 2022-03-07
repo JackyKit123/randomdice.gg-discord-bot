@@ -1,21 +1,37 @@
-import Discord, { TextBasedChannel } from 'discord.js';
+import Discord, {
+    ApplicationCommandData,
+    CommandInteraction,
+    ContextMenuInteraction,
+    DiscordAPIError,
+    GuildMember,
+    Message,
+    TextBasedChannel,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
 import parseMsIntoReadableText from 'util/parseMS';
+import { reply } from 'util/typesafeReply';
 
-async function closeReport(message: Discord.Message): Promise<void> {
-    const { member, channel, guild, content } = message;
+export async function closeReport(
+    input: Message | CommandInteraction
+): Promise<void> {
+    const { channel, guild } = input;
 
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
     if (
-        await cooldown(message, '!closereport', {
+        await cooldown(input, '!closereport', {
             default: 10 * 1000,
             donator: 10 * 1000,
         })
     ) {
         return;
     }
-    if (!guild || !member || channel.type !== 'GUILD_TEXT') {
+    if (!guild || !member || channel?.type !== 'GUILD_TEXT') {
         return;
     }
+    const content =
+        input instanceof Message
+            ? input.content.replace('!closereport', '').trim()
+            : input.options.getString('reason') ?? '';
     const modRoleId = '804223928427216926';
     const tModRoleId = '807219483311603722';
     if (
@@ -25,19 +41,20 @@ async function closeReport(message: Discord.Message): Promise<void> {
             channel.permissionsFor(member)?.has('MANAGE_CHANNELS')
         )
     ) {
-        await channel.send('You do not have permission to close this report.');
+        await reply(input, 'You do not have permission to close this report.');
         return;
     }
     if (!channel.name.endsWith('-report-room')) {
-        await channel.send('You cannot use this command here.');
+        await reply(input, 'You cannot use this command here.');
         return;
     }
     if (channel.parentId === '806634775514710106') {
-        await channel.send('This report is already closed.');
+        await reply(input, 'This report is already closed.');
         return;
     }
-    if (content.replace('!closereport', '').trim().length > 1024) {
-        await channel.send(
+    if (content.length > 1024) {
+        await reply(
+            input,
             'Close report reason should be less than 1024 characters.'
         );
         return;
@@ -48,15 +65,24 @@ async function closeReport(message: Discord.Message): Promise<void> {
     )?.id;
     const reportMember = guild.members.cache.get(reportedMemberId || '');
     const archiveCat = guild.channels.cache.get('806634775514710106');
-    if (archiveCat) {
-        await channel.setParent('806634775514710106', {
-            reason: 'Report Closed',
-        });
-    } else {
-        await channel.send(
+
+    if (archiveCat?.type !== 'GUILD_CATEGORY') {
+        await reply(
+            input,
             'Unable to retrieve Archive channel category, please contact an admin to manually drag this channel into Archive category.'
         );
+        return;
     }
+    if (archiveCat.children.size >= 50) {
+        await reply(
+            input,
+            'There are too many reports in the archive category. Please delete some reports.'
+        );
+        return;
+    }
+    await channel.setParent('806634775514710106', {
+        reason: 'Report Closed',
+    });
     const reportLog = guild.channels.cache.get('806812461302022145');
     const now = Date.now();
     if (reportLog?.isText()) {
@@ -116,7 +142,7 @@ async function closeReport(message: Discord.Message): Promise<void> {
                                 member.user.discriminator
                             } ${member.toString()}` +
                                 '\n' +
-                                `**Closed at**: ${message.createdAt.toUTCString()}` +
+                                `**Closed at**: ${input.createdAt.toUTCString()}` +
                                 '\n' +
                                 `**ID:** ${member.user.id}`
                         );
@@ -153,7 +179,8 @@ async function closeReport(message: Discord.Message): Promise<void> {
         ],
         'Archive Channel.'
     );
-    await channel.send(
+    await reply(
+        input,
         `Report closed, removed access for everyone, archiving this channel.`
     );
     await reportMember?.send({
@@ -168,32 +195,31 @@ async function closeReport(message: Discord.Message): Promise<void> {
                     }),
                 })
                 .setDescription(content.replace('!closereport', ''))
-                .setFooter('Report closed at')
+                .setFooter({ text: 'Report closed at' })
                 .setTimestamp(),
         ],
     });
 }
 
-export default async function report(message: Discord.Message): Promise<void> {
-    const {
-        member,
-        guild,
-        channel,
-        author,
-        content,
-        mentions,
-        createdTimestamp,
-    } = message;
+export async function report(
+    input: Message | CommandInteraction | ContextMenuInteraction
+): Promise<void> {
+    const { guild, channel, createdTimestamp } = input;
 
-    const [command, ...args] = content.split(' ');
-    if (command === '!closereport') {
-        closeReport(message);
-    }
-    if (command !== '!report' || !guild || !member) {
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+
+    const content =
+        // eslint-disable-next-line no-nested-ternary
+        (input instanceof Message
+            ? input.content.replace('!report', '').trim()
+            : input instanceof CommandInteraction
+            ? input.options.getString('message')
+            : input.options.getMessage('message')?.content) ?? 'not specific';
+    if (!guild || !member) {
         return;
     }
     if (
-        await cooldown(message, '!report', {
+        await cooldown(input, '!report', {
             default: 10 * 1000,
             donator: 10 * 1000,
         })
@@ -201,29 +227,39 @@ export default async function report(message: Discord.Message): Promise<void> {
         return;
     }
 
-    if (message.deletable) {
+    if (input instanceof Message) {
         try {
-            await message.delete();
-        } catch {
-            // suppress error
+            await input.delete();
+        } catch (err) {
+            if ((err as DiscordAPIError).message !== 'Unknown Message')
+                throw err;
         }
     }
     const now = Date.now();
-    const lastMessage = channel.lastMessageId;
-    const memberMentions = mentions.members;
+    const messageLink =
+        input instanceof ContextMenuInteraction
+            ? input.options.getMessage('message')?.id
+            : input.channel?.lastMessageId;
+    const memberMentions =
+        // eslint-disable-next-line no-nested-ternary
+        input instanceof ContextMenuInteraction
+            ? [input.options.getMessage('message')?.member]
+            : input instanceof CommandInteraction
+            ? [input.options.getMember('member') as GuildMember]
+            : Array.from(
+                  input.mentions.members?.values() ?? ([] as GuildMember[])
+              );
     let embed = new Discord.MessageEmbed()
         .setAuthor({
-            name: author.tag,
+            name: member.user.tag,
             iconURL: member.displayAvatarURL({ dynamic: true }),
         })
         .setTitle('New Report')
         .setColor('#00ff00')
-        .setDescription(args.join(' '))
+        .setDescription(content)
         .addField(
             'Member Info',
-            `**Name:** ${author.username}#${
-                author.discriminator
-            } ${author.toString()}` +
+            `**Name:** ${member.user.username}#${member.user.discriminator} ${member}` +
                 '\n' +
                 `**Joined at:** ${parseMsIntoReadableText(
                     now - (member.joinedTimestamp || now),
@@ -231,35 +267,33 @@ export default async function report(message: Discord.Message): Promise<void> {
                 )} ago` +
                 '\n' +
                 `**Account Created:** ${parseMsIntoReadableText(
-                    now - author.createdTimestamp,
+                    now - member.user.createdTimestamp,
                     true
                 )} ago` +
                 '\n' +
-                `**Reported from:** ${channel.toString()} [Jump to context](https://discord.com/channels/804222694488932362/${
-                    channel.id
-                }/${lastMessage})`
+                `**Reported from:** ${channel} [Jump to context](https://discord.com/channels/804222694488932362/${channel?.id}/${messageLink})`
         )
-        .setFooter({ text: `Report ID: ${message.id}` })
+        .setFooter({ text: `Report ID: ${input.id}` })
         .setTimestamp(createdTimestamp);
-    Array.from(memberMentions || []).forEach(([, m], i) => {
-        embed = embed.addField(
-            `Mentioned user #${i + 1}`,
-            `**Name:** ${m.user.username}#${
-                m.user.discriminator
-            } ${m.toString()}` +
-                '\n' +
-                `**Joined at:** ${parseMsIntoReadableText(
-                    now - (m.joinedTimestamp || now),
-                    true
-                )} ago` +
-                '\n' +
-                `**Account Created:** ${parseMsIntoReadableText(
-                    now - m.user.createdTimestamp,
-                    true
-                )} ago` +
-                '\n' +
-                `**ID:** ${m.user.id}`
-        );
+    memberMentions.forEach((m, i) => {
+        const mentioned = guild.members.cache.get(m?.user?.id ?? '');
+        if (mentioned)
+            embed = embed.addField(
+                `Mentioned user #${i + 1}`,
+                `**Name:** ${mentioned.user.tag} ${m}` +
+                    '\n' +
+                    `**Joined at:** ${parseMsIntoReadableText(
+                        now - (mentioned.joinedTimestamp || now),
+                        true
+                    )} ago` +
+                    '\n' +
+                    `**Account Created:** ${parseMsIntoReadableText(
+                        now - mentioned.user.createdTimestamp,
+                        true
+                    )} ago` +
+                    '\n' +
+                    `**ID:** ${mentioned.user.id}`
+            );
     });
     const logChannel = guild.channels.cache.get('806812461302022145');
     const supportCategory = guild.channels.cache.get('804230480475848754');
@@ -273,7 +307,7 @@ export default async function report(message: Discord.Message): Promise<void> {
         await logChannel.send({ embeds: [embed.setTitle('Member Report')] });
     }
     const reportRoom = (await guild.channels.create(
-        `${author.username}-${author.discriminator}-report-room`,
+        `${member.user.username}-${member.user.discriminator}-report-room`,
         {
             parent: supportCategory,
             reason: 'Member Report',
@@ -298,8 +332,50 @@ export default async function report(message: Discord.Message): Promise<void> {
         }
     )) as TextBasedChannel;
     const initMessage = await reportRoom.send({
-        content: `${author.toString()}, please wait patiently for our ${modRole} ${tModRole} team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
+        content: `${member.user.toString()}, please wait patiently for our ${modRole} ${tModRole} team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
         embeds: [embed],
     });
     await initMessage.pin();
+    if (!(input instanceof Message)) {
+        reply(
+            input,
+            `A report channel has been created, please wait patiently for our ${modRole} ${tModRole} team to response, please describe the details of the report if it was not fully addressed in the \`!report\` command`,
+            true
+        );
+    }
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'report',
+        description: 'Report a member',
+        options: [
+            {
+                name: 'member',
+                description: 'the member to report',
+                type: 6,
+            },
+            {
+                name: 'message',
+                description: 'describe your report',
+                type: 3,
+            },
+        ],
+    },
+    {
+        name: 'Report this message',
+        type: 3,
+    },
+    {
+        name: 'closereport',
+        description: 'Close a report',
+        defaultPermission: false,
+        options: [
+            {
+                name: 'reason',
+                description: 'reason for closing the report',
+                type: 3,
+            },
+        ],
+    },
+];
