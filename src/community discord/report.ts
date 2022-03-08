@@ -211,7 +211,7 @@ export async function report(
                     true
                 )} ago` +
                 '\n' +
-                `**Reported from:** ${channel} [Jump to context](https://com/channels/804222694488932362/${channel?.id}/${messageId})`
+                `**Reported from:** ${channel} [Jump to context](https://www.discordapp.com/channels/804222694488932362/${channel?.id}/${messageId})`
         )
         .setFooter({ text: `Report ID: ${interaction.id}` })
         .setTimestamp(createdTimestamp);
