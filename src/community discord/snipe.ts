@@ -3,16 +3,16 @@ import { tier2RoleIds, tier3RoleIds } from 'config/roleId';
 import {
     ApplicationCommandData,
     BufferResolvable,
+    ButtonInteraction,
     CommandInteraction,
-    GuildChannelResolvable,
     Message,
     MessageActionRow,
     MessageButton,
     MessageEmbed,
     PartialMessage,
+    User,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import checkPermission from './util/checkPermissions';
 
 const snipeStore = {
@@ -37,6 +37,14 @@ const snipeStore = {
         }[]
     >(),
 };
+
+const sentSnipedMessage = new Map<
+    string,
+    {
+        snipedMember: User;
+        commandName: 'snipe' | 'editsnipe';
+    }
+>();
 
 export async function snipeListener(
     type: 'edit' | 'delete',
@@ -85,20 +93,16 @@ export async function snipeListener(
 }
 
 export default async function snipe(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild, channel } = input;
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
-    const [command, arg] =
-        input instanceof Message
-            ? input.content.split(' ')
-            : [input.commandName, input.options.getInteger('index')];
+    if (!interaction.inCachedGuild()) return;
+
+    const { member, channel, options } = interaction;
+    const commandName = interaction.commandName as 'snipe' | 'editsnipe';
 
     if (
-        !guild ||
-        !member ||
         !channel ||
-        (await cooldown(input, '!snipe', {
+        (await cooldown(interaction, commandName, {
             default: 10 * 1000,
             donator: 2 * 1000,
         }))
@@ -106,41 +110,33 @@ export default async function snipe(
         return;
     }
 
-    if (!(await checkPermission(input, ...tier2RoleIds))) return;
+    if (!(await checkPermission(interaction, ...tier2RoleIds))) return;
 
-    let snipeIndex = 0;
-    if (
-        !Number.isNaN(arg) &&
-        Number.isInteger(Number(arg)) &&
-        Number(arg) > 0
-    ) {
-        snipeIndex = Number(arg) - 1;
-    }
+    const snipeIndex = (options.getInteger('index') ?? 1) - 1;
 
     if (snipeIndex && !tier3RoleIds.some(id => member.roles.cache.has(id))) {
-        await reply(input, {
+        await interaction.reply({
             embeds: [
                 new MessageEmbed()
                     .setTitle(
-                        `You cannot use enhanced ${command?.toLowerCase()} with snipe index.`
+                        `You cannot use enhanced \`/${commandName}\` with snipe index.`
                     )
                     .setColor('#ff0000')
                     .setDescription(
-                        'To use enhanced snipe to snipe with index\n' +
-                            'You need one of the following roles to use this command.\n' +
-                            '<@&804512584375599154> <@&809142956715671572>\n'
+                        `${
+                            'To use enhanced snipe to snipe with index\n' +
+                            'You need one of the following roles to use this command.\n'
+                        }${tier3RoleIds.map(id => `<@&${id}>`).join(' ')}`
                     ),
             ],
         });
         return;
     }
 
-    const snipedList = snipeStore[
-        command?.toLowerCase().replace('!', '') as 'snipe' | 'editsnipe'
-    ].get(channel.id);
+    const snipedList = snipeStore[commandName].get(channel.id);
 
     if (!snipedList?.length) {
-        await reply(input, "There's nothing to snipe here");
+        await interaction.reply("There's nothing to snipe here");
         return;
     }
     const snipeIndexTooBig = typeof snipedList[snipeIndex] === 'undefined';
@@ -161,7 +157,7 @@ export default async function snipe(
         })
         .setDescription(snipedMessage.content)
         .setFooter({
-            text: `snipedMessage by: ${member.user.tag}`,
+            text: `Message sniped by: ${member.user.tag}`,
         })
         .setTimestamp(snipedMessage.createdAt);
 
@@ -184,7 +180,8 @@ export default async function snipe(
         '❌ Press this button to delete this message\n🗑️ Press this button to permanently delete this message from the snipe list.'
     );
 
-    const messageOption = {
+    const sentSnipe = await interaction.reply({
+        fetchReply: true,
         content: snipeIndexTooBig
             ? `The snipe index ${snipeIndex + 1} is too big, there are only ${
                   snipedList.length
@@ -196,93 +193,95 @@ export default async function snipe(
             new MessageActionRow().addComponents([
                 new MessageButton()
                     .setEmoji('❌')
-                    .setCustomId('Delete')
+                    .setCustomId('delete-snipe')
                     .setLabel('Delete')
                     .setStyle('DANGER'),
                 new MessageButton()
                     .setEmoji('🗑️')
-                    .setCustomId('Trash')
+                    .setCustomId('trash-snipe')
                     .setLabel('Trash')
                     .setStyle('DANGER'),
             ]),
         ],
-    };
+    });
 
-    const sentSnipe = await reply(input, messageOption);
+    sentSnipedMessage.set(sentSnipe.id, {
+        snipedMember: snipedMessage.author,
+        commandName,
+    });
+}
 
-    sentSnipe
-        .createMessageComponentCollector()
-        .on('collect', async interaction => {
-            if (!interaction.isButton()) return;
-            const userCanManageMessage = !!guild.members.cache
-                .get(interaction.user.id)
-                ?.permissionsIn(channel as GuildChannelResolvable)
-                .has('MANAGE_MESSAGES');
-            const userIsSnipedMessageAuthor =
-                interaction.user.id === snipedMessage.author.id;
-            const userIsInteractionTrigger =
-                interaction.user.id === member.user.id;
+export async function deleteSnipe(
+    interaction: ButtonInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
 
-            switch (interaction.customId) {
-                case '❌':
-                    if (
-                        !userCanManageMessage &&
-                        !userIsSnipedMessageAuthor &&
-                        !userIsInteractionTrigger
-                    ) {
-                        await interaction.reply({
-                            content:
-                                'You do not have permission to delete this message.',
-                            ephemeral: true,
-                        });
-                        return;
-                    }
-                    await (input instanceof Message
-                        ? sentSnipe.delete()
-                        : input.deleteReply());
-                    break;
-                case '🗑️':
-                    if (!userCanManageMessage && !userIsSnipedMessageAuthor) {
-                        await interaction.reply({
-                            content:
-                                'You do not have permission to clear this message from snipe list.',
-                            ephemeral: true,
-                        });
-                        return;
-                    }
-                    await (input instanceof Message
-                        ? sentSnipe.delete()
-                        : input.deleteReply());
-                    snipeStore[
-                        command?.toLowerCase().replace('!', '') as
-                            | 'snipe'
-                            | 'editsnipe'
-                    ].set(
-                        channel.id,
-                        snipeStore[
-                            command?.toLowerCase().replace('!', '') as
-                                | 'snipe'
-                                | 'editsnipe'
-                        ]
-                            .get(channel.id)
-                            ?.filter(
-                                ({ message: snipedStoreMessage }) =>
-                                    snipedStoreMessage.id !== snipedMessage.id
-                            ) ?? []
-                    );
-                    await channel.send(
-                        `${interaction.user}, sniped message removed from snipe list.`
-                    );
-                    break;
-                default:
+    const { channel, member, message } = interaction;
+
+    if (!channel) return;
+
+    const userCanManageMessage = !!member
+        ?.permissionsIn(channel)
+        .has('MANAGE_MESSAGES');
+
+    const snipedMessage = sentSnipedMessage.get(interaction.message.id);
+
+    if (!snipedMessage) {
+        await interaction.reply(
+            `This message is too old to be deleted with buttons, please ${
+                userCanManageMessage
+                    ? 'delete it manually.'
+                    : 'contact a moderator if you need to delete this message.'
+            }`
+        );
+        return;
+    }
+
+    const userIsSnipedMessageAuthor =
+        member.id === snipedMessage.snipedMember.id;
+    const userIsInteractionTrigger = member.id === message.author.id;
+
+    switch (interaction.customId) {
+        case 'delete-snipe':
+            if (
+                !userCanManageMessage &&
+                !userIsSnipedMessageAuthor &&
+                !userIsInteractionTrigger
+            ) {
+                await interaction.reply({
+                    content:
+                        'You do not have permission to delete this message.',
+                    ephemeral: true,
+                });
+                return;
             }
-        })
-        .on('end', async () => {
-            messageOption.components = [];
-            if (sentSnipe.editable) {
-                await sentSnipe.edit(messageOption);
+            await message.delete();
+            break;
+        case 'trash-snipe':
+            if (!userCanManageMessage && !userIsSnipedMessageAuthor) {
+                await interaction.reply({
+                    content:
+                        'You do not have permission to clear this message from snipe list.',
+                    ephemeral: true,
+                });
+                return;
             }
-        });
+            await message.delete();
+            snipeStore[snipedMessage.commandName].set(
+                channel.id,
+                snipeStore[snipedMessage.commandName]
+                    .get(channel.id)
+                    ?.filter(
+                        ({ message: snipedStoreMessage }) =>
+                            snipedStoreMessage.id !== message.id
+                    ) ?? []
+            );
+            await channel.send(
+                `${member}, sniped message removed from snipe list.`
+            );
+            break;
+        default:
+    }
 }
 
 export const commandData: ApplicationCommandData[] = [
