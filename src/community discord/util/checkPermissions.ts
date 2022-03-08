@@ -27,9 +27,9 @@ export default async function checkPermission(
                     .setTitle('Unable to cast command')
                     .setColor('#ff0000')
                     .setDescription(
-                        `You need one of the following roles to use this command.\n${roleIds.join(
-                            ' '
-                        )}`
+                        `You need one of the following roles to use this command.\n${roleIds
+                            .map(id => `<@&${id}>`)
+                            .join(' ')}`
                     ),
             ],
         });
