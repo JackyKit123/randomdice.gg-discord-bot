@@ -46,9 +46,7 @@ export async function reply<TEphemeral extends true | undefined = undefined>(
         allowedMentions: { repliedUser: false },
     };
 
-    console.log(finalOption);
     if (input instanceof Message) {
-        console.log('message');
         if (ephemeral) {
             try {
                 await input.author.send(finalOption);
@@ -63,7 +61,6 @@ export async function reply<TEphemeral extends true | undefined = undefined>(
                 }
             }
         } else {
-            console.log(input, 'reply');
             return input.reply(finalOption) as Promise<
                 TEphemeral extends true ? undefined : Message<boolean>
             >;
