@@ -76,12 +76,16 @@ export default async function messageCreate(message: Message): Promise<void> {
                     channel.id !== '804640084007321600')
             )
         ) {
+            if (suffix.startsWith('!')) {
+                asyncPromisesCapturer.push(
+                    communityServerCommands(
+                        message,
+                        suffix.replace(/^!/, '').toLowerCase()
+                    )
+                );
+            }
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
-                communityServerCommands(
-                    message,
-                    suffix.replace(/^!/, '').toLowerCase()
-                ),
                 autoRole(message),
                 solveMathEquation(message),
                 pokeballTrap(message),

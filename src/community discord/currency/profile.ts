@@ -1,29 +1,44 @@
 import Discord, {
+    CommandInteraction,
     DiscordAPIError,
+    Message,
     MessageActionRow,
     MessageButton,
+    UserContextMenuInteraction,
 } from 'discord.js';
 import moment from 'moment';
 import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
 import fetchMention from 'util/fetchMention';
+import { reply } from 'util/typesafeReply';
 import getBalance from './balance';
 import { duplicatedRoleMulti } from './chatCoins';
 
-export default async function Profile(message: Discord.Message): Promise<void> {
-    const { member, channel, guild, content, client } = message;
+export default async function Profile(
+    input: Message | CommandInteraction | UserContextMenuInteraction
+): Promise<void> {
+    const { channel, guild, client } = input;
     const numberFormat = new Intl.NumberFormat();
 
-    if (!member || !guild) return;
+    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    if (!member || !guild || !channel) return;
 
-    const memberArg = content.split(' ')[1];
-    const target =
-        (await fetchMention(memberArg, guild, {
-            content,
-            mentionIndex: 1,
-        })) || member;
+    let target = member;
+    if (input instanceof Message) {
+        const memberArg = input.content.split(' ')[1];
+        target =
+            (await fetchMention(memberArg, guild, {
+                content: input.content,
+                mentionIndex: 1,
+            })) || member;
+    } else {
+        target =
+            guild.members.cache.get(
+                input.options.getUser('member')?.id ?? member.id
+            ) ?? member;
+    }
 
-    const balance = await getBalance(message, 'emit new member', target);
+    const balance = await getBalance(input, 'emit new member', target);
     if (balance === false) return;
 
     const prestigeLevels: { [level: number]: string } = {
@@ -308,7 +323,7 @@ export default async function Profile(message: Discord.Message): Promise<void> {
             )
         ),
     ];
-    const sentMessage = await channel.send({
+    const sentMessage = await reply(input, {
         embeds: [generalProfile],
         components,
     });
