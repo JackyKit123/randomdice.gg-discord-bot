@@ -112,69 +112,73 @@ export default async function messageCreate(message: Message): Promise<void> {
             return;
         }
 
-        if (!/^\.gg ?/i.test(suffix) || author.bot) {
-            return;
-        }
-        if (process.env.DEV_USERS_ID?.includes(author.id)) {
-            switch (command?.toLowerCase()) {
-                case 'createinvites':
-                    await fetchInvites(message);
-                    return;
-                case 'setemoji':
-                    await setEmoji(message);
-                    return;
-                case 'stat':
-                    await statistic(message);
-                    return;
-                case 'reboot':
-                    await reboot(message);
-                    return;
-                case 'version':
-                    await version(message);
-                    return;
-                case 'help':
-                    await devHelp(message);
-                    break;
-                default:
+        if (/^\.gg ?/i.test(suffix) && !author.bot) {
+            if (process.env.DEV_USERS_ID?.includes(author.id)) {
+                switch (command?.toLowerCase()) {
+                    case 'createinvites':
+                        await fetchInvites(message);
+                        return;
+                    case 'setemoji':
+                        await setEmoji(message);
+                        return;
+                    case 'stat':
+                        await statistic(message);
+                        return;
+                    case 'reboot':
+                        await reboot(message);
+                        return;
+                    case 'version':
+                        await version(message);
+                        return;
+                    case 'help':
+                        await devHelp(message);
+                        break;
+                    default:
+                }
             }
-        }
-        if (!command?.toLowerCase()) {
-            await reply(
-                message,
-                'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'
-            );
-        } else if (
-            (await baseCommands(message, command?.toLowerCase())) === 'no match'
-        ) {
-            const listOfCommands = Object.values(
-                cache['discord_bot/help']
-            ).flatMap(category =>
-                category.commands.map(cmd => cmd.command.split(' ')[1])
-            );
-            const { bestMatch } = stringSimilarity.findBestMatch(
-                command,
-                listOfCommands
-            );
-            const warningString = `Hi! I am awake. But \`${command}\` is not a command.`;
-            if (bestMatch.rating >= 0.5) {
-                await yesNoButton(
-                    message,
-                    `${warningString} Did you mean to do \`.gg ${bestMatch.target}\`?`,
-                    async sentMessage => {
-                        const editedCommandString = content.replace(
-                            `.gg ${command}`,
-                            `.gg ${bestMatch.target}`
-                        );
-                        // eslint-disable-next-line no-param-reassign
-                        message.content = editedCommandString;
-                        await sentMessage.delete();
-                        client.emit('messageCreate', message);
-                    }
-                );
-            } else {
+            if (!command?.toLowerCase()) {
                 await reply(
                     message,
-                    `${warningString} Need help? type \`.gg help\``
+                    'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'
+                );
+            } else if (
+                (await baseCommands(message, command?.toLowerCase())) ===
+                'no match'
+            ) {
+                const listOfCommands = Object.values(
+                    cache['discord_bot/help']
+                ).flatMap(category =>
+                    category.commands.map(cmd => cmd.command.split(' ')[1])
+                );
+                const { bestMatch } = stringSimilarity.findBestMatch(
+                    command,
+                    listOfCommands
+                );
+                const warningString = `Hi! I am awake. But \`${command}\` is not a command.`;
+                if (bestMatch.rating >= 0.5) {
+                    await yesNoButton(
+                        message,
+                        `${warningString} Did you mean to do \`.gg ${bestMatch.target}\`?`,
+                        async sentMessage => {
+                            const editedCommandString = content.replace(
+                                `.gg ${command}`,
+                                `.gg ${bestMatch.target}`
+                            );
+                            // eslint-disable-next-line no-param-reassign
+                            message.content = editedCommandString;
+                            await sentMessage.delete();
+                            client.emit('messageCreate', message);
+                        }
+                    );
+                } else {
+                    await reply(
+                        message,
+                        `${warningString} Need help? type \`.gg help\``
+                    );
+                }
+            } else {
+                await channel.send(
+                    '.gg commands will be phased out soon. The new features will soon be replaced with slash `/` commands. The commands will remain the same but the prefix will be `/` instead of `.gg`. You will also need to have `USE_APPLICATION_COMMANDS` permission to be able to use the commands, if you lack permissions, you will need to ask the server admin to enable the permission. For now, you can still use the commands by typing `.gg`, but new features will be replaced with slash commands. You can also use the slash commands by typing `/`. To stop seeing this message, you can start sending the commands with slash commands'
                 );
             }
         }
