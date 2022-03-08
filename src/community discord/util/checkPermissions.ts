@@ -5,21 +5,21 @@ import {
     ContextMenuInteraction,
     MessageEmbed,
 } from 'discord.js';
-import { reply } from 'util/typesafeReply';
 
 export default async function checkPermission(
-    input:
+    interaction:
         | ButtonInteraction<CacheType>
         | CommandInteraction<CacheType>
         | ContextMenuInteraction<CacheType>,
     ...roleIds: string[]
 ): Promise<boolean> {
-    const member = input.guild?.members.cache.get(input.member?.user.id ?? '');
+    if (!interaction.inCachedGuild()) {
+        await interaction.reply('This command can only be used in a guild.');
+        return false;
+    }
 
-    if (!member) return false;
-
-    if (!roleIds.some(id => member.roles.cache.has(id))) {
-        await reply(input, {
+    if (!interaction.member.roles.cache.hasAny(...roleIds)) {
+        await interaction.reply({
             embeds: [
                 new MessageEmbed()
                     .setTitle('Unable to cast command')
