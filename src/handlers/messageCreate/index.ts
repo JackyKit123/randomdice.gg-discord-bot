@@ -27,7 +27,7 @@ import setEmoji from 'dev-commands/setEmoji';
 import statistic from 'dev-commands/stat';
 import version from 'dev-commands/version';
 import cache from 'util/cache';
-import { baseCommands, communityServerCommands } from 'register/commandCase';
+import { baseCommands } from 'register/commandCase';
 import yesNoButton from 'util/yesNoButton';
 import { reply } from 'util/typesafeReply';
 
@@ -76,14 +76,6 @@ export default async function messageCreate(message: Message): Promise<void> {
                     channel.id !== '804640084007321600')
             )
         ) {
-            if (suffix.startsWith('!')) {
-                asyncPromisesCapturer.push(
-                    communityServerCommands(
-                        message,
-                        suffix.replace(/^!/, '').toLowerCase()
-                    )
-                );
-            }
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
                 autoRole(message),

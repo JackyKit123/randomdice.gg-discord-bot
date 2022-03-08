@@ -3,14 +3,12 @@ import {
     CacheType,
     CommandInteraction,
     ContextMenuInteraction,
-    Message,
     MessageEmbed,
 } from 'discord.js';
 import { reply } from 'util/typesafeReply';
 
 export default async function checkPermission(
     input:
-        | Message<boolean>
         | ButtonInteraction<CacheType>
         | CommandInteraction<CacheType>
         | ContextMenuInteraction<CacheType>,
