@@ -12,7 +12,7 @@ import cooldown from 'util/cooldown';
 import cache, { Dice } from 'util/cache';
 import getBalanced from './balance';
 import chatCoins from './chatCoins';
-import isBotChannels from '../isBotChannels';
+import isBotChannels from '../util/isBotChannels';
 
 const wait = promisify(setTimeout);
 const ddIntervals = new Map<string, number[]>();

@@ -3,7 +3,7 @@ import Discord from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import getBalance from './balance';
-import isBotChannels from '../isBotChannels';
+import isBotChannels from '../util/isBotChannels';
 
 export default async function coinflip(
     message: Discord.Message
