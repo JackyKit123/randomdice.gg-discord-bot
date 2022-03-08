@@ -1,118 +1,91 @@
 import {
     ApplicationCommandData,
     CommandInteraction,
-    GuildBasedChannel,
-    Message,
+    NonThreadGuildBasedChannel,
+    PermissionString,
 } from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
-import { edit, reply } from 'util/typesafeReply';
 
 const wait = promisify(setTimeout);
 
 export default async function lockUnlock(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { channel, guild } = input;
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    if (!interaction.inCachedGuild()) return;
+    const { guild, channel, member } = interaction;
 
-    const command = (
-        input instanceof Message
-            ? input.content.split(' ')[0]?.replace('!', '')
-            : input.commandName
-    ) as 'lock' | 'unlock';
-
-    if (!member || !guild || !channel || channel.type === 'DM') return;
+    const commandName = interaction.commandName as 'lock' | 'unlock';
 
     if (
-        await cooldown(input, '!lock', {
+        !channel ||
+        (await cooldown(interaction, commandName, {
             default: 2 * 1000,
             donator: 2 * 1000,
-        })
+        }))
     ) {
         return;
     }
 
-    let timer = 0;
-    let target: GuildBasedChannel = channel;
-    if (input instanceof Message) {
-        const args = input.content.split(' ').slice(1);
-        const channelRegex = /^(?:<#(\d{18})>|(\d{18}))$/;
-        const anotherChannelArg = args?.[0]?.match(channelRegex);
-        timer =
-            parseStringIntoMs(args?.[0]) ?? parseStringIntoMs(args?.[1]) ?? 0;
-
-        target =
-            guild.channels.cache.get(
-                anotherChannelArg?.[1] || anotherChannelArg?.[2] || channel.id
-            ) ?? target;
-    } else {
-        target =
-            guild.channels.cache.get(
-                input.options.getChannel('channel')?.id ?? target.id
-            ) ?? target;
-        timer = parseStringIntoMs(input.options.getString('time') ?? '') ?? 0;
-    }
+    const target = interaction.options.getChannel('channel') ?? channel;
+    let timer =
+        parseStringIntoMs(interaction.options.getString('time') ?? '') ?? 0;
 
     const { everyone } = guild.roles;
     async function updateChannelPermission(
         action: 'lock' | 'unlock',
-        replyAction: typeof reply | typeof edit
+        replyAction: 'reply' | 'editReply'
     ): Promise<void> {
-        const permissionForEveryone = target?.permissionsFor(everyone.id);
-        const isAlreadyLocked = async () =>
-            (input instanceof Message ? reply : replyAction)(
-                input,
-                `${target} is already ${action}ed.`
+        const permissionForEveryone = target.permissionsFor(everyone.id);
+
+        const execute = async (
+            ch: NonThreadGuildBasedChannel,
+            ...permissions: PermissionString[]
+        ): Promise<boolean> => {
+            if (
+                permissionForEveryone &&
+                ((action === 'lock' &&
+                    permissions.every(
+                        permission =>
+                            permissionForEveryone.serialize()[permission]
+                    ) === false) ||
+                    (action === 'unlock' &&
+                        permissions.every(permission =>
+                            permissionForEveryone.has(permission)
+                        )))
+            ) {
+                await interaction[replyAction](`${ch} is already ${action}ed.`);
+                return false;
+            }
+
+            await ch.permissionOverwrites.edit(
+                everyone,
+                Object.fromEntries(
+                    permissions.map(permission => [
+                        permission,
+                        action === 'lock' ? false : null,
+                    ])
+                )
             );
-        if (target?.isVoice()) {
-            if (
-                (action === 'lock' &&
-                    permissionForEveryone?.serialize().CONNECT === false) ||
-                (action === 'unlock' && permissionForEveryone?.has('CONNECT'))
-            ) {
-                await isAlreadyLocked();
-                return;
-            }
+            return true;
+        };
 
-            await target.permissionOverwrites.edit(everyone, {
-                CONNECT: action === 'lock' ? false : null,
-            });
+        let executeSuccess = false;
+        if (target.isVoice()) {
+            executeSuccess = await execute(target, 'CONNECT');
+        } else if (target.isText() && !target.isThread()) {
+            executeSuccess = await execute(target, 'SEND_MESSAGES');
+        } else if (target.isThread()) {
+            if (target.parent)
+                executeSuccess = await execute(target.parent, 'SEND_MESSAGES');
+        } else {
+            await interaction[replyAction](
+                `${target} is not a channel that can be ${commandName}ed.`
+            );
         }
-        if (target && target.isText() && !target.isThread()) {
-            if (
-                (action === 'lock' &&
-                    permissionForEveryone?.serialize().SEND_MESSAGES ===
-                        false) ||
-                (action === 'unlock' &&
-                    permissionForEveryone?.has('SEND_MESSAGES'))
-            ) {
-                await isAlreadyLocked();
-                return;
-            }
+        if (!executeSuccess) return;
 
-            await target.permissionOverwrites.edit(everyone, {
-                SEND_MESSAGES: action === 'lock' ? false : null,
-                SEND_MESSAGES_IN_THREADS: action === 'lock' ? false : null,
-            });
-        }
-        if (target.isThread() && target.parent) {
-            if (
-                (action === 'lock' &&
-                    permissionForEveryone?.serialize()
-                        .SEND_MESSAGES_IN_THREADS === false) ||
-                (action === 'unlock' &&
-                    permissionForEveryone?.has('SEND_MESSAGES_IN_THREADS'))
-            ) {
-                await isAlreadyLocked();
-                return;
-            }
-
-            await target.parent.permissionOverwrites.edit(everyone, {
-                SEND_MESSAGES_IN_THREADS: action === 'lock' ? false : null,
-            });
-        }
         const statusMessage = `${
             action === 'lock' ? 'Locked down' : 'Unlocked'
         } ${target}${
@@ -121,10 +94,7 @@ export default async function lockUnlock(
         if (channel?.id !== target.id && target.isText()) {
             await target.send(statusMessage);
         }
-        await (input instanceof Message ? reply : replyAction)(
-            input,
-            statusMessage
-        );
+        await interaction[replyAction](statusMessage);
     }
 
     if (
@@ -145,16 +115,14 @@ export default async function lockUnlock(
             member.permissions.has('ADMINISTRATOR')
         )
     ) {
-        reply(
-            input,
-            `You don't have permission to ${command.replace('!', '')} ${target}`
+        interaction.reply(
+            `You don't have permission to ${commandName} ${target}`
         );
         return;
     }
 
     if (timer !== 0 && (timer > 2147483647 || timer <= 3000)) {
-        await reply(
-            input,
+        await interaction.reply(
             `Delay **${parseMsIntoReadableText(timer)}** is too ${
                 timer <= 3000 ? 'short' : 'long'
             }.`
@@ -162,11 +130,14 @@ export default async function lockUnlock(
         return;
     }
 
-    await updateChannelPermission(command, reply);
+    await updateChannelPermission(commandName, 'reply');
     if (timer === 0) return;
     await wait(timer);
     timer = 0;
-    await updateChannelPermission(command === 'lock' ? 'unlock' : 'lock', edit);
+    await updateChannelPermission(
+        commandName === 'lock' ? 'unlock' : 'lock',
+        'editReply'
+    );
 }
 
 export const commandData: ApplicationCommandData[] = [
