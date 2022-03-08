@@ -5,18 +5,14 @@ import {
     CategoryChannel,
     Client,
     CommandInteraction,
-    DiscordAPIError,
-    Message,
     MessageActionRow,
     MessageButton,
     MessageEmbed,
-    TextChannel,
 } from 'discord.js';
 import { argDependencies } from 'mathjs';
 import { database } from 'register/firebase';
 import cache, { CommunityDiscordApplication } from 'util/cache';
 import cooldown from 'util/cooldown';
-import { edit, reply } from 'util/typesafeReply';
 import yesNoButton from 'util/yesNoButton';
 import checkPermission from './util/checkPermissions';
 
@@ -137,33 +133,22 @@ export const commandData = (
 };
 
 export default async function Apply(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild } = input;
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    if (!interaction.inCachedGuild()) return;
+    const position = interaction.options.getString('position', true);
 
-    if (!member || !guild) {
-        return;
-    }
-
-    const arg =
-        input instanceof Message
-            ? input.content.split(' ').slice(1).join(' ')
-            : input.options.getString('position');
+    const { guild, member, commandName } = interaction;
 
     if (
-        await cooldown(input, '!apply', {
+        await cooldown(interaction, commandName, {
             default: 1000 * 60 * 10,
             donator: 1000 * 60 * 10,
         })
     ) {
         return;
     }
-    try {
-        if (input instanceof Message) await input.delete();
-    } catch (err) {
-        if ((err as DiscordAPIError).message !== 'Unknown Message') throw err;
-    }
+
     const applications = cache['discord_bot/community/applications'];
     const openedApplications = applications.filter(app => app.isOpen);
     const openedApplicationsEmbed = new MessageEmbed()
@@ -177,23 +162,14 @@ export default async function Apply(
         .setFooter({
             text: `Opened Application Count: ${openedApplications.length}`,
         });
-    if (!arg) {
-        await reply(input, {
-            embeds: [
-                openedApplicationsEmbed.setDescription(
-                    `Please specify an application you are applying for.\`\`\`!apply <position>\`\`\``
-                ),
-            ],
-        });
-        return;
-    }
 
     const application = applications.find(
-        app => arg.toLowerCase() === app.position.toLowerCase() && app.isOpen
+        app =>
+            position.toLowerCase() === app.position.toLowerCase() && app.isOpen
     );
 
     if (!application) {
-        await reply(input, {
+        await interaction.reply({
             embeds: [
                 openedApplicationsEmbed.setDescription(
                     `\`${argDependencies}\` is not a currently opened application.`
@@ -204,9 +180,10 @@ export default async function Apply(
     }
 
     const applicationCategory = guild.channels.cache.get('807183574645735474');
-    const newChannel = (await guild.channels.create(
+    const newChannel = await guild.channels.create(
         `${member.user.username}-${member.user.discriminator}-${application.position}-application`,
         {
+            type: 'GUILD_TEXT',
             parent:
                 applicationCategory instanceof CategoryChannel
                     ? applicationCategory
@@ -223,27 +200,29 @@ export default async function Apply(
                 },
             ],
         }
-    )) as TextChannel;
-    let applicationEmbed = new MessageEmbed()
-        .setTitle(`${application.position} Application`)
-        .setColor(member.displayHexColor)
-        .setAuthor({
-            name: member.user.tag,
-            iconURL: member.displayAvatarURL({ dynamic: true }),
-        })
-        .setFooter({
-            text: 'Click ✅ when finished, and ❌ to cancel your application.',
-        })
-        .setTimestamp();
-    application.questions.forEach((question, i) => {
-        applicationEmbed = applicationEmbed.addField(
-            `Question ${i + 1}`,
-            question
-        );
-    });
+    );
+
     await newChannel.send({
         content: member.toString(),
-        embeds: [applicationEmbed],
+        embeds: [
+            new MessageEmbed()
+                .setTitle(`${application.position} Application`)
+                .setColor(member.displayHexColor)
+                .setAuthor({
+                    name: member.user.tag,
+                    iconURL: member.displayAvatarURL({ dynamic: true }),
+                })
+                .setFooter({
+                    text: 'Click ✅ when finished, and ❌ to cancel your application.',
+                })
+                .setTimestamp()
+                .addFields(
+                    application.questions.map((question, i) => ({
+                        name: `Question ${i + 1}`,
+                        value: question,
+                    }))
+                ),
+        ],
         components: [
             new MessageActionRow().addComponents([
                 new MessageButton()
@@ -259,45 +238,41 @@ export default async function Apply(
             ]),
         ],
     });
-    if (input instanceof CommandInteraction) {
-        await input.reply(
-            `Your application channel has been created ${newChannel}`
-        );
-    }
+
+    await interaction.reply(
+        `Your application channel has been created ${newChannel}`
+    );
 }
 
 export async function closeApplication(
     interaction: ButtonInteraction
 ): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+
     const {
-        message,
+        message: { author, embeds },
         channel,
         guild,
         client: { user: clientUser },
         user,
         customId,
     } = interaction;
-    const { embeds } = channel?.messages.cache.get(message.id) ?? {};
-
-    if (
-        !guild ||
-        guild.id !== process.env.COMMUNITY_SERVER_ID ||
-        !clientUser ||
-        !embeds ||
-        !channel
-    ) {
-        return;
-    }
 
     const applicationName = embeds.find(embed =>
         embed.title?.endsWith(' Application')
     )?.title;
+
     if (
-        channel.type !== 'GUILD_TEXT' ||
-        !channel.name.match(/^.{2,32}-\d{4}-.+-application$/) ||
-        message.author.id !== clientUser.id ||
-        !applicationName
+        guild.id !== process.env.COMMUNITY_SERVER_ID ||
+        !(clientUser?.id === author.id) ||
+        !applicationName ||
+        !channel?.isText() ||
+        channel.isThread() ||
+        !channel.name.match(/^.{2,32}-\d{4}-.+-application$/)
     ) {
+        await interaction.reply(
+            'Invalid application channel. Please contact an admin if you believe this is an error.'
+        );
         return;
     }
 
@@ -306,36 +281,42 @@ export async function closeApplication(
     )?.id;
 
     if (!memberId || memberId !== user.id) {
+        await interaction.reply(
+            'You are not allowed to use this button, you are not the author of this application.'
+        );
         return;
     }
 
-    if (customId === 'application-submit') {
-        await yesNoButton(
-            interaction,
-            'Please confirm again that you are ready to submit.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.',
-            async () => {
-                await channel.permissionOverwrites.edit(
-                    guild.roles.everyone,
-                    {
-                        SEND_MESSAGES: false,
-                    },
-                    {
-                        reason: 'Application Submit',
-                    }
-                );
-                await channel.send(`Locked down ${channel}`);
-                await channel.send(
-                    `<@&804223328709115944>, ${user} has submitted the ${applicationName.toLowerCase()}.`
-                );
-            }
-        );
-    }
-    if (customId === 'application-cancel') {
-        await yesNoButton(
-            interaction,
-            'Please confirm again that you are cancelling application.\n⚠️ Warning, once you confirm cancel, the channel will be deleted, this action cannot be undone.',
-            async () => channel.delete()
-        );
+    switch (customId) {
+        case 'application-submit':
+            await yesNoButton(
+                interaction,
+                'Please confirm again that you are ready to submit.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.',
+                async () => {
+                    await channel.permissionOverwrites.edit(
+                        guild.roles.everyone,
+                        {
+                            SEND_MESSAGES: false,
+                        },
+                        {
+                            reason: 'Application Submit',
+                        }
+                    );
+                    await channel.send(`Locked down ${channel}`);
+                    await channel.send(
+                        `<@&804223328709115944>, ${user} has submitted the ${applicationName.toLowerCase()}.`
+                    );
+                }
+            );
+            break;
+        case 'application-cancel':
+            await yesNoButton(
+                interaction,
+                'Please confirm again that you are cancelling application.\n⚠️ Warning, once you confirm cancel, the channel will be deleted, this action cannot be undone.',
+                async () => channel.delete()
+            );
+            break;
+        default:
     }
 }
 
@@ -358,43 +339,30 @@ export async function fetchApps(client: Client): Promise<void> {
 }
 
 export async function configApps(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild } = input;
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    if (!interaction.inCachedGuild()) return;
+    const { guild, commandName, member } = interaction;
 
-    const [, subcommand, ...args] =
-        input instanceof Message
-            ? input.content.split(' ')
-            : [
-                  null,
-                  input.options.getSubcommand(true),
-                  input.options.getString('position', true),
-                  '|',
-                  input.options.getString('questions') ?? '',
-              ];
-    const [position, ...questionsArgs] = args
-        .join(' ')
-        .split('|')
-        .map(e => e.trim());
+    const subcommand = interaction.options.getSubcommand(true);
+    const position = interaction.options.getString('position', true);
+    const questionsArgs =
+        interaction.options
+            .getString('questions')
+            ?.split('|')
+            .map(question => question.trim()) ?? [];
 
     const ref = database.ref('discord_bot/community/applications');
     const existingApplications = cache['discord_bot/community/applications'];
 
-    if (!member || !guild) {
-        return;
-    }
-
     if (
-        await cooldown(input, '!application', {
+        (await cooldown(interaction, commandName, {
             default: 5 * 1000,
             donator: 5 * 1000,
-        })
-    ) {
+        })) ||
+        !(await checkPermission(interaction, roleIds.Admin))
+    )
         return;
-    }
-
-    if (!(await checkPermission(input, roleIds.Admin))) return;
 
     const getApplicationEmbed = (
         questions: string[],
@@ -413,7 +381,7 @@ export async function configApps(
                         ? `Application for ${position} is now ${
                               showPublicityInFooter ? 'opened' : 'closed'
                           }.`
-                        : 'React to ✅ when finished, react to ❌ to cancel your application.',
+                        : 'press ✅ when finished, press ❌ to cancel your application.',
             })
             .setTimestamp();
         questions.forEach((question, i) => {
@@ -443,24 +411,23 @@ export async function configApps(
                 ),
         ]);
 
-    switch (subcommand?.toLowerCase()) {
+    switch (subcommand) {
         case 'add':
             if (existedApp) {
-                await reply(
-                    input,
+                await interaction.reply(
                     `Application for ${position} already exist, use \`edit\` to edit the questions instead`
                 );
                 return;
             }
 
             await yesNoButton(
-                input,
+                interaction,
                 {
                     content:
-                        "Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel",
+                        "Here's a preview of how the application would look like, press ✅ in 1 minute to confirm, press ❌ to cancel",
                     embeds: [getApplicationEmbed(questionsArgs)],
                 },
-                async sentMessage => {
+                async () => {
                     await ref.set(
                         existingApplications.concat({
                             isOpen: true,
@@ -469,36 +436,30 @@ export async function configApps(
                         })
                     );
                     await updateCommandOptions();
-                    await edit(
-                        input instanceof CommandInteraction
-                            ? input
-                            : sentMessage,
-                        {
-                            content: `Added ${position} application and it's opened for application.`,
-                            embeds: [],
-                            components: [],
-                        }
-                    );
+                    await interaction.editReply({
+                        content: `Added ${position} application and it's opened for application.`,
+                        embeds: [],
+                        components: [],
+                    });
                 }
             );
 
             break;
         case 'edit':
             if (!existedApp) {
-                await reply(
-                    input,
+                await interaction.reply(
                     `Application for ${position} does not exist, use \`add\` to add a new application.`
                 );
                 return;
             }
             await yesNoButton(
-                input,
+                interaction,
                 {
                     content:
-                        "Here's a preview of how the application would look like, react to ✅ in 1 minute to confirm, react to ❌ to cancel",
+                        "Here's a preview of how the application would look like, press ✅ in 1 minute to confirm, press ❌ to cancel",
                     embeds: [getApplicationEmbed(questionsArgs)],
                 },
-                async sentMessage => {
+                async () => {
                     await ref.set(
                         existingApplications.map(app => {
                             if (
@@ -511,32 +472,26 @@ export async function configApps(
                             return app;
                         })
                     );
-                    await edit(
-                        input instanceof CommandInteraction
-                            ? input
-                            : sentMessage,
-                        {
-                            content: `Edited ${position} application.`,
-                            embeds: [],
-                            components: [],
-                        }
-                    );
+                    await interaction.editReply({
+                        content: `Edited ${position} application.`,
+                        embeds: [],
+                        components: [],
+                    });
                 }
             );
             break;
         case 'delete':
             if (!existedApp) {
-                await reply(
-                    input,
+                await interaction.reply(
                     `Application for ${position} does not exist.`
                 );
                 return;
             }
 
             await yesNoButton(
-                input,
+                interaction,
                 {
-                    content: `${member} You are about to delete this application, react to ✅ in 1 minute to confirm delete, react to ❌ to cancel`,
+                    content: `${member} You are about to delete this application, press ✅ in 1 minute to confirm delete, press ❌ to cancel`,
                     embeds: [
                         getApplicationEmbed(
                             existedApp.questions,
@@ -544,20 +499,7 @@ export async function configApps(
                         ),
                     ],
                 },
-                async sentMessage => {
-                    await ref.set(
-                        existingApplications.map(app => {
-                            if (
-                                app.position.toLowerCase() ===
-                                position.toLowerCase()
-                            ) {
-                                // eslint-disable-next-line no-param-reassign
-                                app.questions = questionsArgs;
-                            }
-                            return app;
-                        })
-                    );
-                    await updateCommandOptions();
+                async () => {
                     await ref.set(
                         existingApplications.filter(
                             app =>
@@ -565,24 +507,18 @@ export async function configApps(
                                 position.toLowerCase()
                         )
                     );
-                    await edit(
-                        input instanceof CommandInteraction
-                            ? input
-                            : sentMessage,
-                        {
-                            content: `Removed ${position} application.`,
-                            embeds: [],
-                            components: [],
-                        }
-                    );
+                    await updateCommandOptions();
+                    await interaction.editReply({
+                        content: `Removed ${position} application.`,
+                        embeds: [],
+                        components: [],
+                    });
                 }
             );
-
             break;
         case 'toggle':
             if (!existedApp) {
-                await reply(
-                    input,
+                await interaction.reply(
                     `Application for ${position} does not exist.`
                 );
                 return;
@@ -597,16 +533,14 @@ export async function configApps(
                 })
             );
             await updateCommandOptions();
-            await reply(
-                input,
+            await interaction.reply(
                 `Application for ${position} is now ${
                     existedApp.isOpen ? 'opened' : 'closed'
                 }.`
             );
-
             break;
         case 'show':
-            await reply(input, {
+            await interaction.reply({
                 embeds: [
                     !existedApp
                         ? new MessageEmbed()
@@ -636,86 +570,7 @@ export async function configApps(
                           ),
                 ],
             });
-
-            break;
-        case 'export':
-        case 'exports':
-            {
-                const target = existingApplications.find(
-                    app => app.position.toLowerCase() === position.toLowerCase()
-                );
-                await reply(
-                    input,
-                    !target
-                        ? {
-                              embeds: [
-                                  new MessageEmbed()
-                                      .setTitle(`All Applications`)
-                                      .setColor(member.displayHexColor)
-                                      .setAuthor({
-                                          name: member.user.tag,
-                                          iconURL: member.displayAvatarURL({
-                                              dynamic: true,
-                                          }),
-                                      })
-                                      .setDescription(
-                                          existingApplications
-                                              .map(
-                                                  app =>
-                                                      `${
-                                                          app.isOpen
-                                                              ? 'opened'
-                                                              : 'closed'
-                                                      } \`${app.position}\``
-                                              )
-                                              .join('\n')
-                                      ),
-                              ],
-                          }
-                        : `\`\`\`${target.position} | ${target.questions.join(
-                              ' | '
-                          )}\`\`\``
-                );
-            }
             break;
         default:
-            await reply(input, {
-                embeds: [
-                    new MessageEmbed()
-                        .setTitle('Command Parse Error')
-                        .setColor('#ff0000')
-                        .setDescription('usage of the command')
-                        .addField(
-                            'Adding new application',
-                            '`!application add <position> | <questions separated with linebreaks>`' +
-                                '\n' +
-                                'Example```!application add ADMIN | Why do you want to be admin? | How will you do your admin task? | How active are you?```'
-                        )
-                        .addField(
-                            'Editing existing application',
-                            '`!application edit <position> | <questions separated with linebreaks>`' +
-                                '\n' +
-                                'Example```!application edit ADMIN | Why do you want to be admin? | How will you do your admin task? | How active are you?```'
-                        )
-                        .addField(
-                            'Deleting existing application',
-                            '`!application delete <position>`' +
-                                '\n' +
-                                'Example```!application delete ADMIN```'
-                        )
-                        .addField(
-                            'Toggling accepting new applications',
-                            '`!application toggle <position>`' +
-                                '\n' +
-                                'Example```!application toggle ADMIN```'
-                        )
-                        .addField(
-                            'Showing stored applications',
-                            '`!application show [position]`' +
-                                '\n' +
-                                'Example```!application show\n!application show ADMIN```'
-                        ),
-                ],
-            });
     }
 }
