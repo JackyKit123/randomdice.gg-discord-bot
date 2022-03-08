@@ -49,7 +49,6 @@ export default async function ready(client: Client<true>): Promise<void> {
         ]);
         await infoVC(client);
     } catch (err) {
-        console.log(err);
         await logMessage(
             client,
             'warning',
