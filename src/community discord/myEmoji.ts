@@ -6,28 +6,26 @@ import {
     CommandInteraction,
     DiscordAPIError,
     Message,
+    MessageAttachment,
 } from 'discord.js';
 import axios, { AxiosResponse } from 'axios';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { tier3RoleIds } from 'config/roleId';
-import { reply } from 'util/typesafeReply';
 import checkPermission from './util/checkPermissions';
 
 export default async function myEmoji(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild } = input;
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
-    if (!member || !guild) return;
+    if (!interaction.inCachedGuild()) return;
+    const { member, guild, commandName } = interaction;
 
-    if (!(await checkPermission(input, ...tier3RoleIds))) return;
-    const attachment =
-        input instanceof Message ? input.attachments.first() : undefined;
-    const emojiArg =
-        input instanceof Message
-            ? input.content.split(' ')[1]
-            : input.options.getString('emoji', true);
+    if (!(await checkPermission(interaction, ...tier3RoleIds))) return;
+
+    const emojiArg = interaction.options.getString('emoji');
+    const attachment = interaction.options.get(
+        'attachments'
+    ) as unknown as MessageAttachment; // FIXME: will be available in future discord.js versions;
     const emojiRegexMatch = emojiArg?.match(/^<(a)?:[\w\d_]+:(\d{18})>$/);
     const urlRegexMatch = emojiArg?.match(
         /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=+$,\w]+@)?[A-Za-z0-9.-]+|(?:www\.|[-;:&=+$,\w]+@)[A-Za-z0-9.-]+)((?:\/[+~%/.\w\-_]*)?\??(?:[-+=&;%@.\w_]*)#?(?:[.!/\\\w]*))?)/
@@ -36,16 +34,16 @@ export default async function myEmoji(
         cache['discord_bot/community/customreact']?.[member.id];
 
     let alienEmojiBinary: AxiosResponse<Buffer>;
+
     if (emojiRegexMatch) {
         const [, isAnimated, emojiID] = emojiRegexMatch;
         const guildEmoji = guild.emojis.cache.get(emojiID);
-        if (guildEmoji && userCustomReact === guildEmoji.id) {
+        if (userCustomReact === guildEmoji?.id) {
             const nameBeforeEdit = guildEmoji.name;
             const nameAfterEdit = (
                 await guildEmoji.setName(member.user.username)
             ).name;
-            await reply(
-                input,
+            await interaction.reply(
                 nameBeforeEdit === nameAfterEdit
                     ? `You already have ${guildEmoji} as your custom emoji.`
                     : `Updated the name of ${guildEmoji} to match your current username.`
@@ -53,6 +51,7 @@ export default async function myEmoji(
             return;
         }
 
+        await interaction.deferReply();
         alienEmojiBinary = await axios.get<Buffer>(
             `https://cdn.discordapp.com/emojis/${emojiID}.${
                 isAnimated ? 'gif' : 'png'
@@ -62,7 +61,7 @@ export default async function myEmoji(
             }
         );
     } else if (attachment || urlRegexMatch) {
-        if (input instanceof CommandInteraction) await input.deferReply();
+        await interaction.deferReply();
         alienEmojiBinary = await axios.get<Buffer>(
             attachment?.url ?? emojiArg,
             {
@@ -70,14 +69,13 @@ export default async function myEmoji(
             }
         );
     } else {
-        await reply(
-            input,
-            'Usage of command\n`!myEmoji <emoji>`\nor\n`!myEmoji` with an image attachment'
+        await interaction.reply(
+            'Please include an emoji or an url to the image or an image attachment.'
         );
         return;
     }
     if (
-        await cooldown(input, '!myEmoji', {
+        await cooldown(interaction, commandName, {
             default: 10 * 60 * 1000,
             donator: 60 * 1000,
         })
@@ -88,7 +86,7 @@ export default async function myEmoji(
         alienEmojiBinary.data,
         member.user.username.replaceAll(/[^\d\w_]/g, ''),
         {
-            reason: `!customreaction command used by ${member.user.tag}`,
+            reason: `/myEmoji command used by ${member.user.tag}`,
         }
     );
     if (userCustomReact) {
@@ -99,8 +97,7 @@ export default async function myEmoji(
         .ref('discord_bot/community/customreact')
         .child(member.id)
         .set(newEmoji.id);
-    await reply(
-        input,
+    await interaction.reply(
         `Uploaded ${newEmoji} as your custom emoji and auto reaction.`
     );
 }
