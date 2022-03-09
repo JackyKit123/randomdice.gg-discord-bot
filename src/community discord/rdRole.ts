@@ -63,58 +63,34 @@ const setRole = async (
     );
 
 const hasAnyRole = (roleList: string[], member: GuildMember): boolean =>
-    roleList.some(critRoleId => member.roles.cache.has(critRoleId));
+    roleList.some(roleId => member.roles.cache.has(roleId));
 
-const hasRole = (
-    roleList: string[],
-    member: GuildMember,
-    roleId: string
-): boolean =>
-    roleList.some(
-        critRoleId =>
-            critRoleId === roleId && member.roles.cache.has(critRoleId)
-    );
+const hasRole = (roleList: string[], member: GuildMember, roleId: string) =>
+    roleList.some(id => id === roleId && member.roles.cache.has(id));
 
-export async function rdRole(
-    input: Message | CommandInteraction
-): Promise<void> {
-    const member = input.guild?.members.cache.get(input.member?.user.id ?? '');
+export async function myClass(interaction: CommandInteraction): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { member, options, commandName } = interaction;
 
-    if (!member) return;
-
-    const [command, ...args] =
-        input instanceof Message
-            ? input.content.split(' ')
-            : [input.commandName];
-
-    const isMyClass = command.replace('!', '').toLowerCase() === 'myclass';
-    const roleList = isMyClass ? classRoleIds : critRoleIds;
-    const critArg =
-        input instanceof Message
-            ? Number(args[0])
-            : input.options.getInteger('crit') ?? 0;
-    const newRoleId = isMyClass
-        ? getClassRoleId(
-              input instanceof Message
-                  ? args.join(' ') ?? ''
-                  : input.options.getString('class', true)
-          )
-        : getCritRoleId(member, critArg);
-
-    if (!newRoleId || (!isMyClass && !Number.isInteger(critArg))) {
+    const classArg = options.getString('class', true);
+    const newRoleId = getClassRoleId(classArg);
+    if (!newRoleId) {
         await reply(
-            input,
-            isMyClass
-                ? `Unknown Class, possible values are ${classRoles
-                      .map(([roleName]) => `\`${roleName}\``)
-                      .join(' ')}`
-                : 'You need to enter your crit%, example: `!myCrit 1337`'
+            interaction,
+            `${classArg} is not a valid class. Possible classes are: ${classRoles.map(
+                ([roleName]) => roleName
+            )}`
         );
         return;
     }
 
+    if (member.roles.cache.has(newRoleId)) {
+        await interaction.reply(`You already have <@&${newRoleId}> role`);
+        return;
+    }
+
     if (
-        await cooldown(input, command, {
+        await cooldown(interaction, commandName, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
@@ -122,51 +98,55 @@ export async function rdRole(
         return;
     }
 
-    if (hasRole(roleList, member, newRoleId)) {
-        await reply(input, {
-            content: `You already have <@&${newRoleId}> role`,
-            allowedMentions: {
-                users: [],
-                roles: [],
-                parse: [],
-            },
-        });
+    const hasAnyOppositeRole = hasAnyRole(critRoleIds, member);
+    await setRole(classRoleIds, member, newRoleId);
+
+    await interaction.reply(
+        `Updated your class role to be <@&${newRoleId}>${
+            !hasAnyOppositeRole
+                ? `, you can also update your crit role by using \`/mycrit\``
+                : '.'
+        }`
+    );
+}
+
+export async function myCrit(interaction: CommandInteraction): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { member, options, commandName } = interaction;
+
+    const critArg = options.getInteger('crit', true);
+    const newRoleId = getCritRoleId(member, critArg);
+
+    if (member.roles.cache.has(newRoleId)) {
+        await interaction.reply(`You already have <@&${newRoleId}> role`);
         return;
     }
 
-    await setRole(roleList, member, newRoleId);
+    if (
+        await cooldown(interaction, commandName, {
+            default: 60 * 1000,
+            donator: 10 * 1000,
+        })
+    ) {
+        return;
+    }
 
-    const hasAnyOppositeRole = isMyClass
-        ? hasAnyRole(critRoleIds, member)
-        : hasAnyRole(classRoleIds, member);
+    const hasAnyOppositeRole = hasAnyRole(classRoleIds, member);
+    await setRole(critRoleIds, member, newRoleId);
 
-    await reply(input, {
-        content: `Updated your ${
-            isMyClass ? 'class' : 'crit'
-        } role to be <@&${newRoleId}>${
+    await interaction.reply(
+        `Updated your crit role to be <@&${newRoleId}>${
             !hasAnyOppositeRole
-                ? `, you can also update your ${
-                      isMyClass ? 'crit' : 'class'
-                  } role by using \`${isMyClass ? '!myCrit' : '!myClass'}\``
+                ? `, you can also update your class role by using \`/myclass\``
                 : '.'
-        }`,
-        allowedMentions: {
-            users: [],
-            roles: [],
-            parse: [],
-        },
-    });
+        }`
+    );
 }
 
-export async function autoRole(message: Message): Promise<void> {
-    const { member, content } = message;
+export async function autoClassCritRole(message: Message): Promise<void> {
+    const { member } = message;
 
-    if (
-        !member ||
-        content.toLowerCase().startsWith('!myclass') ||
-        content.toLowerCase().startsWith('!mycrit')
-    )
-        return;
+    if (!member) return;
 
     const matchClassInName =
         member.displayName.match(/\bc(?:lass)? ?(\d{1,2})\b/i) ??
@@ -222,8 +202,8 @@ export async function autoRole(message: Message): Promise<void> {
         ? `${updatedClassRoleText} and ${updatedCritRoleText}`
         : updatedClassRoleText || updatedCritRoleText;
 
-    const useMyClass = updatedClassRole && `your class role using \`!myClass\``;
-    const useMyCrit = updatedCritRole && `your crit role using \`!myCrit\``;
+    const useMyClass = updatedClassRole && `your class role using \`/myClass\``;
+    const useMyCrit = updatedCritRole && `your crit role using \`/myCrit\``;
     const useResponseText = updatedBothRoles
         ? `${useMyClass} and ${useMyCrit}`
         : useMyClass || useMyCrit;

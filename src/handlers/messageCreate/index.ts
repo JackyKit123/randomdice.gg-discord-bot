@@ -14,7 +14,7 @@ import voteReward from 'community discord/currency/voteReward';
 import announceLastToLeaveVC from 'community discord/lastToLeaveVC';
 import { autoReaction } from 'community discord/myEmoji';
 import oneMinute from 'community discord/oneMinute';
-import { autoRole } from 'community discord/rdRole';
+import { autoClassCritRole } from 'community discord/rdRole';
 import solveMathEquation from 'community discord/solveMathEquation';
 import spy from 'community discord/spy';
 import voteAutoResponder from 'community discord/voteAutoResponder';
@@ -79,7 +79,7 @@ export default async function messageCreate(message: Message): Promise<void> {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
                 hackwarnTimer(message),
-                autoRole(message),
+                autoClassCritRole(message),
                 solveMathEquation(message),
                 pokeballTrap(message),
                 oneMinute(message),

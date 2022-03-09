@@ -12,7 +12,7 @@ import gtn from 'community discord/gtn';
 import eventPing from 'community discord/eventping';
 import customRole from 'community discord/customRole';
 import myEmoji from 'community discord/myEmoji';
-import { rdRole } from 'community discord/rdRole';
+import { myClass, myCrit } from 'community discord/rdRole';
 import advertise from 'community discord/promote';
 import drawDice from 'community discord/currency/drawDice';
 import balance from 'community discord/currency/balance';
@@ -116,8 +116,10 @@ export default async function interactionCreate(
                         await myEmoji(interaction);
                         break;
                     case 'myclass':
+                        await myClass(interaction);
+                        break;
                     case 'mycrit':
-                        await rdRole(interaction);
+                        await myCrit(interaction);
                         break;
                     case 'promote':
                     case 'advertise':
