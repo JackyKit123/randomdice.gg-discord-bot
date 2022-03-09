@@ -1,37 +1,31 @@
 import roleIds, { eventManagerRoleIds } from 'config/roleId';
-import Discord, {
+import {
     ApplicationCommandData,
     CommandInteraction,
-    Message,
+    MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import checkPermission from './util/checkPermissions';
 
 export default async function eventPing(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { channel, guild } = input;
+    if (!interaction.inCachedGuild()) return;
+    const { member, channel, guild } = interaction;
 
-    const msg =
-        input instanceof Message
-            ? input.content.replace(/!eventping ?/i, '')
-            : input.options.getString('message');
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    const msg = interaction.options.getString('message');
 
     if (
-        !guild ||
-        !member ||
         !channel ||
-        !(await checkPermission(input, ...eventManagerRoleIds)) ||
-        (await cooldown(input, '!eventping', {
+        !(await checkPermission(interaction, ...eventManagerRoleIds)) ||
+        (await cooldown(interaction, '!eventping', {
             default: 60 * 1000,
             donator: 60 * 1000,
         }))
     )
         return;
 
-    let embed = new Discord.MessageEmbed()
+    let embed = new MessageEmbed()
         .setAuthor({
             name: 'Event Time WOO HOO!!!',
             iconURL:
@@ -44,8 +38,7 @@ export default async function eventPing(
         .addField('Hosted by', member.toString());
 
     if (msg && msg.length > 1024) {
-        await reply(
-            input,
+        await interaction.reply(
             'Event detail cannot be longer than 1024 characters.'
         );
         return;
@@ -54,18 +47,12 @@ export default async function eventPing(
         embed = embed.addField('Event Detail', msg);
     }
 
-    if (input instanceof Message) {
-        await input.delete();
-    } else {
-        await input.deferReply();
-    }
+    await interaction.deferReply();
     await channel.send({
         content: `<@&${roleIds['Server Event Ping']}>`,
         embeds: [embed],
     });
-    if (input instanceof CommandInteraction) {
-        await input.deleteReply();
-    }
+    await interaction.deleteReply();
 }
 
 export const commandData: ApplicationCommandData = {
