@@ -28,6 +28,7 @@ import { commandData as myEmoji } from 'community discord/myEmoji';
 import { commandData as rdRole } from 'community discord/rdRole';
 import { commandData as wordle } from 'community discord/wordle';
 import { commandData as balance } from 'community discord/currency/balance';
+import { commandData as advertise } from 'community discord/promote';
 
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
@@ -67,6 +68,7 @@ export default async function registerSlashCommands(
         ...rdRole,
         wordle,
         ...balance,
+        advertise,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {

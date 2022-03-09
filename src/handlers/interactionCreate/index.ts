@@ -121,7 +121,6 @@ export default async function interactionCreate(
                     case 'mycrit':
                         await myCrit(interaction);
                         break;
-                    case 'promote':
                     case 'advertise':
                         await advertise(interaction);
                         break;

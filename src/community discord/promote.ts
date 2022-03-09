@@ -1,14 +1,13 @@
 import channelIds from 'config/channelIds';
 import { tier4RoleIds } from 'config/roleId';
 import {
+    ApplicationCommandData,
     CommandInteraction,
     DiscordAPIError,
     GuildMember,
-    Message,
     MessageAttachment,
     MessageEmbed,
 } from 'discord.js';
-import { reply } from 'util/typesafeReply';
 import checkPermission from './util/checkPermissions';
 
 const activePromotionCreation = new Map<string, boolean>();
@@ -114,35 +113,30 @@ async function createPromotion(
 }
 
 export default async function advertise(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild } = input;
+    if (!interaction.inCachedGuild()) return;
+    const { guild, member, user } = interaction;
 
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
-    const author = member?.user;
-    if (
-        !author ||
-        !member ||
-        !guild ||
-        !(await checkPermission(input, ...tier4RoleIds))
-    )
-        return;
+    if (!(await checkPermission(interaction, ...tier4RoleIds))) return;
 
     const promotionChannel = guild.channels.cache.get(
         channelIds['promotion-and-ads']
     );
     if (!promotionChannel?.isText()) {
-        throw new Error('Promotion Channel not found');
+        await interaction.reply(
+            'The promotion channel is not found, please contact an admin.'
+        );
+        return;
     }
     const promotions = await promotionChannel.messages.fetch();
     const existingUserPromotion = promotions.find(
         promotion =>
-            promotion.embeds?.[0]?.footer?.text === author.id &&
+            promotion.embeds?.[0]?.footer?.text === user.id &&
             promotion.createdTimestamp + 1000 * 60 * 60 * 24 > Date.now()
     );
-    if (activePromotionCreation.get(author.id)) {
-        await reply(
-            input,
+    if (activePromotionCreation.get(user.id)) {
+        await interaction.reply(
             'Please first finish previous the promotion creation or exit it.'
         );
         return;
@@ -150,28 +144,31 @@ export default async function advertise(
 
     try {
         try {
-            activePromotionCreation.set(author.id, true);
-            await author.send(
+            activePromotionCreation.set(user.id, true);
+            await user.send(
                 `Hi, please answer a few questions for me to post a promotion advertisement. You can type \`exit\` at anytime to quit this campaign maker.\n${
                     existingUserPromotion
                         ? 'I found a promotion in the last 24 hours from you, your last promotion will be edited instead of sending a new one.'
                         : ''
                 }`
             );
-            await reply(input, 'Please proceed in DM channel.');
+            await interaction.reply('Please proceed in DM channel.');
         } catch (err) {
             if (
-                (err as DiscordAPIError).message ===
+                (err as DiscordAPIError).message !==
                 'Cannot send messages to this user'
             ) {
-                throw new Error('I cannot initial a DM with you.');
+                throw err;
             }
-            throw err;
+            await interaction.reply(
+                'I cannot send DM to you. Please make sure you have DM enabled.'
+            );
+            return;
         }
 
         const item = await Promise.race([
             createPromotion(member),
-            author.dmChannel?.awaitMessages({
+            user.dmChannel?.awaitMessages({
                 filter: m => m.content.toLowerCase() === 'exit',
                 max: 1,
             }),
@@ -179,21 +176,26 @@ export default async function advertise(
         const isEmbed = (arg: typeof item): arg is MessageEmbed =>
             arg instanceof MessageEmbed;
         if (!isEmbed(item)) {
-            activePromotionCreation.set(author.id, false);
+            activePromotionCreation.set(user.id, false);
             return;
         }
         if (existingUserPromotion) {
             await existingUserPromotion.edit({ embeds: [item] });
-            await author.send(
+            await user.send(
                 `Your promotion has been edited\n${existingUserPromotion.url}`
             );
         } else {
             const sent = await promotionChannel.send({ embeds: [item] });
-            await author.send(`Your promotion has been sent\n${sent.url}`);
+            await user.send(`Your promotion has been sent\n${sent.url}`);
         }
-        activePromotionCreation.set(author.id, false);
+        activePromotionCreation.set(user.id, false);
     } catch (err) {
-        activePromotionCreation.set(author.id, false);
+        activePromotionCreation.set(user.id, false);
         throw err;
     }
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'advertise',
+    description: 'Create a promotion advertisement',
+};
