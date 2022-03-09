@@ -1,10 +1,12 @@
 import { database } from 'register/firebase';
-import Discord, {
+import {
     ApplicationCommandData,
     CommandInteraction,
+    Guild,
     GuildMember,
-    Message,
     PartialGuildMember,
+    Permissions,
+    RoleData,
 } from 'discord.js';
 import colorParser from 'color-parser';
 import cache from 'util/cache';
@@ -14,46 +16,36 @@ import { tier2RoleIds } from 'config/roleId';
 import checkPermission from './util/checkPermissions';
 
 export default async function customRole(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild, channel } = input;
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
-    if (!member || !guild || !channel) return;
+    if (!interaction.inCachedGuild()) return;
+    const { member, guild, channel, commandName } = interaction;
 
-    if (!(await checkPermission(input, ...tier2RoleIds))) return;
+    if (!channel || !(await checkPermission(interaction, ...tier2RoleIds)))
+        return;
 
-    const colorArg =
-        input instanceof Message
-            ? input.content.split(' ')[1]
-            : input.options.getString('color', true);
-    if (!colorArg) {
-        await reply(
-            input,
-            'Usage of the command. `!customrole <color> <role Name>`'
-        );
-        return;
-    }
-    const color = colorParser(colorArg);
-    const roleName =
-        input instanceof Message
-            ? input.content.split(' ').slice(2).join(' ').trim()
-            : input.options.getString('role-name', true);
-    if (!color) {
-        await reply(
-            input,
-            `\`${colorArg}\` is not a valid color. Please include a valid color in the first command parameter.`
-        );
-        return;
-    }
-    if (!roleName) {
-        await reply(
-            input,
-            `Please include a role name for your custom role after color.`
-        );
-        return;
-    }
+    const colorArg = interaction.options.getString('color', true);
+
     if (
-        await cooldown(input, '!customrole', {
+        !/^w+$/i.test(colorArg) ||
+        !/^#[a-f\d]{6}$/i.test(colorArg) ||
+        !/^#[a-f\d]{3}$/i.test(colorArg)
+    ) {
+        await interaction.reply(
+            'Invalid color. Use a hex color code or the name of a color.'
+        );
+        return;
+    }
+    const roleName = interaction.options.getString('role-name', true);
+
+    const color = colorParser(colorArg);
+    if (!color) {
+        await reply(interaction, `\`${colorArg}\` is not a valid color.`);
+        return;
+    }
+
+    if (
+        await cooldown(interaction, commandName, {
             default: 1000 * 60 * 60,
             donator: 1000 * 60 * 10,
         })
@@ -62,14 +54,14 @@ export default async function customRole(
     }
 
     const customRoleId = cache['discord_bot/community/customroles'][member.id];
-    const manageRoleOptions: Discord.RoleData = {
+    const manageRoleOptions: RoleData = {
         name: `${roleName}‎‎‎`,
         color: [color.r, color.g, color.b].every(colorValue => colorValue === 0)
             ? [1, 1, 1]
             : [color.r, color.g, color.b],
         mentionable: false,
         hoist: false,
-        permissions: [],
+        permissions: new Permissions([]),
     };
 
     if (customRoleId) {
@@ -77,26 +69,26 @@ export default async function customRole(
         if (role) {
             await role.edit(
                 manageRoleOptions,
-                `!customrole update for ${member.user.tag}`
+                `/customrole update for ${member.user.tag}`
             );
-            await reply(input, `Updated ${role}.`);
+            await reply(interaction, `Updated ${role}.`);
             return;
         }
     }
     const role = await guild.roles.create({
         ...manageRoleOptions,
-        reason: `!customrole creation for  ${member.user.tag}`,
+        reason: `/customrole creation for  ${member.user.tag}`,
     });
     await database
         .ref('discord_bot/community/customroles')
         .child(member.id)
         .set(role.id);
     await member.roles.add(role);
-    await reply(input, `Added ${role} to you.`);
+    await reply(interaction, `Added ${role} to you.`);
 }
 
 export async function deleteCustomRole(
-    guild: Discord.Guild,
+    guild: Guild,
     memberId: string,
     reason?: string
 ): Promise<void> {
