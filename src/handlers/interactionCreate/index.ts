@@ -125,16 +125,13 @@ export default async function interactionCreate(
                         await advertise(interaction);
                         break;
                     case 'dd':
-                    case 'drawdice':
-                    case 'dicedraw':
                         await drawDice(interaction);
                         break;
                     case 'wordle':
                         await wordle(interaction);
                         break;
-                    case 'bal':
                     case 'balance':
-                        await balance(interaction, 'emit');
+                        await balance(interaction);
                         break;
                     case 'rank':
                     case 'profile':
@@ -218,6 +215,14 @@ export default async function interactionCreate(
                         break;
                     case 'help':
                         await help(interaction, true);
+                        break;
+                    default:
+                }
+            }
+            if (interaction.isUserContextMenu()) {
+                switch (interaction.commandName) {
+                    case 'Check Balance':
+                        await balance(interaction);
                         break;
                     default:
                 }

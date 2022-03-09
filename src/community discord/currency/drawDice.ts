@@ -15,7 +15,7 @@ import cooldown from 'util/cooldown';
 import cache, { Dice } from 'util/cache';
 import channelIds from 'config/channelIds';
 import { coinDice, nullDice, shuffleDiceLegendary } from 'config/emojiId';
-import getBalanced from './balance';
+import { getBalance } from './balance';
 import isBotChannels from '../util/isBotChannels';
 
 const wait = promisify(setTimeout);
@@ -54,8 +54,8 @@ export default async function drawDice(
         });
         return;
     }
-    const balance = await getBalanced(interaction, 'emit new member');
-    if (balance === false) return;
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
 
     const memberDDtimestamp = ddTimestamp.get(member.id) || [];
 

@@ -4,64 +4,27 @@ import {
     ButtonInteraction,
     CommandInteraction,
     GuildMember,
-    Message,
     MessageEmbed,
     UserContextMenuInteraction,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import fetchMention from 'util/fetchMention';
 import cache from 'util/cache';
 import { prestigeRoles } from 'config/roleId';
 import { coinDice } from 'config/emojiId';
 
-export default async function balance(
-    input:
-        | Message
-        | ButtonInteraction
-        | CommandInteraction
-        | UserContextMenuInteraction,
-    output: 'silence' | 'emit' | 'emit new member',
-    optionalTarget?: GuildMember
-): Promise<number | false> {
-    const prestigeRoleIds = Object.values(prestigeRoles);
-    const numberFormat = new Intl.NumberFormat();
-    const { member, channel, guild, client } = input;
-    if (!guild || !member) return false;
-    if (output === 'emit') {
-        if (
-            await cooldown(input, `!balance`, {
-                default: 10 * 1000,
-                donator: 2 * 1000,
-            })
-        ) {
-            return false;
-        }
-    }
+const numberFormat = new Intl.NumberFormat();
 
-    let target = guild.members.cache.get(
-        optionalTarget?.id || member.user.id
-    ) as GuildMember;
-    if (input instanceof Message) {
-        const memberArg = input.content.split(' ')[1];
+const getEmbed = (
+    target: GuildMember,
+    targetIsAuthor: boolean,
+    bal: number
+) => {
+    const prestigeLevel = target.roles.cache
+        .sort(({ position: a }, { position: b }) => b - a)
+        .filter(role => Object.values(prestigeRoles).includes(role.id))
+        .first()?.name;
 
-        if (memberArg && !optionalTarget && output === 'emit') {
-            target =
-                (await fetchMention(memberArg, guild, {
-                    content: input.content,
-                    mentionIndex: 1,
-                })) || target;
-        }
-    }
-
-    if (!Object.keys(cache['discord_bot/community/currency']).length)
-        return false;
-    const profile = cache['discord_bot/community/currency'][target.id];
-
-    let prestigeLevel = 0;
-    prestigeRoleIds.forEach(id => {
-        if (target.roles.cache.has(id)) prestigeLevel += 1;
-    });
-    const embed = new MessageEmbed()
+    let embed = new MessageEmbed()
         .setAuthor({
             name: target.user.tag,
             iconURL:
@@ -70,61 +33,97 @@ export default async function balance(
                 }) ?? undefined,
         })
         .setColor(target.displayHexColor)
-        .setTitle(`${target?.id === member.user.id ? 'Your' : 'Their'} Balance`)
-        .setFooter(
-            prestigeLevel > 0
-                ? {
-                      text:
-                          guild.roles.cache.get(
-                              prestigeRoleIds[prestigeLevel - 1]
-                          )?.name ?? '',
-                  }
-                : null
-        );
-    if (!profile || !profile.initiated) {
-        if (target.id !== member.user.id && output !== 'silence') {
-            await channel?.send(
+        .setTitle(`${targetIsAuthor ? 'Your' : 'Their'} Balance`)
+        .setDescription(`${coinDice} ${numberFormat.format(bal)}`);
+
+    if (prestigeLevel) {
+        embed = embed.setFooter({
+            text: prestigeLevel,
+        });
+    }
+
+    return embed;
+};
+
+export async function getBalance(
+    interaction:
+        | ButtonInteraction
+        | CommandInteraction
+        | UserContextMenuInteraction,
+    silence = false,
+    optionalTarget?: GuildMember | null
+): Promise<number | null> {
+    if (!interaction.inCachedGuild()) return null;
+    const { member, channel } = interaction;
+
+    const target = optionalTarget ?? member;
+
+    if (!Object.keys(cache['discord_bot/community/currency']).length)
+        return null;
+    const profile = cache['discord_bot/community/currency'][target.id];
+
+    if (!profile?.initiated) {
+        if (target.id !== member.id && !silence) {
+            await interaction.reply(
                 'They have not started using currency command yet.'
             );
-            return false;
+            return null;
         }
+
+        const bal = Number(profile?.balance) || 10000;
         await database
             .ref(`discord_bot/community/currency/${target.id}/balance`)
-            .set(Number(profile?.balance) || 10000);
+            .set(bal);
         await database
             .ref(`discord_bot/community/currency/${target.id}/prestige`)
-            .set(prestigeLevel);
-        if (output === 'emit new member' || output === 'emit') {
-            await (channel ?? client.users.cache.get(member.user.id))?.send({
-                content: `Looks like you are the first time using server currency command, you have been granted **${coinDice} 10,000** as a starter reward.`,
-                embeds: [
-                    embed.setDescription(
-                        `${coinDice} ${numberFormat.format(
-                            Number(profile?.balance) || 10000
-                        )}`
-                    ),
-                ],
-            });
+            .set(0);
+        if (!silence) {
+            const messageOption = {
+                content: `${member}, Looks like you are the first time using server currency command, you have been granted **${coinDice} 10,000** as a starter reward. You can use ${
+                    interaction.isCommand() || interaction.isContextMenu()
+                        ? `\`${interaction.commandName}\` command`
+                        : 'the button'
+                } again.`,
+                embeds: [getEmbed(target, target.id === member.id, bal)],
+            };
             await database
                 .ref(`discord_bot/community/currency/${target.id}/initiated`)
                 .set(true);
-            if (input instanceof Message) {
-                client.emit('messageCreate', input);
+            if (!channel) {
+                await interaction.reply(messageOption);
+                return null;
             }
+            await channel.send(messageOption);
         }
-        return output === 'silence' ? Number(profile?.balance) || 10000 : false;
+        return bal;
     }
-    if (output !== 'emit') {
-        return Number(profile.balance);
+
+    return Number(profile.balance);
+}
+
+export default async function balance(
+    interaction: CommandInteraction | UserContextMenuInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+
+    const { options, member, commandName } = interaction;
+
+    const target = options.getMember('user') ?? member;
+    const bal = await getBalance(interaction, false, target);
+
+    if (
+        bal === null ||
+        (await cooldown(interaction, commandName, {
+            default: 10 * 1000,
+            donator: 2 * 1000,
+        }))
+    ) {
+        return;
     }
-    await (channel ?? client.users.cache.get(member.user.id))?.send({
-        embeds: [
-            embed.setDescription(
-                `${coinDice} ${numberFormat.format(Number(profile?.balance))}`
-            ),
-        ],
+
+    await interaction.reply({
+        embeds: [getEmbed(target, target.id === member.id, bal)],
     });
-    return false;
 }
 
 export const commandData: ApplicationCommandData[] = [
