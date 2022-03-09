@@ -3,54 +3,41 @@ import Discord, {
     ApplicationCommandData,
     CommandInteraction,
     DiscordAPIError,
-    Message,
     MessageActionRow,
     MessageButton,
     User,
 } from 'discord.js';
 import { promisify } from 'util';
-import { reply } from 'util/typesafeReply';
 
 const wait = promisify(setTimeout);
 
 const numberToGuess = new Map<string, number>();
 
 export default async function gtn(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { channel, member, client } = input;
+    if (!interaction.inCachedGuild()) return;
+    const { channel, client, user } = interaction;
 
-    const author = client.users.cache.get(member?.user.id ?? '');
+    if (!channel) return;
 
-    if (!channel || !author) return;
-
-    const maxRange =
-        input instanceof Message
-            ? Number(input.content.split(' ')[1])
-            : input.options.getInteger('max-range', true);
+    const maxRange = interaction.options.getInteger('max-range', true);
 
     if (
         typeof numberToGuess.get(channel.id) !== 'undefined' &&
         numberToGuess.get(channel.id) !== -1
     ) {
-        await reply(input, `There's a game already going on in this channel.`);
-        return;
-    }
-
-    if (!maxRange || maxRange < 100 || maxRange > 1000000) {
-        await reply(
-            input,
-            'Usage of the command: `!gtn <max Range (100 - 1m)>` Example```!gtn 1000```'
+        await interaction.reply(
+            `There's a game already going on in this channel.`
         );
         return;
     }
 
     numberToGuess.set(channel.id, 0);
-    await reply(
-        input,
-        `${author}, please tell me in DM what number is in your mind, you have 20 seconds.`
+    await interaction.reply(
+        `${user}, please tell me in DM what number is in your mind, you have 20 seconds.`
     );
-    const numberPrompt = await author.send('What is the number in your mind?');
+    const numberPrompt = await user.send('What is the number in your mind?');
 
     let awaitedMessage = await numberPrompt.channel.awaitMessages({
         filter: (newMessage: Discord.Message) =>
@@ -59,7 +46,7 @@ export default async function gtn(
         max: 1,
     });
     if (numberToGuess.get(channel.id) !== 0) {
-        await author.send(
+        await user.send(
             'Someone else has started a game, please wait for the next round.'
         );
         return;
@@ -67,22 +54,22 @@ export default async function gtn(
     const numberInMind = Number(awaitedMessage.first()?.content);
     if (!Number.isInteger(numberInMind)) {
         numberToGuess.set(channel.id, -1);
-        await author.send(
+        await user.send(
             'You have to tell me a number. Please redo the command.'
         );
-        await channel.send(`${author} did not tell me a number in time.`);
+        await channel.send(`${user} did not tell me a number in time.`);
         return;
     }
     if (numberInMind > maxRange) {
         numberToGuess.set(channel.id, -1);
-        await author.send(
+        await user.send(
             `**${numberInMind}** is larger than the max range ${maxRange} you specified.`
         );
         return;
     }
     if (numberInMind < 1) {
         numberToGuess.set(channel.id, -1);
-        await author.send('The number cannot be smaller than 1.');
+        await user.send('The number cannot be smaller than 1.');
         return;
     }
     numberToGuess.set(channel.id, numberInMind);
@@ -91,7 +78,7 @@ export default async function gtn(
     );
 
     const joinMessage = await channel.send({
-        content: `${author} is starting a guess the number game for a number from \`1 - ${maxRange}\`, click below to join, starting in 10 seconds.`,
+        content: `${user} is starting a guess the number game for a number from \`1 - ${maxRange}\`, click below to join, starting in 10 seconds.`,
         components: [
             new MessageActionRow().addComponents([
                 new MessageButton()
@@ -106,29 +93,21 @@ export default async function gtn(
 
     joinMessage
         .createMessageComponentCollector({
-            filter: async interaction => {
-                if (interaction.customId !== 'join-gtn' || interaction.user.bot)
-                    return false;
-                return true;
-            },
             time: 10000,
         })
-        .on('collect', async interaction => {
-            if (interaction.customId !== 'join-gtn' || interaction.user.bot)
-                return;
-            if (interaction.user.id === author.id) {
-                await interaction.reply(`You can't join your own game.`);
+        .on('collect', async i => {
+            if (i.user.id === user.id) {
+                await i.reply(`You can't join your own game.`);
                 return;
             }
-            if (participants.find(user => user.id === interaction.user.id)) {
-                await interaction.reply(
-                    `${interaction.user}, You have already joined.`
-                );
+            if (
+                participants.some(participant => participant.id === i.user.id)
+            ) {
+                await i.reply(`${i.user}, You have already joined.`);
                 return;
             }
-            participants.push(interaction.user);
-
-            await interaction.reply(`${interaction.user} has joined the game!`);
+            participants.push(i.user);
+            await i.reply(`${i.user} has joined the game!`);
         })
         .on('end', async () => {
             try {
@@ -142,7 +121,7 @@ export default async function gtn(
                 }
 
                 await joinMessage.edit({
-                    content: `${author}'s game is starting!`,
+                    content: `${user}'s game is starting!`,
                     components: [],
                 });
 
@@ -201,7 +180,7 @@ export default async function gtn(
                         );
                     } else {
                         await channel.send(
-                            `**${guess}** is the number from ${author}, congratulations to ${currentParticipant}!`
+                            `**${guess}** is the number from ${user}, congratulations to ${currentParticipant}!`
                         );
                         numberToGuess.set(channel.id, -1);
                         return;
