@@ -259,13 +259,10 @@ export async function registerTimer(client: Client): Promise<void> {
     });
 }
 
-export async function hackwarnTimer(
-    message: Message | CommandInteraction
-): Promise<void> {
-    if (message instanceof CommandInteraction) return;
-    const { guild, channel, member } = message;
+export async function hackwarnTimer(message: Message): Promise<void> {
+    const { guild, channel, member, content } = message;
 
-    if (!guild || !member) return;
+    if (!content.startsWith('!!hackwarn') || !guild || !member) return;
 
     const carlBotRespond = await channel.awaitMessages({
         max: 1,

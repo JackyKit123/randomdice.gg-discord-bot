@@ -6,7 +6,7 @@ import snipe, { deleteSnipe } from 'community discord/snipe';
 import apply, { configApps, closeApplication } from 'community discord/apply';
 import { report, closeReport } from 'community discord/report';
 import lock from 'community discord/lock';
-import timer, { hackwarnTimer } from 'community discord/timer';
+import timer from 'community discord/timer';
 import lfg from 'community discord/lfg';
 import gtn from 'community discord/gtn';
 import eventPing from 'community discord/eventping';
@@ -99,9 +99,6 @@ export default async function interactionCreate(
                         break;
                     case 'timer':
                         await timer(interaction);
-                        break;
-                    case 'hackwarn':
-                        await hackwarnTimer(interaction);
                         break;
                     case 'lfg':
                         await lfg(interaction);
