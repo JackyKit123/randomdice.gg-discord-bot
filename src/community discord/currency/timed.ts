@@ -3,8 +3,11 @@ import moment from 'moment';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
+import { coinDice } from 'config/emojiId';
 import getBalance from './balance';
 import isBotChannels from '../util/isBotChannels';
+import roleIds from 'config/roleId';
+import channelIds from 'config/channelIds';
 
 export default async function timed(
     message: Discord.Message,
@@ -25,10 +28,10 @@ export default async function timed(
 
     let multiplier = 0;
     const rolesCache = member.roles.cache;
-    if (rolesCache.has('804512584375599154')) multiplier = 0.5;
-    if (rolesCache.has('804513079319592980')) multiplier = 1;
-    if (rolesCache.has('804513117228367882')) multiplier = 2;
-    if (rolesCache.has('805727466219372546')) multiplier = 5;
+    if (rolesCache.has(roleIds['$5 Patreon'])) multiplier = 0.5;
+    if (rolesCache.has(roleIds['$10 Patreon'])) multiplier = 1;
+    if (rolesCache.has(roleIds['$20 Patreon'])) multiplier = 2;
+    if (rolesCache.has(roleIds['$50 Patreon'])) multiplier = 5;
     multiplier += 1;
 
     switch (mode) {
@@ -139,14 +142,14 @@ export default async function timed(
     if (mode === 'yearly') {
         embed = embed
             .setDescription(
-                `Added 1 <:dicecoin:839981846419079178> to your balance\n||What? Are you seriously expecting more? Fine, come back another year for another <:dicecoin:839981846419079178> 1 reward.||`
+                `Added 1 ${coinDice} to your balance\n||What? Are you seriously expecting more? Fine, come back another year for another ${coinDice} 1 reward.||`
             )
             .setFooter('');
     } else {
         embed = embed.setDescription(
             `${
                 isBotChannels(channel) ? 'Added' : 'Removed'
-            } <:dicecoin:839981846419079178> ${numberFormat.format(reward)} ${
+            } ${coinDice} ${numberFormat.format(reward)} ${
                 isBotChannels(channel) ? 'to' : 'from'
             } your balance${
                 !isBotChannels(channel)
@@ -154,7 +157,7 @@ export default async function timed(
                     : ''
             }!${
                 !isBotChannels(channel)
-                    ? `\n<#805739701902114826> <#804227071765118976> exist for a reason to let you to spam your commands.`
+                    ? `\n${channelIds['💫 | VIP Channels']} ${channelIds['🤖 | Bot Channels']} exist for a reason to let you to spam your commands.`
                     : ''
             }`
         );
@@ -167,21 +170,26 @@ export default async function timed(
     await channel.send({ embeds: [embed] });
     if (mode === 'daily') {
         if (streak === 100) {
-            await member?.roles.add('847777372745105438', '100 daily streaks');
+            await member?.roles.add(
+                roleIds['100 Daily Streaks'],
+                '100 daily streaks'
+            );
             await channel.send({
                 content: 'Congratulation on achieving 100 daily streaks.',
                 embeds: [
                     new Discord.MessageEmbed()
-                        .setDescription(`Added <@&847777372745105438> to you.`)
+                        .setDescription(
+                            `Added <@&${roleIds['100 Daily Streaks']}> to you.`
+                        )
                         .setColor('#FFD700'),
                 ],
             });
         } else if (
             streak < 100 &&
-            member?.roles.cache.has('847777372745105438')
+            member?.roles.cache.has(roleIds['100 Daily Streaks'])
         ) {
             await member?.roles.remove(
-                '847777372745105438',
+                roleIds['100 Daily Streaks'],
                 'less than 100 daily streak'
             );
         }

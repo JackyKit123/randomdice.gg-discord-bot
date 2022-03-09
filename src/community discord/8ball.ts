@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import Discord from 'discord.js';
 
 export default async function eightBall(
@@ -8,9 +9,9 @@ export default async function eightBall(
         /^(does|do|did|wanna|should|is|are|am|should|may|shall|was|were|will|can|could|would|have|had|havn't|hadn't|haven't|didn't|don't|wouldn't|isn't|aren't|ain't|shouldn't|won't|can't|weren't|couldn't)( .+){1,}\?/i;
     if (
         [
-            '804229330443436032',
-            '804230784205979649',
-            '804224162364129320',
+            channelIds['random-dice'],
+            channelIds['look-for-games'],
+            channelIds['deck-help-and-game-questions'],
         ].includes(channel.id)
     )
         return;

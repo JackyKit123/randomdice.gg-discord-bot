@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import Discord from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
 import { promisify } from 'util';
@@ -9,7 +10,7 @@ export default async function validateCrewAds(
 ): Promise<void> {
     const { channel, author, content } = message;
 
-    if (channel.id !== '804366933989654589') {
+    if (channel.id !== channelIds['look-for-crew-and-recruiting']) {
         return;
     }
 
@@ -46,8 +47,12 @@ export default async function validateCrewAds(
 export async function fetchExistingCrewAds(
     client: Discord.Client
 ): Promise<void> {
-    const guild = await client.guilds.fetch('804222694488932362');
-    const channel = guild.channels.cache.get('804366933989654589');
+    const guild = client.guilds.cache.get(
+        process.env.COMMUNITY_SERVER_ID ?? ''
+    );
+    const channel = guild?.channels.cache.get(
+        channelIds['look-for-crew-and-recruiting']
+    );
     if (!channel?.isText()) {
         return;
     }

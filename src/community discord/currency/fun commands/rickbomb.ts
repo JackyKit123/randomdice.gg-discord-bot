@@ -1,3 +1,5 @@
+import { rickCoin } from 'config/emojiId';
+import roleIds from 'config/roleId';
 import Discord from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
@@ -102,41 +104,37 @@ export default async function rickBomb(
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
-        messageToSend = `💵💵 A batch of <a:Dice_TierX_RickCoin:827059872810008616> rick has shown up, the first ${
+        messageToSend = `💵💵 A batch of ${rickCoin} rick has shown up, the first ${
             maxCollectorAllowed > 1 ? `${maxCollectorAllowed} people` : 'person'
         } to type \`${collectionTrigger}\` can watch rick roll. 💵💵`;
         endMessage = (members): string =>
-            `<a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616> ${members.join(
-                ' '
-            )} ${
+            `${rickCoin} ${members.join(' ')} ${
                 members.length > 1 ? 'have' : 'has'
-            } gone to watch rick roll videos <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
+            } gone to watch rick roll videos ${rickCoin}`;
     } else if (rngMultiplier === 2) {
         maxCollectorAllowed = Math.ceil(uniqueChatters.length / 10);
         collectionTrigger =
             basicCollectionTriggers[
                 Math.floor(basicCollectionTriggers.length * Math.random())
             ];
-        messageToSend = `💰💰💰💰 A huge batch of <a:Dice_TierX_RickCoin:827059872810008616> rick has shown up. The first ${
+        messageToSend = `💰💰💰💰 A huge batch of ${rickCoin} rick has shown up. The first ${
             maxCollectorAllowed > 1 ? `${maxCollectorAllowed} people` : 'person'
         } to type \`${collectionTrigger}\` can selfie with rick. 💰💰💰💰`;
         endMessage = (members): string =>
-            `<a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616> ${members.join(
-                ' '
-            )} ${
+            `${rickCoin} ${members.join(' ')} ${
                 members.length > 1 ? 'have' : 'has'
-            } ⛏️ up the huge batch of Rick Astley selfies <a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>`;
+            } ⛏️ up the huge batch of Rick Astley selfies ${rickCoin}`;
     } else {
         collectionTrigger =
             advancedCollectionTriggers[
                 Math.floor(advancedCollectionTriggers.length * Math.random())
             ];
-        messageToSend = `💎💎💎💎💎💎**BIG MONEY TIME**💎💎💎💎💎💎\n<a:Dice_TierX_RickCoin:827059872810008616> Rick has shown up. The first one to type \`${collectionTrigger}\` can get rick rolled.`;
+        messageToSend = `💎💎💎💎💎💎**BIG MONEY TIME**💎💎💎💎💎💎\n${rickCoin} Rick has shown up. The first one to type \`${collectionTrigger}\` can get rick rolled.`;
         maxCollectorAllowed = 1;
         endMessage = (members): string =>
-            `<a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616><a:Dice_TierX_RickCoin:827059872810008616>\n ${members.join(
-                ' '
-            )} ${members.length > 1 ? 'have' : 'has'} got rick roll`;
+            `${rickCoin}\n ${members.join(' ')} ${
+                members.length > 1 ? 'have' : 'has'
+            } got rick roll`;
     }
 
     const collected: Discord.User[] = [];
@@ -154,10 +152,10 @@ export default async function rickBomb(
         const { id } = collect.author;
         if (collected.some(user => user.id === id)) return;
         collected.push(collect.author);
-        await collect.react('<a:Dice_TierX_RickCoin:827059872810008616>');
-        await guild.members.cache.get(id)?.roles.add('892634239290445824');
+        await collect.react(rickCoin);
+        await guild.members.cache.get(id)?.roles.add(roleIds.rick);
         await wait(1000 * 60 * 5);
-        await guild.members.cache.get(id)?.roles.remove('892634239290445824');
+        await guild.members.cache.get(id)?.roles.remove(roleIds.rick);
     });
     collector.on('end', async () => {
         activeCoinbombInChannel.set(channel.id, false);

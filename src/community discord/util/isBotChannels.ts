@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import Discord from 'discord.js';
 
 const isBotChannels = (
@@ -7,7 +8,8 @@ const isBotChannels = (
         channel.isText() &&
         !channel.isThread() &&
         channel.type !== 'DM' &&
-        (channel.parentId === '804227071765118976' ||
-            channel.parentId === '805739701902114826')) ||
-    channel.id === '804640084007321600';
+        (channel.parentId === channelIds['🤖 | Bot Channels'] ||
+            channel.parentId === channelIds['💫 | VIP Channels'])) ||
+    channel.id === channelIds['jackykit-playground-v2'] ||
+    channel.id === channelIds['jackykit-playground-v3'];
 export default isBotChannels;

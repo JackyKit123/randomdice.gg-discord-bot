@@ -1,3 +1,4 @@
+import roleIds, { moderatorRoleIds } from 'config/roleId';
 import {
     CategoryChannel,
     ClientUser,
@@ -44,12 +45,8 @@ export default async function setChannel(message: Message): Promise<void> {
         try {
             const memberOfMain = await communityDiscord.members.fetch(id);
             if (
-                !memberOfMain.roles.cache.find(role =>
-                    [
-                        '804223328709115944',
-                        '804223928427216926',
-                        '807219483311603722',
-                    ].includes(role.id)
+                !memberOfMain.roles.cache.hasAny(
+                    ...[...moderatorRoleIds, roleIds.Admin]
                 )
             ) {
                 throw new Error();

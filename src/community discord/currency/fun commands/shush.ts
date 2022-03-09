@@ -1,3 +1,4 @@
+import { pokeball } from 'config/emojiId';
 import Discord from 'discord.js';
 import cooldown from 'util/cooldown';
 import fetchMention from 'util/fetchMention';
@@ -39,7 +40,7 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
     if (shushMember.some(m => m.victim === target?.id)) {
         await channel.send({
-            content: `${target} has already been trapped inside <:pokeball:820533431217815573>.`,
+            content: `${target} has already been trapped inside ${pokeball}.`,
             allowedMentions: {
                 parse: [],
                 users: [],
@@ -49,7 +50,7 @@ export default async function shush(message: Discord.Message): Promise<void> {
     }
     shushMember = [...shushMember, { victim: target.id, by: author }];
     await channel.send({
-        content: `Shush ${target}! You are trapped inside a <:pokeball:820533431217815573> for 10 seconds.`,
+        content: `Shush ${target}! You are trapped inside a ${pokeball} for 10 seconds.`,
         allowedMentions: {
             parse: [],
             users: [],
@@ -59,7 +60,7 @@ export default async function shush(message: Discord.Message): Promise<void> {
         if (!target || !shushMember.some(m => m.victim === target?.id)) return;
         shushMember = shushMember.filter(m => m.victim !== target?.id);
         await channel.send({
-            content: `${author}, your pokemon ${target} has escaped from <:pokeball:820533431217815573>.`,
+            content: `${author}, your pokemon ${target} has escaped from ${pokeball}.`,
             allowedMentions: {
                 parse: [],
                 users: [],
@@ -98,7 +99,7 @@ export async function unShush(message: Discord.Message): Promise<void> {
     }
     shushMember = shushMember.filter(m => m.victim !== shushed.victim);
     await channel.send({
-        content: `${shushed.by}, your pokemon <@${shushed.victim}> has been released from <:pokeball:820533431217815573>. by ${member}`,
+        content: `${shushed.by}, your pokemon <@${shushed.victim}> has been released from ${pokeball}. by ${member}`,
         allowedMentions: {
             parse: [],
             users: [],
@@ -116,7 +117,7 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
 
     if (attachments.size) {
         await author.send(
-            `Your last message contains an attachment, it cannot be posted because you are trapped in a <:pokeball:820533431217815573>.`
+            `Your last message contains an attachment, it cannot be posted because you are trapped in a ${pokeball}.`
         );
     }
 
@@ -167,10 +168,10 @@ export async function pokeballTrap(message: Discord.Message): Promise<void> {
             .replace(/`/g, '\\`') + '‎'; /* invis unicode */
 
     const randomString = [
-        `**${displayName}** is trapped in a <:pokeball:820533431217815573>: ||${sanitized}||`,
-        `**${displayName}** is yelling from inside the <:pokeball:820533431217815573>: ||${sanitized}||`,
-        `A sound from a distant <:pokeball:820533431217815573>, **${displayName}** says: ||${sanitized}||`,
-        `<:pokeball:820533431217815573>**${displayName}**<:pokeball:820533431217815573>\n||${sanitized}||`,
+        `**${displayName}** is trapped in a ${pokeball}: ||${sanitized}||`,
+        `**${displayName}** is yelling from inside the ${pokeball}: ||${sanitized}||`,
+        `A sound from a distant ${pokeball}, **${displayName}** says: ||${sanitized}||`,
+        `${pokeball}**${displayName}**${pokeball}\n||${sanitized}||`,
     ];
     await channel.send({
         content: randomString[Math.floor(Math.random() * randomString.length)],

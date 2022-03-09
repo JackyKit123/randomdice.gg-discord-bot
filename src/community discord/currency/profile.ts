@@ -11,6 +11,8 @@ import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
 import fetchMention from 'util/fetchMention';
 import { reply } from 'util/typesafeReply';
+import { coinDice, nullDice } from 'config/emojiId';
+import { prestigeRoles } from 'config/roleId';
 import getBalance from './balance';
 import { duplicatedRoleMulti } from './chatCoins';
 
@@ -41,20 +43,8 @@ export default async function Profile(
     const balance = await getBalance(input, 'emit new member', target);
     if (balance === false) return;
 
-    const prestigeLevels: { [level: number]: string } = {
-        1: '806312627877838878',
-        2: '806896328255733780',
-        3: '806896441947324416',
-        4: '809142950117245029',
-        5: '809142956715671572',
-        6: '809142968434950201',
-        7: '809143362938339338',
-        8: '809143374555774997',
-        9: '809143390791925780',
-        10: '809143588105486346',
-    };
     const currentPrestigeLevel = Number(
-        Object.entries(prestigeLevels)
+        Object.entries(prestigeRoles)
             .sort(([a], [b]) => Number(b) - Number(a))
             .find(([, roleId]) => target.roles.cache.has(roleId))?.[0] || 0
     );
@@ -172,18 +162,16 @@ export default async function Profile(
             `${
                 profile.prestige > 0
                     ? `**${guild.roles.cache
-                          .get(prestigeLevels[profile.prestige])
+                          .get(prestigeRoles[profile.prestige])
                           ?.name.toUpperCase()}** ${await getPrestigeIcon(
-                          prestigeLevels[profile.prestige]
+                          prestigeRoles[profile.prestige]
                       )}`
                     : ' '
             }${getOtherBadges() ? `\n\n${getOtherBadges()}\n‎` : ''}`
         )
         .addField(
             'Balance',
-            `<:dicecoin:839981846419079178> **${numberFormat.format(
-                balance
-            )}**`,
+            `${coinDice} **${numberFormat.format(balance)}**`,
             true
         )
         .addField(
@@ -218,7 +206,7 @@ export default async function Profile(
                             profileB.balance - profileA.balance
                     )
                     .findIndex(([uid]) => uid === target.id) + 1
-            }** in <:dicecoin:839981846419079178> wealth\n**#${
+            }** in ${coinDice} wealth\n**#${
                 Object.entries(currency)
                     .sort(
                         ([, profileA], [, profileB]) =>
@@ -261,11 +249,11 @@ export default async function Profile(
     const gambleProfile = new Discord.MessageEmbed(embed)
         .setTitle("Gamble's Profile")
         .setDescription(
-            `Total won: <:dicecoin:839981846419079178> ${numberFormat.format(
+            `Total won: ${coinDice} ${numberFormat.format(
                 profile.gamble?.gain || 0
-            )}\nTotal lose: <:dicecoin:839981846419079178> ${numberFormat.format(
+            )}\nTotal lose: ${coinDice} ${numberFormat.format(
                 profile.gamble?.lose || 0
-            )}\nTotal earning: <:dicecoin:839981846419079178> ${numberFormat.format(
+            )}\nTotal earning: ${coinDice} ${numberFormat.format(
                 (profile.gamble?.gain || 0) - (profile.gamble?.lose || 0)
             )}\n`
         )
@@ -301,13 +289,7 @@ export default async function Profile(
 
     let components = [
         new MessageActionRow().addComponents(
-            [
-                '👤',
-                '⏲️',
-                '🎰',
-                '<:Dice_TierX_Null:807019807312183366>',
-                '❌',
-            ].map((button, i) =>
+            ['👤', '⏲️', '🎰', nullDice, '❌'].map((button, i) =>
                 new MessageButton()
                     .setCustomId(button)
                     .setEmoji(button)
@@ -337,13 +319,7 @@ export default async function Profile(
         try {
             components = [
                 new MessageActionRow().addComponents(
-                    [
-                        '👤',
-                        '⏲️',
-                        '🎰',
-                        '<:Dice_TierX_Null:807019807312183366>',
-                        '❌',
-                    ].map(button =>
+                    ['👤', '⏲️', '🎰', nullDice, '❌'].map(button =>
                         new MessageButton()
                             .setCustomId(button)
                             .setEmoji(button)
@@ -378,7 +354,7 @@ export default async function Profile(
                         components,
                     });
                     break;
-                case '<:Dice_TierX_Null:807019807312183366>':
+                case nullDice:
                     await interaction.update({
                         embeds: [diceDrawnProfile],
                         components,

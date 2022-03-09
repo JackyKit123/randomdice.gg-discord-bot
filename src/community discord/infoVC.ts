@@ -1,16 +1,18 @@
+import channelIds from 'config/channelIds';
 import Discord from 'discord.js';
 import { promisify } from 'util';
 
 const wait = promisify(setTimeout);
 
 export default async function infoVC(client: Discord.Client): Promise<void> {
-    const guild = await client.guilds.fetch('804222694488932362');
+    const guild = client.guilds.cache.get(
+        process.env.COMMUNITY_SERVER_ID ?? ''
+    );
 
     async function updateTime(): Promise<void> {
-        const channel = guild.channels.cache.get('806658300220407819');
-        if (!channel) {
-            return;
-        }
+        const channel = guild?.channels.cache.get(channelIds['Server Clock']);
+        if (!channel) return;
+
         const now = new Date();
         const hour = now.getUTCHours();
         const minutes = now.getUTCMinutes();

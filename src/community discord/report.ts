@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import { moderatorRoleIds } from 'config/roleId';
 import {
     ApplicationCommandData,
@@ -44,7 +45,7 @@ export async function closeReport(
         await interaction.reply('You cannot use this command here.');
         return;
     }
-    if (channel.parentId === '806634775514710106') {
+    if (channel.parentId === channelIds['📦 | Report Archives']) {
         await interaction.reply('This report is already closed.');
         return;
     }
@@ -59,7 +60,9 @@ export async function closeReport(
         overwrite => overwrite.type === 'member'
     )?.id;
     const reportMember = guild.members.cache.get(reportedMemberId || '');
-    const archiveCat = guild.channels.cache.get('806634775514710106');
+    const archiveCat = guild.channels.cache.get(
+        channelIds['📦 | Report Archives']
+    );
 
     if (archiveCat?.type !== 'GUILD_CATEGORY') {
         await interaction.reply(
@@ -73,10 +76,10 @@ export async function closeReport(
         );
         return;
     }
-    await channel.setParent('806634775514710106', {
+    await channel.setParent(channelIds['📦 | Report Archives'], {
         reason: 'Report Closed',
     });
-    const reportLog = guild.channels.cache.get('806812461302022145');
+    const reportLog = guild.channels.cache.get(channelIds['report-log']);
 
     if (reportLog?.isText()) {
         const pinnedMessages = await channel.messages.fetchPinned();
@@ -211,7 +214,7 @@ export async function report(
                     true
                 )} ago` +
                 '\n' +
-                `**Reported from:** ${channel} [Jump to context](https://www.discordapp.com/channels/804222694488932362/${channel?.id}/${messageId})`
+                `**Reported from:** ${channel} [Jump to context](https://www.discordapp.com/channels/${guild.id}/${channel?.id}/${messageId})`
         )
         .setFooter({ text: `Report ID: ${interaction.id}` })
         .setTimestamp(createdTimestamp);
@@ -234,18 +237,13 @@ export async function report(
                 `**ID:** ${memberReported.user.id}`
         );
 
-    const logChannel = guild.channels.cache.get('806812461302022145');
-    const supportCategory = guild.channels.cache.get('804230480475848754');
+    const logChannel = guild.channels.cache.get(channelIds['report-log']);
+    const supportCategory = guild.channels.cache.get(
+        channelIds['🆘 | Support Channels']
+    );
 
     const { everyone } = guild.roles;
-    if (!(supportCategory instanceof CategoryChannel)) {
-        await interaction.reply({
-            content:
-                'Unable to locate server support category, please contact an admin.',
-            ephemeral: true,
-        });
-        return;
-    }
+
     if (logChannel?.isText()) {
         await logChannel.send({ embeds: [embed.setTitle('Member Report')] });
     }
@@ -253,7 +251,10 @@ export async function report(
         `${member.user.username}-${member.user.discriminator}-report-room`,
         {
             type: 'GUILD_TEXT',
-            parent: supportCategory,
+            parent:
+                supportCategory instanceof CategoryChannel
+                    ? supportCategory
+                    : undefined,
             reason: 'Member Report',
             permissionOverwrites: [
                 {

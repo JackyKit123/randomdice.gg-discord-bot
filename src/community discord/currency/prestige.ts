@@ -2,6 +2,8 @@ import Discord from 'discord.js';
 import { database } from 'register/firebase';
 import cooldown from 'util/cooldown';
 import cache from 'util/cache';
+import { prestigeRoles } from 'config/roleId';
+import { coinDice } from 'config/emojiId';
 import getBalance from './balance';
 
 export default async function prestige(
@@ -20,23 +22,8 @@ export default async function prestige(
     const balance = await getBalance(message, 'emit new member');
     if (balance === false) return;
 
-    const prestigeLevels: {
-        [level: number]: string;
-    } = {
-        1: '806312627877838878',
-        2: '806896328255733780',
-        3: '806896441947324416',
-        4: '809142950117245029',
-        5: '809142956715671572',
-        6: '809142968434950201',
-        7: '809143362938339338',
-        8: '809143374555774997',
-        9: '809143390791925780',
-        10: '809143588105486346',
-    };
-
     const currentPrestigeLevel = Number(
-        Object.entries(prestigeLevels)
+        Object.entries(prestigeRoles)
             .sort(([a], [b]) => Number(b) - Number(a))
             .find(([, roleId]) => member.roles.cache.has(roleId))?.[0] || 0
     );
@@ -74,15 +61,13 @@ export default async function prestige(
                     )
                     .addField(
                         'Prestige Cost',
-                        `<:dicecoin:839981846419079178> ${numberFormat.format(
+                        `${coinDice} ${numberFormat.format(
                             nextPrestigeLevel * 250000
                         )}`
                     )
                     .addField(
                         'Your Balance',
-                        `<:dicecoin:839981846419079178> ${numberFormat.format(
-                            balance
-                        )}`
+                        `${coinDice} ${numberFormat.format(balance)}`
                     ),
             ],
         });
@@ -114,8 +99,8 @@ export default async function prestige(
         }
         await channel.send(
             `You can prestige now.\n⚠️ Warning, if you choose to prestige now, your balance and dice drawn will be reset in exchange for the **${
-                guild.roles.cache.get(prestigeLevels[nextPrestigeLevel])
-                    ?.name || prestigeLevels[nextPrestigeLevel]
+                guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])?.name ||
+                prestigeRoles[nextPrestigeLevel]
             }** role. Type \`prestige me\` if you want to prestige now.${
                 donation
                     ? `\n⭐Since you are a patreon donator, when you prestige, you can keep ${donation}% of your current balance!`
@@ -131,7 +116,7 @@ export default async function prestige(
         });
         if (awaitedMessage.first()?.content.toLowerCase() === 'prestige me') {
             await member.roles.add(
-                prestigeLevels[nextPrestigeLevel],
+                prestigeRoles[nextPrestigeLevel],
                 'Member Prestige'
             );
             await database
@@ -145,8 +130,8 @@ export default async function prestige(
                 .set(0);
             await channel.send(
                 `Congratulations on achieving **${
-                    guild.roles.cache.get(prestigeLevels[nextPrestigeLevel])
-                        ?.name || prestigeLevels[nextPrestigeLevel]
+                    guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])
+                        ?.name || prestigeRoles[nextPrestigeLevel]
                 }**`
             );
         }

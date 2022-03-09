@@ -1,3 +1,5 @@
+import { coinDice } from 'config/emojiId';
+import roleIds from 'config/roleId';
 import Discord from 'discord.js';
 
 const isInCooldown = new Map<string, boolean>();
@@ -12,11 +14,11 @@ export default async function voteAutoResponder(
                 new Discord.MessageEmbed()
                     .setTitle('VOTE VOTE VOTE!!!')
                     .setDescription(
-                        'I heard someone said `vote`. Do you know you can vote for the server on [discord server list](https://top.gg/servers/804222694488932362/vote) and get you <@&804642685095772181> role.'
+                        `I heard someone said \`vote\`. Do you know you can vote for the server on [discord server list](https://top.gg/servers/${process.env.COMMUNITY_SERVER_ID}/vote) and get you ${roleIds.Voted} role.`
                     )
                     .addField(
                         'Special Perks for @Voted Role',
-                        '+ <:Dice_TierX_Coin:813149167585067008> 1000 everytime you vote!\n+ `x5` chat coins multi guild-wise\n+ access to premium bot channels with have `x2` chat coins multi'
+                        `+ ${coinDice} 1000 everytime you vote!\n+ \`x5\` chat coins multi guild-wise\n+ access to premium bot channels with have \`x2\` chat coins multi`
                     ),
             ],
         });

@@ -10,6 +10,8 @@ import * as math from 'mathjs';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import cache, { Dice } from 'util/cache';
+import channelIds from 'config/channelIds';
+import { coinDice, nullDice, shuffleDiceLegendary } from 'config/emojiId';
 import getBalanced from './balance';
 import chatCoins from './chatCoins';
 import isBotChannels from '../util/isBotChannels';
@@ -192,10 +194,10 @@ export default async function drawDice(
                 dynamic: true,
             }),
         })
-        .setDescription(`You earned <:dicecoin:839981846419079178> ????`)
+        .setDescription(`You earned ${coinDice} ????`)
         .addField(
             `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
-            '<:Dice_TierX_Null:807019807312183366> '.repeat(prestige)
+            `${nullDice} `.repeat(prestige)
         );
 
     const sentMessage = await (input instanceof Interaction
@@ -206,9 +208,7 @@ export default async function drawDice(
         .setDescription(
             `You ${
                 isBotChannels(channel) ? 'earned' : 'lost'
-            } <:dicecoin:839981846419079178> ${numberFormat.format(
-                Math.abs(outcome.reward)
-            )}`
+            } ${coinDice} ${numberFormat.format(Math.abs(outcome.reward))}`
         )
         .setColor(outcome.color);
     embed.fields = [
@@ -216,12 +216,12 @@ export default async function drawDice(
             name: `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
             value: isBotChannels(channel)
                 ? drawnDice.map(randomDraw => emoji[randomDraw.id]).join(' ')
-                : `<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>**JACKPOT**<:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178><:dicecoin:839981846419079178>\nYou lost <:dicecoin:839981846419079178> ${outcome.reward} instead since you are using this command in ${channel}\n<#805739701902114826> <#804227071765118976> exist for a reason to let you to spam your commands.`,
+                : `${coinDice}${coinDice}${coinDice}${coinDice}${coinDice}**JACKPOT**${coinDice}${coinDice}${coinDice}${coinDice}${coinDice}\nYou lost ${coinDice} ${outcome.reward} instead since you are using this command in ${channel}\n<#${channelIds['💫 | VIP Channels']}> <#${channelIds['🤖 | Bot Channels']}> exist for a reason to let you to spam your commands.`,
             inline: false,
         },
         {
             name: 'Current Balance',
-            value: `<:dicecoin:839981846419079178> ${numberFormat.format(
+            value: `${coinDice} ${numberFormat.format(
                 outcome.reward + balance
             )}`,
             inline: false,
@@ -234,7 +234,7 @@ export default async function drawDice(
             new MessageActionRow().addComponents([
                 new MessageButton()
                     .setCustomId('dd')
-                    .setEmoji('<a:Dice_TierX_RandomLegend:867076479733334016>')
+                    .setEmoji(shuffleDiceLegendary)
                     .setStyle('PRIMARY')
                     .setLabel('Draw Again'),
             ]),

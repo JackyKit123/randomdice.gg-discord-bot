@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import { tier4RoleIds } from 'config/roleId';
 import {
     CommandInteraction,
@@ -127,7 +128,9 @@ export default async function advertise(
     )
         return;
 
-    const promotionChannel = guild.channels.cache.get('860114325007237120');
+    const promotionChannel = guild.channels.cache.get(
+        channelIds['promotion-and-ads']
+    );
     if (!promotionChannel?.isText()) {
         throw new Error('Promotion Channel not found');
     }

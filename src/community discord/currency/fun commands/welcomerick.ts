@@ -3,6 +3,9 @@ import { promisify } from 'util';
 import fetchMentionString from 'util/fetchMention';
 import cooldown from 'util/cooldown';
 import commandCost from './commandCost';
+import channelIds from 'config/channelIds';
+import { rickCoin } from 'config/emojiId';
+import roleIds from 'config/roleId';
 
 const wait = promisify(setTimeout);
 
@@ -57,7 +60,7 @@ export default async function welcomerick(
                 .setTitle(`Not A Member!!`)
                 .setColor(3669760)
                 .setDescription(
-                    `Make sure to check out ${target} getting rick rolled for some high quality meme, and check out <#804227456630128640> for the recorded rick rolls.`
+                    `Make sure to check out ${target} getting rick rolled for some high quality meme, and check out <#${channelIds.memes}> for the recorded rick rolls.`
                 )
                 .addField(
                     'Meme Created at',
@@ -66,7 +69,7 @@ export default async function welcomerick(
                 .setFooter({ text: 'Get rick rolled' }),
         ],
     });
-    const general = guild.channels.cache.get('804222694488932364');
+    const general = guild.channels.cache.get(channelIds.general);
     if (general?.type !== 'GUILD_TEXT' || !general.isText()) return;
     const saidWelcome: string[] = [];
     general
@@ -79,9 +82,9 @@ export default async function welcomerick(
             const id = collected.member?.id;
             if (!id || saidWelcome.includes(id)) return;
             saidWelcome.push(id);
-            await collected.react('<a:Dice_TierX_RickCoin:827059872810008616>');
-            await collected.member.roles.add('892634239290445824');
+            await collected.react(rickCoin);
+            await collected.member.roles.add(roleIds.rick);
             await wait(1000 * 60 * 5);
-            await collected.member.roles.remove('892634239290445824');
+            await collected.member.roles.remove(roleIds.rick);
         });
 }

@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import roleIds, { tier2RoleIds } from 'config/roleId';
 import Discord, {
     ApplicationCommandData,
@@ -27,12 +28,12 @@ export default async function lfg(input: CommandInteraction): Promise<void> {
     if (!(await checkPermission(input, ...tier2RoleIds))) return;
 
     if (
-        channel.id !== '804224162364129320' &&
-        channel.id !== '804640084007321600'
+        channel.id !== channelIds['jackykit-playground-v3'] &&
+        channel.id !== channelIds['look-for-games']
     ) {
         await reply(
             input,
-            'You can only use this command in <#804224162364129320>.'
+            `You can only use this command in <#${channelIds['look-for-games']}>.`
         );
         return;
     }

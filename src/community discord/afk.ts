@@ -4,50 +4,23 @@ import { promisify } from 'util';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import parseMsIntoReadableText from 'util/parseMS';
+import { tier2RoleIds } from 'config/roleId';
+import checkPermission from './util/checkPermissions';
 
 const wait = promisify(setTimeout);
 
 export default async function afk(message: Discord.Message): Promise<void> {
-    const { member, content, channel, createdTimestamp } = message;
+    const { member, content, createdTimestamp } = message;
 
     if (!member) return;
     const afkMessage = content.replace(/!afk ?/i, '') || 'AFK';
 
     if (
-        !(
-            member.roles.cache.has('804512584375599154') ||
-            member.roles.cache.has('804231753535193119') ||
-            member.roles.cache.has('806896328255733780') ||
-            member.roles.cache.has('805388604791586826')
-        )
-    ) {
-        await channel.send({
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle(`You cannot use !afk`)
-                    .setColor('#ff0000')
-                    .setDescription(
-                        'You need one of the following roles to use this command.\n' +
-                            '<@&804512584375599154> <@&804231753535193119> <@&806896328255733780> <@&805388604791586826>'
-                    ),
-            ],
-        });
-        return;
-    }
-
-    if (member.user.id === '540380357342527498') {
-        await message.reply(
-            'You are banned from using this command.\n' +
-                'If you believe this is an error, please contact a staff member.'
-        );
-        return;
-    }
-
-    if (
-        await cooldown(message, '!afk', {
+        !(await checkPermission(message, tier2RoleIds)) ||
+        (await cooldown(message, '!afk', {
             default: 30 * 1000,
             donator: 30 * 1000,
-        })
+        }))
     ) {
         return;
     }

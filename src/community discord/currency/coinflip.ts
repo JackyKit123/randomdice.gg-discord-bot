@@ -2,6 +2,9 @@ import { database } from 'register/firebase';
 import Discord from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import { tier4RoleIds } from 'config/roleId';
+import channelIds from 'config/channelIds';
+import { coinDice } from 'config/emojiId';
 import getBalance from './balance';
 import isBotChannels from '../util/isBotChannels';
 
@@ -18,13 +21,6 @@ export default async function coinflip(
         return;
 
     const { channel, content, author, member } = message;
-
-    if (author.id === '285696350702796801') {
-        await channel.send(
-            'As per request, you are not allowed to use this command.'
-        );
-        return;
-    }
 
     if (!member) return;
     const balance = await getBalance(message, 'emit new member');
@@ -44,20 +40,20 @@ export default async function coinflip(
 
     if (balance < 100) {
         await channel.send(
-            'You do not even have <:dicecoin:839981846419079178> 100 to bet on a coinflip.'
+            `You do not even have ${coinDice} 100 to bet on a coinflip.`
         );
         return;
     }
     let amount = Number(amountArg);
     if (typeof amountArg === 'undefined') {
         amount = 100;
-    } else if (member.roles.cache.has('809143588105486346')) {
+    } else if (member.roles.cache.hasAny(...tier4RoleIds)) {
         if (
             (!Number.isInteger(amount) && amountArg !== 'max') ||
             Number(amountArg) < 100
         ) {
             await channel.send(
-                'You have to bet at least <:dicecoin:839981846419079178> 100 or `max`.'
+                `You have to bet at least ${coinDice} 100 or \`max\`.`
             );
             return;
         }
@@ -126,21 +122,23 @@ export default async function coinflip(
                 .setDescription(
                     `You ${
                         won ? 'won' : 'lost'
-                    } <:dicecoin:839981846419079178> ${numberFormat.format(
-                        amount
-                    )}${
+                    } ${coinDice} ${numberFormat.format(amount)}${
                         !isBotChannels(channel)
                             ? `\nBut since you're using this command in ${channel}, you ${
                                   won ? 'won' : 'lost'
-                              } <:dicecoin:839981846419079178> ${numberFormat.format(
+                              } ${coinDice} ${numberFormat.format(
                                   Math.abs(gainMultiplier * amount)
-                              )} instead\n<#805739701902114826> <#804227071765118976> exist for a reason to let you to spam your commands.`
+                              )} instead\n<#${
+                                  channelIds['💫 | VIP Channels']
+                              }> <#${
+                                  channelIds['🤖 | Bot Channels']
+                              }> exist for a reason to let you to spam your commands.`
                             : ''
                     }`
                 )
                 .addField(
                     'Current Balance',
-                    `<:dicecoin:839981846419079178> ${numberFormat.format(
+                    `${coinDice} ${numberFormat.format(
                         Number(balance) + amount * gainMultiplier
                     )}`
                 ),

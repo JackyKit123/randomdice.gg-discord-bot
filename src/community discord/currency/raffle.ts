@@ -12,7 +12,11 @@ import { database } from 'register/firebase';
 import { parseStringIntoMs } from 'util/parseMS';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import { coinDice } from 'config/emojiId';
 import getBalance from './balance';
+import channelIds from 'config/channelIds';
+import roleIds, { eventManagerRoleIds } from 'config/roleId';
+import checkPermission from 'community discord/util/checkPermissions';
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -40,7 +44,7 @@ async function host(
         .setTitle('New Dice Coins Raffle')
         .addField(
             'Ticket Entries',
-            `<:dicecoin:839981846419079178> **${ticketCost} per ticket** (${maxEntries} max)`
+            `${coinDice} **${ticketCost} per ticket** (${maxEntries} max)`
         )
         .addField('Hosted by', `${author}`)
         .setFooter({ text: 'Raffle ends at' })
@@ -48,7 +52,7 @@ async function host(
 }
 
 async function announceWinner(guild: Guild): Promise<void> {
-    const channel = guild.channels.cache.get('807229757049012266');
+    const channel = guild.channels.cache.get(channelIds['dice-coins-raffle']);
     const { client } = guild;
     const clientUser = client.user;
     if (channel?.type !== 'GUILD_TEXT' || !channel.isText() || !clientUser)
@@ -74,7 +78,7 @@ async function announceWinner(guild: Guild): Promise<void> {
             clientUser
         );
         const sentMessage = await channel.send({
-            content: '<@&839694796431294485>',
+            content: roleIds['Raffle Ping'],
             embeds: announceWinnerEmbed
                 ? [announceWinnerEmbed, newRaffleEmbed]
                 : [newRaffleEmbed],
@@ -117,7 +121,7 @@ async function announceWinner(guild: Guild): Promise<void> {
                               Object.keys(uniqueEntry).length
                           }** people entered the raffle with a total of **${
                               entries.length
-                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing <:dicecoin:839981846419079178> **${numberFormat.format(
+                          }** tickets. The winning ticket is ||**${winningTicket}**, <@${winner}>|| walked away grabbing ${coinDice} **${numberFormat.format(
                               amount
                           )}**. Congratulations!`
                 )
@@ -164,9 +168,9 @@ export default async function raffle(message: Message): Promise<void> {
 
     if (!member || !guild) return;
 
-    if (channel.id !== '807229757049012266') {
+    if (channel.id !== channelIds['dice-coins-raffle']) {
         await channel.send(
-            'You can only use this command in <#807229757049012266>'
+            `You can only use this command in <#${channelIds['dice-coins-raffle']}>`
         );
         return;
     }
@@ -201,11 +205,11 @@ export default async function raffle(message: Message): Promise<void> {
                             .setTitle('Dice Coins Raffle')
                             .addField(
                                 'Ticket Entries',
-                                `<:dicecoin:839981846419079178> **${entries.ticketCost} per ticket** (${entries.maxEntries} ticket(s) max)`
+                                `${coinDice} **${entries.ticketCost} per ticket** (${entries.maxEntries} ticket(s) max)`
                             )
                             .addField(
                                 'Current Prize Pool',
-                                `<:dicecoin:839981846419079178> **${numberFormat.format(
+                                `${coinDice} **${numberFormat.format(
                                     currentEntries.length * entries.ticketCost
                                 )}** (${currentEntries.length} Tickets)`
                             )
@@ -243,13 +247,6 @@ export default async function raffle(message: Message): Promise<void> {
             return;
         case 'join':
             {
-                if (author.id === '285696350702796801') {
-                    await channel.send(
-                        'As per request, you are not allowed to use this command.'
-                    );
-                    return;
-                }
-
                 if (raffleTimeLeft < 0) {
                     await channel.send({
                         embeds: [
@@ -288,7 +285,7 @@ export default async function raffle(message: Message): Promise<void> {
                     }
                     if (balance < entries.ticketCost) {
                         await channel.send(
-                            `The cost per ticket in this raffle is <:dicecoin:839981846419079178> ${entries.ticketCost} but you only have <:dicecoin:839981846419079178> ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
+                            `The cost per ticket in this raffle is ${coinDice} ${entries.ticketCost} but you only have ${coinDice} ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
                         );
                         return;
                     }
@@ -297,7 +294,7 @@ export default async function raffle(message: Message): Promise<void> {
                         Math.floor(balance / entries.ticketCost)
                     );
                     await channel.send(
-                        `You are entering the raffle with \`max\` entries, which will cost you <:dicecoin:839981846419079178> ${
+                        `You are entering the raffle with \`max\` entries, which will cost you ${coinDice} ${
                             currEntry * entries.ticketCost
                         }, answer \`yes\` if you wish to continue.`
                     );
@@ -345,9 +342,9 @@ export default async function raffle(message: Message): Promise<void> {
                 }
                 if (balance < currEntry * entries.ticketCost) {
                     await channel.send(
-                        `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is <:dicecoin:839981846419079178> **${numberFormat.format(
+                        `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is ${coinDice} **${numberFormat.format(
                             currEntry * entries.ticketCost
-                        )}** but you have only <:dicecoin:839981846419079178> **${numberFormat.format(
+                        )}** but you have only ${coinDice} **${numberFormat.format(
                             balance
                         )}**.`
                     );
@@ -376,7 +373,7 @@ export default async function raffle(message: Message): Promise<void> {
                             currEntry * entries.ticketCost
                     );
                 await channel.send(
-                    `You have entered the raffle with ${currEntry} ticket(s), costing you <:dicecoin:839981846419079178> **${numberFormat.format(
+                    `You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
                         currEntry * entries.ticketCost
                     )}**${
                         prevEntry > 0
@@ -389,14 +386,14 @@ export default async function raffle(message: Message): Promise<void> {
                         .map(([ticketNumber]) => `**${ticketNumber}**`)
                         .join(', ')}`
                 );
-                if (!member.roles.cache.has('839694796431294485')) {
+                if (!member.roles.cache.has(roleIds['Raffle Ping'])) {
                     const sentMessage = await channel.send({
                         embeds: [
                             new MessageEmbed()
                                 .setTitle('Tip!')
                                 .setColor('#32cd32')
                                 .setDescription(
-                                    'It looks like you are missing the role <@&839694796431294485>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can click ✅ to claim this role now.'
+                                    `It looks like you are missing the role <@&${roleIds['Raffle Ping']}>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can click ✅ to claim this role now.`
                                 ),
                         ],
                         components: [
@@ -414,8 +411,7 @@ export default async function raffle(message: Message): Promise<void> {
                         })
                         .on('collect', async interaction =>
                             interaction.reply({
-                                content:
-                                    'Added <@&839694796431294485> role to you',
+                                content: `Added <@&${roleIds['Raffle Ping']}> role to you`,
                                 ephemeral: true,
                             })
                         )
@@ -436,18 +432,7 @@ export default async function raffle(message: Message): Promise<void> {
             }
             return;
         case 'host': {
-            if (
-                !(
-                    member.roles.cache.has('805772165394858015') ||
-                    member.roles.cache.has('805000661133295616') ||
-                    member.permissions.has('ADMINISTRATOR')
-                )
-            ) {
-                await channel.send(
-                    'You do not have permission to host a raffle.'
-                );
-                return;
-            }
+            if (!(await checkPermission(message, eventManagerRoleIds))) return;
             const time = parseStringIntoMs(arg);
             const ticketCost = Number(arg2);
             const maxEntries = Number(arg3) || 1;
@@ -477,7 +462,7 @@ export default async function raffle(message: Message): Promise<void> {
                 return;
             }
             await channel.send({
-                content: '<@&839694796431294485>',
+                content: roleIds['Raffle Ping'],
                 embeds: [
                     await host(time, maxEntries, ticketCost, guild, author),
                 ],
@@ -503,18 +488,7 @@ export default async function raffle(message: Message): Promise<void> {
                 });
                 return;
             }
-            if (
-                !(
-                    member.roles.cache.has('805772165394858015') ||
-                    member.roles.cache.has('805000661133295616') ||
-                    member.permissions.has('ADMINISTRATOR')
-                )
-            ) {
-                await channel.send(
-                    'You do not have permission to cancel a raffle.'
-                );
-                return;
-            }
+            if (!(await checkPermission(message, eventManagerRoleIds))) return;
             await channel.send(
                 '⚠️ WARNING ⚠️\n Type `end` to cancel the raffle, the action is irreversible.'
             );
@@ -575,7 +549,9 @@ export default async function raffle(message: Message): Promise<void> {
 }
 
 export async function setRaffleTimerOnBoot(client: Client): Promise<void> {
-    const guild = await client.guilds.fetch('804222694488932362');
+    const guild = client.guilds.cache.get(
+        process.env.COMMUNITY_SERVER_ID ?? ''
+    );
     if (!guild) return;
     announceWinner(guild);
 }

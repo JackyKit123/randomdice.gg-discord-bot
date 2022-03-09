@@ -2,6 +2,7 @@ import Discord from 'discord.js';
 import fetchMentionString from 'util/fetchMention';
 import cooldown from 'util/cooldown';
 import commandCost from './commandCost';
+import roleIds, { moderatorRoleIds } from 'config/roleId';
 
 export default async function bedtime(message: Discord.Message): Promise<void> {
     const { content, channel, guild, member } = message;
@@ -29,15 +30,9 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
     }
 
     const bedtimeForReal = /!bedtime\b.* --for-real\b/i.test(content);
-    if (!target.roles.cache.has('804223995025162280')) {
+    if (!target.roles.cache.has(roleIds['Bed time'])) {
         if (bedtimeForReal) {
-            if (
-                !member?.roles.cache.some(
-                    role =>
-                        role.id === '807219483311603722' ||
-                        role.id === '804223928427216926'
-                )
-            ) {
+            if (!member?.roles.cache.hasAny(...moderatorRoleIds)) {
                 await channel.send(
                     "You don't have sufficient permission to use argument `--for-real`"
                 );
@@ -47,11 +42,11 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
         if (!(await commandCost(message, 500))) {
             return;
         }
-        await target.roles.add('804223995025162280');
+        await target.roles.add(roleIds['Bed time']);
         setTimeout(
             () => {
                 try {
-                    target.roles.remove('804223995025162280');
+                    target.roles.remove(roleIds['Bed time']);
                 } catch {
                     // nothing
                 }
@@ -64,9 +59,9 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
                     .setTitle('Temporary role added')
                     .setColor(5496236)
                     .setDescription(
-                        `${target} has been granted the <@&804223995025162280> role for ${
-                            bedtimeForReal ? '8 hours' : 'now'
-                        }.`
+                        `${target} has been granted the <@&${
+                            roleIds['Bed time']
+                        }> role for ${bedtimeForReal ? '8 hours' : 'now'}.`
                     ),
             ],
         });

@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import Discord from 'discord.js';
 import parseMsIntoReadableText from 'util/parseMS';
 
@@ -7,7 +8,7 @@ export default async function announceLastToLeaveVC(
     const { webhookId, embeds, guild, channel } = message;
     let embed = embeds?.[0];
     if (
-        channel.id !== '804243533195640852' /* #voice-log */ ||
+        channel.id !== channelIds['voice-log'] ||
         !webhookId ||
         !embed ||
         !guild
@@ -57,14 +58,14 @@ export default async function announceLastToLeaveVC(
         });
         const timeSpan =
             (timestamp || 0) - (joinMessage?.embeds?.[0].timestamp || 0);
-        const logChannel = guild.channels.cache.get('805943260987392000');
+        const logChannel = guild.channels.cache.get(channelIds['voice-log']);
         if (logChannel?.isText())
             await logChannel.send(
                 !joinMessage
-                    ? `${member} has left <#810580588569296916> but I am unable to locate the join time.`
-                    : `${member} has stayed in <#810580588569296916> for ${parseMsIntoReadableText(
-                          timeSpan
-                      )}`
+                    ? `${member} has left <#${channelIds['voice-log']}> but I am unable to locate the join time.`
+                    : `${member} has stayed in <#${
+                          channelIds['voice-log']
+                      }> for ${parseMsIntoReadableText(timeSpan)}`
             );
     }
 }

@@ -17,7 +17,7 @@ export default async function commandCost(
     if (balance === false) return false;
     if (balance < cost) {
         await channel.send(
-            `You need at least <:dicecoin:839981846419079178> ${cost} to use \`${command.toLowerCase()}\``
+            `You need at least ${coinDice} ${cost} to use \`${command.toLowerCase()}\``
         );
         return false;
     }
@@ -28,7 +28,7 @@ export default async function commandCost(
         try {
             (
                 await author.send({
-                    content: `You used \`${command.toLowerCase()}\` command which costs you <:dicecoin:839981846419079178> ${cost}, click 🔇 in 60 seconds to stop this notification.`,
+                    content: `You used \`${command.toLowerCase()}\` command which costs you ${coinDice} ${cost}, click 🔇 in 60 seconds to stop this notification.`,
                     components: [
                         new MessageActionRow().addComponents([
                             new MessageButton()

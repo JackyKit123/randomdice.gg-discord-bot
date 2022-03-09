@@ -36,6 +36,7 @@ import shush, { unShush } from 'community discord/currency/fun commands/shush';
 import rickbomb from 'community discord/currency/fun commands/rickbomb';
 import givemoney from 'community discord/currency/fun commands/mudkipz';
 import wordle from 'community discord/wordle';
+import channelIds from 'config/channelIds';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -46,10 +47,10 @@ export default async function interactionCreate(
         (process.env.NODE_ENV === 'development' &&
             guild &&
             guild.id !== process.env.DEV_SERVER_ID &&
-            channel?.id !== '804640084007321600') ||
+            channel?.id !== channelIds['jackykit-playground-v2']) ||
         (process.env.NODE_ENV === 'production' &&
             (guild?.id === process.env.DEV_SERVER_ID ||
-                channel?.id === '804640084007321600'))
+                channel?.id === channelIds['jackykit-playground-v2']))
     )
         return;
 

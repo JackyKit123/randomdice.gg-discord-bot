@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import Discord from 'discord.js';
 import fetchMention from 'util/fetchMention';
 
@@ -5,12 +6,12 @@ export default async function banMessage(
     message: Discord.Message
 ): Promise<void> {
     const { client, author, embeds, channel, guild } = message;
-    const general = guild?.channels.cache.get('804222694488932364');
+    const general = guild?.channels.cache.get(channelIds.general);
 
     if (
         guild &&
         author.id === '235148962103951360' /* carl-bot */ &&
-        channel.id === '804235946807525409' /* #public-mod-log */ &&
+        channel.id === channelIds['public-mod-log'] &&
         general?.isText()
     ) {
         const embed = embeds[0];

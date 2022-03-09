@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import Discord from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
@@ -10,7 +11,7 @@ export default async function voteReward(
 
     if (
         author.id !== '479688142908162059' ||
-        channel.id !== '804711958116565003' ||
+        channel.id !== channelIds['thank-you-supporters'] ||
         !guild
     )
         return;
@@ -30,7 +31,7 @@ export default async function voteReward(
         .ref(`discord_bot/community/currency/${uid}/balance`)
         .set(balance + 1000);
     await channel.send({
-        content: `Added <:dicecoin:839981846419079178> 1000 to ${member}'s balance. Thanks for voting us!`,
+        content: `Added ${coinDice} 1000 to ${member}'s balance. Thanks for voting us!`,
         allowedMentions: {
             parse: [],
             users: [],

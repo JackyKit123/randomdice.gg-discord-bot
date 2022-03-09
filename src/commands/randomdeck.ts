@@ -1,3 +1,4 @@
+import { shuffleDice, shuffleDiceLegendary } from 'config/emojiId';
 import {
     ApplicationCommandData,
     CommandInteraction,
@@ -38,9 +39,7 @@ export default async function RandomDeck(
         Array(5)
             .fill(0)
             .map(() =>
-                Math.random() > 0.5
-                    ? '<a:Dice_TierX_RandomLegend:867076479733334016>'
-                    : '<a:Dice_TierX_RandomCommon:830670733004242974>'
+                Math.random() > 0.5 ? shuffleDiceLegendary : shuffleDice
             );
 
     const sentMessage = await reply(input, getShuffleAnimation().join(''));

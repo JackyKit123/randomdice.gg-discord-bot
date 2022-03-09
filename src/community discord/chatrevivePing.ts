@@ -1,3 +1,5 @@
+import channelIds from 'config/channelIds';
+import roleIds from 'config/roleId';
 import Discord from 'discord.js';
 
 let timeout: NodeJS.Timeout;
@@ -5,7 +7,7 @@ export default async function chatRevivePing(
     message: Discord.Message
 ): Promise<void> {
     const { channel } = message;
-    if (channel.id !== '804222694488932364') {
+    if (channel.id !== channelIds.general) {
         return;
     }
 
@@ -15,7 +17,7 @@ export default async function chatRevivePing(
     timeout = setTimeout(
         async () =>
             channel.send(
-                '<@&807578981003689984> come and revive this dead chat.'
+                `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat.`
             ),
         1000 * 60 * 60
     );
@@ -24,8 +26,10 @@ export default async function chatRevivePing(
 export async function fetchGeneralOnBoot(
     client: Discord.Client
 ): Promise<void> {
-    const guild = await client.guilds.fetch('804222694488932362');
-    const general = guild.channels.cache.get('804222694488932364');
+    const guild = client.guilds.cache.get(
+        process.env.COMMUNITY_SERVER_ID ?? ''
+    );
+    const general = guild?.channels.cache.get(channelIds.general);
     if (!general?.isText()) return;
     try {
         const lastMessages = await general.messages.fetch();
@@ -39,7 +43,7 @@ export async function fetchGeneralOnBoot(
             timeout = setTimeout(
                 async () =>
                     general.send(
-                        '<@&807578981003689984> come and revive this dead chat.'
+                        `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat.`
                     ),
                 tenMinutes - deadChatTimer
             );

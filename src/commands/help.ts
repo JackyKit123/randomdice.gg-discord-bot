@@ -57,7 +57,7 @@ export default async function help(
 
     if (communityHelpOnly) {
         await reply(input, { embeds: [communityHelpMessage] }, true);
-    } else if (guild?.id === '804222694488932362') {
+    } else if (guild?.id === process.env.COMMUNITY_SERVER_ID) {
         await reply(
             input,
             {

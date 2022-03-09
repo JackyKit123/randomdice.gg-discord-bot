@@ -1,3 +1,4 @@
+import roleIds from 'config/roleId';
 import Discord, {
     GuildAuditLogsEntry,
     GuildAuditLogsResolvable,
@@ -5,6 +6,7 @@ import Discord, {
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import fetchMention from 'util/fetchMention';
+import { clown as clownEmoji } from 'config/emojiId';
 import commandCost from './commandCost';
 
 const wait = promisify(setTimeout);
@@ -28,7 +30,7 @@ export default async function clown(message: Discord.Message): Promise<void> {
         !(await commandCost(message, Math.round(Math.random() * 3500 - 1500)))
     ) {
         await channel.send(
-            "Usually that's the case, but today I am gonna allow you to use it.<a:clowndance:845532985787940894>"
+            `Usually that's the case, but today I am gonna allow you to use it.${clownEmoji}`
         );
     }
     const memberArg = content.split(' ')?.[1];
@@ -41,10 +43,7 @@ export default async function clown(message: Discord.Message): Promise<void> {
         await channel.send('Unknown target.');
         return;
     }
-    if (
-        target?.id === author.id &&
-        member.roles.cache.has('845530033695096853')
-    ) {
+    if (target?.id === author.id && member.roles.cache.has(roleIds['🤡'])) {
         await channel.send('Slow Down. You are already a clown, jeez.');
         return;
     }
@@ -70,9 +69,9 @@ export default async function clown(message: Discord.Message): Promise<void> {
             Math.random() < 0.95)
     ) {
         await sentMessage.edit(
-            `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
+            `${target} got clowned by ${author}.${clownEmoji}`
         );
-    } else if (target.roles.cache.has('845530033695096853')) {
+    } else if (target.roles.cache.has(roleIds['🤡'])) {
         await sentMessage.edit(
             `${target} has already been clowned. Why are you so desperate? I guess you are the real clown then.`
         );
@@ -95,7 +94,7 @@ export default async function clown(message: Discord.Message): Promise<void> {
         target = member;
     } else {
         await sentMessage.edit(
-            `${target} got clowned by ${author}.<a:clowndance:845532985787940894>`
+            `${target} got clowned by ${author}.${clownEmoji}`
         );
     }
     const originalName = target.displayName;
@@ -104,7 +103,7 @@ export default async function clown(message: Discord.Message): Promise<void> {
             ? 10
             : Math.ceil(Math.random() * 10);
     try {
-        await target.roles.add('845530033695096853');
+        await target.roles.add(roleIds['🤡']);
         await target.setNickname('🤡'.repeat(howClown));
     } catch (err) {
         // suppress error
@@ -114,10 +113,8 @@ export default async function clown(message: Discord.Message): Promise<void> {
                 typedWrongCommand || clownedABot
                     ? `${target} ${clownedABot ? 'tried to clown a bot.' : ''}${
                           typedWrongCommand ? 'typed the wrong command.' : ''
-                      } 100% clown!<a:clowndance:845532985787940894>`
-                    : `${target} is a ${
-                          howClown * 10
-                      }% clown.<a:clowndance:845532985787940894>`,
+                      } 100% clown!${clownEmoji}`
+                    : `${target} is a ${howClown * 10}% clown.${clownEmoji}`,
             allowedMentions: {
                 users: [],
                 roles: [],
@@ -126,8 +123,8 @@ export default async function clown(message: Discord.Message): Promise<void> {
         });
         await wait(1000 * 60 * 5);
         try {
-            if (target.roles.cache.has('845530033695096853')) {
-                await target.roles.remove('845530033695096853');
+            if (target.roles.cache.has(roleIds['🤡'])) {
+                await target.roles.remove(roleIds['🤡']);
             }
             await wait(5000);
             await target.setNickname(originalName);
@@ -140,8 +137,10 @@ export default async function clown(message: Discord.Message): Promise<void> {
 export async function purgeRolesOnReboot(
     client: Discord.Client
 ): Promise<void> {
-    const guild = await client.guilds.fetch('804222694488932362');
-    if (!client.user) return;
+    const guild = client.guilds.cache.get(
+        process.env.COMMUNITY_SERVER_ID ?? ''
+    );
+    if (!client.user || !guild) return;
     const roleUpdateLog = await guild.fetchAuditLogs({
         user: client.user,
         type: 'MEMBER_ROLE_UPDATE',
@@ -158,8 +157,8 @@ export async function purgeRolesOnReboot(
         ...roleUpdateLog.entries.filter(getLast10Minutes).map(async entry => {
             if (!entry.target) return;
             const member = await guild.members.fetch(entry.target.id);
-            if (member.roles.cache.has('845530033695096853'))
-                await member.roles.remove('845530033695096853');
+            if (member.roles.cache.has(roleIds['🤡']))
+                await member.roles.remove(roleIds['🤡']);
         }),
         ...nickUpdateLog.entries.filter(getLast10Minutes).map(async entry => {
             const memberNicknameUpdated: string[] = [];

@@ -14,7 +14,6 @@ import voteReward from 'community discord/currency/voteReward';
 import announceLastToLeaveVC from 'community discord/lastToLeaveVC';
 import { autoReaction } from 'community discord/myEmoji';
 import oneMinute from 'community discord/oneMinute';
-import oneWordStoryValidate from 'community discord/oneWordStoryValidate';
 import { autoRole } from 'community discord/rdRole';
 import solveMathEquation from 'community discord/solveMathEquation';
 import spy from 'community discord/spy';
@@ -30,6 +29,7 @@ import cache from 'util/cache';
 import { baseCommands } from 'register/commandCase';
 import yesNoButton from 'util/yesNoButton';
 import { reply } from 'util/typesafeReply';
+import channelIds from 'config/channelIds';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { content, channel, guild, author, member, client } = message;
@@ -59,7 +59,6 @@ export default async function messageCreate(message: Message): Promise<void> {
         ) {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
-                oneWordStoryValidate(message),
                 voteReward(message),
                 banMessage(message),
                 announceLastToLeaveVC(message),
@@ -71,9 +70,9 @@ export default async function messageCreate(message: Message): Promise<void> {
             member &&
             !(
                 (process.env.NODE_ENV === 'production' &&
-                    channel.id === '804640084007321600') ||
+                    channel.id === channelIds['jackykit-playground-v2']) ||
                 (process.env.NODE_ENV === 'development' &&
-                    channel.id !== '804640084007321600')
+                    channel.id !== channelIds['jackykit-playground-v2'])
             )
         ) {
             asyncPromisesCapturer = [

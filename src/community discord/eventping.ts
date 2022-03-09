@@ -1,4 +1,4 @@
-import { eventManagerRoleIds } from 'config/roleId';
+import roleIds, { eventManagerRoleIds } from 'config/roleId';
 import Discord, {
     ApplicationCommandData,
     CommandInteraction,
@@ -59,7 +59,10 @@ export default async function eventPing(
     } else {
         await input.deferReply();
     }
-    await channel.send({ content: '<@&804544088153391124>', embeds: [embed] });
+    await channel.send({
+        content: `<@&${roleIds['Server Event Ping']}>`,
+        embeds: [embed],
+    });
     if (input instanceof CommandInteraction) {
         await input.deleteReply();
     }

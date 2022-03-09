@@ -2,6 +2,10 @@ import { database } from 'register/firebase';
 import Discord from 'discord.js';
 import cooldown from 'util/cooldown';
 import fetchMentionString from 'util/fetchMention';
+import checkPermission from 'community discord/util/checkPermissions';
+import { eventManagerRoleIds } from 'config/roleId';
+import channelIds from 'config/channelIds';
+import { coinDice } from 'config/emojiId';
 import getBalance from './balance';
 
 export default async function currency(
@@ -19,27 +23,8 @@ export default async function currency(
     const { channel, content, guild, member } = message;
     const [, amountArg, ...memberArgs] = content.split(' ');
 
-    if (
-        !guild ||
-        !(
-            member?.roles.cache.has('805000661133295616') ||
-            member?.roles.cache.has('805772165394858015') ||
-            member?.permissions.has('ADMINISTRATOR')
-        )
-    ) {
-        await channel.send({
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle(`You cannot use currency audit command.`)
-                    .setColor('#ff0000')
-                    .setDescription(
-                        'You need one of the following roles to use this command.\n' +
-                            '<@&805000661133295616> <@&805772165394858015>\n'
-                    ),
-            ],
-        });
+    if (!guild || !(await checkPermission(message, eventManagerRoleIds)))
         return;
-    }
 
     const targetInList: string[] = [];
     const targets = (
@@ -87,7 +72,7 @@ export default async function currency(
     }
     if (amount > 50000 && !member.permissions.has('ADMINISTRATOR')) {
         await channel.send(
-            'The audit amount is too large (> <:dicecoin:839981846419079178> 50,000), you need `ADMINISTRATOR` permission to enter that large amount.'
+            `The audit amount is too large (> ${coinDice} 50,000), you need \`ADMINISTRATOR\` permission to enter that large amount.`
         );
         return;
     }
@@ -106,23 +91,25 @@ export default async function currency(
     await channel.send({
         content: `You have ${
             deduction ? 'taken away' : 'given'
-        } <:dicecoin:839981846419079178> ${numberFormat.format(
-            Math.abs(amount)
-        )} ${deduction ? 'from' : 'to'} ${targets.join(' ')}`,
+        } ${coinDice} ${numberFormat.format(Math.abs(amount))} ${
+            deduction ? 'from' : 'to'
+        } ${targets.join(' ')}`,
         allowedMentions: {
             parse: [],
             users: [],
             roles: [],
         },
     });
-    const logChannel = guild.channels.cache.get('804640084007321600');
+    const logChannel = guild.channels.cache.get(
+        channelIds['jackykit-playground-v2']
+    );
     if (logChannel?.isText()) {
         await logChannel.send({
             content: `${member} have ${
                 deduction ? 'taken away' : 'given'
-            } <:dicecoin:839981846419079178> ${numberFormat.format(
-                Math.abs(amount)
-            )} ${deduction ? 'from' : 'to'} ${targets.join(' ')}`,
+            } ${coinDice} ${numberFormat.format(Math.abs(amount))} ${
+                deduction ? 'from' : 'to'
+            } ${targets.join(' ')}`,
             allowedMentions: {
                 parse: [],
                 users: [],

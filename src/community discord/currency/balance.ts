@@ -11,19 +11,8 @@ import {
 import cooldown from 'util/cooldown';
 import fetchMention from 'util/fetchMention';
 import cache from 'util/cache';
-
-const prestigeRoleIds = [
-    '806312627877838878',
-    '806896328255733780',
-    '806896441947324416',
-    '809142950117245029',
-    '809142956715671572',
-    '809142968434950201',
-    '809143362938339338',
-    '809143374555774997',
-    '809143390791925780',
-    '809143588105486346',
-];
+import { prestigeRoles } from 'config/roleId';
+import { coinDice } from 'config/emojiId';
 
 export default async function balance(
     input:
@@ -34,6 +23,7 @@ export default async function balance(
     output: 'silence' | 'emit' | 'emit new member',
     optionalTarget?: GuildMember
 ): Promise<number | false> {
+    const prestigeRoleIds = Object.values(prestigeRoles);
     const numberFormat = new Intl.NumberFormat();
     const { member, channel, guild, client } = input;
     if (!guild || !member) return false;
@@ -106,11 +96,10 @@ export default async function balance(
             .set(prestigeLevel);
         if (output === 'emit new member' || output === 'emit') {
             await (channel ?? client.users.cache.get(member.user.id))?.send({
-                content:
-                    'Looks like you are the first time using server currency command, you have been granted **<:dicecoin:839981846419079178> 10,000** as a starter reward.',
+                content: `Looks like you are the first time using server currency command, you have been granted **${coinDice} 10,000** as a starter reward.`,
                 embeds: [
                     embed.setDescription(
-                        `<:dicecoin:839981846419079178> ${numberFormat.format(
+                        `${coinDice} ${numberFormat.format(
                             Number(profile?.balance) || 10000
                         )}`
                     ),
@@ -131,9 +120,7 @@ export default async function balance(
     await (channel ?? client.users.cache.get(member.user.id))?.send({
         embeds: [
             embed.setDescription(
-                `<:dicecoin:839981846419079178> ${numberFormat.format(
-                    Number(profile?.balance)
-                )}`
+                `${coinDice} ${numberFormat.format(Number(profile?.balance))}`
             ),
         ],
     });

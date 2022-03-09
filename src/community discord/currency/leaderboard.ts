@@ -4,6 +4,9 @@ import logMessage from 'dev-commands/logMessage';
 import cache, { MemberCurrency } from 'util/cache';
 import cooldown from 'util/cooldown';
 import getPaginationComponents from 'util/paginationButtons';
+import channelIds from 'config/channelIds';
+import roleIds, { tier2RoleIds } from 'config/roleId';
+import { coinDice } from 'config/emojiId';
 import { deleteCustomRole } from '../customRole';
 
 const numberFormat = new Intl.NumberFormat();
@@ -50,7 +53,7 @@ function sortLeaderboard(
         })
         .map(([uid, profile], i) => ({
             name: `#${i + 1}`,
-            value: `<@!${uid}> \n<:dicecoin:839981846419079178> **__${numberFormat.format(
+            value: `<@!${uid}> \n${coinDice} **__${numberFormat.format(
                 value[type](profile)
             )}__**`,
         }));
@@ -58,24 +61,24 @@ function sortLeaderboard(
 
 async function resetWeekly(client: Discord.Client): Promise<void> {
     const guild = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID || '804222694488932362'
+        process.env.COMMUNITY_SERVER_ID ?? ''
     );
     if (!guild) {
         await logMessage(
             client,
             'warning',
             `Unable to get guild ${
-                process.env.COMMUNITY_SERVER_ID || '804222694488932362'
+                process.env.COMMUNITY_SERVER_ID ?? ''
             } when resetting weekly.`
         );
         return;
     }
-    const channel = guild.channels.cache.get('805388492174655488');
+    const channel = guild.channels.cache.get(channelIds['weekly-top-5']);
     if (!channel?.isText()) {
         await logMessage(
             client,
             'warning',
-            'Unable to get text channel 805388492174655488 when resetting weekly.'
+            'Unable to get text channel weekly-top-5 when resetting weekly.'
         );
         return;
     }
@@ -88,7 +91,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
         database.ref(`discord_bot/community/currency/${id}/weeklyChat`).set(0)
     );
     await channel.send({
-        content: '<@&804544088153391124>',
+        content: roleIds['Server Event Ping'],
         embeds: [
             new Discord.MessageEmbed()
                 .setColor('#6ba4a5')
@@ -111,14 +114,14 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
         weeklyWinners
             .concat(
                 guild.roles.cache
-                    .get('805388604791586826')
+                    .get(roleIds['Weekly Top 5'] ?? '')
                     ?.members.map(m => m.id) || []
             )
             .map(async uid => {
                 try {
                     const m = await guild.members.fetch(uid);
-                    if (m && m.roles.cache.has('805388604791586826')) {
-                        await m.roles.remove('805388604791586826');
+                    if (m && m.roles.cache.has(roleIds['Weekly Top 5'])) {
+                        await m.roles.remove(roleIds['Weekly Top 5']);
                         findUniques.set(m.id, true);
                     }
                 } catch {
@@ -127,7 +130,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
             })
     );
     await channel.send(
-        `Remove <@&805388604791586826> from ${findUniques.size} members`
+        `Remove <@&${roleIds['Weekly Top 5']}> from ${findUniques.size} members`
     );
     const weeklyList = await Promise.all(
         sortedWeekly.slice(0, 5).map(async ({ value }) => {
@@ -136,8 +139,10 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
             try {
                 const m = await guild.members.fetch(uid);
                 if (m) {
-                    await m.roles.add('805388604791586826');
-                    await channel.send(`Added <@&805388604791586826> to ${m}`);
+                    await m.roles.add(roleIds['Weekly Top 5']);
+                    await channel.send(
+                        `Added <@&${roleIds['Weekly Top 5']}> to ${m}`
+                    );
                 }
                 return uid;
             } catch {
@@ -154,20 +159,13 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
         weeklyWinners
             .concat(
                 guild.roles.cache
-                    .get('805388604791586826')
+                    .get(roleIds['Weekly Top 5'])
                     ?.members.map(m => m.id) || []
             )
             .map(async uid => {
                 try {
                     const m = await guild.members.fetch(uid);
-                    if (
-                        !(
-                            m.roles.cache.has('804512584375599154') ||
-                            m.roles.cache.has('804231753535193119') ||
-                            m.roles.cache.has('806896328255733780') ||
-                            m.roles.cache.has('805388604791586826')
-                        )
-                    ) {
+                    if (!m.roles.cache.hasAny(...tier2RoleIds)) {
                         await deleteCustomRole(
                             guild,
                             m.id,

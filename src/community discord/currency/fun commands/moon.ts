@@ -14,10 +14,6 @@ export default async function moon(message: Discord.Message): Promise<void> {
     }
 
     const memberArg = content.split(' ')?.[1];
-    if (author.id === '722951439567290458') {
-        await channel.send("No you can't use `!moon`, get rekt.");
-        return;
-    }
 
     const target = await fetchMention(memberArg, guild, {
         content,

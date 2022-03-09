@@ -1,19 +1,17 @@
+import channelIds from 'config/channelIds';
+import roleIds, {
+    tier1RoleIds,
+    tier2RoleIds,
+    tier3RoleIds,
+    tier4RoleIds,
+    tier5RoleIds,
+} from 'config/roleId';
 import Discord from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import getBalance from './balance';
 
 export function duplicatedRoleMulti(member: Discord.GuildMember): number {
-    const tier1roles = ['806312627877838878'];
-    const tier2roles = [
-        '806896328255733780',
-        '804231753535193119',
-        '805388604791586826',
-    ];
-    const tier3roles = ['804512584375599154', '809142956715671572'];
-    const tier4roles = ['804513079319592980', '809143588105486346'];
-    const tier5roles = ['804513117228367882', '805727466219372546'];
-
     const duplicatedTierMulti = (
         tierRoles: string[],
         multiplier: number
@@ -27,11 +25,11 @@ export function duplicatedRoleMulti(member: Discord.GuildMember): number {
         );
 
     return (
-        duplicatedTierMulti(tier1roles, 2) +
-        duplicatedTierMulti(tier2roles, 5) +
-        duplicatedTierMulti(tier3roles, 10) +
-        duplicatedTierMulti(tier4roles, 20) +
-        duplicatedTierMulti(tier5roles, 50)
+        duplicatedTierMulti(tier1RoleIds, 2) +
+        duplicatedTierMulti(tier2RoleIds, 5) +
+        duplicatedTierMulti(tier3RoleIds, 10) +
+        duplicatedTierMulti(tier4RoleIds, 20) +
+        duplicatedTierMulti(tier5RoleIds, 50)
     );
 }
 
@@ -46,25 +44,26 @@ export default async function chatCoins(
     if (
         client.user &&
         author.id === client.user.id &&
-        channel.id === '804222694488932364' &&
-        content === '<@&807578981003689984> come and revive this dead chat.'
+        channel.id === channelIds.general &&
+        content ===
+            `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat.`
     ) {
         let generalMulti =
             cache['discord_bot/community/currencyConfig'].multiplier.channels[
-                '804222694488932364'
+                channelIds.general
             ] || 0;
         await database
             .ref(
-                `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
+                `discord_bot/community/currencyConfig/multiplier/channels/${channelIds.general}`
             )
             .set(generalMulti + 10);
         setTimeout(async () => {
             generalMulti =
                 cache['discord_bot/community/currencyConfig'].multiplier
-                    .channels['804222694488932364'] || 0;
+                    .channels[channelIds.general] || 0;
             await database
                 .ref(
-                    `discord_bot/community/currencyConfig/multiplier/channels/804222694488932364`
+                    `discord_bot/community/currencyConfig/multiplier/channels/${channelIds.general}`
                 )
                 .set(generalMulti - 10);
         }, 60 * 60 * 1000);
@@ -121,6 +120,6 @@ export default async function chatCoins(
         .set(weekly + 1);
     setTimeout(
         () => weeklyCooldown.set(member.id, false),
-        (channel.parentId === '804227071765118976' ? 30 : 10) * 1000
+        (channel.parentId === channelIds['🤖 | Bot Channels'] ? 30 : 10) * 1000
     );
 }

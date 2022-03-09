@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import roleIds from 'config/roleId';
 import {
     ApplicationCommandData,
@@ -179,7 +180,9 @@ export default async function Apply(
         return;
     }
 
-    const applicationCategory = guild.channels.cache.get('807183574645735474');
+    const applicationCategory = guild.channels.cache.get(
+        channelIds['💼 | Applications']
+    );
     const newChannel = await guild.channels.create(
         `${member.user.username}-${member.user.discriminator}-${application.position}-application`,
         {
@@ -304,7 +307,9 @@ export async function closeApplication(
                     );
                     await channel.send(`Locked down ${channel}`);
                     await channel.send(
-                        `<@&804223328709115944>, ${user} has submitted the ${applicationName.toLowerCase()}.`
+                        `${
+                            roleIds.Admin
+                        }, ${user} has submitted the ${applicationName.toLowerCase()}.`
                     );
                 }
             );
@@ -325,7 +330,9 @@ export async function fetchApps(client: Client): Promise<void> {
     const guild = await client.guilds.fetch(
         process.env.COMMUNITY_SERVER_ID as string
     );
-    const applications = guild.channels.cache.get('807183574645735474');
+    const applications = guild.channels.cache.get(
+        channelIds['💼 | Applications']
+    );
     if (applications instanceof CategoryChannel) {
         applications.children.forEach(async child => {
             if (child.isText()) {

@@ -1,5 +1,7 @@
 import * as Discord from 'discord.js';
 import logMessage from 'dev-commands/logMessage';
+import channelIds from 'config/channelIds';
+import roleIds, { moderatorRoleIds } from 'config/roleId';
 
 const bannedCache: string[] = [];
 
@@ -46,11 +48,13 @@ export default async function spy(message: Discord.Message): Promise<void> {
         )
             return;
 
-        const communityDiscord = await client.guilds.fetch(
-            '804222694488932362'
+        const communityDiscord = client.guilds.cache.get(
+            process.env.COMMUNITY_SERVER_ID ?? ''
         );
-        const spyLog =
-            communityDiscord.channels.cache.get('852355980779978752');
+        const spyLog = communityDiscord?.channels.cache.get(
+            channelIds['hack-discord-spy-log']
+        );
+        if (!communityDiscord || !spyLog) return;
         const isBanned = await fetchIsBanned(communityDiscord, author);
         const isCommunityDiscordMember = isBanned
             ? false
@@ -117,7 +121,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
                 ? `${
                       isBanned
                           ? ''
-                          : '<@&804223928427216926> <@&807219483311603722>'
+                          : moderatorRoleIds.map(id => `<@&${id}>`).join(' ')
                   } Sensitive keyword${
                       Array.from(triggered).length > 1 ? 's' : ''
                   } triggered: ${Array.from(triggered)
@@ -178,7 +182,7 @@ export async function spyLogBanHandler(
     if (
         !guild ||
         !guild.members.cache.get(user.id)?.permissions.has('BAN_MEMBERS') ||
-        channel.id !== '852355980779978752' ||
+        channel.id !== channelIds['hack-discord-spy-log'] ||
         !embeds[0] ||
         author?.id !== (client.user as Discord.ClientUser).id ||
         reaction.emoji.id !== '868148038311489578'
@@ -201,7 +205,9 @@ export async function fetchSpyLogOnBoot(client: Discord.Client): Promise<void> {
     const guild = await client.guilds.fetch(
         process.env.COMMUNITY_SERVER_ID || ''
     );
-    const channel = guild.channels.cache.get('852355980779978752');
+    const channel = guild.channels.cache.get(
+        channelIds['hack-discord-spy-log']
+    );
     if (!channel?.isText()) return;
     await channel.messages.fetch();
 }

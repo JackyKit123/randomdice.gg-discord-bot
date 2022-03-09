@@ -78,23 +78,19 @@ const roleIds = {
 
 export default roleIds;
 
-export const tier1RoleIds = [
-    roleIds['$5 Patreon'],
-    roleIds['Server Booster'],
-    roleIds['Prestige I'],
-    roleIds['Weekly Top 5'],
-];
+export const tier1RoleIds = [roleIds['Prestige I']];
 
 export const tier2RoleIds = [
-    roleIds['$5 Patreon'],
     roleIds['Server Booster'],
     roleIds['Prestige II'],
     roleIds['Weekly Top 5'],
 ];
 
-export const tier3RoleIds = [roleIds['$10 Patreon'], roleIds['Prestige V']];
+export const tier3RoleIds = [roleIds['$5 Patreon'], roleIds['Prestige V']];
 
-export const tier4RoleIds = [roleIds['$20 Patreon'], roleIds['Prestige X']];
+export const tier4RoleIds = [roleIds['$10 Patreon'], roleIds['Prestige X']];
+
+export const tier5RoleIds = [roleIds['$20 Patreon'], roleIds['$50 Patreon']];
 
 export const eventManagerRoleIds = [
     roleIds['Event Manager'],
@@ -102,3 +98,16 @@ export const eventManagerRoleIds = [
 ];
 
 export const moderatorRoleIds = [roleIds.Moderator, roleIds['Trial Moderator']];
+
+export const prestigeRoles: { [level: number]: string } = {
+    1: roleIds['Prestige I'],
+    2: roleIds['Prestige II'],
+    3: roleIds['Prestige III'],
+    4: roleIds['Prestige IV'],
+    5: roleIds['Prestige V'],
+    6: roleIds['Prestige VI'],
+    7: roleIds['Prestige VII'],
+    8: roleIds['Prestige VIII'],
+    9: roleIds['Prestige IX'],
+    10: roleIds['Prestige X'],
+};

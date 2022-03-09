@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import { GuildMember, Message } from 'discord.js';
 import { database } from 'register/firebase';
 import getBalance from './balance';
@@ -7,7 +8,7 @@ const rapidSuccessJoin = new Map<GuildMember, number>();
 export default async function welcomeReward(
     member: GuildMember
 ): Promise<void> {
-    const general = member.guild.channels.cache.get('804222694488932364');
+    const general = member.guild.channels.cache.get(channelIds.general);
     const now = Date.now().valueOf();
 
     if (
@@ -34,6 +35,6 @@ export default async function welcomeReward(
             await database
                 .ref(`discord_bot/community/currency/${id}/balance`)
                 .set(balance + 100);
-            await collected.react('<:dicecoin:839981846419079178>');
+            await collected.react('${coinDice}');
         });
 }

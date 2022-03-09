@@ -1,3 +1,4 @@
+import { timeDice } from 'config/emojiId';
 import {
     ApplicationCommandData,
     Client,
@@ -75,7 +76,7 @@ function tickTimer(
                     embeds: [embed.setDescription('**Timer Ended**')],
                 });
                 const timerReact = reactions.cache.find(
-                    reaction => reaction.emoji.id === '804524690440847381'
+                    reaction => reaction.emoji.identifier === timeDice
                 );
                 const userList = (await timerReact?.users.fetch())
                     ?.filter(user => !user.bot && user.id !== hostId)
@@ -164,7 +165,7 @@ export async function setTimer(
         endTime,
     });
     tickTimer(timerMessage, member.id, endTime, ref.key as string);
-    await timerMessage.react('<:Dice_Tier4_Time:804524690440847381>');
+    await timerMessage.react(timeDice);
 }
 
 export default async function timerCommand(
