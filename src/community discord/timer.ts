@@ -14,7 +14,6 @@ import { database } from 'register/firebase';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
-import { reply } from 'util/typesafeReply';
 
 const wait = promisify(setTimeout);
 
@@ -169,43 +168,33 @@ export async function setTimer(
 }
 
 export default async function timerCommand(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild, channel } = input;
-    const member = guild?.members.cache.get(input.member?.user.id ?? '');
+    if (!interaction.inCachedGuild()) return;
+    const { guild, member, channel } = interaction;
 
-    if (!member || !guild || !channel) {
-        return;
-    }
+    if (!channel) return;
 
-    if (
-        input instanceof Message
-            ? input.content.startsWith('!timer cancel')
-            : input.options.getSubcommand(true) === 'cancel'
-    ) {
-        const timerId =
-            input instanceof Message
-                ? input.content.replace(/^!timer cancel ?/, '')[0]
-                : input.options.getString('message-id', true);
+    if (interaction.options.getSubcommand(true) === 'cancel') {
+        const timerId = interaction.options.getString('message-id', true);
         const existingTimer = Object.entries(
             cache['discord_bot/community/timer']
         ).find(([, timer]) => timer.messageId === timerId);
         if (!existingTimer) {
-            await reply(input, 'No active timer found.');
+            await interaction.reply('No active timer found.');
             return;
         }
         const [key, timer] = existingTimer;
         const timerChannel = guild.channels.cache.get(timer.channelId);
         if (!timerChannel?.isText()) {
-            await reply(input, 'No active timer found.');
+            await interaction.reply('No active timer found.');
             return;
         }
         if (
             !timerChannel.permissionsFor(member)?.has('MANAGE_MESSAGES') &&
             existingTimer?.[1].hostId !== member.id
         ) {
-            await reply(
-                input,
+            await interaction.reply(
                 `You do not have permission to end that timer. You need to either be the one started that timer or have \`MANAGE_MESSAGE\` permission in <#${timer.channelId}>`
             );
             return;
@@ -221,40 +210,24 @@ export default async function timerCommand(
                 throw err;
             }
         }
-        await reply(input, 'Killed timer.');
+        await interaction.reply('Killed timer.');
         return;
     }
 
-    const [, timeString, ...msgArg] =
-        input instanceof Message
-            ? input.content.split(' ')
-            : [
-                  null,
-                  input.options.getString('time', true),
-                  input.options.getString('title'),
-              ];
-    const time = parseStringIntoMs(timeString);
-    const msg = msgArg.join(' ');
+    const time = parseStringIntoMs(interaction.options.getString('time', true));
+    const msg =
+        interaction.options.getString('title') ??
+        `${member.displayName}'s Timer`;
 
     if (!time) {
-        await reply(input, {
-            embeds: [
-                new MessageEmbed()
-                    .setTitle('Command Parse Error')
-                    .setColor('#ff0000')
-                    .setDescription('usage of the command')
-                    .addField(
-                        `!timer <time> [message]`,
-                        'Example:```!timer 20s Just a countdown\n!timer 4d20m smoke weed everyday```'
-                    ),
-            ],
-        });
+        await interaction.reply(
+            'Invalid time string. Time string should be like `1d2h3m4s`'
+        );
         return;
     }
+    await interaction.deferReply();
     await setTimer(channel, member, msg, time);
-    if (input instanceof CommandInteraction) {
-        await reply(input, 'A timer has been started.', true);
-    }
+    await interaction.deleteReply();
 }
 
 export async function registerTimer(client: Client): Promise<void> {
