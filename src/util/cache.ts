@@ -146,28 +146,30 @@ export interface Raffle {
     };
 }
 
-export interface MemberCurrency {
-    [memberId: string]: {
-        balance: number;
-        initiated?: true;
-        prestige: number;
-        hourly?: number;
-        daily?: number;
-        weekly?: number;
-        monthly?: number;
-        yearly?: number;
-        weeklyChat?: number;
-        dailyStreak?: number;
-        hourlyStreak?: number;
-        diceDrawn?: {
-            [id: string]: number;
-        };
-        gamble?: {
-            lose: number;
-            gain: number;
-        };
-        ignoreFunCommandPrompt?: string[];
+export interface MemberCurrencyProfile {
+    balance: number;
+    initiated?: true;
+    prestige: number;
+    hourly?: number;
+    daily?: number;
+    weekly?: number;
+    monthly?: number;
+    yearly?: number;
+    weeklyChat?: number;
+    dailyStreak?: number;
+    hourlyStreak?: number;
+    diceDrawn?: {
+        [id: string]: number;
     };
+    gamble?: {
+        lose: number;
+        gain: number;
+    };
+    ignoreFunCommandPrompt?: string[];
+}
+
+export interface MemberCurrency {
+    [memberId: string]: MemberCurrencyProfile;
 }
 
 export interface CurrencyConfig {

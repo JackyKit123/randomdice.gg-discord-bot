@@ -16,7 +16,7 @@ import { myClass, myCrit } from 'community discord/rdRole';
 import advertise from 'community discord/promote';
 import drawDice from 'community discord/currency/drawDice';
 import balance from 'community discord/currency/balance';
-import profile from 'community discord/currency/profile';
+import profile, { profileButtons } from 'community discord/currency/profile';
 import coinflip from 'community discord/currency/coinflip';
 import leaderboard from 'community discord/currency/leaderboard';
 import prestige from 'community discord/currency/prestige';
@@ -37,6 +37,7 @@ import rickbomb from 'community discord/currency/fun commands/rickbomb';
 import givemoney from 'community discord/currency/fun commands/mudkipz';
 import wordle from 'community discord/wordle';
 import channelIds from 'config/channelIds';
+import { nullDice } from 'config/emojiId';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -71,6 +72,13 @@ export default async function interactionCreate(
                     case 'delete-snipe':
                     case 'trash-snipe':
                         await deleteSnipe(interaction);
+                        break;
+                    case 'profile-👤':
+                    case 'profile-⏲️':
+                    case 'profile-🎰':
+                    case `profile-${nullDice}`:
+                    case 'profile-❌':
+                        await profileButtons(interaction);
                         break;
                     default:
                 }
@@ -133,10 +141,7 @@ export default async function interactionCreate(
                     case 'balance':
                         await balance(interaction);
                         break;
-                    case 'rank':
                     case 'profile':
-                    case 'stat':
-                    case 'p':
                         await profile(interaction);
                         break;
                     case 'coinflip':
@@ -223,6 +228,9 @@ export default async function interactionCreate(
                 switch (interaction.commandName) {
                     case 'Check Balance':
                         await balance(interaction);
+                        break;
+                    case 'Show Profile':
+                        await profile(interaction);
                         break;
                     default:
                 }

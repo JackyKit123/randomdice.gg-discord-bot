@@ -9,8 +9,8 @@ import {
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 import cache from 'util/cache';
-import { prestigeRoles } from 'config/roleId';
 import { coinDice } from 'config/emojiId';
+import { getPrestigeLevelName } from 'community discord/util/checkPrestigeLevel';
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -19,10 +19,7 @@ const getEmbed = (
     targetIsAuthor: boolean,
     bal: number
 ) => {
-    const prestigeLevel = target.roles.cache
-        .sort(({ position: a }, { position: b }) => b - a)
-        .filter(role => Object.values(prestigeRoles).includes(role.id))
-        .first()?.name;
+    const prestigeLevel = getPrestigeLevelName(target);
 
     let embed = new MessageEmbed()
         .setAuthor({
