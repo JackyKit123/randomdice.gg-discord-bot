@@ -39,6 +39,7 @@ import rickbomb from 'community discord/currency/fun commands/rickbomb';
 import wordle from 'community discord/wordle';
 import channelIds from 'config/channelIds';
 import { nullDice } from 'config/emojiId';
+import help from 'commands/help';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -231,7 +232,7 @@ export default async function interactionCreate(
                         await rickbomb(interaction);
                         break;
                     case 'help':
-                        await help(interaction, true);
+                        await help(interaction);
                         break;
                     default:
                 }

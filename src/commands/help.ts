@@ -9,8 +9,7 @@ import { reply } from 'util/typesafeReply';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function help(
-    input: Message | CommandInteraction,
-    communityHelpOnly?: true
+    input: Message | CommandInteraction
 ): Promise<void> {
     const { guild } = input;
 
@@ -55,14 +54,12 @@ export default async function help(
             }))
         );
 
-    if (communityHelpOnly) {
-        await reply(input, { embeds: [communityHelpMessage] }, true);
-    } else if (guild?.id === process.env.COMMUNITY_SERVER_ID) {
+    if (guild?.id === process.env.COMMUNITY_SERVER_ID) {
         await reply(
             input,
             {
                 content:
-                    'It looks like you are requesting the help message from the community discord. Here is the list of fun commands specific towards the community discord only.',
+                    'Since you are request this `/help` in the community discord. There are two sets of commands for this bot, one is for the generic random dice commands. While the others are a the list of commands specific towards the community discord only.',
                 embeds: [helpMessage, communityHelpMessage],
             },
             true
