@@ -1,69 +1,43 @@
 import { database } from 'register/firebase';
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    GuildMember,
+    MessageEmbed,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
-import fetchMentionString from 'util/fetchMention';
 import checkPermission from 'community discord/util/checkPermissions';
 import { eventManagerRoleIds } from 'config/roleId';
 import channelIds from 'config/channelIds';
 import { coinDice } from 'config/emojiId';
-import getBalance from './balance';
+import { getBalance } from './balance';
 
 export default async function currency(
-    message: Discord.Message
+    interaction: CommandInteraction
 ): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { options, guild, member, commandName } = interaction;
+
     const numberFormat = new Intl.NumberFormat();
     if (
-        await cooldown(message, `!currency update`, {
+        (await cooldown(interaction, commandName, {
             default: 60 * 1000,
             donator: 60 * 1000,
-        })
+        })) ||
+        !(await checkPermission(interaction, ...eventManagerRoleIds))
     )
         return;
 
-    const { channel, content, guild, member } = message;
-    const [, amountArg, ...memberArgs] = content.split(' ');
+    const targets = new Array(20)
+        .fill('')
+        .map((_, i) => options.getMember(`member-${i + 1}`))
+        .filter(target => !!target) as GuildMember[];
 
-    if (!guild || !(await checkPermission(message, eventManagerRoleIds)))
-        return;
+    const amount = options.getInteger('amount', true);
 
-    const targetInList: string[] = [];
-    const targets = (
-        await Promise.all(
-            memberArgs.every(
-                arg =>
-                    /^<@!?(\d{18})>$/.test(arg) ||
-                    /^.+#(\d{4})/.test(arg) ||
-                    /^\d{18}$/.test(arg)
-            )
-                ? memberArgs.map(arg => fetchMentionString(arg, guild))
-                : [
-                      fetchMentionString(memberArgs.join(' '), guild, {
-                          content,
-                          mentionIndex: 2,
-                      }),
-                  ]
-        )
-    ).filter(m => {
-        if (typeof m === 'undefined' || targetInList.includes(m.id))
-            return false;
-        targetInList.push(m.id);
-        return true;
-    });
-
-    const amount = Number(amountArg);
-    if (Number.isNaN(amount) || !targets.length) {
-        await channel.send(
-            'Usage of the command `!currency <amount> <member | member member member...>`, example```!currency +5000 @JackyKit#0333 @fun guy#0069\n!currency -5000 I am a weird nickname```'
-        );
-        return;
-    }
-    if (!Number.isInteger(amount) || amount === 0) {
-        await channel.send('The amount entered should be a non-zero integer.');
-        return;
-    }
-    const botTargets = targets.filter(target => target?.user.bot);
+    const botTargets = targets.filter(target => target.user.bot);
     if (botTargets.length) {
-        await channel.send(
+        await interaction.reply(
             `${botTargets} ${
                 botTargets.length > 1 ? 'are' : 'is'
             } bot user. You cannot audit the currency of bot users`
@@ -71,7 +45,7 @@ export default async function currency(
         return;
     }
     if (amount > 50000 && !member.permissions.has('ADMINISTRATOR')) {
-        await channel.send(
+        await interaction.reply(
             `The audit amount is too large (> ${coinDice} 50,000), you need \`ADMINISTRATOR\` permission to enter that large amount.`
         );
         return;
@@ -79,8 +53,8 @@ export default async function currency(
 
     await Promise.all(
         targets.map(async target => {
-            const balance = await getBalance(message, 'silence', target);
-            if (balance === false) return;
+            const balance = await getBalance(interaction, true, target);
+            if (balance === null) return;
             await database
                 .ref(`discord_bot/community/currency/${target?.id}/balance`)
                 .set(balance + amount);
@@ -88,33 +62,63 @@ export default async function currency(
     );
 
     const deduction = amount < 0;
-    await channel.send({
+    await interaction.reply({
         content: `You have ${
             deduction ? 'taken away' : 'given'
         } ${coinDice} ${numberFormat.format(Math.abs(amount))} ${
             deduction ? 'from' : 'to'
         } ${targets.join(' ')}`,
         allowedMentions: {
-            parse: [],
             users: [],
-            roles: [],
+            repliedUser: false,
         },
     });
-    const logChannel = guild.channels.cache.get(
-        channelIds['jackykit-playground-v2']
-    );
+    const logChannel = guild.channels.cache.get(channelIds['currency-log']);
     if (logChannel?.isText()) {
         await logChannel.send({
-            content: `${member} have ${
-                deduction ? 'taken away' : 'given'
-            } ${coinDice} ${numberFormat.format(Math.abs(amount))} ${
-                deduction ? 'from' : 'to'
-            } ${targets.join(' ')}`,
-            allowedMentions: {
-                parse: [],
-                users: [],
-                roles: [],
-            },
+            embeds: [
+                new MessageEmbed()
+                    .setTitle('Currency Audit')
+                    .setAuthor({
+                        name: member.displayName,
+                        iconURL: member.user.displayAvatarURL({
+                            dynamic: true,
+                        }),
+                    })
+                    .setColor(amount > 0 ? '#00ff00' : '#ff0000')
+                    .addField(
+                        'Audited Amount',
+                        `${coinDice} **${
+                            amount > 0 ? '+' : '-'
+                        }${numberFormat.format(Math.abs(amount))}**`
+                    )
+                    .addField(
+                        'Audited Members',
+                        targets
+                            .map(target => `${target.user.tag} ${target}`)
+                            .join('\n')
+                    )
+                    .setTimestamp(),
+            ],
         });
     }
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'currency-audit',
+    description: 'Audit the balance of up to 20 members.',
+    options: [
+        {
+            name: 'amount',
+            description: 'The amount to add or deduct.',
+            type: 'INTEGER',
+            required: true,
+        },
+        ...new Array(20).fill('').map((_, i) => ({
+            name: `member-${i + 1}`,
+            description: `The member to add or deduct the amount from.`,
+            type: 6,
+            required: i === 0,
+        })),
+    ],
+};

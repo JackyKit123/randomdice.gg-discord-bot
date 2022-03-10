@@ -189,7 +189,7 @@ export default async function interactionCreate(
                     case 'yearly':
                         await timed(interaction, 'yearly');
                         break;
-                    case 'currency':
+                    case 'currency-audit':
                         await currency(interaction);
                         break;
                     case 'coinbomb':

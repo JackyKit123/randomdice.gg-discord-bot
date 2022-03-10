@@ -81,6 +81,7 @@ const channelIds = {
     'join-leave-log': '845448948474576946',
     'member-log': '804235877210390549',
     'voice-log': '804243533195640852',
+    'currency-log': '951371715819233330',
     'hack-discord-spy-log': '852355980779978752',
     '📦 | Archives': '844447322812579870',
     '📦 | Report Archives': '806634775514710106',

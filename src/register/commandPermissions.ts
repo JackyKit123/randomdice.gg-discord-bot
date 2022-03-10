@@ -49,6 +49,7 @@ export default async function setCommandPermissions(
                     break;
                 case 'eventping':
                 case 'coinbomb':
+                case 'currency-audit':
                     await command.permissions.set(
                         adminAndEventManagerPermissions
                     );
