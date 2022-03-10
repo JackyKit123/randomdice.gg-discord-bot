@@ -8,7 +8,7 @@ import cache, { Battlefield } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
-import { getAscendingNumberArray, mapChoices } from 'register/slashCommands';
+import { getAscendingNumberArray, mapChoices } from 'register/commandData';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 

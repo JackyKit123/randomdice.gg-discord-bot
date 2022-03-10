@@ -6,7 +6,7 @@ import {
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { edit, reply } from 'util/typesafeReply';
-import { getAscendingNumberArray } from 'register/slashCommands';
+import { getAscendingNumberArray } from 'register/commandData';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function drawUntil(

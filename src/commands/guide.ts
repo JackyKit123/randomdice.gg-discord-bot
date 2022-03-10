@@ -8,7 +8,7 @@ import cache, { DeckGuide } from 'util/cache';
 import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
-import { mapChoices } from 'register/slashCommands';
+import { mapChoices } from 'register/commandData';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 

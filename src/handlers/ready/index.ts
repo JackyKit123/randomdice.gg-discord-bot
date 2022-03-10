@@ -14,7 +14,7 @@ import { registerTimer } from 'community discord/timer';
 import logMessage from 'dev-commands/logMessage';
 import { fetchAll } from 'util/cache';
 import updateListener from 'util/updateListener';
-import registerSlashCommands from 'register/slashCommands';
+import registerSlashCommands from 'register/commandData';
 
 export default async function ready(client: Client<true>): Promise<void> {
     // eslint-disable-next-line no-unused-expressions
