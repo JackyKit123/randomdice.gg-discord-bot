@@ -28,7 +28,11 @@ export default async function commandCost(
     await database
         .ref(`discord_bot/community/currency/${user.id}/balance`)
         .set(balance - cost);
-    if (!ignorePrompt.includes(commandName)) {
+    if (
+        !ignorePrompt
+            .map(ignored => ignored.replace('!', ''))
+            .includes(commandName)
+    ) {
         try {
             (
                 await user.send({
