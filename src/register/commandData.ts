@@ -45,6 +45,7 @@ import { commandData as imitate } from 'community discord/currency/fun commands/
 import { commandData as clown } from 'community discord/currency/fun commands/clown';
 import { commandData as shush } from 'community discord/currency/fun commands/shush';
 import { commandData as rickbomb } from 'community discord/currency/fun commands/rickbomb';
+import { commandData as bedtime } from 'community discord/currency/fun commands/bedtime';
 
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
@@ -101,6 +102,7 @@ export default async function registerSlashCommands(
         clown,
         ...shush,
         rickbomb,
+        bedtime,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {

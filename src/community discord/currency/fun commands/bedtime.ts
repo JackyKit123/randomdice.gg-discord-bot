@@ -1,4 +1,8 @@
-import { CommandInteraction, MessageEmbed } from 'discord.js';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    MessageEmbed,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
 import roleIds, { moderatorRoleIds } from 'config/roleId';
 import commandCost from './commandCost';
@@ -60,7 +64,7 @@ export default async function bedtime(
     }
 }
 
-export const commandData = {
+export const commandData: ApplicationCommandData = {
     name: 'bedtime',
     description: `Give a member the bedtime role for a while. Time to sleep uh?`,
     options: [
