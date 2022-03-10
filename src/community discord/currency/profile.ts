@@ -149,7 +149,7 @@ const getGeneralProfilePage = (
             true
         )
         .setFooter({
-            text: 'Showing page GENERAL, click the buttons to flip pages',
+            text: 'Showing page 👤 GENERAL, click the buttons to flip pages',
         });
 };
 
@@ -214,7 +214,7 @@ const getCooldownPage = (
             )}\n**Yearly**\n${cooldown(memberProfile.yearly || 0, 'yearly')}`
         )
         .setFooter({
-            text: 'Showing page PROFILE, click the buttons to flip pages',
+            text: 'Showing page ⏲️ Cooldown, click the buttons to flip pages',
         });
 };
 
@@ -235,7 +235,7 @@ const getGambleProfilePage = (
             )}\n`
         )
         .setFooter({
-            text: 'Showing page GAMBLE, click the buttons to flip pages',
+            text: 'Showing page 🎰 Gamble, click the buttons to flip pages',
         });
 
 const getDDProfilePage = (
@@ -273,7 +273,7 @@ const getDDProfilePage = (
                 .flat()
         )
         .setFooter({
-            text: 'Showing page DICE DRAWN, click the buttons to flip pages',
+            text: 'Showing page 🎲 DICE DRAWN, click the buttons to flip pages',
         });
 };
 
