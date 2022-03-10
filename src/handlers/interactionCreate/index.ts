@@ -36,7 +36,6 @@ import imitate from 'community discord/currency/fun commands/imitate';
 import clown from 'community discord/currency/fun commands/clown';
 import shush, { unShush } from 'community discord/currency/fun commands/shush';
 import rickbomb from 'community discord/currency/fun commands/rickbomb';
-import givemoney from 'community discord/currency/fun commands/mudkipz';
 import wordle from 'community discord/wordle';
 import channelIds from 'config/channelIds';
 import { nullDice } from 'config/emojiId';
@@ -230,9 +229,6 @@ export default async function interactionCreate(
                     case 'rickbomb':
                     case 'rickcoin':
                         await rickbomb(interaction);
-                        break;
-                    case 'givemoney':
-                        await givemoney(interaction);
                         break;
                     case 'help':
                         await help(interaction, true);
