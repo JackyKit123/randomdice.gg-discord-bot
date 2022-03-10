@@ -41,12 +41,14 @@ export default async function setCommandPermissions(
         commandManager.map(async command => {
             switch (command.name) {
                 case 'application':
+                case 'leaderboard-reset':
                     await command.permissions.set(adminOnly);
                     break;
                 case 'closereport':
                     await command.permissions.set(adminAndModOnly);
                     break;
                 case 'eventping':
+                case 'coinbomb':
                     await command.permissions.set(
                         adminAndEventManagerPermissions
                     );

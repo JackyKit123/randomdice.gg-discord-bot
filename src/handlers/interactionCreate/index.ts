@@ -151,9 +151,7 @@ export default async function interactionCreate(
                     case 'coinflip':
                         await coinflip(interaction);
                         break;
-                    case 'richest':
                     case 'leaderboard':
-                    case 'lb':
                         await leaderboard(interaction);
                         break;
                     case 'prestige':

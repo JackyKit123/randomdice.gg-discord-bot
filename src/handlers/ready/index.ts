@@ -45,9 +45,9 @@ export default async function ready(client: Client<true>): Promise<void> {
             setRaffleTimerOnBoot(client),
             weeklyAutoReset(client),
             registerTimer(client),
+            infoVC(client),
             fetchAutoReactionRegistry(client),
         ]);
-        await infoVC(client);
     } catch (err) {
         await logMessage(
             client,

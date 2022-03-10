@@ -32,6 +32,7 @@ import { commandData as advertise } from 'community discord/promote';
 import { commandData as dd } from 'community discord/currency/drawDice';
 import { commandData as profile } from 'community discord/currency/profile';
 import { commandData as coinflip } from 'community discord/currency/coinflip';
+import { commandData as leaderboard } from 'community discord/currency/leaderboard';
 
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
@@ -75,6 +76,7 @@ export default async function registerSlashCommands(
         dd,
         ...profile,
         coinflip,
+        ...leaderboard,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {

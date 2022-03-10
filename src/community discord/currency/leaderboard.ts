@@ -1,4 +1,9 @@
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    Client,
+    CommandInteraction,
+    MessageEmbed,
+} from 'discord.js';
 import { database } from 'register/firebase';
 import logMessage from 'dev-commands/logMessage';
 import cache, { MemberCurrency } from 'util/cache';
@@ -7,12 +12,14 @@ import getPaginationComponents from 'util/paginationButtons';
 import channelIds from 'config/channelIds';
 import roleIds, { tier2RoleIds } from 'config/roleId';
 import { coinDice } from 'config/emojiId';
+import checkPermission from 'community discord/util/checkPermissions';
+import { promisify } from 'util';
 import { deleteCustomRole } from '../customRole';
 
+const wait = promisify(setTimeout);
 const numberFormat = new Intl.NumberFormat();
 
 function sortLeaderboard(
-    guild: Discord.Guild,
     currencyList: MemberCurrency,
     type: 'default' | 'weekly' | 'gamble' = 'default'
 ): { name: string; value: string }[] {
@@ -59,7 +66,7 @@ function sortLeaderboard(
         }));
 }
 
-async function resetWeekly(client: Discord.Client): Promise<void> {
+async function resetWeekly(client: Client): Promise<void> {
     const guild = client.guilds.cache.get(
         process.env.COMMUNITY_SERVER_ID ?? ''
     );
@@ -86,14 +93,14 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
     const { weeklyWinners } = cache['discord_bot/community/currencyConfig'];
     const currencyList = cache['discord_bot/community/currency'];
 
-    const sortedWeekly = sortLeaderboard(guild, currencyList, 'weekly');
+    const sortedWeekly = sortLeaderboard(currencyList, 'weekly');
     Object.keys(currencyList).forEach(id =>
         database.ref(`discord_bot/community/currency/${id}/weeklyChat`).set(0)
     );
     await channel.send({
         content: roleIds['Server Event Ping'],
         embeds: [
-            new Discord.MessageEmbed()
+            new MessageEmbed()
                 .setColor('#6ba4a5')
                 .setThumbnail(
                     'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
@@ -179,7 +186,7 @@ async function resetWeekly(client: Discord.Client): Promise<void> {
     );
 }
 
-export function weeklyAutoReset(client: Discord.Client): void {
+export async function weeklyAutoReset(client: Client): Promise<void> {
     const now = new Date();
     const dayNow = now.getUTCDay();
     const hourNow = now.getUTCHours();
@@ -194,40 +201,38 @@ export function weeklyAutoReset(client: Discord.Client): void {
         1000 * 60 * minutesNow -
         1000 * secondsNow -
         msNow;
-    setTimeout(() => resetWeekly(client), cd);
+    await wait(cd);
+    await resetWeekly(client);
+}
+
+export async function resetLeaderboard(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    if (!(await checkPermission(interaction, roleIds.Admin))) return;
+    await resetWeekly(interaction.client);
+    await interaction.reply('Weekly leaderboard has been reset.');
 }
 
 export default async function leaderboard(
-    message: Discord.Message
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { client, channel, guild, content, member } = message;
+    if (!interaction.inCachedGuild()) return;
+    const { guild, commandName, member, options } = interaction;
 
-    if (!guild || !member) return;
     if (
-        await cooldown(message, `!leaderboard`, {
+        await cooldown(interaction, commandName, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
     )
         return;
 
-    const [, arg, arg2] = content.split(' ');
-    const isWeekly = /^(w|week|weekly)$/i.test(arg || '');
-    const isGamble = /^(g|gamble)$/i.test(arg || '');
-    const isReset = /^reset$/i.test(arg2 || '');
+    const isWeekly = options.getString('type') === 'weekly';
+    const isGamble = options.getString('type') === 'gamble';
     const currencyList = cache['discord_bot/community/currency'];
 
-    if (isReset && isWeekly) {
-        if (member.permissions.has('MANAGE_GUILD')) {
-            await resetWeekly(client);
-        } else {
-            await channel.send('You do not have permission to reset weekly');
-        }
-        return;
-    }
-
     const fields = sortLeaderboard(
-        guild,
         currencyList,
         // eslint-disable-next-line no-nested-ternary
         isWeekly ? 'weekly' : isGamble ? 'gamble' : 'default'
@@ -242,7 +247,7 @@ export default async function leaderboard(
     const embeds = Array(pageNumbers)
         .fill('')
         .map((_, i) =>
-            new Discord.MessageEmbed()
+            new MessageEmbed()
                 .setColor('#6ba4a5')
                 .setThumbnail(
                     'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
@@ -272,10 +277,44 @@ export default async function leaderboard(
         pageNumbers,
         currentPage
     );
-    const sentMessage = await channel.send({
+    const sentMessage = await interaction.reply({
         embeds: [embeds[currentPage]],
         components,
+        fetchReply: true,
     });
 
     collectorHandler(sentMessage, member.user, embeds);
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'leaderboard',
+        description: 'View the leaderboard',
+        options: [
+            {
+                name: 'type',
+                description: 'Type of leaderboard to view',
+                type: 'STRING',
+                choices: [
+                    {
+                        name: 'Default Leaderboard',
+                        value: 'default',
+                    },
+                    {
+                        name: 'Weekly Leaderboard',
+                        value: 'weekly',
+                    },
+                    {
+                        name: 'Gamble Leaderboard',
+                        value: 'gamble',
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        name: 'leaderboard-reset',
+        description: 'Reset the weekly leaderboard',
+        defaultPermission: false,
+    },
+];
