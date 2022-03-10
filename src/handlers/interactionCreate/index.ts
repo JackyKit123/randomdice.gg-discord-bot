@@ -20,7 +20,10 @@ import profile, { profileButtons } from 'community discord/currency/profile';
 import coinflip from 'community discord/currency/coinflip';
 import leaderboard from 'community discord/currency/leaderboard';
 import prestige from 'community discord/currency/prestige';
-import raffle from 'community discord/currency/raffle';
+import raffle, {
+    addRafflePingRole,
+    joinRaffleButton,
+} from 'community discord/currency/raffle';
 import timed from 'community discord/currency/timed';
 import currency from 'community discord/currency/currency';
 import { spawnCoinbomb } from 'community discord/currency/coinbomb';
@@ -83,6 +86,17 @@ export default async function interactionCreate(
                     case 'coinflip-head':
                     case 'coinflip-tail':
                         await coinflip(interaction);
+                        break;
+                    case 'get-raffle-ping-role':
+                        await addRafflePingRole(interaction);
+                        break;
+                    case 'raffle-join-1':
+                    case 'raffle-join-5':
+                    case 'raffle-join-10':
+                    case 'raffle-join-20':
+                    case 'raffle-join-50':
+                    case 'raffle-join-max':
+                        await joinRaffleButton(interaction);
                         break;
                     default:
                 }

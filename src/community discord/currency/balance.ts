@@ -4,6 +4,8 @@ import {
     ButtonInteraction,
     CommandInteraction,
     GuildMember,
+    Interaction,
+    Message,
     MessageEmbed,
     UserContextMenuInteraction,
 } from 'discord.js';
@@ -11,6 +13,7 @@ import cooldown from 'util/cooldown';
 import cache from 'util/cache';
 import { coinDice } from 'config/emojiId';
 import { getPrestigeLevelName } from 'community discord/util/checkPrestigeLevel';
+import { reply } from 'util/typesafeReply';
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -43,15 +46,17 @@ const getEmbed = (
 };
 
 export async function getBalance(
-    interaction:
+    input:
+        | Message
         | ButtonInteraction
         | CommandInteraction
         | UserContextMenuInteraction,
     silence = false,
     optionalTarget?: GuildMember | null
 ): Promise<number | null> {
-    if (!interaction.inCachedGuild()) return null;
-    const { member, channel } = interaction;
+    if (input instanceof Interaction && !input.inCachedGuild()) return null;
+    const { member, channel } = input;
+    if (!member) return null;
 
     const target = optionalTarget ?? member;
 
@@ -61,7 +66,8 @@ export async function getBalance(
 
     if (!profile?.initiated) {
         if (target.id !== member.id && !silence) {
-            await interaction.reply(
+            await reply(
+                input,
                 'They have not started using currency command yet.'
             );
             return null;
@@ -74,11 +80,11 @@ export async function getBalance(
         await database
             .ref(`discord_bot/community/currency/${target.id}/prestige`)
             .set(0);
-        if (!silence) {
+        if (!silence && !(input instanceof Message)) {
             const messageOption = {
                 content: `${member}, Looks like you are the first time using server currency command, you have been granted **${coinDice} 10,000** as a starter reward. You can use ${
-                    interaction.isCommand() || interaction.isContextMenu()
-                        ? `\`${interaction.commandName}\` command`
+                    input.isCommand() || input.isContextMenu()
+                        ? `\`${input.commandName}\` command`
                         : 'the button'
                 } again.`,
                 embeds: [getEmbed(target, target.id === member.id, bal)],
@@ -87,7 +93,7 @@ export async function getBalance(
                 .ref(`discord_bot/community/currency/${target.id}/initiated`)
                 .set(true);
             if (!channel) {
-                await interaction.reply(messageOption);
+                await input.reply(messageOption);
                 return null;
             }
             await channel.send(messageOption);

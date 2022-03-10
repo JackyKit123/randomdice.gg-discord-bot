@@ -1,7 +1,8 @@
 import channelIds from 'config/channelIds';
+import { coinDice } from 'config/emojiId';
 import { GuildMember, Message } from 'discord.js';
 import { database } from 'register/firebase';
-import getBalance from './balance';
+import { getBalance } from './balance';
 
 const rapidSuccessJoin = new Map<GuildMember, number>();
 
@@ -30,11 +31,11 @@ export default async function welcomeReward(
             const id = collected.member?.id;
             if (!id || saidWelcome.includes(id)) return;
             saidWelcome.push(id);
-            const balance = await getBalance(collected, 'silence');
-            if (balance === false) return;
+            const balance = await getBalance(collected, true);
+            if (balance === null) return;
             await database
                 .ref(`discord_bot/community/currency/${id}/balance`)
                 .set(balance + 100);
-            await collected.react('${coinDice}');
+            await collected.react(coinDice);
         });
 }

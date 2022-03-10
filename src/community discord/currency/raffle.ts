@@ -1,6 +1,8 @@
 import {
+    ApplicationCommandData,
+    ButtonInteraction,
     Client,
-    DiscordAPIError,
+    CommandInteraction,
     Guild,
     Message,
     MessageActionRow,
@@ -13,10 +15,11 @@ import { parseStringIntoMs } from 'util/parseMS';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { coinDice } from 'config/emojiId';
-import getBalance from './balance';
 import channelIds from 'config/channelIds';
 import roleIds, { eventManagerRoleIds } from 'config/roleId';
 import checkPermission from 'community discord/util/checkPermissions';
+import yesNoButton from 'util/yesNoButton';
+import { getBalance } from './balance';
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -51,6 +54,37 @@ async function host(
         .setTimestamp(Date.now() + duration);
 }
 
+function getJoinRaffleMessageButtons(maxEntries: number): [MessageActionRow] {
+    let buttons: number[] = [];
+    if (maxEntries < 6) {
+        buttons = [1];
+    } else if (maxEntries < 7) {
+        buttons = [1, 5];
+    } else if (maxEntries < 22) {
+        buttons = [1, 5, 10];
+    } else if (maxEntries < 52) {
+        buttons = [1, 5, 10, 20];
+    } else {
+        buttons = [1, 10, 20, 50];
+    }
+    return [
+        new MessageActionRow().addComponents([
+            ...buttons.map(button =>
+                new MessageButton()
+                    .setLabel(`Buy ${button} Tickets`)
+                    .setEmoji('🎫')
+                    .setStyle('PRIMARY')
+                    .setCustomId(`raffle-join-${button}`)
+            ),
+            new MessageButton()
+                .setLabel(`Join MAX Tickets`)
+                .setEmoji('🎫')
+                .setStyle('DANGER')
+                .setCustomId('raffle-join-max'),
+        ]),
+    ];
+}
+
 async function announceWinner(guild: Guild): Promise<void> {
     const channel = guild.channels.cache.get(channelIds['dice-coins-raffle']);
     const { client } = guild;
@@ -78,10 +112,11 @@ async function announceWinner(guild: Guild): Promise<void> {
             clientUser
         );
         const sentMessage = await channel.send({
-            content: roleIds['Raffle Ping'],
+            content: `<@&${roleIds['Raffle Ping']}>`,
             embeds: announceWinnerEmbed
                 ? [announceWinnerEmbed, newRaffleEmbed]
                 : [newRaffleEmbed],
+            components: getJoinRaffleMessageButtons(maxEntries),
         });
         await announceWinner(guild);
         return sentMessage;
@@ -145,8 +180,8 @@ async function announceWinner(guild: Guild): Promise<void> {
                 await channel.send(`Cannot add currency to ${target}`);
                 return;
             }
-            let balance = await getBalance(sentAnnouncement, 'silence', target);
-            if (balance === false) balance = 10000;
+            const balance = await getBalance(sentAnnouncement, true, target);
+            if (balance === null) return;
             const gambleProfile =
                 cache['discord_bot/community/currency'][target.id]?.gamble;
             await database
@@ -159,24 +194,192 @@ async function announceWinner(guild: Guild): Promise<void> {
     }
 }
 
-export default async function raffle(message: Message): Promise<void> {
-    const { channel, member, content, guild, author } = message;
+const getDefaultEmbed = (guild: Guild | null) =>
+    new MessageEmbed()
+        .setAuthor({
+            name: 'randomdice.gg Server',
+            iconURL: guild?.iconURL({ dynamic: true }) ?? undefined,
+        })
+        .setTitle('Dice Coins Raffle');
 
-    const [, subcommand, arg, arg2, arg3] = content
-        .split(' ')
-        .map(word => word.trim());
+const noActiveRaffleResponse = async (
+    interaction: ButtonInteraction | CommandInteraction
+) =>
+    interaction.reply({
+        embeds: [
+            getDefaultEmbed(interaction.guild)
+                .setColor('#ff0000')
+                .setDescription('There is no active raffle at the moment'),
+        ],
+    });
 
-    if (!member || !guild) return;
+async function joinRaffle(
+    interaction: CommandInteraction | ButtonInteraction,
+    ticketAmountArg: string
+) {
+    if (!interaction.inCachedGuild()) return;
+    const { member, channel } = interaction;
 
-    if (channel.id !== channelIds['dice-coins-raffle']) {
-        await channel.send(
-            `You can only use this command in <#${channelIds['dice-coins-raffle']}>`
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
+    const ref = database.ref('discord_bot/community/raffle');
+    const entries = cache['discord_bot/community/raffle'];
+    const currentEntries = Object.entries(entries.tickets ?? {});
+    const raffleTimeLeft = entries.endTimestamp - Date.now();
+
+    if (raffleTimeLeft < 0) {
+        await noActiveRaffleResponse(interaction);
+        return;
+    }
+
+    if (ticketAmountArg === '0') {
+        await interaction.reply('You cannot enter the raffle with 0 ticket');
+        return;
+    }
+    const prevEntry =
+        currentEntries.filter(([, uid]) => uid === member.id)?.length || 0;
+    let currEntry = 0;
+    if (/max/i.test(ticketAmountArg)) {
+        if (prevEntry === entries.maxEntries) {
+            await interaction.reply(
+                `You have already entered with max entries (${entries.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
+            );
+            return;
+        }
+        if (balance < entries.ticketCost) {
+            await interaction.reply(
+                `The cost per ticket in this raffle is ${coinDice} ${entries.ticketCost} but you only have ${coinDice} ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
+            );
+            return;
+        }
+        currEntry = Math.min(
+            entries.maxEntries - prevEntry,
+            Math.floor(balance / entries.ticketCost)
+        );
+    } else {
+        currEntry = Number(ticketAmountArg) || 1;
+        if (!Number.isInteger(currEntry) || currEntry < 1) {
+            await interaction.reply(
+                'Tickets entered should be a positive integer or `max`'
+            );
+            return;
+        }
+    }
+    if (currEntry + prevEntry > entries.maxEntries) {
+        await interaction.reply(
+            `You have already entered with ${prevEntry} ticket(s), the max entires allowance per person for this raffle is ${
+                entries.maxEntries
+            } ticket(s). You can only join with ${
+                entries.maxEntries - prevEntry
+            } more ticket(s). Use \`!raffle info\` to review your entries.`
+        );
+        return;
+    }
+    if (balance < currEntry * entries.ticketCost) {
+        await interaction.reply(
+            `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is ${coinDice} **${numberFormat.format(
+                currEntry * entries.ticketCost
+            )}** but you have only ${coinDice} **${numberFormat.format(
+                balance
+            )}**.`
         );
         return;
     }
 
+    await yesNoButton(
+        interaction,
+        `You are entering the raffle with \`${ticketAmountArg}\` entries, which will cost you ${coinDice} ${
+            currEntry * entries.ticketCost
+        }, press yes if you wish to continue.`,
+        async () => {
+            entries.tickets = entries.tickets || {};
+            for (
+                let i = currentEntries.length;
+                i < currEntry + currentEntries.length;
+                i += 1
+            ) {
+                entries.tickets[i + 1] = member.id;
+            }
+            await ref.child('tickets').set(entries.tickets);
+            await database
+                .ref(`discord_bot/community/currency/${member.id}/balance`)
+                .set(balance - currEntry * entries.ticketCost);
+            const gambleProfile =
+                cache['discord_bot/community/currency'][member.id]?.gamble;
+            await database
+                .ref(`discord_bot/community/currency/${member.id}/gamble/lose`)
+                .set(
+                    (gambleProfile?.lose || 0) + currEntry * entries.ticketCost
+                );
+
+            await interaction.editReply({
+                content: `You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
+                    currEntry * entries.ticketCost
+                )}**${
+                    prevEntry > 0
+                        ? `, you now have a total of ${
+                              currEntry + prevEntry
+                          } ticket(s)`
+                        : '.'
+                }\nTicket Numbers: ${Object.entries(entries.tickets ?? {})
+                    .filter(([, uid]) => uid === member.id)
+                    .map(([ticketNumber]) => `**${ticketNumber}**`)
+                    .join(', ')}`,
+                components: [],
+            });
+            if (!member.roles.cache.has(roleIds['Raffle Ping'])) {
+                await channel?.send({
+                    embeds: [
+                        new MessageEmbed()
+                            .setTitle('Tip!')
+                            .setColor('#32cd32')
+                            .setDescription(
+                                `It looks like you are missing the role <@&${roleIds['Raffle Ping']}>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can click ✅ to claim this role now.`
+                            ),
+                    ],
+                    components: [
+                        new MessageActionRow().addComponents([
+                            new MessageButton()
+                                .setEmoji('✅')
+                                .setStyle('SUCCESS')
+                                .setLabel('Get the role')
+                                .setCustomId('get-raffle-ping-role'),
+                        ]),
+                    ],
+                });
+            }
+        }
+    );
+}
+
+export async function joinRaffleButton(
+    interaction: ButtonInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { customId } = interaction;
+    await joinRaffle(interaction, customId.replace('raffle-join-', ''));
+}
+
+export default async function raffle(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { channel, options, guild, user } = interaction;
+
     if (
-        await cooldown(message, '!raffle', {
+        channel?.id !== channelIds['dice-coins-raffle'] &&
+        channel?.id !== channelIds['jackykit-playground-v2']
+    ) {
+        await interaction.reply({
+            content: `You can only use this command in <#${channelIds['dice-coins-raffle']}>`,
+            ephemeral: true,
+        });
+
+        return;
+    }
+
+    if (
+        await cooldown(interaction, '!raffle', {
             default: 10 * 1000,
             donator: 10 * 1000,
         })
@@ -184,368 +387,142 @@ export default async function raffle(message: Message): Promise<void> {
         return;
     }
 
-    const balance = await getBalance(message, 'emit new member', member);
-    if (balance === false) return;
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
     const ref = database.ref('discord_bot/community/raffle');
     const entries = cache['discord_bot/community/raffle'];
+    const subcommand = options.getSubcommand(true);
     const currentEntries = Object.entries(entries.tickets ?? {});
     const raffleTimeLeft = entries.endTimestamp - Date.now();
 
-    switch (subcommand?.toLowerCase()) {
+    switch (subcommand) {
         case 'info':
-            if (raffleTimeLeft > 0) {
-                await channel.send({
-                    embeds: [
-                        new MessageEmbed()
-                            .setAuthor(
-                                'randomdice.gg Server',
-                                guild.iconURL({ dynamic: true }) ?? undefined
-                            )
-                            .setColor('#00ff00')
-                            .setTitle('Dice Coins Raffle')
-                            .addField(
-                                'Ticket Entries',
-                                `${coinDice} **${entries.ticketCost} per ticket** (${entries.maxEntries} ticket(s) max)`
-                            )
-                            .addField(
-                                'Current Prize Pool',
-                                `${coinDice} **${numberFormat.format(
-                                    currentEntries.length * entries.ticketCost
-                                )}** (${currentEntries.length} Tickets)`
-                            )
-                            .addField('Hosted by', `<@${entries.hostId}>`)
-                            .addField(
-                                'Your Entries',
-                                Object.entries(entries.tickets ?? {})
-                                    .filter(([, uid]) => uid === author.id)
-                                    .map(
-                                        ([ticketNumber]) =>
-                                            `**${ticketNumber}**`
-                                    )
-                                    .join(', ') || '*none*'
-                            )
-                            .setFooter('Raffle ends at')
-                            .setTimestamp(entries.endTimestamp),
-                    ],
-                });
-            } else {
-                await channel.send({
-                    embeds: [
-                        new MessageEmbed()
-                            .setAuthor(
-                                'randomdice.gg Server',
-                                guild.iconURL({ dynamic: true }) ?? undefined
-                            )
-                            .setColor('#ff0000')
-                            .setTitle('Dice Coins Raffle')
-                            .setDescription(
-                                'There is no active raffle at the moment'
-                            ),
-                    ],
-                });
+            if (raffleTimeLeft <= 0) {
+                await noActiveRaffleResponse(interaction);
+                return;
             }
+
+            await interaction.reply({
+                embeds: [
+                    getDefaultEmbed(guild)
+                        .setColor('#00ff00')
+                        .addField(
+                            'Ticket Entries',
+                            `${coinDice} **${entries.ticketCost} per ticket** (${entries.maxEntries} ticket(s) max)`
+                        )
+                        .addField(
+                            'Current Prize Pool',
+                            `${coinDice} **${numberFormat.format(
+                                currentEntries.length * entries.ticketCost
+                            )}** (${currentEntries.length} Tickets)`
+                        )
+                        .addField('Hosted by', `<@${entries.hostId}>`)
+                        .addField(
+                            'Your Entries',
+                            Object.entries(entries.tickets ?? {})
+                                .filter(([, uid]) => uid === user.id)
+                                .map(([ticketNumber]) => `**${ticketNumber}**`)
+                                .join(', ') || '*none*'
+                        )
+                        .setFooter({ text: 'Raffle ends at' })
+                        .setTimestamp(entries.endTimestamp),
+                ],
+            });
             return;
         case 'join':
-            {
-                if (raffleTimeLeft < 0) {
-                    await channel.send({
-                        embeds: [
-                            new MessageEmbed()
-                                .setAuthor({
-                                    name: 'randomdice.gg Server',
-                                    iconURL:
-                                        guild.iconURL({ dynamic: true }) ??
-                                        undefined,
-                                })
-                                .setColor('#ff0000')
-                                .setTitle('Dice Coins Raffle')
-                                .setDescription(
-                                    'There is no active raffle at the moment'
-                                ),
-                        ],
-                    });
-                    return;
-                }
-                if (arg === '0') {
-                    await channel.send(
-                        'You cannot enter the raffle with 0 ticket'
-                    );
-                    return;
-                }
-                const prevEntry =
-                    currentEntries.filter(([, uid]) => uid === author.id)
-                        ?.length || 0;
-                let currEntry = 0;
-                if (/max/i.test(arg)) {
-                    if (prevEntry === entries.maxEntries) {
-                        await channel.send(
-                            `You have already entered with max entries (${entries.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
-                        );
-                        return;
-                    }
-                    if (balance < entries.ticketCost) {
-                        await channel.send(
-                            `The cost per ticket in this raffle is ${coinDice} ${entries.ticketCost} but you only have ${coinDice} ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
-                        );
-                        return;
-                    }
-                    currEntry = Math.min(
-                        entries.maxEntries - prevEntry,
-                        Math.floor(balance / entries.ticketCost)
-                    );
-                    await channel.send(
-                        `You are entering the raffle with \`max\` entries, which will cost you ${coinDice} ${
-                            currEntry * entries.ticketCost
-                        }, answer \`yes\` if you wish to continue.`
-                    );
-                    const awaitedMessage = (
-                        await channel.awaitMessages({
-                            filter: m =>
-                                m.author.id === member.id &&
-                                /^(ok(ay)?|y(es)?|no?|!raffle join)/i.test(
-                                    m.content
-                                ),
-                            time: 1000 * 10,
-                            max: 1,
-                        })
-                    )?.first();
-                    if (
-                        !awaitedMessage ||
-                        /no?/i.test(awaitedMessage.content)
-                    ) {
-                        await channel.send(
-                            'Ok looks like you are not joining the raffle yet.'
-                        );
-                        return;
-                    }
-                    if (/!raffle join/i.test(awaitedMessage.content)) {
-                        return;
-                    }
-                } else {
-                    currEntry = Number(arg) || 1;
-                    if (!Number.isInteger(currEntry) || currEntry < 1) {
-                        await channel.send(
-                            'Tickets entered should be a positive integer or `max`'
-                        );
-                        return;
-                    }
-                }
-                if (currEntry + prevEntry > entries.maxEntries) {
-                    await channel.send(
-                        `You have already entered with ${prevEntry} ticket(s), the max entires allowance per person for this raffle is ${
-                            entries.maxEntries
-                        } ticket(s). You can only join with ${
-                            entries.maxEntries - prevEntry
-                        } more ticket(s). Use \`!raffle info\` to review your entries.`
-                    );
-                    return;
-                }
-                if (balance < currEntry * entries.ticketCost) {
-                    await channel.send(
-                        `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is ${coinDice} **${numberFormat.format(
-                            currEntry * entries.ticketCost
-                        )}** but you have only ${coinDice} **${numberFormat.format(
-                            balance
-                        )}**.`
-                    );
-                    return;
-                }
-                entries.tickets = entries.tickets || {};
-                for (
-                    let i = currentEntries.length;
-                    i < currEntry + currentEntries.length;
-                    i += 1
-                ) {
-                    entries.tickets[i + 1] = author.id;
-                }
-                await ref.child('tickets').set(entries.tickets);
-                await database
-                    .ref(`discord_bot/community/currency/${member.id}/balance`)
-                    .set(balance - currEntry * entries.ticketCost);
-                const gambleProfile =
-                    cache['discord_bot/community/currency'][author.id]?.gamble;
-                await database
-                    .ref(
-                        `discord_bot/community/currency/${author.id}/gamble/lose`
-                    )
-                    .set(
-                        (gambleProfile?.lose || 0) +
-                            currEntry * entries.ticketCost
-                    );
-                await channel.send(
-                    `You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
-                        currEntry * entries.ticketCost
-                    )}**${
-                        prevEntry > 0
-                            ? `, you now have a total of ${
-                                  currEntry + prevEntry
-                              } ticket(s)`
-                            : '.'
-                    }\nTicket Numbers: ${Object.entries(entries.tickets ?? {})
-                        .filter(([, uid]) => uid === author.id)
-                        .map(([ticketNumber]) => `**${ticketNumber}**`)
-                        .join(', ')}`
-                );
-                if (!member.roles.cache.has(roleIds['Raffle Ping'])) {
-                    const sentMessage = await channel.send({
-                        embeds: [
-                            new MessageEmbed()
-                                .setTitle('Tip!')
-                                .setColor('#32cd32')
-                                .setDescription(
-                                    `It looks like you are missing the role <@&${roleIds['Raffle Ping']}>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can click ✅ to claim this role now.`
-                                ),
-                        ],
-                        components: [
-                            new MessageActionRow().addComponents([
-                                new MessageButton()
-                                    .setEmoji('✅')
-                                    .setCustomId('✅')
-                                    .setStyle('PRIMARY'),
-                            ]),
-                        ],
-                    });
-                    sentMessage
-                        .createMessageComponentCollector({
-                            time: 60000,
-                        })
-                        .on('collect', async interaction =>
-                            interaction.reply({
-                                content: `Added <@&${roleIds['Raffle Ping']}> role to you`,
-                                ephemeral: true,
-                            })
-                        )
-                        .on('end', async () => {
-                            try {
-                                await sentMessage.delete();
-                            } catch (err) {
-                                if (
-                                    (err as DiscordAPIError).message !==
-                                    'Unknown Message'
-                                ) {
-                                    throw err;
-                                }
-                            }
-                        });
-                    return;
-                }
-            }
+            await joinRaffle(
+                interaction,
+                options.getString('ticket-amount', true)
+            );
             return;
         case 'host': {
-            if (!(await checkPermission(message, eventManagerRoleIds))) return;
-            const time = parseStringIntoMs(arg);
-            const ticketCost = Number(arg2);
-            const maxEntries = Number(arg3) || 1;
-            if (!time || !ticketCost || !maxEntries) {
-                await channel.send({
-                    embeds: [
-                        new MessageEmbed()
-                            .setTitle('Command Parse Error')
-                            .setColor('#ff0000')
-                            .setDescription('usage of the command')
-                            .addField(
-                                'Hosting a raffle',
-                                '`!raffle host <time> <ticketCost> [maxEntries default=1]`' +
-                                    '\n' +
-                                    'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
-                            ),
-                    ],
-                });
+            if (!(await checkPermission(interaction, ...eventManagerRoleIds)))
+                return;
+            if (raffleTimeLeft > 0) {
+                await interaction.reply(
+                    'There is already an active raffle! Use `/raffle cancel` to cancel it before starting a new one.'
+                );
+                return;
+            }
+            const time = parseStringIntoMs(options.getString('time', true));
+            const ticketCost = options.getInteger('ticket-cost', true);
+            const maxEntries = options.getInteger('max-entries', true);
+            if (!time) {
+                await interaction.reply(
+                    'You must specify a valid time duration for the raffle in format like 1d2h3m.'
+                );
                 return;
             }
             if (maxEntries < 0 || maxEntries > 100) {
-                await channel.send('Max entries should be between 0 - 100');
+                await interaction.reply(
+                    'Max entries should be between 0 - 100'
+                );
                 return;
             }
             if (time > 604800000) {
-                await channel.send('The duration for the raffle is too long.');
+                await interaction.reply(
+                    'The duration for the raffle is too long.'
+                );
                 return;
             }
-            await channel.send({
-                content: roleIds['Raffle Ping'],
-                embeds: [
-                    await host(time, maxEntries, ticketCost, guild, author),
-                ],
+            await interaction.reply({
+                embeds: [await host(time, maxEntries, ticketCost, guild, user)],
+                components: getJoinRaffleMessageButtons(maxEntries),
             });
+            await channel.send(
+                `<@&${roleIds['Raffle Ping']}> A new raffle has started!`
+            );
             await announceWinner(guild);
             return;
         }
         case 'cancel':
             if (raffleTimeLeft < 0) {
-                await channel.send({
-                    embeds: [
-                        new MessageEmbed()
-                            .setAuthor(
-                                'randomdice.gg Server',
-                                guild.iconURL({ dynamic: true }) ?? undefined
-                            )
-                            .setColor('#ff0000')
-                            .setTitle('Dice Coins Raffle')
-                            .setDescription(
-                                'There is no active raffle at the moment'
-                            ),
-                    ],
-                });
+                await noActiveRaffleResponse(interaction);
                 return;
             }
-            if (!(await checkPermission(message, eventManagerRoleIds))) return;
-            await channel.send(
-                '⚠️ WARNING ⚠️\n Type `end` to cancel the raffle, the action is irreversible.'
+            if (!(await checkPermission(interaction, ...eventManagerRoleIds)))
+                return;
+            await yesNoButton(
+                interaction,
+                '⚠️ WARNING ⚠️\n Are you sure you want to cancel the raffle, the action is irreversible.',
+                async () => {
+                    await ref.set({
+                        endTimestamp: 0,
+                        hostId: 0,
+                        maxEntries: 0,
+                        ticketCost: 0,
+                    });
+                    await interaction.editReply({
+                        content: `${user} has cancelled the raffle.`,
+                        components: [],
+                    });
+                }
             );
-            try {
-                await channel.awaitMessages({
-                    filter: (newMessage: Message) =>
-                        newMessage.author.id === author.id &&
-                        newMessage.content.toLowerCase() === 'end',
-                    time: 60000,
-                    max: 1,
-                    errors: ['time'],
-                });
-                await ref.set({
-                    endTimestamp: 0,
-                    hostId: 0,
-                    maxEntries: 0,
-                    ticketCost: 0,
-                });
-                await channel.send(`${author} has cancelled the raffle.`);
-            } catch {
-                await channel.send(
-                    "Ok, look's like we are not canceling the raffle today."
-                );
-            }
-            return;
+
+            break;
         default:
-            await channel.send({
-                embeds: [
-                    new MessageEmbed()
-                        .setTitle('Command Parse Error')
-                        .setColor('#ff0000')
-                        .setDescription('usage of the command')
-                        .addField(
-                            'Joining the raffle',
-                            '`!raffle join [ticket Amount default=1]`' +
-                                '\n' +
-                                'Example```!raffle join\n!raffle join 10```'
-                        )
-                        .addField(
-                            'Showing the info for current raffle',
-                            '`!raffle info`\nExample```!raffle info```'
-                        )
-                        .addField(
-                            'Hosting a raffle (requires Event Manager)',
-                            '`!raffle host <time> <ticketCost> [maxEntries default=1]`' +
-                                '\n' +
-                                'Example```!raffle host 12h30m 1000\n!raffle host 3d 500 4```'
-                        )
-                        .addField(
-                            'Canceling a raffle (requires Event Manager)',
-                            '`!raffle cancel`' +
-                                '\n' +
-                                'Example```!raffle cancel```'
-                        ),
-                ],
-            });
     }
+}
+
+export async function addRafflePingRole(
+    interaction: ButtonInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { member } = interaction;
+    if (member.roles.cache.has(roleIds['Raffle Ping'])) {
+        await interaction.reply({
+            content: 'You already have the raffle ping role',
+            ephemeral: true,
+        });
+        return;
+    }
+    await member.roles.add(
+        roleIds['Raffle Ping'],
+        'Member clicked ✅ on the raffle ping role'
+    );
+    await interaction.reply(
+        `${member} You have been given the raffle ping role, you can now receive notifications for the raffle updates.`
+    );
 }
 
 export async function setRaffleTimerOnBoot(client: Client): Promise<void> {
@@ -553,5 +530,64 @@ export async function setRaffleTimerOnBoot(client: Client): Promise<void> {
         process.env.COMMUNITY_SERVER_ID ?? ''
     );
     if (!guild) return;
-    announceWinner(guild);
+    await announceWinner(guild);
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'raffle',
+    description: 'Raffle commands',
+    options: [
+        {
+            name: 'host',
+            description: 'Host a raffle',
+            type: 'SUB_COMMAND',
+            options: [
+                {
+                    name: 'time',
+                    description: 'Time for the raffle to last',
+                    type: 'STRING',
+                    required: true,
+                },
+                {
+                    name: 'ticket-cost',
+                    description: 'Cost of each ticket',
+                    type: 'INTEGER',
+                    required: true,
+                    minValue: 1,
+                    maxValue: 100000,
+                },
+                {
+                    name: 'max-entries',
+                    description: 'Max number of entries',
+                    type: 'INTEGER',
+                    required: true,
+                    minValue: 1,
+                    maxValue: 100,
+                },
+            ],
+        },
+        {
+            name: 'join',
+            description: 'Join a raffle',
+            type: 'SUB_COMMAND',
+            options: [
+                {
+                    name: 'ticket-amount',
+                    description: 'amount of tickets to buy or "max"',
+                    type: 'STRING',
+                    required: true,
+                },
+            ],
+        },
+        {
+            name: 'cancel',
+            description: 'Cancel a raffle',
+            type: 'SUB_COMMAND',
+        },
+        {
+            name: 'info',
+            description: 'Get info about the raffle',
+            type: 'SUB_COMMAND',
+        },
+    ],
+};
