@@ -195,7 +195,6 @@ export default async function interactionCreate(
                     case 'coinbomb':
                         await spawnCoinbomb(interaction);
                         break;
-                    case 'multi':
                     case 'multiplier':
                         await multiplier(interaction);
                         break;
