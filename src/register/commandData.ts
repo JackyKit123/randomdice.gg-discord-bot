@@ -39,6 +39,7 @@ import { commandData as timed } from 'community discord/currency/timed';
 import { commandData as currency } from 'community discord/currency/currency';
 import { commandData as coinbomb } from 'community discord/currency/coinbomb';
 import { commandData as multiplier } from 'community discord/currency/multiplier';
+import { commandData as welcomerick } from 'community discord/currency/fun commands/welcomerick';
 
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
@@ -89,6 +90,7 @@ export default async function registerSlashCommands(
         currency,
         coinbomb,
         multiplier,
+        welcomerick,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {

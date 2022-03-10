@@ -1,38 +1,43 @@
-import { Message, MessageActionRow, MessageButton } from 'discord.js';
+import { coinDice } from 'config/emojiId';
+import {
+    CommandInteraction,
+    MessageActionRow,
+    MessageButton,
+} from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
-import getBalance from '../balance';
+import { getBalance } from '../balance';
 
 export default async function commandCost(
-    message: Message,
+    interaction: CommandInteraction,
     cost: number
 ): Promise<boolean> {
-    const { author, channel, content } = message;
+    const { user, commandName } = interaction;
 
-    const command = content.split(' ')[0] || '';
     const memberCurrency = cache['discord_bot/community/currency'];
-    const ignorePrompt = memberCurrency[author.id].ignoreFunCommandPrompt || [];
-    const balance = await getBalance(message, 'emit new member');
+    const ignorePrompt = memberCurrency[user.id].ignoreFunCommandPrompt || [];
+    const balance = await getBalance(interaction);
 
-    if (balance === false) return false;
+    if (balance === null) return false;
     if (balance < cost) {
-        await channel.send(
-            `You need at least <:dicecoin:839981846419079178> ${cost} to use \`${command.toLowerCase()}\``
+        await interaction.reply(
+            `You need at least ${coinDice} ${cost} to use \`/${commandName}\``
         );
         return false;
     }
     await database
-        .ref(`discord_bot/community/currency/${author.id}/balance`)
+        .ref(`discord_bot/community/currency/${user.id}/balance`)
         .set(balance - cost);
-    if (!ignorePrompt.includes(command.toLowerCase())) {
+    if (!ignorePrompt.includes(commandName)) {
         try {
             (
-                await author.send({
-                    content: `You used \`${command.toLowerCase()}\` command which costs you <:dicecoin:839981846419079178> ${cost}, click 🔇 in 60 seconds to stop this notification.`,
+                await user.send({
+                    content: `You used \`${commandName}\` command which costs you ${coinDice} ${cost}, click 🔇 in 60 seconds to stop this notification.`,
                     components: [
                         new MessageActionRow().addComponents([
                             new MessageButton()
                                 .setCustomId('🔇')
+                                .setLabel('Mute')
                                 .setEmoji('🔇')
                                 .setStyle('DANGER'),
                         ]),
@@ -43,13 +48,13 @@ export default async function commandCost(
                     time: 1000 * 60,
                     max: 1,
                 })
-                .on('collect', async interaction => {
+                .on('collect', async i => {
                     await database
                         .ref(
-                            `discord_bot/community/currency/${author.id}/ignoreFunCommandPrompt`
+                            `discord_bot/community/currency/${user.id}/ignoreFunCommandPrompt`
                         )
-                        .set([...ignorePrompt, command.toLowerCase()]);
-                    await interaction.update({
+                        .set([...ignorePrompt, commandName]);
+                    await i.update({
                         content: 'Notification Muted. 🔇',
                         components: [],
                     });

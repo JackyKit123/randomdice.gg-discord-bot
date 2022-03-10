@@ -1,55 +1,51 @@
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    Message,
+    MessageEmbed,
+    WebhookClient,
+} from 'discord.js';
 import { promisify } from 'util';
-import fetchMentionString from 'util/fetchMention';
 import cooldown from 'util/cooldown';
-import commandCost from './commandCost';
 import channelIds from 'config/channelIds';
 import { rickCoin } from 'config/emojiId';
 import roleIds from 'config/roleId';
+import commandCost from './commandCost';
 
 const wait = promisify(setTimeout);
 
 export default async function welcomerick(
-    message: Discord.Message
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { content, channel, guild } = message;
+    if (!interaction.inCachedGuild()) return;
+    const { options, guild } = interaction;
 
     if (
-        !guild ||
-        (await cooldown(message, '!welcomerick', {
+        await cooldown(interaction, '!welcomerick', {
             default: 60 * 1000,
             donator: 30 * 1000,
-        }))
+        })
     )
         return;
 
-    const memberArg = content.split(' ')[1];
-    const target = await fetchMentionString(memberArg, guild, {
-        content,
-        mentionIndex: 1,
-    });
+    const target = options.getMember('member', true);
 
-    if (!target) {
-        await channel.send(
-            `Usage of the command: \`\`\`!welcomerick <@mention | user id | username | nickname | #username#discriminator>\`\`\``
-        );
+    if (!(await commandCost(interaction, 1000))) return;
+
+    const general = guild.channels.cache.get(channelIds.general);
+    if (general?.type !== 'GUILD_TEXT' || !general.isText()) {
+        await interaction.reply('I cannot find the general channel');
         return;
     }
 
-    if (!(await commandCost(message, 1000))) return;
-    try {
-        await message.delete();
-    } catch {
-        // nothing
-    }
-    const webhook = new Discord.WebhookClient({
+    const webhook = new WebhookClient({
         id: '819762549796241438',
         token: 'fM0NtIFMah--jhB0iK36zQVCdL6pHXx2uoly-kT-bFanbdDGrw3Q80ImW0H_g5NIFJrd',
     });
     await webhook.send({
         content: `Say Welcome to ${target} getting rick rolled again!`,
         embeds: [
-            new Discord.MessageEmbed()
+            new MessageEmbed()
                 .setImage('https://i.imgur.com/WGTxs0m.gif')
                 .setAuthor({
                     name: 'Rick Astley',
@@ -69,16 +65,18 @@ export default async function welcomerick(
                 .setFooter({ text: 'Get rick rolled' }),
         ],
     });
-    const general = guild.channels.cache.get(channelIds.general);
-    if (general?.type !== 'GUILD_TEXT' || !general.isText()) return;
+    await interaction.reply({
+        content: `Rick Astley is on the way to ${target} getting rick rolled again!`,
+        ephemeral: true,
+    });
     const saidWelcome: string[] = [];
     general
         .createMessageCollector({
-            filter: (collected: Discord.Message) =>
+            filter: (collected: Message) =>
                 !collected.author.bot && /welcome/i.test(collected.content),
             time: 60 * 1000,
         })
-        .on('collect', async (collected: Discord.Message) => {
+        .on('collect', async (collected: Message) => {
             const id = collected.member?.id;
             if (!id || saidWelcome.includes(id)) return;
             saidWelcome.push(id);
@@ -88,3 +86,17 @@ export default async function welcomerick(
             await collected.member.roles.remove(roleIds.rick);
         });
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'welcomerick',
+    description:
+        'Send a fake welcome message to #general, Rick Astley just joined!',
+    options: [
+        {
+            name: 'member',
+            description: 'The member to be targeted for the rick roll',
+            type: 'USER',
+            required: true,
+        },
+    ],
+};
