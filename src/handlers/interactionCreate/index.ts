@@ -30,10 +30,9 @@ import { spawnCoinbomb } from 'community discord/currency/coinbomb';
 import multiplier from 'community discord/currency/multiplier';
 import bon from 'community discord/currency/fun commands/bon';
 import welcomerick from 'community discord/currency/fun commands/welcomerick';
-import afk, { afkResponse, removeAfkListener } from 'community discord/afk';
+import afk, { removeAfkListener } from 'community discord/afk';
 import bedtime from 'community discord/currency/fun commands/bedtime';
-import yomama from 'community discord/currency/fun commands/yomama';
-import moon from 'community discord/currency/fun commands/moon';
+import imitate from 'community discord/currency/fun commands/imitate';
 import clown from 'community discord/currency/fun commands/clown';
 import shush, { unShush } from 'community discord/currency/fun commands/shush';
 import rickbomb from 'community discord/currency/fun commands/rickbomb';
@@ -216,10 +215,8 @@ export default async function interactionCreate(
                         await bedtime(interaction);
                         break;
                     case 'yomama':
-                        await yomama(interaction);
-                        break;
-                    case 'moon':
-                        await moon(interaction);
+                    case 'moongirl':
+                        await imitate(interaction);
                         break;
                     case 'clown':
                         await clown(interaction);
