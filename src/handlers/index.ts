@@ -1,4 +1,5 @@
 import { Client } from 'discord.js';
+import guildBanAdd from './guildBanAdd';
 import guildCreate from './guildCreate';
 import guildMemberAdd from './guildMemberAdd';
 import guildMemberRemove from './guildMemberRemove';
@@ -21,5 +22,6 @@ export default function botEventHandlers(client: Client): void {
         .on('messageReactionAdd', messageReactionAdd)
         .on('messageDelete', messageDelete)
         .on('messageUpdate', messageUpdate)
-        .on('typingStart', typingStart);
+        .on('typingStart', typingStart)
+        .on('guildBanAdd', guildBanAdd);
 }
