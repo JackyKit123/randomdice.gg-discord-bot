@@ -1,82 +1,87 @@
 import { database } from 'register/firebase';
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    ButtonInteraction,
+    CommandInteraction,
+    GuildMember,
+    MessageActionRow,
+    MessageButton,
+    MessageEmbed,
+} from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { tier4RoleIds } from 'config/roleId';
 import channelIds from 'config/channelIds';
 import { coinDice } from 'config/emojiId';
-import getBalance from './balance';
+import { getBalance } from './balance';
 import isBotChannels from '../util/isBotChannels';
 
+const memberDefaultCoinFlip = new Map<GuildMember, number>();
+
 export default async function coinflip(
-    message: Discord.Message
+    interaction: CommandInteraction | ButtonInteraction
 ): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
     const numberFormat = new Intl.NumberFormat();
+    const { channel, member, user } = interaction;
+
     if (
-        await cooldown(message, '!coinflip', {
+        !channel ||
+        (await cooldown(interaction, '/coinflip', {
             default: 10 * 1000,
             donator: 5 * 1000,
-        })
+        }))
     )
         return;
 
-    const { channel, content, author, member } = message;
-
-    if (!member) return;
-    const balance = await getBalance(message, 'emit new member');
-    if (balance === false) return;
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
     const gambleProfile =
         cache['discord_bot/community/currency'][member.id]?.gamble;
-    const [, headTail, amountArg] = content.split(' ');
 
-    const isHead = headTail?.match(/^(heads?|h)$/i)?.[1];
-    const isTail = headTail?.match(/^(tails?|t)$/i)?.[1];
-    if (!isHead && !isTail) {
-        await channel.send(
-            'You must specify the face you choose, example```!coinflip head 500```'
-        );
-        return;
-    }
+    const isHead =
+        interaction instanceof CommandInteraction
+            ? interaction.options.getString('side', true) === 'head'
+            : interaction.customId === 'coinflip-head';
+    const isTail = !isHead;
 
     if (balance < 100) {
-        await channel.send(
-            `You do not even have ${coinDice} 100 to bet on a coinflip.`
+        await interaction.reply(
+            `You do not even have ${coinDice} 100 to bet on a coin flip.`
         );
         return;
     }
-    let amount = Number(amountArg);
-    if (typeof amountArg === 'undefined') {
-        amount = 100;
-    } else if (member.roles.cache.hasAny(...tier4RoleIds)) {
-        if (
-            (!Number.isInteger(amount) && amountArg !== 'max') ||
-            Number(amountArg) < 100
-        ) {
-            await channel.send(
-                `You have to bet at least ${coinDice} 100 or \`max\`.`
-            );
-            return;
-        }
-        if (amountArg === 'max') {
-            amount = balance;
-        }
-    } else if (
-        !Number.isInteger(amount) ||
-        Number(amountArg) < 100 ||
-        Number(amountArg) > 10000
-    ) {
-        await channel.send(
-            'Coinflip amount must be a integer between 100 - 10000'
+    const memberIsTier4 = member.roles.cache.hasAny(...tier4RoleIds);
+    const amountArg =
+        (interaction instanceof CommandInteraction
+            ? interaction.options.getString('amount')
+            : memberDefaultCoinFlip.get(member)) ?? 100;
+    const amount =
+        memberIsTier4 && amountArg === 'max' ? balance : Number(amountArg);
+
+    if (!Number.isInteger(amount) || amount < 100 || amount > 10000) {
+        await interaction.reply(
+            `Coinflip amount must be an integer between 100 - 10000${
+                // eslint-disable-next-line no-nested-ternary
+                member.roles.cache.hasAny(...tier4RoleIds)
+                    ? ' or `max`'
+                    : amountArg === 'max'
+                    ? `, betting \`max\` is only allowed for ${tier4RoleIds
+                          .map(id => `<@&${id}>`)
+                          .join(' ')}`
+                    : ''
+            }.`
         );
         return;
     }
-    if (Number(amountArg) > balance) {
-        await channel.send(
+
+    if (amount > balance) {
+        await interaction.reply(
             'You cannot coinflip that much, you are not rich enough.'
         );
         return;
     }
-    amount = amount || Number(amountArg);
+    memberDefaultCoinFlip.set(member, amount);
 
     const flip = Math.random() < 0.5 ? 'head' : 'tail';
     const won = (flip === 'head' && isHead) || (flip === 'tail' && isTail);
@@ -89,11 +94,11 @@ export default async function coinflip(
         ? -1
         : -10;
     await database
-        .ref(`discord_bot/community/currency/${author.id}/balance`)
+        .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + amount * gainMultiplier);
     await database
         .ref(
-            `discord_bot/community/currency/${author.id}/gamble/${
+            `discord_bot/community/currency/${member.id}/gamble/${
                 won ? 'gain' : 'lose'
             }`
         )
@@ -101,11 +106,11 @@ export default async function coinflip(
             Number(gambleProfile?.[won ? 'gain' : 'lose'] || 0) +
                 Math.abs(amount * gainMultiplier)
         );
-    await channel.send({
+    await interaction.reply({
         embeds: [
-            new Discord.MessageEmbed()
+            new MessageEmbed()
                 .setAuthor({
-                    name: author.tag,
+                    name: user.tag,
                     iconURL: member.displayAvatarURL({ dynamic: true }),
                 })
                 .setColor(won ? '#99ff00' : '#ff0000')
@@ -143,5 +148,45 @@ export default async function coinflip(
                     )}`
                 ),
         ],
+        components: [
+            new MessageActionRow().addComponents(
+                ['head', 'tail'].map(side =>
+                    new MessageButton()
+                        .setStyle('PRIMARY')
+                        .setCustomId(`coinflip-${side}`)
+                        .setLabel(`Bet ${side} again`)
+                        .setEmoji(coinDice)
+                )
+            ),
+        ],
     });
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'coinflip',
+    description: 'Flip a coin and bet on it.',
+    options: [
+        {
+            name: 'side',
+            type: 3,
+            description: 'The side of the coin to bet on.',
+            required: true,
+            choices: [
+                {
+                    name: 'head',
+                    value: 'head',
+                },
+                {
+                    name: 'tail',
+                    value: 'tail',
+                },
+            ],
+        },
+        {
+            name: 'amount',
+            type: 3,
+            description:
+                'The amount to bet default to 100, exclusive to tier 4 roles, bet "max" to bet all your balance.',
+        },
+    ],
+};

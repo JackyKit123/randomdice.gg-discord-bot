@@ -80,6 +80,10 @@ export default async function interactionCreate(
                     case 'profile-❌':
                         await profileButtons(interaction);
                         break;
+                    case 'coinflip-head':
+                    case 'coinflip-tail':
+                        await coinflip(interaction);
+                        break;
                     default:
                 }
             }
@@ -145,7 +149,6 @@ export default async function interactionCreate(
                         await profile(interaction);
                         break;
                     case 'coinflip':
-                    case 'cf':
                         await coinflip(interaction);
                         break;
                     case 'richest':
