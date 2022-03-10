@@ -1,8 +1,9 @@
 import channelIds from 'config/channelIds';
+import { coinDice } from 'config/emojiId';
 import Discord from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
-import getBalance from './balance';
+import { getBalance } from './balance';
 
 export default async function voteReward(
     message: Discord.Message
@@ -25,7 +26,7 @@ export default async function voteReward(
     const member = await guild.members.fetch(uid);
     if (!member || !Object.keys(cache['discord_bot/community/currency']).length)
         return;
-    const balance = (await getBalance(message, 'silence', member)) || 10000;
+    const balance = (await getBalance(message, true, member)) || 10000;
 
     await database
         .ref(`discord_bot/community/currency/${uid}/balance`)
