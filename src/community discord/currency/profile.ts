@@ -15,7 +15,10 @@ import cache, { MemberCurrencyProfile } from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
 import { coinDice, nullDice } from 'config/emojiId';
 import { prestigeRoles } from 'config/roleId';
-import { getPrestigeLevel } from 'community discord/util/checkPrestigeLevel';
+import {
+    getPrestigeIcon,
+    getPrestigeLevel,
+} from 'community discord/util/checkPrestigeLevel';
 import { getBalance } from './balance';
 import { duplicatedRoleMulti } from './chatCoins';
 
@@ -47,19 +50,6 @@ const getGeneralProfilePage = (
     channel: GuildTextBasedChannel | null
 ) => {
     const { guild, client } = member;
-
-    const getPrestigeIcon = (roleId: string) => {
-        const role = guild.roles.cache.get(roleId);
-        const devServer = client.guilds.cache.get(
-            process.env.DEV_SERVER_ID ?? ''
-        );
-        if (!role || !devServer) return '';
-        const prestigeRoleName = role.name;
-        const prestigeRoleIconEmoji = devServer.emojis.cache.find(
-            emoji => emoji.name === prestigeRoleName.replace(' ', '_')
-        );
-        return prestigeRoleIconEmoji?.toString();
-    };
 
     const getOtherBadges = (): string =>
         member.roles.cache
@@ -102,7 +92,8 @@ const getGeneralProfilePage = (
                     ? `**${guild.roles.cache
                           .get(prestigeRoles[memberProfile.prestige])
                           ?.name.toUpperCase()}** ${getPrestigeIcon(
-                          prestigeRoles[memberProfile.prestige]
+                          client,
+                          memberProfile.prestige
                       )}`
                     : ' '
             }${getOtherBadges() ? `\n\n${getOtherBadges()}\n‎` : ''}`

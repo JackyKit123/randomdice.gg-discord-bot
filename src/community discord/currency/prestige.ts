@@ -1,46 +1,54 @@
-import Discord from 'discord.js';
+import {
+    CommandInteraction,
+    MessageActionRow,
+    MessageButton,
+    MessageEmbed,
+    UserContextMenuInteraction,
+    ApplicationCommandData,
+} from 'discord.js';
 import { database } from 'register/firebase';
 import cooldown from 'util/cooldown';
 import cache from 'util/cache';
 import { prestigeRoles } from 'config/roleId';
 import { coinDice } from 'config/emojiId';
-import getBalance from './balance';
+import {
+    getPrestigeIcon,
+    getPrestigeLevel,
+} from 'community discord/util/checkPrestigeLevel';
+import { getBalance } from './balance';
 
 export default async function prestige(
-    message: Discord.Message
+    interaction: CommandInteraction | UserContextMenuInteraction
 ): Promise<void> {
-    const { member, channel, guild } = message;
+    if (!interaction.inCachedGuild()) return;
+    const { client, member, guild } = interaction;
     const numberFormat = new Intl.NumberFormat();
     if (
-        await cooldown(message, `!prestige`, {
+        await cooldown(interaction, `!prestige`, {
             default: 20 * 1000,
             donator: 5 * 1000,
         })
     )
         return;
-    if (!member || !guild) return;
-    const balance = await getBalance(message, 'emit new member');
-    if (balance === false) return;
 
-    const currentPrestigeLevel = Number(
-        Object.entries(prestigeRoles)
-            .sort(([a], [b]) => Number(b) - Number(a))
-            .find(([, roleId]) => member.roles.cache.has(roleId))?.[0] || 0
-    );
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
 
-    if (currentPrestigeLevel === 10) {
-        await channel.send(
+    const prestigeLevel = getPrestigeLevel(member);
+
+    if (prestigeLevel === 10) {
+        await interaction.reply(
             'You are already max prestige, you cannot prestige anymore.'
         );
         return;
     }
 
-    const nextPrestigeLevel = currentPrestigeLevel + 1;
+    const nextPrestigeLevel = prestigeLevel + 1;
     const progress = balance / (nextPrestigeLevel * 250000);
     if (progress < 1) {
-        await channel.send({
+        await interaction.reply({
             embeds: [
-                new Discord.MessageEmbed()
+                new MessageEmbed()
                     .setAuthor({
                         name: member.user.tag,
                         iconURL: member.user.displayAvatarURL({
@@ -74,66 +82,86 @@ export default async function prestige(
         return;
     }
 
-    if (progress >= 1) {
-        const userIsDonator = Object.values(cache.users).find(
-            user =>
-                user['linked-account'].discord === member.id &&
-                Boolean(user['patreon-tier'])
-        );
-        const tier = userIsDonator?.['patreon-tier'];
-        let donation = 0;
-        switch (tier) {
-            case 1:
-                donation = 5;
-                break;
-            case 2:
-                donation = 10;
-                break;
-            case 3:
-                donation = 20;
-                break;
-            case 4:
-                donation = 50;
-                break;
-            default:
-        }
-        await channel.send(
-            `You can prestige now.\n⚠️ Warning, if you choose to prestige now, your balance and dice drawn will be reset in exchange for the **${
-                guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])?.name ||
-                prestigeRoles[nextPrestigeLevel]
-            }** role. Type \`prestige me\` if you want to prestige now.${
-                donation
-                    ? `\n⭐Since you are a patreon donator, when you prestige, you can keep ${donation}% of your current balance!`
-                    : ''
-            }`
-        );
-        const awaitedMessage = await channel.awaitMessages({
-            filter: (newMessage: Discord.Message) =>
-                newMessage.author.id === member.id &&
-                newMessage.content.toLowerCase() === 'prestige me',
-            time: 60000,
-            max: 1,
-        });
-        if (awaitedMessage.first()?.content.toLowerCase() === 'prestige me') {
-            await member.roles.add(
-                prestigeRoles[nextPrestigeLevel],
-                'Member Prestige'
-            );
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/prestige`)
-                .set(nextPrestigeLevel);
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/balance`)
-                .set(Math.round((balance * donation) / 100));
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/diceDrawn`)
-                .set(0);
-            await channel.send(
-                `Congratulations on achieving **${
-                    guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])
-                        ?.name || prestigeRoles[nextPrestigeLevel]
-                }**`
-            );
-        }
+    const userIsDonator = Object.values(cache.users).find(
+        user =>
+            user['linked-account'].discord === member.id &&
+            Boolean(user['patreon-tier'])
+    );
+    const tier = userIsDonator?.['patreon-tier'];
+    let donation = 0;
+    switch (tier) {
+        case 1:
+            donation = 5;
+            break;
+        case 2:
+            donation = 10;
+            break;
+        case 3:
+            donation = 20;
+            break;
+        case 4:
+            donation = 50;
+            break;
+        default:
     }
+    const confirmationMessage = await interaction.reply({
+        content: `You can prestige now.\n⚠️ Warning, if you choose to prestige now, your balance and dice drawn will be reset in exchange for the **${
+            guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])?.name ||
+            prestigeRoles[nextPrestigeLevel]
+        }** role. Press the \`prestige me\` button if you want to prestige now.${
+            donation
+                ? `\n⭐Since you are a patreon donator, when you prestige, you can keep ${donation}% of your current balance!`
+                : ''
+        }`,
+        components: [
+            new MessageActionRow().addComponents([
+                new MessageButton()
+                    .setLabel('Prestige Me')
+                    .setStyle('SUCCESS')
+                    .setCustomId('prestige-me')
+                    .setEmoji(
+                        getPrestigeIcon(client, nextPrestigeLevel) ?? coinDice
+                    ),
+            ]),
+        ],
+        fetchReply: true,
+    });
+    confirmationMessage
+        .createMessageComponentCollector({
+            time: 60 * 1000,
+        })
+        .on('collect', async i => {
+            if (i.user.id !== member.id) {
+                await interaction.reply('This button is not for you.');
+                return;
+            }
+            if (i.customId === 'prestige-me') {
+                await member.roles.add(
+                    prestigeRoles[nextPrestigeLevel],
+                    'Member Prestige'
+                );
+                await database
+                    .ref(`discord_bot/community/currency/${member.id}/prestige`)
+                    .set(nextPrestigeLevel);
+                await database
+                    .ref(`discord_bot/community/currency/${member.id}/balance`)
+                    .set(Math.round((balance * donation) / 100));
+                await database
+                    .ref(
+                        `discord_bot/community/currency/${member.id}/diceDrawn`
+                    )
+                    .set(0);
+                await interaction.reply(
+                    `Congratulations on achieving **${
+                        guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])
+                            ?.name || prestigeRoles[nextPrestigeLevel]
+                    }**`
+                );
+            }
+        });
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'prestige',
+    description: 'Exchange all you balance for a prestige role.',
+};
