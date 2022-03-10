@@ -1,83 +1,67 @@
 import roleIds from 'config/roleId';
-import Discord, {
+import {
+    ApplicationCommandData,
+    Client,
+    CommandInteraction,
     GuildAuditLogsEntry,
     GuildAuditLogsResolvable,
 } from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
-import fetchMention from 'util/fetchMention';
 import { clown as clownEmoji } from 'config/emojiId';
 import commandCost from './commandCost';
 
 const wait = promisify(setTimeout);
 
-export default async function clown(message: Discord.Message): Promise<void> {
-    const { content, author, guild, channel, member } = message;
-
-    if (!guild || !member) {
-        return;
-    }
+export default async function clown(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { options, member } = interaction;
 
     if (
-        await cooldown(message, '!clown', {
+        (await cooldown(interaction, '!clown', {
             default: 60 * 1000 * 5,
             donator: 60 * 1000 * 1,
-        })
+        })) ||
+        !(await commandCost(
+            interaction,
+            Math.round(Math.random() * 3500 - 1500)
+        ))
     ) {
         return;
     }
-    if (
-        !(await commandCost(message, Math.round(Math.random() * 3500 - 1500)))
-    ) {
-        await channel.send(
-            `Usually that's the case, but today I am gonna allow you to use it.${clownEmoji}`
-        );
-    }
-    const memberArg = content.split(' ')?.[1];
+    let target = options.getMember('member', true);
 
-    let target = await fetchMention(memberArg, guild, {
-        content,
-        mentionIndex: 1,
-    });
-    if (!target && member.id === '195174308052467712') {
-        await channel.send('Unknown target.');
+    if (target?.id === member.id && member.roles.cache.has(roleIds['🤡'])) {
+        await interaction.reply('Slow Down. You are already a clown, jeez.');
         return;
     }
-    if (target?.id === author.id && member.roles.cache.has(roleIds['🤡'])) {
-        await channel.send('Slow Down. You are already a clown, jeez.');
-        return;
-    }
-    const sentMessage = await channel.send(
+    await interaction.reply(
         'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
     );
     await wait(4700);
-    let typedWrongCommand = false;
+
     let clownedABot = false;
-    if (!target) {
-        await sentMessage.edit(
-            `You are so stupid that you can't even type the command right, I guess you are the real clown then.\nUsage of the command: \`\`\`!clown <@mention | user id | username | nickname | #username#discriminator>\`\`\``
-        );
-        target = member;
-        typedWrongCommand = true;
-    } else if (target.id === author.id) {
-        await sentMessage.edit(
-            `${author}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
+    if (target.id === member.id) {
+        await interaction.editReply(
+            `${member}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
         );
     } else if (
         member.id === '195174308052467712' ||
         (['722951439567290458', '415166565550653442'].includes(target.id) &&
             Math.random() < 0.95)
     ) {
-        await sentMessage.edit(
-            `${target} got clowned by ${author}.${clownEmoji}`
+        await interaction.editReply(
+            `${target} got clowned by ${member}.${clownEmoji}`
         );
     } else if (target.roles.cache.has(roleIds['🤡'])) {
-        await sentMessage.edit(
+        await interaction.editReply(
             `${target} has already been clowned. Why are you so desperate? I guess you are the real clown then.`
         );
         target = member;
     } else if (target.user.bot) {
-        await sentMessage.edit(
+        await interaction.editReply(
             `What's wrong in your mind to clown a bot? Good Try tho, you clown.`
         );
         clownedABot = true;
@@ -88,18 +72,18 @@ export default async function clown(message: Discord.Message): Promise<void> {
             Math.random() < 0.95) ||
         (target.id !== member.id && Math.random() < 0.6)
     ) {
-        await sentMessage.edit(
-            `${author} is trying clown ${target}. **BUT IT BACKFIRED, ${author} is now a clown LOL!!!**`
+        await interaction.editReply(
+            `${member} is trying clown ${target}. **BUT IT BACKFIRED, ${member} is now a clown LOL!!!**`
         );
         target = member;
     } else {
-        await sentMessage.edit(
-            `${target} got clowned by ${author}.${clownEmoji}`
+        await interaction.editReply(
+            `${target} got clowned by ${member}.${clownEmoji}`
         );
     }
     const originalName = target.displayName;
     const howClown =
-        typedWrongCommand || clownedABot || member.id === '195174308052467712'
+        clownedABot || member.id === '195174308052467712'
             ? 10
             : Math.ceil(Math.random() * 10);
     try {
@@ -108,13 +92,12 @@ export default async function clown(message: Discord.Message): Promise<void> {
     } catch (err) {
         // suppress error
     } finally {
-        await channel.send({
-            content:
-                typedWrongCommand || clownedABot
-                    ? `${target} ${clownedABot ? 'tried to clown a bot.' : ''}${
-                          typedWrongCommand ? 'typed the wrong command.' : ''
-                      } 100% clown!${clownEmoji}`
-                    : `${target} is a ${howClown * 10}% clown.${clownEmoji}`,
+        await interaction.reply({
+            content: `${target} ${
+                clownedABot
+                    ? 'tried to clown a bot. 100%'
+                    : `is a ${howClown * 10}%`
+            } clown!${clownEmoji}`,
             allowedMentions: {
                 users: [],
                 roles: [],
@@ -134,9 +117,7 @@ export default async function clown(message: Discord.Message): Promise<void> {
     }
 }
 
-export async function purgeRolesOnReboot(
-    client: Discord.Client
-): Promise<void> {
+export async function purgeRolesOnReboot(client: Client): Promise<void> {
     const guild = client.guilds.cache.get(
         process.env.COMMUNITY_SERVER_ID ?? ''
     );
@@ -187,3 +168,16 @@ export async function purgeRolesOnReboot(
         }),
     ]);
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'clown',
+    description: 'Whoever you want to clown, clown!',
+    options: [
+        {
+            name: 'member',
+            description: 'The member who deserves to be clowned',
+            required: true,
+            type: 'USER',
+        },
+    ],
+};
