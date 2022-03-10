@@ -1,6 +1,5 @@
 import { Client } from 'discord.js';
 import { fetchApps } from 'community discord/apply';
-import { purgeRolesOnReboot as purgeMoonedRoles } from 'community discord/currency/fun commands/moon';
 import { purgeRolesOnReboot as purgeClownRoles } from 'community discord/currency/fun commands/clown';
 import { fetchGeneralOnBoot } from 'community discord/chatrevivePing';
 import { fetchExistingCrewAds } from 'community discord/checkCrewAds';
@@ -30,7 +29,6 @@ export default async function ready(client: Client<true>): Promise<void> {
         // eslint-disable-next-line no-console
         console.log(bootMessage);
         await Promise.all([
-            purgeMoonedRoles(client),
             purgeClownRoles(client),
             fetchApps(client),
             fetchGeneralOnBoot(client),

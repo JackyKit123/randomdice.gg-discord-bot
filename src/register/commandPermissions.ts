@@ -45,6 +45,7 @@ export default async function setCommandPermissions(
                     await command.permissions.set(adminOnly);
                     break;
                 case 'closereport':
+                case 'shush':
                     await command.permissions.set(adminAndModOnly);
                     break;
                 case 'eventping':

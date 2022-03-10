@@ -43,6 +43,7 @@ import { commandData as welcomerick } from 'community discord/currency/fun comma
 import { commandData as bon } from 'community discord/currency/fun commands/bon';
 import { commandData as imitate } from 'community discord/currency/fun commands/imitate';
 import { commandData as clown } from 'community discord/currency/fun commands/clown';
+import { commandData as shush } from 'community discord/currency/fun commands/shush';
 
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
@@ -97,6 +98,7 @@ export default async function registerSlashCommands(
         bon,
         ...imitate,
         clown,
+        ...shush,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {
