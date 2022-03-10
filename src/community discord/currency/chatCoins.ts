@@ -9,7 +9,7 @@ import roleIds, {
 import Discord from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
-import getBalance from './balance';
+import { getBalance } from './balance';
 
 export function duplicatedRoleMulti(member: Discord.GuildMember): number {
     const duplicatedTierMulti = (
@@ -83,9 +83,9 @@ export default async function chatCoins(
         return;
     }
 
-    const balance = await getBalance(message, 'silence');
+    const balance = await getBalance(message, true);
     if (
-        balance === false ||
+        balance === null ||
         !Object.keys(cache['discord_bot/community/currency']).length
     )
         return;
