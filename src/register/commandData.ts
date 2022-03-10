@@ -35,6 +35,7 @@ import { commandData as coinflip } from 'community discord/currency/coinflip';
 import { commandData as leaderboard } from 'community discord/currency/leaderboard';
 import { commandData as prestige } from 'community discord/currency/prestige';
 import { commandData as raffle } from 'community discord/currency/raffle';
+import { commandData as timed } from 'community discord/currency/timed';
 
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
@@ -81,6 +82,7 @@ export default async function registerSlashCommands(
         ...leaderboard,
         prestige,
         raffle,
+        ...timed,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {

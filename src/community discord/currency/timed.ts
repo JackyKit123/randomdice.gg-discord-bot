@@ -1,23 +1,28 @@
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    MessageEmbed,
+} from 'discord.js';
 import moment from 'moment';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
 import { coinDice } from 'config/emojiId';
-import getBalance from './balance';
-import isBotChannels from '../util/isBotChannels';
 import roleIds from 'config/roleId';
 import channelIds from 'config/channelIds';
+import { getBalance } from './balance';
+import isBotChannels from '../util/isBotChannels';
 
 export default async function timed(
-    message: Discord.Message,
+    interaction: CommandInteraction,
     mode: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly'
 ): Promise<void> {
-    const { member, channel } = message;
+    if (!interaction.inCachedGuild()) return;
+    const { member, channel } = interaction;
     const numberFormat = new Intl.NumberFormat();
 
-    const balance = await getBalance(message, 'emit new member');
-    if (balance === false || !member) return;
+    const balance = await getBalance(interaction);
+    if (balance === null || !channel) return;
     const memberProfile = cache['discord_bot/community/currency'][member.id];
 
     let timestamp = 0;
@@ -72,9 +77,9 @@ export default async function timed(
     }
 
     if (endOf.diff(timestamp) < period) {
-        await channel.send({
+        await interaction.reply({
             embeds: [
-                new Discord.MessageEmbed()
+                new MessageEmbed()
                     .setTitle('Slow Down!')
                     .setColor('#6ba4a5')
                     .setDescription(
@@ -90,7 +95,7 @@ export default async function timed(
     await database
         .ref(`discord_bot/community/currency/${member.id}/${mode}`)
         .set(Date.now().valueOf());
-    let embed = new Discord.MessageEmbed()
+    let embed = new MessageEmbed()
         .setTitle(`You claimed your ${mode} coins!`)
         .setColor('#ffff00');
     if (multiplier > 1) {
@@ -144,7 +149,7 @@ export default async function timed(
             .setDescription(
                 `Added 1 ${coinDice} to your balance\n||What? Are you seriously expecting more? Fine, come back another year for another ${coinDice} 1 reward.||`
             )
-            .setFooter('');
+            .setFooter(null);
     } else {
         embed = embed.setDescription(
             `${
@@ -167,17 +172,20 @@ export default async function timed(
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + reward * (isBotChannels(channel) ? 1 : -1));
 
-    await channel.send({ embeds: [embed] });
+    const sentMessage = await interaction.reply({
+        embeds: [embed],
+        fetchReply: true,
+    });
     if (mode === 'daily') {
         if (streak === 100) {
             await member?.roles.add(
                 roleIds['100 Daily Streaks'],
                 '100 daily streaks'
             );
-            await channel.send({
-                content: 'Congratulation on achieving 100 daily streaks.',
+            await sentMessage.reply({
+                content: `${member} Congratulation on achieving 100 daily streaks.`,
                 embeds: [
-                    new Discord.MessageEmbed()
+                    new MessageEmbed()
                         .setDescription(
                             `Added <@&${roleIds['100 Daily Streaks']}> to you.`
                         )
@@ -195,3 +203,26 @@ export default async function timed(
         }
     }
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'hourly',
+        description: 'Claim your hourly coins.',
+    },
+    {
+        name: 'daily',
+        description: 'Claim your daily coins.',
+    },
+    {
+        name: 'weekly',
+        description: 'Claim your weekly coins.',
+    },
+    {
+        name: 'monthly',
+        description: 'Claim your monthly coins.',
+    },
+    {
+        name: 'yearly',
+        description: 'Claim your yearly coins.',
+    },
+];
