@@ -1,6 +1,13 @@
 import { rickCoin } from 'config/emojiId';
 import roleIds from 'config/roleId';
-import Discord from 'discord.js';
+import {
+    ApplicationCommandData,
+    Collector,
+    CommandInteraction,
+    Message,
+    Snowflake,
+    User,
+} from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import { activeCoinbombInChannel } from '../coinbomb';
@@ -9,23 +16,27 @@ import commandCost from './commandCost';
 const wait = promisify(setTimeout);
 
 export default async function rickBomb(
-    message: Discord.Message
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild, member, content, channel: originalChannel } = message;
+    if (!interaction.inCachedGuild()) return;
+    const {
+        guild,
+        options,
+        channel: originalChannel,
+        commandName,
+    } = interaction;
     let channel = originalChannel;
-    if (!guild || !member) {
-        return;
+
+    if (!channel) return;
+
+    const anotherChannel = options.getChannel('channel');
+
+    if (anotherChannel?.isText()) {
+        channel = anotherChannel;
     }
-    const channelRegex = /^(?:<#(\d{18})>|(\d{18}))$/;
-    const anotherChannelArg = content.split(' ')?.[1]?.match(channelRegex);
-    if (anotherChannelArg) {
-        const getChannel = guild.channels.cache.get(anotherChannelArg?.[1]);
-        if (getChannel?.isText()) {
-            channel = getChannel;
-        }
-    }
+
     if (
-        await cooldown(message, '!rickbomb', {
+        await cooldown(interaction, commandName, {
             default: 60 * 1000 * 5,
             donator: 60 * 1000 * 1,
         })
@@ -33,17 +44,18 @@ export default async function rickBomb(
         return;
     }
     if (activeCoinbombInChannel.get(channel.id)) {
-        await originalChannel.send(
-            `There is an active coinbomb in ${channel}, you cannot spawn a new one before the last one has ended.`
-        );
+        await interaction.reply({
+            content: `There is an active coinbomb in ${channel}, you cannot spawn a new one before the last one has ended.`,
+            ephemeral: true,
+        });
         return;
     }
-    if (!(await commandCost(message, 500))) return;
-    try {
-        message.delete();
-    } catch {
-        // nothing
-    }
+    if (!(await commandCost(interaction, 500))) return;
+
+    await interaction.reply({
+        content: `${rickCoin} is on the way!`,
+        ephemeral: true,
+    });
     const rand = Math.random();
     let rngMultiplier: number;
     if (rand > 0.5) {
@@ -57,7 +69,7 @@ export default async function rickBomb(
     let messageToSend: string;
     let maxCollectorAllowed: number;
     let collectionTrigger: string;
-    let endMessage: (members: Discord.User[]) => string;
+    let endMessage: (members: User[]) => string;
     const basicCollectionTriggers = [
         'GIMME',
         'MINE',
@@ -137,18 +149,18 @@ export default async function rickBomb(
             } got rick roll`;
     }
 
-    const collected: Discord.User[] = [];
+    const collected: User[] = [];
     const sentMessage = await channel.send(messageToSend);
     activeCoinbombInChannel.set(channel.id, true);
-    const collector: Discord.Collector<Discord.Snowflake, Discord.Message> =
+    const collector: Collector<Snowflake, Message> =
         channel.createMessageCollector({
-            filter: (m: Discord.Message) =>
+            filter: (m: Message) =>
                 m.author &&
                 !m.author.bot &&
                 m.content.toLowerCase() === collectionTrigger.toLowerCase(),
             time: 20 * 1000,
         });
-    collector.on('collect', async (collect: Discord.Message) => {
+    collector.on('collect', async (collect: Message) => {
         const { id } = collect.author;
         if (collected.some(user => user.id === id)) return;
         collected.push(collect.author);
@@ -158,7 +170,7 @@ export default async function rickBomb(
         await guild.members.cache.get(id)?.roles.remove(roleIds.rick);
     });
     collector.on('end', async () => {
-        activeCoinbombInChannel.set(channel.id, false);
+        if (channel) activeCoinbombInChannel.set(channel.id, false);
         try {
             if (collected.length > 0) {
                 await sentMessage.edit(endMessage(collected));
@@ -170,3 +182,15 @@ export default async function rickBomb(
         }
     });
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'rickbomb',
+    description: 'Spawns a rickbomb',
+    options: [
+        {
+            name: 'channel',
+            description: 'The channel to spawn the rickbomb in',
+            type: 'CHANNEL',
+        },
+    ],
+};
