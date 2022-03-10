@@ -1,10 +1,8 @@
 import {
     ApplicationCommandData,
     CommandInteraction,
-    Message,
     TextBasedChannel,
 } from 'discord.js';
-import { reply } from 'util/typesafeReply';
 import wordList from './words.json';
 
 const activeWordleGame = new Map<string, string>();
@@ -149,50 +147,51 @@ async function endGame(
     firstWinner.delete(channel.id);
 }
 
-async function guessWord(input: CommandInteraction): Promise<void> {
-    const { guild, channel, member } = input;
-    const author = input.client.users.cache.get(member?.user.id ?? '');
-    if (!guild || !channel || !author) return;
+async function guessWord(interaction: CommandInteraction): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { channel, user } = interaction;
 
-    const guess = input.options.getString('word', true).toLowerCase();
+    if (!channel) return;
+    const guess = interaction.options.getString('word', true).toLowerCase();
     const word = activeWordleGame.get(channel.id);
 
     if (!word) {
-        await reply(
-            input,
+        await interaction.reply(
             'There is not a wordle game going on in this channel, use `/wordle start` to start one.'
         );
         return;
     }
 
     if (!guess.match(/^[a-z]{5}$/i)) {
-        await reply(input, 'Please enter a valid 5 letters word.', true);
+        await interaction.reply({
+            content: 'Please enter a valid 5 letters word.',
+            ephemeral: true,
+        });
         return;
     }
 
     if (!wordList.includes(guess)) {
-        await reply(
-            input,
-            'Your guess is not in the word list. Please try again.',
-            true
-        );
+        await interaction.reply({
+            content: 'Your guess is not in the word list. Please try again.',
+            ephemeral: true,
+        });
         return;
     }
 
     const channelGuessRecord = guessRecord.get(channel.id) ?? {};
-    const memberGuessRecord: string[] = channelGuessRecord[author.id] ?? [];
+    const memberGuessRecord: string[] = channelGuessRecord[user.id] ?? [];
 
     if (memberGuessRecord.includes(word)) {
-        await reply(
-            input,
-            'You have already won this game. Please wait for the next one.',
-            true
-        );
+        await interaction.reply({
+            content:
+                'You have already won this game. Please wait for the next one.',
+            ephemeral: true,
+        });
         return;
     }
 
     memberGuessRecord.push(guess);
-    channelGuessRecord[author.id] = memberGuessRecord;
+    channelGuessRecord[user.id] = memberGuessRecord;
     guessRecord.set(channel.id, channelGuessRecord);
 
     const sendGuessRecord = () =>
@@ -202,9 +201,8 @@ async function guessWord(input: CommandInteraction): Promise<void> {
 
     if (memberGuessRecord[memberGuessRecord.length - 1] === word) {
         const isFirst = !firstWinner.get(channel.id);
-        await reply(
-            input,
-            `You ${
+        await interaction.reply({
+            content: `You ${
                 isFirst ? 'are the first to guess' : 'guesssed'
             } the word correctly!\n${memberGuessRecord
                 .map(
@@ -214,20 +212,22 @@ async function guessWord(input: CommandInteraction): Promise<void> {
                         )}`
                 )
                 .join('\n')}`,
-            true
-        );
+            ephemeral: true,
+        });
         await channel.send(
-            `${author} has guessed the word correctly! ${sendGuessRecord()}`
+            `${user} has guessed the word correctly! ${sendGuessRecord()}`
         );
         if (isFirst) {
-            firstWinner.set(channel.id, author.id);
+            firstWinner.set(channel.id, user.id);
         }
     } else if (memberGuessRecord.length > 6) {
-        await reply(input, `You have run out of guesses!`, true);
+        await interaction.reply({
+            content: `You have run out of guesses!`,
+            ephemeral: true,
+        });
     } else {
-        await reply(
-            input,
-            `Your guesses:\n${memberGuessRecord
+        await interaction.reply({
+            content: `Your guesses:\n${memberGuessRecord
                 .map(
                     record =>
                         `${emojiFy(record)}\n${verifyGuess(word, record).join(
@@ -248,12 +248,12 @@ async function guessWord(input: CommandInteraction): Promise<void> {
                             .join(' ')}`
                 )
                 .join('\n')}`,
-            true
-        );
-        await channel.send(`${author} ${sendGuessRecord()}`);
+            ephemeral: true,
+        });
+        await channel.send(`${user} ${sendGuessRecord()}`);
         if (memberGuessRecord.length === 6) {
             await channel.send(
-                `${author} has failed to guess the word correctly!`
+                `${user} has failed to guess the word correctly!`
             );
         }
     }
@@ -275,39 +275,26 @@ async function guessWord(input: CommandInteraction): Promise<void> {
 }
 
 export default async function wordle(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild, channel, member, client } = input;
+    if (!interaction.inCachedGuild()) return;
+    const { channel, client, user, options } = interaction;
+    if (!channel) return;
 
-    const author = client.users.cache.get(member?.user.id ?? '');
-
-    if (!guild || !channel || !author) return;
-
-    const isGuessing =
-        input instanceof Message
-            ? input.content.split(' ')[1] === 'guess'
-            : input.options.getSubcommand() === 'guess';
-
-    if (input instanceof CommandInteraction && isGuessing) {
-        await guessWord(input);
+    if (options.getSubcommand() === 'guess') {
+        await guessWord(interaction);
         return;
     }
 
-    if (
-        input instanceof Message
-            ? input.content.split(' ')[1] === 'help'
-            : input.options.getSubcommand() === 'help'
-    ) {
-        await reply(
-            input,
+    if (options.getSubcommand() === 'help') {
+        await interaction.reply(
             'https://media.discordapp.net/attachments/804222694488932364/950204922895417414/HowtoplayoriginalWordle.png'
         );
         return;
     }
 
     if (activeWordleGame.get(channel.id)) {
-        await reply(
-            input,
+        await interaction.reply(
             `There's a game already going on in this channel. Use \`/wordle guess\` to guess the word.`
         );
         return;
@@ -317,15 +304,11 @@ export default async function wordle(
 
     activeWordleGame.set(channel.id, randomWord);
 
-    await reply(
-        input,
-        `${author} is starting a wordle game, use \`/wordle guess <word>\` to starting guessing`
+    await interaction.reply(
+        `${user} is starting a wordle game, use \`/wordle guess <word>\` to starting guessing`
     );
 
-    const timeLimit =
-        (input instanceof Message
-            ? Number(input.content.split(' ')[2])
-            : input.options.getInteger('time-limit')) || 5;
+    const timeLimit = interaction.options.getInteger('time-limit') ?? 5;
 
     for (let timeLeft = timeLimit - 1; timeLeft > 0; timeLeft -= 1) {
         /* eslint-disable no-await-in-loop */
@@ -344,7 +327,7 @@ export default async function wordle(
                         ([, record]) =>
                             record.length < 6 && !record.includes(randomWord)
                     )
-                    .map(([user]) => `<@${user}>`)
+                    .map(([uid]) => `<@${uid}>`)
                     .join(' ')}\nThe game has ${timeLeft} minute${
                     timeLeft <= 1 ? '' : 's'
                 } left!`
