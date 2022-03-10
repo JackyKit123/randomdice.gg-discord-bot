@@ -1,26 +1,25 @@
 import {
+    ApplicationCommandData,
     Client,
     Collection,
+    CommandInteraction,
     DiscordAPIError,
     GuildMember,
+    GuildTextBasedChannel,
     InteractionCollector,
     Message,
     MessageActionRow,
     MessageButton,
     MessageCollector,
     MessageComponentInteraction,
-    NewsChannel,
-    TextChannel,
 } from 'discord.js';
 import { database } from 'register/firebase';
 import { promisify } from 'util';
 import logMessage from 'dev-commands/logMessage';
 import rickBomb from 'community discord/currency/fun commands/rickbomb';
 import { coinDice, goldenPickaxe, pickaxe } from 'config/emojiId';
-import getBalance from './balance';
 import channelIds from 'config/channelIds';
-import checkPermission from 'community discord/util/checkPermissions';
-import { eventManagerRoleIds } from 'config/roleId';
+import { getBalance } from './balance';
 
 const wait = promisify(setTimeout);
 const numberFormat = new Intl.NumberFormat();
@@ -30,7 +29,7 @@ type BatchType = 'pick' | 'goldenPick' | 'small' | 'medium' | 'large';
 
 export default async function pickCoins(
     client: Client,
-    channel: TextChannel | NewsChannel,
+    channel: GuildTextBasedChannel,
     recursive = false,
     type?: BatchType
 ): Promise<void> {
@@ -295,8 +294,8 @@ export default async function pickCoins(
                 (memberHasReward ?? 0) +
                     rngReward * (isGoldenPickaxe === member.id ? 10 : 1)
             );
-            const balance = await getBalance(message, 'silence', member);
-            if (balance === false) return;
+            const balance = await getBalance(message, true, member);
+            if (balance === null) return;
             await database
                 .ref(`discord_bot/community/currency/${member.id}/balance`)
                 .set(
@@ -433,23 +432,17 @@ export async function pickCoinsInit(client: Client): Promise<void> {
     pickCoins(client, channel, true);
 }
 
-export async function spawnCoinbomb(message: Message): Promise<void> {
-    const { client, content, member, channel } = message;
+export async function spawnCoinbomb(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { client, options, channel, user } = interaction;
+    if (!channel) return;
 
-    const arg = content.split(' ')[1];
-    if (
-        !member ||
-        !(await checkPermission(message, ...eventManagerRoleIds)) ||
-        channel?.type !== 'GUILD_TEXT'
-    ) {
-        await channel.send('You do not have permission to spawn a coinbomb');
-        return;
-    }
-    if (!database) {
-        throw new Error('Database is not ready');
-    }
+    const arg = options.getString('type');
+
     if (activeCoinbombInChannel.get(channel.id)) {
-        await channel.send(
+        await interaction.reply(
             'There is an active coinbomb in this channel, you cannot spawn a new one before the last one has ended.'
         );
         return;
@@ -462,42 +455,63 @@ export async function spawnCoinbomb(message: Message): Promise<void> {
         case 'goldenpick':
             type = 'goldenPick';
             break;
-        case pickaxe:
         case '⛏️':
-        case ':pick:':
-        case 'tiny':
             type = 'pick';
             break;
         case '💵':
-        case ':dollar:':
-        case 'small':
             type = 'small';
             break;
         case '💰':
-        case ':moneybag:':
-        case 'medium':
             type = 'medium';
             break;
         case '💎':
-        case ':gem:':
-        case 'big':
-        case 'large':
-        case 'huge':
             type = 'large';
             break;
         case 'rick':
-            await rickBomb(message);
+            await rickBomb(interaction);
             return;
         default:
-            if (
-                /^<a?:[\w\d_]*(\d|\b|_)rick(\d|\b|_)[\w\d_]*:\d{18}>$/i.test(
-                    arg
-                )
-            ) {
-                await rickBomb(message);
-                return;
-            }
     }
 
-    pickCoins(client, channel, false, type);
+    await interaction.reply(`${user} has spawned a coinbomb!`);
+    await pickCoins(client, channel, false, type);
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'coinbomb',
+    description: 'Spawns a coinbomb',
+    options: [
+        {
+            name: 'type',
+            description: 'The type of coinbomb to spawn',
+            type: 'STRING',
+            required: false,
+            choices: [
+                {
+                    name: '⛏️ Pickers',
+                    value: '⛏️',
+                },
+                {
+                    name: '⛏️ Golden Pickaxe',
+                    value: 'goldenpick',
+                },
+                {
+                    name: '💵 Small',
+                    value: '💵',
+                },
+                {
+                    name: '💰 Medium',
+                    value: '💰',
+                },
+                {
+                    name: '💎 Large',
+                    value: '💎',
+                },
+                {
+                    name: 'RICK, you know what it is',
+                    value: 'rick',
+                },
+            ],
+        },
+    ],
+};
