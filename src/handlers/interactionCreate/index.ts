@@ -30,7 +30,7 @@ import { spawnCoinbomb } from 'community discord/currency/coinbomb';
 import multiplier from 'community discord/currency/multiplier';
 import bon from 'community discord/currency/fun commands/bon';
 import welcomerick from 'community discord/currency/fun commands/welcomerick';
-import afk from 'community discord/afk';
+import afk, { afkResponse, removeAfkListener } from 'community discord/afk';
 import bedtime from 'community discord/currency/fun commands/bedtime';
 import yomama from 'community discord/currency/fun commands/yomama';
 import moon from 'community discord/currency/fun commands/moon';
@@ -58,11 +58,16 @@ export default async function interactionCreate(
     )
         return;
 
+    const asyncPromisesCapturer: Promise<unknown>[] = [];
+
     try {
         if (
             interaction.inCachedGuild() &&
             interaction.guildId === process.env.COMMUNITY_SERVER_ID
         ) {
+            asyncPromisesCapturer.push(
+                removeAfkListener(interaction, interaction.user)
+            );
             if (interaction.isButton()) {
                 switch (interaction.customId) {
                     case 'dd':
@@ -260,6 +265,7 @@ export default async function interactionCreate(
         } else if (interaction.isCommand()) {
             await baseCommands(interaction, interaction.commandName);
         }
+        await Promise.all(asyncPromisesCapturer);
     } catch (err) {
         try {
             if (

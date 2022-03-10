@@ -1,5 +1,15 @@
 import { database } from 'register/firebase';
-import Discord, { TextBasedChannel } from 'discord.js';
+import {
+    CommandInteraction,
+    GuildMember,
+    Interaction,
+    Message,
+    MessageReaction,
+    PartialUser,
+    TextBasedChannel,
+    TextChannel,
+    User,
+} from 'discord.js';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
@@ -9,15 +19,17 @@ import checkPermission from './util/checkPermissions';
 
 const wait = promisify(setTimeout);
 
-export default async function afk(message: Discord.Message): Promise<void> {
-    const { member, content, createdTimestamp } = message;
+export default async function afk(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { member, options, createdTimestamp } = interaction;
 
-    if (!member) return;
-    const afkMessage = content.replace(/!afk ?/i, '') || 'AFK';
+    const afkMessage = options.getString('reason') || 'AFK';
 
     if (
-        !(await checkPermission(message, tier2RoleIds)) ||
-        (await cooldown(message, '!afk', {
+        !(await checkPermission(interaction, ...tier2RoleIds)) ||
+        (await cooldown(interaction, '!afk', {
             default: 30 * 1000,
             donator: 30 * 1000,
         }))
@@ -34,7 +46,7 @@ export default async function afk(message: Discord.Message): Promise<void> {
     }
     await Promise.all([
         wait(30 * 1000),
-        message.reply({
+        interaction.reply({
             content: `I have set your afk to: ${afkMessage}`,
             allowedMentions: {
                 parse: [],
@@ -51,8 +63,8 @@ export default async function afk(message: Discord.Message): Promise<void> {
 }
 
 async function afkHandler(
-    channel: Discord.TextChannel,
-    member: Discord.GuildMember,
+    channel: TextChannel,
+    member: GuildMember,
     {
         content,
         createdTimestamp,
@@ -100,18 +112,17 @@ async function afkHandler(
     );
 }
 
-export async function afkResponse(message: Discord.Message): Promise<void> {
+export async function afkResponse(message: Message): Promise<void> {
     const { member, content, channel, createdTimestamp } = message;
     if (!member || channel.type !== 'GUILD_TEXT') return;
     await afkHandler(channel, member, { content, createdTimestamp });
 }
 
 export async function removeAfkListener(
-    arg: TextBasedChannel | Discord.MessageReaction,
-    user: Discord.User | Discord.PartialUser
+    arg: TextBasedChannel | MessageReaction | Interaction,
+    user: User | PartialUser
 ): Promise<void> {
-    const channel =
-        arg instanceof Discord.MessageReaction ? arg.message.channel : arg;
+    const channel = arg instanceof MessageReaction ? arg.message.channel : arg;
     const { COMMUNITY_SERVER_ID } = process.env;
     if (channel.type !== 'GUILD_TEXT' || !COMMUNITY_SERVER_ID) return;
     const { guild } = channel;
