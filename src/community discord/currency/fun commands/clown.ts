@@ -17,9 +17,10 @@ export default async function clown(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, member } = interaction;
+    const { options, member, channel } = interaction;
 
     if (
+        !channel ||
         (await cooldown(interaction, '!clown', {
             default: 60 * 1000 * 5,
             donator: 60 * 1000 * 1,
@@ -92,7 +93,7 @@ export default async function clown(
     } catch (err) {
         // suppress error
     } finally {
-        await interaction.reply({
+        await channel.send({
             content: `${target} ${
                 clownedABot
                     ? 'tried to clown a bot. 100%'
