@@ -1,38 +1,35 @@
-import Discord from 'discord.js';
-import fetchMentionString from 'util/fetchMention';
+import {
+    ApplicationCommandData,
+    CommandInteraction,
+    MessageEmbed,
+} from 'discord.js';
 import cooldown from 'util/cooldown';
 import commandCost from './commandCost';
 
-export default async function bon(message: Discord.Message): Promise<void> {
-    const { content, channel, guild, author } = message;
+export default async function bon(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { options, user, guild, commandName } = interaction;
 
     if (
-        !guild ||
-        (await cooldown(message, '!bon', {
+        await cooldown(interaction, commandName, {
             default: 60 * 1000,
             donator: 30 * 1000,
-        }))
+        })
     )
         return;
 
-    const memberArg = content.split(' ')[1];
-    const target = await fetchMentionString(memberArg, guild);
-    const reason = content.split(' ').slice(2).join(' ') || 'no reason';
+    const target = options.getMember('member', true);
+    const reason = options.getString('reason') || 'no reason';
 
-    if (!target) {
-        await channel.send(
-            `Usage of the command: \`\`\`!bon <@mention | user id | username | nickname | #username#discriminator>\`\`\``
-        );
-        return;
-    }
-
-    if (!(await commandCost(message, 1000))) return;
+    if (!(await commandCost(interaction, 1000))) return;
     const general = guild?.channels.cache.get('804222694488932364');
-    await channel.send(`Goodbye ${target}, get fucking bonned!`);
+    await interaction.reply(`Goodbye ${target}, get fucking bonned!`);
     if (general?.isText())
         await general.send({
             embeds: [
-                new Discord.MessageEmbed()
+                new MessageEmbed()
                     .setImage(
                         'https://media1.tenor.com/images/7a9fe7f23548941c33b2ef1609c3d31c/tenor.gif?itemid=10045949'
                     )
@@ -44,8 +41,26 @@ export default async function bon(message: Discord.Message): Promise<void> {
                     .setTitle(`${target.user.tag} Got bonned`)
                     .setColor('#ff0000')
                     .setDescription(
-                        `${target} got bonned by ${author} for ||${reason}||`
+                        `${target} got bonned by ${user} for ||${reason}||`
                     ),
             ],
         });
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'bon',
+    description: `Bon a member, you don't need to be a mod to use this command`,
+    options: [
+        {
+            name: 'member',
+            type: 'USER',
+            description: 'The member to bon',
+            required: true,
+        },
+        {
+            name: 'reason',
+            type: 'STRING',
+            description: 'The reason for boning the member',
+        },
+    ],
+};
