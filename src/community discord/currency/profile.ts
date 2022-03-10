@@ -44,11 +44,11 @@ const getDefaultEmbed = (member: GuildMember) =>
 const getGeneralProfilePage = (
     member: GuildMember,
     balance: number,
-    channel?: GuildTextBasedChannel
+    channel: GuildTextBasedChannel | null
 ) => {
     const { guild, client } = member;
 
-    const getPrestigeIcon = async (roleId: string) => {
+    const getPrestigeIcon = (roleId: string) => {
         const role = guild.roles.cache.get(roleId);
         const devServer = client.guilds.cache.get(
             process.env.DEV_SERVER_ID ?? ''
@@ -119,10 +119,10 @@ const getGeneralProfilePage = (
         )
         .addField(
             'Your Chat Multi',
-            `\`+${roleMulti}\` from your Roles\n\`+${dupedMulti}\` from duplicated perks\n+${
+            `\`+${roleMulti}\` from your Roles\n\`+${dupedMulti}\` from duplicated perks\n${
                 channel
-                    ? `\`${channelMulti}\` in <#${channel.id}>`
-                    : '`unknown` in #unknown-channel???'
+                    ? `\`+${channelMulti}\` in <#${channel.id}>`
+                    : '`+unknown` in #unknown-channel???'
             }\n\`+${channelMulti + roleMulti + dupedMulti + 1}\` in Total`,
             true
         )
@@ -329,7 +329,7 @@ export default async function profile(
     if (balance === null) return;
 
     const sentMessage = await interaction.reply({
-        embeds: [getGeneralProfilePage(member, balance)],
+        embeds: [getGeneralProfilePage(target, balance, channel)],
         components: getProfileButtons((_, i) => i === 0),
         fetchReply: true,
     });
@@ -340,7 +340,7 @@ export async function profileButtons(
     interaction: ButtonInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { customId, message, user } = interaction;
+    const { customId, message, user, channel } = interaction;
     const components = getProfileButtons(
         button => `profile-${button}` === customId
     );
@@ -361,7 +361,13 @@ export async function profileButtons(
     switch (interaction.customId) {
         case 'profile-👤':
             await interaction.update({
-                embeds: [getGeneralProfilePage(target, memberProfile.balance)],
+                embeds: [
+                    getGeneralProfilePage(
+                        target,
+                        memberProfile.balance,
+                        channel
+                    ),
+                ],
                 components,
             });
             break;
