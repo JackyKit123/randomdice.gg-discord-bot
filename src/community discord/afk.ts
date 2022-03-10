@@ -1,5 +1,6 @@
 import { database } from 'register/firebase';
 import {
+    ApplicationCommandData,
     CommandInteraction,
     GuildMember,
     Interaction,
@@ -25,7 +26,7 @@ export default async function afk(
     if (!interaction.inCachedGuild()) return;
     const { member, options, createdTimestamp } = interaction;
 
-    const afkMessage = options.getString('reason') || 'AFK';
+    const afkMessage = options.getString('message') || 'AFK';
 
     if (
         !(await checkPermission(interaction, ...tier2RoleIds)) ||
@@ -130,3 +131,15 @@ export async function removeAfkListener(
     if (!member || !guild || guild.id !== COMMUNITY_SERVER_ID) return;
     await afkHandler(channel, member);
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'afk',
+    description: 'Set your afk status',
+    options: [
+        {
+            name: 'message',
+            description: 'The message to display when you are afk',
+            type: 'STRING',
+        },
+    ],
+};

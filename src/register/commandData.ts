@@ -27,6 +27,7 @@ import { commandData as customRole } from 'community discord/customRole';
 import { commandData as myEmoji } from 'community discord/myEmoji';
 import { commandData as rdRole } from 'community discord/rdRole';
 import { commandData as wordle } from 'community discord/wordle';
+import { commandData as afk } from 'community discord/afk';
 import { commandData as balance } from 'community discord/currency/balance';
 import { commandData as advertise } from 'community discord/promote';
 import { commandData as dd } from 'community discord/currency/drawDice';
@@ -103,6 +104,7 @@ export default async function registerSlashCommands(
         ...shush,
         rickbomb,
         bedtime,
+        afk,
     ];
 
     const setCommands = async (guildId = '', commands = baseCommands) => {
