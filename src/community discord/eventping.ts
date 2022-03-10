@@ -57,6 +57,7 @@ export default async function eventPing(
 
 export const commandData: ApplicationCommandData = {
     name: 'eventping',
+    defaultPermission: false,
     description:
         'Ping members with the event role to let them know the event is starting.',
     options: [

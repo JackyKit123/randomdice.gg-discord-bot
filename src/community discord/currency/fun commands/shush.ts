@@ -216,6 +216,7 @@ export const commandData: ApplicationCommandData[] = [
     {
         name: 'unshush',
         description: 'Unshush whoever is has been shushed.',
+        defaultPermission: false,
         options: [
             {
                 name: 'member',

@@ -107,6 +107,7 @@ export default async function currency(
 export const commandData: ApplicationCommandData = {
     name: 'currency-audit',
     description: 'Audit the balance of up to 20 members.',
+    defaultPermission: false,
     options: [
         {
             name: 'amount',

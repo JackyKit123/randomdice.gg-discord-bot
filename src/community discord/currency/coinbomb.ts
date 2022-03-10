@@ -480,6 +480,7 @@ export async function spawnCoinbomb(
 export const commandData: ApplicationCommandData = {
     name: 'coinbomb',
     description: 'Spawns a coinbomb',
+    defaultPermission: false,
     options: [
         {
             name: 'type',
