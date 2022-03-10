@@ -74,5 +74,10 @@ export const commandData: ApplicationCommandData = {
             description: 'The member who should go to bed',
             required: true,
         },
+        {
+            name: 'for-real',
+            type: 'BOOLEAN',
+            description: 'Whether the member should go to bed for real',
+        },
     ],
 };
