@@ -6,7 +6,6 @@ import {
     Message,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 
 const critRoleIds = Object.entries(roleIds)
     .filter(([roleName]) => roleName.endsWith('Crit'))
@@ -75,8 +74,7 @@ export async function myClass(interaction: CommandInteraction): Promise<void> {
     const classArg = options.getString('class', true);
     const newRoleId = getClassRoleId(classArg);
     if (!newRoleId) {
-        await reply(
-            interaction,
+        await interaction.reply(
             `${classArg} is not a valid class. Possible classes are: ${classRoles.map(
                 ([roleName]) => roleName
             )}`

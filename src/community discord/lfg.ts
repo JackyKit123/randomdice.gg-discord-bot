@@ -6,19 +6,20 @@ import {
     MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import checkPermission from './util/checkPermissions';
 
-export default async function lfg(command: CommandInteraction): Promise<void> {
-    if (!command.inCachedGuild()) return;
-    const { member, channel, commandName } = command;
+export default async function lfg(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { member, channel, commandName } = interaction;
 
-    const msg = command.options.getString('message');
+    const msg = interaction.options.getString('message');
 
     if (!channel) return;
 
     if (
-        await cooldown(command, commandName, {
+        await cooldown(interaction, commandName, {
             default: 600 * 1000,
             donator: 600 * 1000,
         })
@@ -26,22 +27,20 @@ export default async function lfg(command: CommandInteraction): Promise<void> {
         return;
     }
 
-    if (!(await checkPermission(command, ...tier2RoleIds))) return;
+    if (!(await checkPermission(interaction, ...tier2RoleIds))) return;
 
     if (
         channel.id !== channelIds['jackykit-playground-v3'] &&
         channel.id !== channelIds['look-for-games']
     ) {
-        await reply(
-            command,
+        await interaction.reply(
             `You can only use this command in <#${channelIds['look-for-games']}>.`
         );
         return;
     }
 
     if (msg && msg.length > 1024) {
-        await reply(
-            command,
+        await interaction.reply(
             'Your message cannot be longer than 1024 characters.'
         );
         return;
@@ -62,14 +61,14 @@ export default async function lfg(command: CommandInteraction): Promise<void> {
         embed = embed.addField('Message', msg);
     }
 
-    await command.deferReply();
+    await interaction.deferReply();
 
     await channel.send({
         content: `<@&${roleIds['Looking for Games Ping']}>`,
         embeds: [embed],
     });
 
-    await command.deleteReply();
+    await interaction.deleteReply();
 }
 
 export const commandData: ApplicationCommandData = {

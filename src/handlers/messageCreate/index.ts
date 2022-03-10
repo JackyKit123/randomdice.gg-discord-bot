@@ -27,7 +27,6 @@ import version from 'dev-commands/version';
 import cache from 'util/cache';
 import { baseCommands } from 'register/commandCase';
 import yesNoButton from 'util/yesNoButton';
-import { reply } from 'util/typesafeReply';
 import channelIds from 'config/channelIds';
 import { hackwarnTimer } from 'community discord/timer';
 
@@ -128,8 +127,7 @@ export default async function messageCreate(message: Message): Promise<void> {
                 }
             }
             if (!command?.toLowerCase()) {
-                await reply(
-                    message,
+                await message.reply(
                     'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'
                 );
             } else if (
@@ -162,8 +160,7 @@ export default async function messageCreate(message: Message): Promise<void> {
                         }
                     );
                 } else {
-                    await reply(
-                        message,
+                    await message.reply(
                         `${warningString} Need help? type \`.gg help\``
                     );
                 }
@@ -182,8 +179,7 @@ export default async function messageCreate(message: Message): Promise<void> {
                 guild ? `server ${guild.name}` : `DM with <@${author.id}>`
             } : ${(err as Error).stack ?? (err as Error).message ?? err}`
         );
-        await reply(
-            message,
+        await message.reply(
             `Oops, something went wrong: ${(err as Error).message}`
         );
     }
