@@ -1,45 +1,33 @@
-import Discord from 'discord.js';
-import fetchMentionString from 'util/fetchMention';
+import { CommandInteraction, MessageEmbed } from 'discord.js';
 import cooldown from 'util/cooldown';
-import commandCost from './commandCost';
 import roleIds, { moderatorRoleIds } from 'config/roleId';
+import commandCost from './commandCost';
 
-export default async function bedtime(message: Discord.Message): Promise<void> {
-    const { content, channel, guild, member } = message;
+export default async function bedtime(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { options, member } = interaction;
 
-    if (
-        !guild ||
-        (await cooldown(message, '!bedtime', {
-            default: 60 * 1000,
-            donator: 30 * 1000,
-        }))
-    )
-        return;
+    const target = options.getMember('member', true);
+    const forReal = options.getBoolean('for-real');
 
-    const memberArg = content.split(' ')[1];
-    const target = await fetchMentionString(memberArg, guild, {
-        content,
-        mentionIndex: 1,
-    });
-
-    if (!target) {
-        await channel.send(
-            `Usage of the command: \`\`\`!bedtime <@mention | user id | username | nickname | #username#discriminator>\`\`\``
-        );
-        return;
-    }
-
-    const bedtimeForReal = /!bedtime\b.* --for-real\b/i.test(content);
     if (!target.roles.cache.has(roleIds['Bed time'])) {
-        if (bedtimeForReal) {
+        if (forReal) {
             if (!member?.roles.cache.hasAny(...moderatorRoleIds)) {
-                await channel.send(
-                    "You don't have sufficient permission to use argument `--for-real`"
+                await interaction.reply(
+                    "You don't have sufficient permission to use argument `for-real`"
                 );
                 return;
             }
         }
-        if (!(await commandCost(message, 500))) {
+        if (
+            (await cooldown(interaction, '!bedtime', {
+                default: 60 * 1000,
+                donator: 30 * 1000,
+            })) ||
+            !(await commandCost(interaction, 500))
+        ) {
             return;
         }
         await target.roles.add(roleIds['Bed time']);
@@ -51,23 +39,36 @@ export default async function bedtime(message: Discord.Message): Promise<void> {
                     // nothing
                 }
             },
-            bedtimeForReal ? 1000 * 60 * 60 * 8 : 1000 * 10
+            forReal ? 1000 * 60 * 60 * 8 : 1000 * 10
         );
-        await channel.send({
+        await interaction.reply({
             embeds: [
-                new Discord.MessageEmbed()
+                new MessageEmbed()
                     .setTitle('Temporary role added')
                     .setColor(5496236)
                     .setDescription(
                         `${target} has been granted the <@&${
                             roleIds['Bed time']
-                        }> role for ${bedtimeForReal ? '8 hours' : 'now'}.`
+                        }> role for ${forReal ? '8 hours' : 'now'}.`
                     ),
             ],
         });
     } else {
-        await channel.send(
-            'You cannot use `!bedtime` on someone who already has this role.'
+        await interaction.reply(
+            'You cannot use `/bedtime` on someone who already has this role.'
         );
     }
 }
+
+export const commandData = {
+    name: 'bedtime',
+    description: `Give a member the bedtime role for a while. Time to sleep uh?`,
+    options: [
+        {
+            name: 'member',
+            type: 'USER',
+            description: 'The member who should go to bed',
+            required: true,
+        },
+    ],
+};
