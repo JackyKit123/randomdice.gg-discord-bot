@@ -5,6 +5,7 @@ import {
     Collection,
     CommandInteraction,
     GuildMember,
+    MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 
@@ -47,12 +48,29 @@ export default async function closeAppeal(
                     overwrite.type === 'member' && overwrite.id === member.id
             )?.id ?? ''
         );
+    const reason = options.getString('reason');
+    const logChannel = guild.channels.cache.get('805059910484099112');
 
     if (!target) {
         await interaction.reply(
             'Please provide a valid member to close the appeal.'
         );
         return;
+    }
+
+    let logEmbed = new MessageEmbed()
+        .setAuthor({
+            name: target.user.tag,
+            iconURL: member.displayAvatarURL({ dynamic: true }),
+        })
+        .setTimestamp()
+        .addField(
+            'Appeal closed by',
+            `${member.displayName}\n${member.toString()}`
+        );
+
+    if (reason) {
+        logEmbed = logEmbed.setDescription(reason);
     }
 
     const accept = async (): Promise<void> => {
@@ -69,13 +87,13 @@ export default async function closeAppeal(
             await guild.members.ban(target, {
                 reason: 'Appeal accepted.',
             });
-            await interaction.reply(
-                `Accepted appeal for ${
-                    target instanceof GuildMember
-                        ? `**${target.user.tag}**`
-                        : `<@${target}>`
-                }.`
-            );
+            const appealLog = logEmbed
+                .setTitle('Appeal accepted')
+                .setColor('#e5ffe5');
+            await interaction.reply({ embeds: [appealLog] });
+            if (logChannel?.isText()) {
+                await logChannel.send({ embeds: [appealLog] });
+            }
         }
     };
 
@@ -86,13 +104,13 @@ export default async function closeAppeal(
             await guild.members.ban(target, {
                 reason: 'Appeal rejected.',
             });
-            await interaction.reply(
-                `Rejected appeal for ${
-                    target instanceof GuildMember
-                        ? `**${target.user.tag}**`
-                        : `<@${target}>`
-                }.`
-            );
+            const appealLog = logEmbed
+                .setTitle('Appeal rejected')
+                .setColor('#ff3434');
+            await interaction.reply({ embeds: [appealLog] });
+            if (logChannel?.isText()) {
+                await logChannel.send({ embeds: [appealLog] });
+            }
         }
     };
 
@@ -111,14 +129,13 @@ export default async function closeAppeal(
                 target,
                 'Member is not guilty, appeal closed.'
             );
-
-            await interaction.reply(
-                `Closed appeal for ${
-                    target instanceof GuildMember
-                        ? `**${target.user.tag}**`
-                        : `<@${target}>`
-                }. User is clean.`
-            );
+            const appealLog = logEmbed
+                .setTitle('Member is not guilty')
+                .setColor('#e5ffe5');
+            await interaction.reply({ embeds: [appealLog] });
+            if (logChannel?.isText()) {
+                await logChannel.send({ embeds: [appealLog] });
+            }
         }
     };
 
