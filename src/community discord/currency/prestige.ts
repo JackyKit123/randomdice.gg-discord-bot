@@ -135,14 +135,14 @@ export default async function prestige(
                 await i.reply({
                     content: 'This button is not for you.',
                     ephemeral: true,
-                );
+                });
                 return;
             }
             if (i.customId === 'prestige-me') {
                 await member.roles.add(
                     prestigeRoles[nextPrestigeLevel],
                     'Member Prestige'
-                );
+                });
                 await database
                     .ref(`discord_bot/community/currency/${member.id}/prestige`)
                     .set(nextPrestigeLevel);
