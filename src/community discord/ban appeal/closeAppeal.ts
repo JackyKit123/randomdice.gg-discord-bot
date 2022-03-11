@@ -1,27 +1,30 @@
 import {
+    ApplicationCommandData,
     CategoryChannel,
     ClientUser,
     Collection,
+    CommandInteraction,
     GuildMember,
-    Message,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import fetchMentionString from 'util/fetchMention';
 
-export default async function closeAppeal(message: Message): Promise<void> {
-    const { client, content, member, guild, channel } = message;
-    const [command, arg] = content.split(' ');
+export default async function closeAppeal(
+    interaction: CommandInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { client, member, guild, channel, commandName, options } =
+        interaction;
+
     const { COMMUNITY_SERVER_ID } = process.env;
 
-    if (!member || !guild) {
-        return;
-    }
-
     if (
-        await cooldown(message, '!closeappeal', {
+        !channel ||
+        !channel.isText() ||
+        channel.isThread() ||
+        (await cooldown(interaction, commandName, {
             default: 60 * 1000,
             donator: 60 * 1000,
-        })
+        }))
     ) {
         return;
     }
@@ -30,22 +33,43 @@ export default async function closeAppeal(message: Message): Promise<void> {
         throw new Error('Missing `COMMUNITY_SERVER_ID` env in bot code.');
     }
 
-    const accept = async (target: GuildMember | string): Promise<void> => {
-        (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
+    const communityDiscord = client.guilds.cache.get(COMMUNITY_SERVER_ID);
+
+    if (!communityDiscord) {
+        throw new Error('Community Discord server is not located.');
+    }
+
+    const target =
+        options.getMember('member') ??
+        guild.members.cache.get(
+            channel.permissionOverwrites.cache.find(
+                overwrite =>
+                    overwrite.type === 'member' && overwrite.id === member.id
+            )?.id ?? ''
+        );
+
+    if (!target) {
+        await interaction.reply(
+            'Please provide a valid member to close the appeal.'
+        );
+        return;
+    }
+
+    const accept = async (): Promise<void> => {
+        await communityDiscord.members.unban(
             target,
             'Appealed accepted in appeal server.'
         );
 
         try {
-            if (target instanceof GuildMember)
-                await target.send(
-                    'Your appeal is accepted, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
-                );
+            await target.send(
+                'Your appeal is accepted, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+            );
         } finally {
-            guild.members.ban(target, {
+            await guild.members.ban(target, {
                 reason: 'Appeal accepted.',
             });
-            await channel.send(
+            await interaction.reply(
                 `Accepted appeal for ${
                     target instanceof GuildMember
                         ? `**${target.user.tag}**`
@@ -55,15 +79,14 @@ export default async function closeAppeal(message: Message): Promise<void> {
         }
     };
 
-    const reject = async (target: GuildMember | string): Promise<void> => {
+    const reject = async (): Promise<void> => {
         try {
-            if (target instanceof GuildMember)
-                await target.send('Your appeal is rejected.');
+            await target.send('Your appeal is rejected.');
         } finally {
-            guild.members.ban(target, {
+            await guild.members.ban(target, {
                 reason: 'Appeal rejected.',
             });
-            await channel.send(
+            await interaction.reply(
                 `Rejected appeal for ${
                     target instanceof GuildMember
                         ? `**${target.user.tag}**`
@@ -73,24 +96,23 @@ export default async function closeAppeal(message: Message): Promise<void> {
         }
     };
 
-    const falsebanned = async (target: GuildMember | string): Promise<void> => {
-        (await client.guilds.fetch(COMMUNITY_SERVER_ID)).members.unban(
+    const falsebanned = async (): Promise<void> => {
+        await communityDiscord.members.unban(
             target,
             'Appealed accepted in appeal server, member is not guilty.'
         );
 
         try {
-            if (target instanceof GuildMember)
-                await target.send(
-                    'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
-                );
+            await target.send(
+                'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+            );
         } finally {
             await guild.members.kick(
                 target,
                 'Member is not guilty, appeal closed.'
             );
 
-            await channel.send(
+            await interaction.reply(
                 `Closed appeal for ${
                     target instanceof GuildMember
                         ? `**${target.user.tag}**`
@@ -100,37 +122,14 @@ export default async function closeAppeal(message: Message): Promise<void> {
         }
     };
 
-    if (!['!accept', '!reject', '!falsebanned'].includes(command)) {
-        return;
-    }
-
-    let target: string | GuildMember | undefined = await fetchMentionString(
-        arg,
-        guild,
-        {
-            content,
-            mentionIndex: 1,
-        }
-    );
-    if (!target) {
-        target =
-            arg.match(/^<@!?(\d{18})>$/)?.[1] || arg.match(/^(\d{18})$/)?.[1];
-        if (!target) {
-            await channel.send(
-                `Usage of the command: \`\`\`${command} <@mention | user id | username>\`\`\``
-            );
-            return;
-        }
-    }
-
     if (!member.permissions.has('BAN_MEMBERS')) {
-        await channel.send(
+        await interaction.reply(
             'You do not have sufficient permission to execute this command.'
         );
         return;
     }
 
-    if (target instanceof GuildMember) {
+    {
         const executorRole = member.roles.highest;
         const targetRole = target.roles.highest;
         const clientRole = (
@@ -140,14 +139,14 @@ export default async function closeAppeal(message: Message): Promise<void> {
         ).roles.highest;
 
         if (executorRole.comparePositionTo(targetRole) < 0) {
-            await channel.send(
+            await interaction.reply(
                 'You do not have sufficient permission to ban or unban this user.'
             );
             return;
         }
 
         if (clientRole.comparePositionTo(targetRole) <= 0) {
-            await channel.send(
+            await interaction.reply(
                 'I do not have sufficient permission to execute this command.'
             );
             return;
@@ -167,18 +166,55 @@ export default async function closeAppeal(message: Message): Promise<void> {
             position: -1,
         }));
 
-    if (channel.type === 'GUILD_TEXT') await channel.setParent(archiveCategory);
+    if (channel?.type === 'GUILD_TEXT')
+        await channel.setParent(archiveCategory);
 
-    switch (command) {
-        case '!accept':
-            accept(target);
+    switch (commandName) {
+        case 'accept':
+            await accept();
             break;
-        case '!reject':
-            reject(target);
+        case 'reject':
+            await reject();
             break;
-        case '!falsebanned':
-            falsebanned(target);
+        case 'falsebanned':
+            await falsebanned();
             break;
         default:
     }
 }
+
+export const commandData: ApplicationCommandData[] = [
+    {
+        name: 'accept',
+        description: 'Accepts the appeal.',
+        options: [
+            {
+                name: 'member',
+                description: 'The member to accept the appeal for.',
+                type: 'USER',
+            },
+        ],
+    },
+    {
+        name: 'reject',
+        description: 'Rejects the appeal.',
+        options: [
+            {
+                name: 'member',
+                description: 'The member to reject the appeal for.',
+                type: 'USER',
+            },
+        ],
+    },
+    {
+        name: 'falsebanned',
+        description: 'Closes the appeal as false banned.',
+        options: [
+            {
+                name: 'member',
+                description: 'The member to close the appeal for.',
+                type: 'USER',
+            },
+        ],
+    },
+];

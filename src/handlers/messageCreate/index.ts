@@ -2,7 +2,6 @@ import { Message } from 'discord.js';
 import stringSimilarity from 'string-similarity';
 import eightBall from 'community discord/8ball';
 import { afkResponse } from 'community discord/afk';
-import closeAppeal from 'community discord/ban appeal/closeAppeal';
 import chatRevivePing from 'community discord/chatrevivePing';
 import validateCrewAds from 'community discord/checkCrewAds';
 import cleverBot from 'community discord/cleverbot';
@@ -31,17 +30,6 @@ export default async function messageCreate(message: Message): Promise<void> {
     try {
         if (process.env.NODE_ENV === 'production') {
             asyncPromisesCapturer = [...asyncPromisesCapturer, spy(message)];
-        }
-
-        if (
-            process.env.COMMUNITY_APPEAL_SERVER_ID === guild?.id &&
-            process.env.NODE_ENV === 'production'
-        ) {
-            if (content.startsWith('!')) {
-                await closeAppeal(message);
-                return;
-            }
-            return;
         }
 
         if (

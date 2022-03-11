@@ -54,6 +54,8 @@ import { commandData as fetchInvites } from 'dev-commands/fetchInvites';
 import { commandData as stat } from 'dev-commands/stat';
 import { commandData as version } from 'dev-commands/version';
 
+import { commandData as closeAppeal } from 'community discord/ban appeal/closeAppeal';
+
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
 
@@ -121,6 +123,8 @@ export default async function registerSlashCommands(
         version,
     ];
 
+    const appealCommands: ApplicationCommandDataResolvable[] = [...closeAppeal];
+
     const setCommands = async (guildId = '', commands = baseCommands) => {
         if (guildId) {
             const guild = client.guilds.cache.get(guildId);
@@ -130,32 +134,45 @@ export default async function registerSlashCommands(
     };
 
     let communityServerCommandsManager;
+    let appealServerCommandsManager;
     if (process.env.NODE_ENV === 'development') {
-        [, communityServerCommandsManager] = await Promise.all([
-            setCommands(process.env.DEV_SERVER_ID, [
-                ...baseCommands,
-                ...devCommands,
-            ]),
-            setCommands(
-                process.env.COMMUNITY_SERVER_ID ?? '',
-                communityCommands
-            ),
-        ]);
+        [, communityServerCommandsManager, appealServerCommandsManager] =
+            await Promise.all([
+                setCommands(process.env.DEV_SERVER_ID, [
+                    ...baseCommands,
+                    ...devCommands,
+                ]),
+                setCommands(
+                    process.env.COMMUNITY_SERVER_ID ?? '',
+                    communityCommands
+                ),
+                setCommands(
+                    process.env.COMMUNITY_APPEAL_SERVER_ID ?? '',
+                    appealCommands
+                ),
+            ]);
     } else if (process.env.NODE_ENV === 'production') {
-        [, communityServerCommandsManager] = await Promise.all([
-            setCommands(process.env.DEV_SERVER_ID),
-            setCommands(process.env.COMMUNITY_SERVER_ID ?? ''),
-            setCommands(
-                process.env.COMMUNITY_SERVER_ID ?? '',
-                communityCommands
-            ),
-            setCommands(process.env.DEV_SERVER_ID, devCommands),
-            setCommands(process.env.COMMUNITY_APPEAL_SERVER_ID ?? ''),
-            setCommands(),
-        ]);
+        [, , communityServerCommandsManager, appealServerCommandsManager] =
+            await Promise.all([
+                setCommands(process.env.DEV_SERVER_ID),
+                setCommands(process.env.COMMUNITY_SERVER_ID ?? ''),
+                setCommands(
+                    process.env.COMMUNITY_SERVER_ID ?? '',
+                    communityCommands
+                ),
+                setCommands(
+                    process.env.COMMUNITY_APPEAL_SERVER_ID ?? '',
+                    appealCommands
+                ),
+                setCommands(process.env.DEV_SERVER_ID, devCommands),
+                setCommands(),
+            ]);
     }
     if (communityServerCommandsManager) {
         await setCommandPermissions(communityServerCommandsManager);
+    }
+    if (appealServerCommandsManager) {
+        await setCommandPermissions(appealServerCommandsManager);
     }
 }
 

@@ -34,6 +34,16 @@ const adminAndEventManagerPermissions: {
     permissions: [adminPermission, ...eventManagerPermissions],
 };
 
+const appealServerStaffPermissions: {
+    permissions: ApplicationCommandPermissions[];
+} = {
+    permissions: [
+        '805037559671422976',
+        '805037585348296725',
+        '807533306076856320',
+    ].map(id => getPermission(id)),
+};
+
 export default async function setCommandPermissions(
     commandManager: Collection<string, ApplicationCommand>
 ): Promise<void> {
@@ -54,6 +64,11 @@ export default async function setCommandPermissions(
                     await command.permissions.set(
                         adminAndEventManagerPermissions
                     );
+                    break;
+                case 'accept':
+                case 'reject':
+                case 'falsebanned':
+                    await command.permissions.set(appealServerStaffPermissions);
                     break;
                 default:
             }

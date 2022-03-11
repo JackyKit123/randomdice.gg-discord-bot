@@ -46,6 +46,8 @@ import statistic from 'dev-commands/stat';
 import reboot from 'dev-commands/reboot';
 import version from 'dev-commands/version';
 
+import closeAppeal from 'community discord/ban appeal/closeAppeal';
+
 import channelIds from 'config/channelIds';
 import { nullDice } from 'config/emojiId';
 
@@ -282,6 +284,20 @@ export default async function interactionCreate(
                     break;
                 case 'version':
                     await version(interaction);
+                    break;
+                default:
+            }
+        }
+        if (
+            interaction.inCachedGuild() &&
+            interaction.isCommand() &&
+            interaction.guildId === process.env.COMMUNITY_APPEAL_SERVER_ID
+        ) {
+            switch (interaction.commandName) {
+                case 'accept':
+                case 'reject':
+                case 'falsebanned':
+                    await closeAppeal(interaction);
                     break;
                 default:
             }
