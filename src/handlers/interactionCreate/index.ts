@@ -256,7 +256,8 @@ export default async function interactionCreate(
                     default:
                 }
             }
-        } else if (interaction.isCommand()) {
+        }
+        if (interaction.isCommand()) {
             await baseCommands(interaction, interaction.commandName);
         }
         await Promise.all(asyncPromisesCapturer);
