@@ -132,7 +132,7 @@ export default async function prestige(
         })
         .on('collect', async i => {
             if (i.user.id !== member.id) {
-                await interaction.reply({
+                await i.reply({
                     content: 'This button is not for you.',
                     ephemeral: true,
                 );
