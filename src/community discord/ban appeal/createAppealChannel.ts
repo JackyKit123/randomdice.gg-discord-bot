@@ -125,13 +125,20 @@ export default async function createAppealChanel(
         embeds: [
             new MessageEmbed()
                 .setTitle('Appeal Form')
+                .setAuthor({
+                    name: 'randomdice.gg Ban Appeal Server',
+                    iconURL: guild.iconURL({ dynamic: true }) ?? undefined,
+                })
                 .setDescription(
-                    `Welcome to the randomdice.gg unbanning server.\n` +
-                        `Before we can start processing your application for a ban, we need important key information from you.\n` +
+                    `Before we can start processing your application for a ban, we need important key information from you.\n` +
                         `It should be said that your application will be rejected with immediate effect if we expose one or more of your information as a lie.\n` +
-                        `We need the following information from you: `
+                        `Please answer the following questions: `
                 )
                 .setColor('#6ba4a5')
+                .addField(
+                    'Why were you banned?',
+                    '*Describe the rules you have broken which lead to the ban*'
+                )
                 .addField(
                     'Why should you be unbanned?',
                     '*You will only be unbanned if you are not guilty*'

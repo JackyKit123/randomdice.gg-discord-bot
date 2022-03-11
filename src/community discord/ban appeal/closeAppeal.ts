@@ -3,10 +3,8 @@ import {
     ApplicationCommandData,
     ButtonInteraction,
     CategoryChannel,
-    ClientUser,
     Collection,
     CommandInteraction,
-    GuildMember,
     MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
@@ -19,15 +17,10 @@ export default async function closeAppeal(
 
     const { COMMUNITY_SERVER_ID } = process.env;
 
-    if (
-        !channel ||
-        !channel.isText() ||
-        channel.isThread() ||
-        (await cooldown(interaction, 'close appeal', {
-            default: 60 * 1000,
-            donator: 60 * 1000,
-        }))
-    ) {
+    if (!member.permissions.has('BAN_MEMBERS')) {
+        await interaction.reply(
+            'You do not have sufficient permission to execute this command.'
+        );
         return;
     }
 
@@ -40,6 +33,8 @@ export default async function closeAppeal(
     if (!communityDiscord) {
         throw new Error('Community Discord server is not located.');
     }
+
+    if (!channel || !channel.isText() || channel.isThread()) return;
 
     const membersInAppealRoom = channel.permissionOverwrites.cache.filter(
         overwrite => overwrite.type === 'member'
@@ -60,6 +55,14 @@ export default async function closeAppeal(
         await interaction.reply(
             'Please provide a valid member to close the appeal.'
         );
+        return;
+    }
+
+    if (target.id === member.id) {
+        await interaction.reply({
+            content: 'You cannot close your own appeal.',
+            ephemeral: true,
+        });
         return;
     }
 
@@ -144,18 +147,8 @@ export default async function closeAppeal(
         }
     };
 
-    if (!member.permissions.has('BAN_MEMBERS')) {
-        await interaction.reply(
-            'You do not have sufficient permission to execute this command.'
-        );
-        return;
-    }
-
     const executorRole = member.roles.highest;
     const targetRole = target.roles.highest;
-    const clientRole = (
-        guild.members.cache.get((client.user as ClientUser).id) as GuildMember
-    ).roles.highest;
 
     if (executorRole.comparePositionTo(targetRole) < 0) {
         await interaction.reply(
@@ -164,10 +157,12 @@ export default async function closeAppeal(
         return;
     }
 
-    if (clientRole.comparePositionTo(targetRole) <= 0) {
-        await interaction.reply(
-            'I do not have sufficient permission to execute this command.'
-        );
+    if (
+        await cooldown(interaction, 'close appeal', {
+            default: 60 * 1000,
+            donator: 60 * 1000,
+        })
+    ) {
         return;
     }
 
