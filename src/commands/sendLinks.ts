@@ -3,6 +3,8 @@ import {
     ClientUser,
     CommandInteraction,
     Message,
+    MessageActionRow,
+    MessageButton,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
@@ -58,17 +60,21 @@ export default async function sendLinks(
                         .setTitle('Support Us')
                         .setDescription(
                             'You can support randomdice.gg by funding in patreon or contributing on github.'
-                        )
-                        .addFields([
-                            {
-                                name: 'Patreon',
-                                value: 'https://www.patreon.com/RandomDiceCommunityWebsite',
-                            },
-                            {
-                                name: 'Github',
-                                value: 'https://github.randomdice.gg',
-                            },
-                        ]),
+                        ),
+                ],
+                components: [
+                    new MessageActionRow().addComponents([
+                        new MessageButton()
+                            .setStyle('LINK')
+                            .setLabel('Patreon')
+                            .setURL(
+                                'https://www.patreon.com/RandomDiceCommunityWebsite'
+                            ),
+                        new MessageButton()
+                            .setStyle('LINK')
+                            .setLabel('GitHub')
+                            .setURL('https://github.randomdice.gg'),
+                    ]),
                 ],
             });
             break;
