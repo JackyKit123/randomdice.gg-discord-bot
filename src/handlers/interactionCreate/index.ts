@@ -9,11 +9,13 @@ import lock from 'community discord/lock';
 import timer from 'community discord/timer';
 import lfg from 'community discord/lfg';
 import gtn from 'community discord/gtn';
+import wordle from 'community discord/wordle';
 import eventPing from 'community discord/eventping';
 import customRole from 'community discord/customRole';
 import myEmoji from 'community discord/myEmoji';
 import { myClass, myCrit } from 'community discord/rdRole';
 import advertise from 'community discord/promote';
+
 import drawDice from 'community discord/currency/drawDice';
 import balance from 'community discord/currency/balance';
 import profile, { profileButtons } from 'community discord/currency/profile';
@@ -28,6 +30,7 @@ import timed from 'community discord/currency/timed';
 import currency from 'community discord/currency/currency';
 import { spawnCoinbomb } from 'community discord/currency/coinbomb';
 import multiplier from 'community discord/currency/multiplier';
+
 import bon from 'community discord/currency/fun commands/bon';
 import welcomerick from 'community discord/currency/fun commands/welcomerick';
 import afk, { removeAfkListener } from 'community discord/afk';
@@ -36,10 +39,15 @@ import imitate from 'community discord/currency/fun commands/imitate';
 import clown from 'community discord/currency/fun commands/clown';
 import shush, { unShush } from 'community discord/currency/fun commands/shush';
 import rickbomb from 'community discord/currency/fun commands/rickbomb';
-import wordle from 'community discord/wordle';
+
+import fetchInvites from 'dev-commands/fetchInvites';
+import setEmoji from 'dev-commands/setEmoji';
+import statistic from 'dev-commands/stat';
+import reboot from 'dev-commands/reboot';
+import version from 'dev-commands/version';
+
 import channelIds from 'config/channelIds';
 import { nullDice } from 'config/emojiId';
-import help from 'commands/help';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -231,9 +239,6 @@ export default async function interactionCreate(
                     case 'rickcoin':
                         await rickbomb(interaction);
                         break;
-                    case 'help':
-                        await help(interaction);
-                        break;
                     default:
                 }
             }
@@ -255,6 +260,30 @@ export default async function interactionCreate(
                         break;
                     default:
                 }
+            }
+        }
+        if (
+            interaction.inCachedGuild() &&
+            interaction.isCommand() &&
+            interaction.guildId === process.env.DEV_SERVER_ID
+        ) {
+            switch (interaction.commandName) {
+                case 'createinvites':
+                    await fetchInvites(interaction);
+                    break;
+                case 'setemoji':
+                    await setEmoji(interaction);
+                    break;
+                case 'stat':
+                    await statistic(interaction);
+                    break;
+                case 'reboot':
+                    await reboot(interaction);
+                    break;
+                case 'version':
+                    await version(interaction);
+                    break;
+                default:
             }
         }
         if (interaction.isCommand()) {

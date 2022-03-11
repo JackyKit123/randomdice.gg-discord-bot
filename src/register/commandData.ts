@@ -48,6 +48,12 @@ import { commandData as shush } from 'community discord/currency/fun commands/sh
 import { commandData as rickbomb } from 'community discord/currency/fun commands/rickbomb';
 import { commandData as bedtime } from 'community discord/currency/fun commands/bedtime';
 
+import { commandData as reboot } from 'dev-commands/reboot';
+import { commandData as setEmoji } from 'dev-commands/setEmoji';
+import { commandData as fetchInvites } from 'dev-commands/fetchInvites';
+import { commandData as stat } from 'dev-commands/stat';
+import { commandData as version } from 'dev-commands/version';
+
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
 
@@ -107,6 +113,14 @@ export default async function registerSlashCommands(
         afk,
     ];
 
+    const devCommands: ApplicationCommandDataResolvable[] = [
+        reboot,
+        setEmoji,
+        stat,
+        fetchInvites,
+        version,
+    ];
+
     const setCommands = async (guildId = '', commands = baseCommands) => {
         if (guildId) {
             const guild = client.guilds.cache.get(guildId);
@@ -118,7 +132,10 @@ export default async function registerSlashCommands(
     let communityServerCommandsManager;
     if (process.env.NODE_ENV === 'development') {
         [, communityServerCommandsManager] = await Promise.all([
-            setCommands(process.env.DEV_SERVER_ID),
+            setCommands(process.env.DEV_SERVER_ID, [
+                ...baseCommands,
+                ...devCommands,
+            ]),
             setCommands(
                 process.env.COMMUNITY_SERVER_ID ?? '',
                 communityCommands
@@ -132,6 +149,7 @@ export default async function registerSlashCommands(
                 process.env.COMMUNITY_SERVER_ID ?? '',
                 communityCommands
             ),
+            setCommands(process.env.DEV_SERVER_ID, devCommands),
             setCommands(process.env.COMMUNITY_APPEAL_SERVER_ID ?? ''),
             setCommands(),
         ]);

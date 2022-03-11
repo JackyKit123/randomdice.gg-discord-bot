@@ -17,13 +17,7 @@ import { autoClassCritRole } from 'community discord/rdRole';
 import solveMathEquation from 'community discord/solveMathEquation';
 import spy from 'community discord/spy';
 import voteAutoResponder from 'community discord/voteAutoResponder';
-import fetchInvites from 'dev-commands/fetchInvites';
-import devHelp from 'dev-commands/help';
 import logMessage from 'dev-commands/logMessage';
-import reboot from 'dev-commands/reboot';
-import setEmoji from 'dev-commands/setEmoji';
-import statistic from 'dev-commands/stat';
-import version from 'dev-commands/version';
 import cache from 'util/cache';
 import { baseCommands } from 'register/commandCase';
 import yesNoButton from 'util/yesNoButton';
@@ -103,29 +97,6 @@ export default async function messageCreate(message: Message): Promise<void> {
         }
 
         if (/^\.gg ?/i.test(suffix) && !author.bot) {
-            if (process.env.DEV_USERS_ID?.includes(author.id)) {
-                switch (command?.toLowerCase()) {
-                    case 'createinvites':
-                        await fetchInvites(message);
-                        return;
-                    case 'setemoji':
-                        await setEmoji(message);
-                        return;
-                    case 'stat':
-                        await statistic(message);
-                        return;
-                    case 'reboot':
-                        await reboot(message);
-                        return;
-                    case 'version':
-                        await version(message);
-                        return;
-                    case 'help':
-                        await devHelp(message);
-                        break;
-                    default:
-                }
-            }
             if (!command?.toLowerCase()) {
                 await message.reply(
                     'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'

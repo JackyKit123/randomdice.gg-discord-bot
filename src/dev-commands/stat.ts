@@ -1,9 +1,12 @@
-import { CommandInteraction } from 'discord.js';
+import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 
 export default async function statistic(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { client, channel } = interaction;
+    const { client, channel, options } = interaction;
+
+    if (options.getString('env', true) !== process.env.NODE_ENV) return;
+
     const guildCount = client.guilds.cache.size;
     const guildData = client.guilds.cache.map(guild => {
         let memberCountString = guild.memberCount.toString();
@@ -31,3 +34,27 @@ export default async function statistic(
             )
     );
 }
+
+export const commandData: ApplicationCommandData = {
+    name: 'statistic',
+    description: 'Get the statistic of this bot.',
+    options: [
+        {
+            name: 'env',
+            description:
+                'which environment of the bot should that respond from.',
+            type: 'STRING',
+            required: true,
+            choices: [
+                {
+                    name: 'production',
+                    value: 'production',
+                },
+                {
+                    name: 'development',
+                    value: 'development',
+                },
+            ],
+        },
+    ],
+};

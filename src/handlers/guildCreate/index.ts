@@ -1,40 +1,34 @@
-import { Guild, TextChannel, VoiceChannel } from 'discord.js';
+import { Guild, GuildBasedChannel } from 'discord.js';
 import logMessage from 'dev-commands/logMessage';
+import { createInvite } from 'dev-commands/fetchInvites';
 
 export default async function handler(guild: Guild): Promise<void> {
     const { client, systemChannel, channels, name } = guild;
+
+    const filter = (channel: GuildBasedChannel) =>
+        channel.isText() &&
+        !channel.isThread() &&
+        !!channel.permissionsFor(client.user ?? '')?.has('SEND_MESSAGES');
     const msgChannel =
         systemChannel ||
-        channels.cache.find(
-            channel => !!channel.name?.match(/(general|welcome)/i)
-        ) ||
-        channels.cache.first();
+        channels.cache
+            .filter(filter)
+            ?.find(channel => !!channel.name?.match(/(general|welcome)/i)) ||
+        channels.cache.filter(filter).first();
 
-    logMessage(
+    await logMessage(
         client,
         'info',
         `Timestamp: ${new Date().toTimeString()}, bot is invited to ${name}`
     );
 
-    if (
-        !msgChannel ||
-        !(
-            msgChannel instanceof TextChannel ||
-            msgChannel instanceof VoiceChannel
-        )
-    )
-        return;
+    const invite = await createInvite(guild);
 
-    const invite = await msgChannel.createInvite();
-    logMessage(
-        client,
-        'info',
-        `Invite link to the server https://discord.gg/${invite.code}`
-    );
+    await logMessage(client, 'info', invite);
 
-    if (msgChannel.isText()) {
-        msgChannel.send(
-            'Thank you for the invitation, you may do `.gg help` to view a list of commands. You may also join the community discord here at https://discord.gg/ZrXRpZq2mq'
+    if (msgChannel?.isText()) {
+        await msgChannel.send(
+            'Thank you for the invitation, you may do `/help` to view a list of commands. You may also join the community discord here at https://discord.gg/ZrXRpZq2mq'
         );
     }
 }
