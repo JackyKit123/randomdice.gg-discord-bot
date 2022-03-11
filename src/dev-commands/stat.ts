@@ -1,9 +1,9 @@
-import Discord from 'discord.js';
+import { CommandInteraction } from 'discord.js';
 
 export default async function statistic(
-    message: Discord.Message
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { client, channel } = message;
+    const { client, channel } = interaction;
     const guildCount = client.guilds.cache.size;
     const guildData = client.guilds.cache.map(guild => {
         let memberCountString = guild.memberCount.toString();
@@ -13,6 +13,10 @@ export default async function statistic(
         return `${guild.id}|      ${memberCountString}|${guild.name}`;
     });
 
+    if (!channel) return;
+    await interaction.reply(
+        `I am ${client.user?.toString()}, I am now serving in **${guildCount}** discord servers.\n`
+    );
     await Promise.all(
         new Array(Math.ceil(guildData.length / 20))
             .fill('')
@@ -20,7 +24,7 @@ export default async function statistic(
                 channel.send(
                     `${
                         i === 0
-                            ? `I am ${client.user?.toString()}, I am now serving in **${guildCount}** discord servers.\n\`\`\`Server Id         |Member Count|Server Name\n`
+                            ? `\`\`\`Server Id         |Member Count|Server Name\n`
                             : '```'
                     }${guildData.slice(20 * i, 20 * i + 20).join('\n')}\`\`\``
                 )
