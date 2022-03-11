@@ -132,7 +132,10 @@ export default async function prestige(
         })
         .on('collect', async i => {
             if (i.user.id !== member.id) {
-                await interaction.reply('This button is not for you.');
+                await i.reply({
+                    content: 'This button is not for you.',
+                    ephemeral: true,
+                });
                 return;
             }
             if (i.customId === 'prestige-me') {
@@ -151,7 +154,7 @@ export default async function prestige(
                         `discord_bot/community/currency/${member.id}/diceDrawn`
                     )
                     .set(0);
-                await interaction.reply(
+                await i.reply(
                     `Congratulations on achieving **${
                         guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])
                             ?.name || prestigeRoles[nextPrestigeLevel]
