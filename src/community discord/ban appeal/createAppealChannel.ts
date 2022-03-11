@@ -4,6 +4,8 @@ import {
     CategoryChannel,
     ClientUser,
     GuildMember,
+    MessageActionRow,
+    MessageButton,
     MessageEmbed,
 } from 'discord.js';
 import { setTimer } from '../timer';
@@ -146,6 +148,25 @@ export default async function createAppealChanel(
                 )
                 .setTimestamp(),
             banInfo,
+        ],
+        components: [
+            new MessageActionRow().addComponents([
+                new MessageButton()
+                    .setEmoji('✅')
+                    .setLabel('Accept Appeal')
+                    .setCustomId('appeal-accept')
+                    .setStyle('SUCCESS'),
+                new MessageButton()
+                    .setEmoji('❌')
+                    .setLabel('Reject Appeal')
+                    .setCustomId('appeal-reject')
+                    .setStyle('DANGER'),
+                new MessageButton()
+                    .setEmoji('⭕')
+                    .setLabel('Not guilty')
+                    .setCustomId('appeal-falsebanned')
+                    .setStyle('PRIMARY'),
+            ]),
         ],
     });
     await setTimer(

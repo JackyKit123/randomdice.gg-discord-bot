@@ -1,5 +1,6 @@
 import {
     ApplicationCommandData,
+    ButtonInteraction,
     CategoryChannel,
     ClientUser,
     Collection,
@@ -10,11 +11,10 @@ import {
 import cooldown from 'util/cooldown';
 
 export default async function closeAppeal(
-    interaction: CommandInteraction
+    interaction: CommandInteraction | ButtonInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { client, member, guild, channel, commandName, options } =
-        interaction;
+    const { client, member, guild, channel } = interaction;
 
     const { COMMUNITY_SERVER_ID } = process.env;
 
@@ -22,7 +22,7 @@ export default async function closeAppeal(
         !channel ||
         !channel.isText() ||
         channel.isThread() ||
-        (await cooldown(interaction, commandName, {
+        (await cooldown(interaction, 'close appeal', {
             default: 60 * 1000,
             donator: 60 * 1000,
         }))
@@ -45,11 +45,14 @@ export default async function closeAppeal(
     );
 
     const target =
-        options.getMember('member') ??
+        (interaction instanceof CommandInteraction &&
+            interaction.options.getMember('member')) ??
         (membersInAppealRoom.size === 1 &&
-            guild.members.cache.get(membersInAppealRoom.first()?.id ?? ''));
+            (await guild.members.fetch(membersInAppealRoom.first()?.id ?? '')));
 
-    const reason = options.getString('reason');
+    const reason =
+        interaction instanceof CommandInteraction &&
+        interaction.options.getString('reason');
     const logChannel = guild.channels.cache.get('805059910484099112');
 
     if (!target) {
@@ -183,14 +186,21 @@ export default async function closeAppeal(
     if (channel?.type === 'GUILD_TEXT')
         await channel.setParent(archiveCategory);
 
-    switch (commandName) {
+    switch (
+        interaction instanceof CommandInteraction
+            ? interaction.commandName
+            : interaction.customId
+    ) {
         case 'accept':
+        case 'appeal-accept':
             await accept();
             break;
         case 'reject':
+        case 'appeal-reject':
             await reject();
             break;
         case 'falsebanned':
+        case 'appeal-falsebanned':
             await falsebanned();
             break;
         default:
