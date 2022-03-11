@@ -27,7 +27,7 @@ export default async function customRole(
     const colorArg = interaction.options.getString('color', true);
 
     if (
-        !/^w+$/i.test(colorArg) ||
+        !/^\w+$/i.test(colorArg) ||
         !/^#[a-f\d]{6}$/i.test(colorArg) ||
         !/^#[a-f\d]{3}$/i.test(colorArg)
     ) {
