@@ -78,6 +78,12 @@ const roleIds = {
 
 export default roleIds;
 
+export const appealServerRoleIds = {
+    Admin: '805037559671422976',
+    Moderator: '805037585348296725',
+    'Trial Moderator': '807533306076856320',
+};
+
 export const tier1RoleIds = [roleIds['Prestige I']];
 
 export const tier2RoleIds = [

@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import channelIds from 'config/channelIds';
 import { moderatorRoleIds } from 'config/roleId';
+import { banHammer } from 'config/emojiId';
 
 const bannedCache: string[] = [];
 
@@ -122,7 +123,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
             : undefined,
         embeds: [embed],
     });
-    if (!isBanned) await sentMessage.react('868148038311489578');
+    if (!isBanned) await sentMessage.react(banHammer);
 }
 
 async function cleanUpMessage(
@@ -170,7 +171,7 @@ export async function spyLogBanHandler(
         channel.id !== channelIds['hack-discord-spy-log'] ||
         !embeds[0] ||
         author?.id !== (client.user as Discord.ClientUser).id ||
-        reaction.emoji.id !== '868148038311489578'
+        reaction.emoji.identifier !== banHammer
     )
         return;
 

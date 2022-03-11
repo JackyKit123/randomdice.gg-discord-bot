@@ -13,3 +13,5 @@ export const clown = '<a:clowndance:845532985787940894>';
 export const rickCoin = '<a:Dice_TierX_RickCoin:827059872810008616>';
 
 export const pokeball = '<:pokeball:820533431217815573>';
+
+export const banHammer = '<:banned:868148038311489578>';

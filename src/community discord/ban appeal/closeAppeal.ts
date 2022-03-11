@@ -1,3 +1,4 @@
+import { appealServerChannelId } from 'config/channelIds';
 import {
     ApplicationCommandData,
     ButtonInteraction,
@@ -53,7 +54,7 @@ export default async function closeAppeal(
     const reason =
         interaction instanceof CommandInteraction &&
         interaction.options.getString('reason');
-    const logChannel = guild.channels.cache.get('805059910484099112');
+    const logChannel = guild.channels.cache.get(appealServerChannelId.log);
 
     if (!target) {
         await interaction.reply(

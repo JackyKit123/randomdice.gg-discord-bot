@@ -1,4 +1,6 @@
-import roleIds from 'config/roleId';
+import { appealServerChannelId } from 'config/channelIds';
+import { banHammer } from 'config/emojiId';
+import roleIds, { appealServerRoleIds } from 'config/roleId';
 import logMessage from 'dev-commands/logMessage';
 import {
     CategoryChannel,
@@ -35,7 +37,7 @@ export default async function createAppealChanel(
         return;
     }
 
-    const logChannel = guild.channels.cache.get('805059910484099112');
+    const logChannel = guild.channels.cache.get(appealServerChannelId.log);
 
     const auditLogs = await communityDiscord.fetchAuditLogs({
         type: 'MEMBER_BAN_ADD',
@@ -50,21 +52,11 @@ export default async function createAppealChanel(
     const communityMember = communityDiscord.members.cache.get(id);
     if (!ban) {
         if (communityMember?.roles.cache.has(roleIds.Moderator)) {
-            const modRoleInBanAppealServer = guild.roles.cache.find(
-                ({ name }) => name === 'Moderator'
-            );
-            if (modRoleInBanAppealServer) {
-                await member.roles.add(modRoleInBanAppealServer);
-            }
+            await member.roles.add(appealServerRoleIds.Moderator);
             return;
         }
         if (communityMember?.roles.cache.has(roleIds['Trial Moderator'])) {
-            const modRoleInBanAppealServer = guild.roles.cache.find(
-                ({ name }) => name === 'Trial Moderator'
-            );
-            if (modRoleInBanAppealServer) {
-                await member.roles.add(modRoleInBanAppealServer);
-            }
+            await member.roles.add(appealServerRoleIds['Trial Moderator']);
             return;
         }
         await member.user.send(
@@ -93,7 +85,9 @@ export default async function createAppealChanel(
         return;
     }
 
-    const appealRoomCat = guild.channels.cache.get('805035618765242369');
+    const appealRoomCat = guild.channels.cache.get(
+        appealServerChannelId['Appeal Room']
+    );
     const appealRoom = await guild.channels.create(
         `${member.user.username}${member.user.discriminator}`,
         {
@@ -157,12 +151,12 @@ export default async function createAppealChanel(
                     .setCustomId('appeal-accept')
                     .setStyle('SUCCESS'),
                 new MessageButton()
-                    .setEmoji('❌')
+                    .setEmoji(banHammer)
                     .setLabel('Reject Appeal')
                     .setCustomId('appeal-reject')
                     .setStyle('DANGER'),
                 new MessageButton()
-                    .setEmoji('⭕')
+                    .setEmoji('❌')
                     .setLabel('Not guilty')
                     .setCustomId('appeal-falsebanned')
                     .setStyle('PRIMARY'),

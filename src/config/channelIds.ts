@@ -89,3 +89,11 @@ const channelIds = {
 };
 
 export default channelIds;
+
+export const appealServerChannelId = {
+    Information: '805050669580288010',
+    'mod-information': '805073738193436695',
+    log: '805059910484099112',
+    'Appeal Room': '805035618765242369',
+    'ban-appeal-discussion': '805035618765242371',
+};
