@@ -291,7 +291,7 @@ export const commandData: ApplicationCommandData[] = [
         options: [
             {
                 name: 'index',
-                type: 3,
+                type: 'INTEGER',
                 description: 'The index of the deleted message stored to snipe',
             },
         ],
@@ -302,7 +302,7 @@ export const commandData: ApplicationCommandData[] = [
         options: [
             {
                 name: 'index',
-                type: 3,
+                type: 'INTEGER',
                 description: 'The index of the edited message stored to snipe',
             },
         ],
