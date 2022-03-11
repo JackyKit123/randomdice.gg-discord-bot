@@ -142,7 +142,7 @@ export default async function prestige(
                 await member.roles.add(
                     prestigeRoles[nextPrestigeLevel],
                     'Member Prestige'
-                });
+                );
                 await database
                     .ref(`discord_bot/community/currency/${member.id}/prestige`)
                     .set(nextPrestigeLevel);
