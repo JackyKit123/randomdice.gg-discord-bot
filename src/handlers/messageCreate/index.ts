@@ -3,7 +3,6 @@ import stringSimilarity from 'string-similarity';
 import eightBall from 'community discord/8ball';
 import { afkResponse } from 'community discord/afk';
 import closeAppeal from 'community discord/ban appeal/closeAppeal';
-import setChannel from 'community discord/ban appeal/setChannel';
 import chatRevivePing from 'community discord/chatrevivePing';
 import validateCrewAds from 'community discord/checkCrewAds';
 import cleverBot from 'community discord/cleverbot';
@@ -42,7 +41,6 @@ export default async function messageCreate(message: Message): Promise<void> {
                 await closeAppeal(message);
                 return;
             }
-            await setChannel(message);
             return;
         }
 

@@ -1,18 +1,34 @@
+import createAppealChanel from 'community discord/ban appeal/createAppealChannel';
 import welcomeReward from 'community discord/currency/welcomeReward';
+import logMessage from 'dev-commands/logMessage';
 import { GuildMember } from 'discord.js';
 
 export default async function guildMemberAdd(
     member: GuildMember
 ): Promise<void> {
-    const { guild } = member;
+    const { guild, client } = member;
 
-    let asyncPromisesCapturer: Promise<unknown>[] = [];
-    if (
-        process.env.COMMUNITY_SERVER_ID === guild.id &&
-        process.env.NODE_ENV === 'production'
-    ) {
-        asyncPromisesCapturer = [welcomeReward(member)];
+    const asyncPromisesCapturer: Promise<unknown>[] = [];
+    if (process.env.NODE_ENV === 'production') {
+        switch (guild.id) {
+            case process.env.COMMUNITY_SERVER_ID:
+                asyncPromisesCapturer.push(welcomeReward(member));
+                break;
+            case process.env.COMMUNITY_APPEAL_SERVER_ID:
+                asyncPromisesCapturer.push(createAppealChanel(member));
+                break;
+            default:
+        }
     }
-
-    await Promise.all(asyncPromisesCapturer);
+    try {
+        await Promise.all(asyncPromisesCapturer);
+    } catch (err) {
+        await logMessage(
+            client,
+            'warning',
+            `Oops, something went wrong when listening to guildMemberAdd in server ${
+                guild.name
+            }.\n${(err as Error).stack ?? (err as Error).message ?? err}`
+        );
+    }
 }
