@@ -40,14 +40,15 @@ export default async function closeAppeal(
         throw new Error('Community Discord server is not located.');
     }
 
+    const membersInAppealRoom = channel.permissionOverwrites.cache.filter(
+        overwrite => overwrite.type === 'member'
+    );
+
     const target =
         options.getMember('member') ??
-        guild.members.cache.get(
-            channel.permissionOverwrites.cache.find(
-                overwrite =>
-                    overwrite.type === 'member' && overwrite.id === member.id
-            )?.id ?? ''
-        );
+        (membersInAppealRoom.size === 1 &&
+            guild.members.cache.get(membersInAppealRoom.first()?.id ?? ''));
+
     const reason = options.getString('reason');
     const logChannel = guild.channels.cache.get('805059910484099112');
 
@@ -146,28 +147,24 @@ export default async function closeAppeal(
         return;
     }
 
-    {
-        const executorRole = member.roles.highest;
-        const targetRole = target.roles.highest;
-        const clientRole = (
-            guild.members.cache.get(
-                (client.user as ClientUser).id
-            ) as GuildMember
-        ).roles.highest;
+    const executorRole = member.roles.highest;
+    const targetRole = target.roles.highest;
+    const clientRole = (
+        guild.members.cache.get((client.user as ClientUser).id) as GuildMember
+    ).roles.highest;
 
-        if (executorRole.comparePositionTo(targetRole) < 0) {
-            await interaction.reply(
-                'You do not have sufficient permission to ban or unban this user.'
-            );
-            return;
-        }
+    if (executorRole.comparePositionTo(targetRole) < 0) {
+        await interaction.reply(
+            'You do not have sufficient permission to ban or unban this user.'
+        );
+        return;
+    }
 
-        if (clientRole.comparePositionTo(targetRole) <= 0) {
-            await interaction.reply(
-                'I do not have sufficient permission to execute this command.'
-            );
-            return;
-        }
+    if (clientRole.comparePositionTo(targetRole) <= 0) {
+        await interaction.reply(
+            'I do not have sufficient permission to execute this command.'
+        );
+        return;
     }
 
     const archiveCategories = guild.channels.cache.filter(
