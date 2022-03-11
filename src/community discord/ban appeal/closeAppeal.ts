@@ -65,7 +65,7 @@ export default async function closeAppeal(
     let logEmbed = new MessageEmbed()
         .setAuthor({
             name: target.user.tag,
-            iconURL: member.displayAvatarURL({ dynamic: true }),
+            iconURL: target.displayAvatarURL({ dynamic: true }),
         })
         .setTimestamp()
         .addField(
