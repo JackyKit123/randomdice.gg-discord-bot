@@ -33,6 +33,8 @@ export default async function createAppealChanel(
         return;
     }
 
+    const logChannel = guild.channels.cache.get('805059910484099112');
+
     const auditLogs = await communityDiscord.fetchAuditLogs({
         type: 'MEMBER_BAN_ADD',
     });
@@ -69,6 +71,23 @@ export default async function createAppealChanel(
         await member.kick(
             'Member joined without being banned in the main discord.'
         );
+        if (logChannel?.isText()) {
+            await logChannel.send({
+                embeds: [
+                    new MessageEmbed()
+                        .setAuthor({
+                            name: member.user.tag,
+                            iconURL: member.displayAvatarURL({ dynamic: true }),
+                        })
+                        .setTitle('Kicked')
+                        .setColor('#e57f7f')
+                        .setDescription(
+                            'Member joined without being banned in the main discord.'
+                        )
+                        .setTimestamp(),
+                ],
+            });
+        }
         return;
     }
 
@@ -135,4 +154,9 @@ export default async function createAppealChanel(
         'You have 24 hours to respond to this appeal ticket or you will be banned',
         1000 * 60 * 60 * 24
     );
+    if (logChannel?.isText()) {
+        await logChannel.send({
+            embeds: [banInfo.setTitle('Ban Appeal Created')],
+        });
+    }
 }
