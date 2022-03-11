@@ -284,9 +284,11 @@ export async function closeApplication(
     )?.id;
 
     if (!memberId || memberId !== user.id) {
-        await interaction.reply(
-            'You are not allowed to use this button, you are not the author of this application.'
-        );
+        await interaction.reply({
+            content:
+                'You are not allowed to use this button, you are not the author of this application.',
+            ephemeral: true,
+        });
         return;
     }
 
@@ -307,9 +309,9 @@ export async function closeApplication(
                     );
                     await channel.send(`Locked down ${channel}`);
                     await channel.send(
-                        `${
+                        `<@&${
                             roleIds.Admin
-                        }, ${user} has submitted the ${applicationName.toLowerCase()}.`
+                        }>, ${user} has submitted the ${applicationName.toLowerCase()}.`
                     );
                 }
             );

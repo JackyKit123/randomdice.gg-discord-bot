@@ -1,4 +1,8 @@
-import roleId, { eventManagerRoleIds, moderatorRoleIds } from 'config/roleId';
+import roleId, {
+    appealServerRoleIds,
+    eventManagerRoleIds,
+    moderatorRoleIds,
+} from 'config/roleId';
 import {
     ApplicationCommand,
     ApplicationCommandPermissions,
@@ -37,11 +41,9 @@ const adminAndEventManagerPermissions: {
 const appealServerStaffPermissions: {
     permissions: ApplicationCommandPermissions[];
 } = {
-    permissions: [
-        '805037559671422976',
-        '805037585348296725',
-        '807533306076856320',
-    ].map(id => getPermission(id)),
+    permissions: Object.values(appealServerRoleIds).map(id =>
+        getPermission(id)
+    ),
 };
 
 export default async function setCommandPermissions(

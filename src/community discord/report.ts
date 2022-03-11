@@ -273,17 +273,21 @@ export async function report(
         }
     );
     const initMessage = await reportRoom.send({
-        content: `${member}, please wait patiently for our ${moderatorRoleIds.join(
-            ' '
-        )} team to response, please describe the details of the report if it was not fully addressed in the \`/report\` command`,
+        content: `${member}, please wait patiently for our ${moderatorRoleIds
+            .map(id => `<@&${id}>`)
+            .join(
+                ' '
+            )} team to response, please describe the details of the report if it was not fully addressed in the \`/report\` command`,
         embeds: [embed],
     });
     await initMessage.pin();
 
     await interaction.reply({
-        content: `A report channel has been created, please wait patiently for our ${moderatorRoleIds.join(
-            ' '
-        )} team to response, please describe the details of the report if it was not fully addressed in the \`/report\` command`,
+        content: `A report channel has been created, please wait patiently for our ${moderatorRoleIds
+            .map(id => `<@&${id}>`)
+            .join(
+                ' '
+            )} team to response, please describe the details of the report if it was not fully addressed in the \`/report\` command`,
         ephemeral: true,
     });
 }

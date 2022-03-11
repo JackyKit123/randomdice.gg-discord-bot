@@ -75,9 +75,9 @@ export async function myClass(interaction: CommandInteraction): Promise<void> {
     const newRoleId = getClassRoleId(classArg);
     if (!newRoleId) {
         await interaction.reply(
-            `${classArg} is not a valid class. Possible classes are: ${classRoles.map(
-                ([roleName]) => roleName
-            )}`
+            `${classArg} is not a valid class. Possible classes are: ${classRoles
+                .map(([roleName]) => `\`${roleName}\``)
+                .join(' ')}`
         );
         return;
     }

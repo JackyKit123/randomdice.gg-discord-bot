@@ -14,7 +14,7 @@ export default async function voteAutoResponder(
                 new Discord.MessageEmbed()
                     .setTitle('VOTE VOTE VOTE!!!')
                     .setDescription(
-                        `I heard someone said \`vote\`. Do you know you can vote for the server on [discord server list](https://top.gg/servers/${process.env.COMMUNITY_SERVER_ID}/vote) and get you ${roleIds.Voted} role.`
+                        `I heard someone said \`vote\`. Do you know you can vote for the server on [discord server list](https://top.gg/servers/${process.env.COMMUNITY_SERVER_ID}/vote) and get you <@&${roleIds.Voted}> role.`
                     )
                     .addField(
                         'Special Perks for @Voted Role',
