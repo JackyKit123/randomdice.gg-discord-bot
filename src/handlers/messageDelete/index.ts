@@ -1,6 +1,6 @@
 import { Message, PartialMessage } from 'discord.js';
 import { snipeListener } from 'community discord/snipe';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 
 export default async function messageDelete(
     message: Message | PartialMessage

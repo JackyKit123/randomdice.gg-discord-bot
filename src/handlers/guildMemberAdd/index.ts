@@ -1,6 +1,6 @@
 import createAppealChanel from 'community discord/ban appeal/createAppealChannel';
 import welcomeReward from 'community discord/currency/welcomeReward';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { GuildMember } from 'discord.js';
 
 export default async function guildMemberAdd(

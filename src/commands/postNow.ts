@@ -9,7 +9,7 @@ import Discord, {
 import firebase from 'firebase-admin';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import cooldown from 'util/cooldown';
 import { edit, reply } from 'util/typesafeReply';
 import { getNewsInfo } from './news';

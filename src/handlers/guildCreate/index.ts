@@ -1,5 +1,5 @@
 import { Guild, GuildBasedChannel } from 'discord.js';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { createInvite } from 'dev-commands/fetchInvites';
 
 export default async function handler(guild: Guild): Promise<void> {

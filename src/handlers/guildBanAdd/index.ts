@@ -1,5 +1,5 @@
 import banMessage from 'community discord/banMessage';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { GuildBan } from 'discord.js';
 
 export default async function guildBanAdd(ban: GuildBan): Promise<void> {

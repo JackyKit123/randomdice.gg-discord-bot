@@ -1,5 +1,5 @@
 import { removeAfkListener } from 'community discord/afk';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { Typing } from 'discord.js';
 
 export default async function typingStart(typing: Typing): Promise<void> {

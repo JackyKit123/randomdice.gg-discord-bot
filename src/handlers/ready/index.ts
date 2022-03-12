@@ -10,7 +10,7 @@ import infoVC from 'community discord/infoVC';
 import { fetchAutoReactionRegistry } from 'community discord/myEmoji';
 import { fetchSpyLogOnBoot } from 'community discord/spy';
 import { registerTimer } from 'community discord/timer';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { fetchAll } from 'util/cache';
 import updateListener from 'util/updateListener';
 import registerSlashCommands from 'register/commandData';

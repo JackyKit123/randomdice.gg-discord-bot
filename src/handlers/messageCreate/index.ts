@@ -15,7 +15,7 @@ import { autoClassCritRole } from 'community discord/rdRole';
 import solveMathEquation from 'community discord/solveMathEquation';
 import spy from 'community discord/spy';
 import voteAutoResponder from 'community discord/voteAutoResponder';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import cache from 'util/cache';
 import { baseCommands } from 'register/commandCase';
 import yesNoButton from 'util/yesNoButton';

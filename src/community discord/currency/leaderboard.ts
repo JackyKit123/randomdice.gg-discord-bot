@@ -5,7 +5,7 @@ import {
     MessageEmbed,
 } from 'discord.js';
 import { database } from 'register/firebase';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import cache, { MemberCurrency } from 'util/cache';
 import cooldown from 'util/cooldown';
 import getPaginationComponents from 'util/paginationButtons';

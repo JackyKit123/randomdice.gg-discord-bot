@@ -1,7 +1,7 @@
 import { appealServerChannelId } from 'config/channelIds';
 import { banHammer } from 'config/emojiId';
 import roleIds, { appealServerRoleIds } from 'config/roleId';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import {
     CategoryChannel,
     ClientUser,

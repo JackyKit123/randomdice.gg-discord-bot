@@ -2,7 +2,7 @@
 import firebase from 'firebase-admin';
 import { database } from 'register/firebase';
 import Discord from 'discord.js';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import * as post from '../commands/postNow';
 
 export default function listener(client: Discord.Client): void {

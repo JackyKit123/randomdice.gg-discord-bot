@@ -15,7 +15,7 @@ import {
 } from 'discord.js';
 import { database } from 'register/firebase';
 import { promisify } from 'util';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import rickBomb from 'community discord/currency/fun commands/rickbomb';
 import { coinDice, goldenPickaxe, pickaxe } from 'config/emojiId';
 import channelIds from 'config/channelIds';

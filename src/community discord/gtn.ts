@@ -1,4 +1,4 @@
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import Discord, {
     ApplicationCommandData,
     CommandInteraction,

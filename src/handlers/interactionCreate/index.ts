@@ -1,5 +1,5 @@
 import { Interaction } from 'discord.js';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { baseCommands } from 'register/commandCase';
 
 import snipe, { deleteSnipe } from 'community discord/snipe';

@@ -1,6 +1,6 @@
 import getBrandingEmbed from 'commands/util/getBrandingEmbed';
 import { Client, Message, MessageEmbed, WebhookClient } from 'discord.js';
-import reboot from './reboot';
+import reboot from 'dev-commands/reboot';
 
 // eslint-disable-next-line consistent-return
 export default async function log(

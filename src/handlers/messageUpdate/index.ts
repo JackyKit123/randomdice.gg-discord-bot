@@ -1,5 +1,5 @@
 import { snipeListener } from 'community discord/snipe';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { Message, PartialMessage } from 'discord.js';
 
 export default async function messageUpdate(

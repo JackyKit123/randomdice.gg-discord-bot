@@ -1,6 +1,6 @@
 import banOnLeave from 'community discord/ban appeal/banOnLeave';
 import { deleteCustomRoleOnGuildLeave } from 'community discord/customRole';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 import { GuildMember, PartialGuildMember } from 'discord.js';
 
 export default async function guildMemberRemove(

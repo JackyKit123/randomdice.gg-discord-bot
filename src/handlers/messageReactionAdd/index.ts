@@ -6,7 +6,7 @@ import {
 } from 'discord.js';
 import { removeAfkListener } from 'community discord/afk';
 import { spyLogBanHandler } from 'community discord/spy';
-import logMessage from 'dev-commands/logMessage';
+import logMessage from 'util/logMessage';
 
 export default async function messageReactionAdd(
     reaction: MessageReaction | PartialMessageReaction,
