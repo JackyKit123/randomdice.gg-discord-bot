@@ -133,41 +133,13 @@ export default async function registerSlashCommands(
         return client.application?.commands.set(commands);
     };
 
-    let communityServerCommandsManager;
-    let appealServerCommandsManager;
-    if (process.env.NODE_ENV === 'development') {
-        [, communityServerCommandsManager, appealServerCommandsManager] =
-            await Promise.all([
-                setCommands(process.env.DEV_SERVER_ID, [
-                    ...baseCommands,
-                    ...devCommands,
-                ]),
-                setCommands(
-                    process.env.COMMUNITY_SERVER_ID ?? '',
-                    communityCommands
-                ),
-                setCommands(
-                    process.env.COMMUNITY_APPEAL_SERVER_ID ?? '',
-                    appealCommands
-                ),
-            ]);
-    } else if (process.env.NODE_ENV === 'production') {
-        [, , communityServerCommandsManager, appealServerCommandsManager] =
-            await Promise.all([
-                setCommands(process.env.DEV_SERVER_ID),
-                setCommands(process.env.COMMUNITY_SERVER_ID ?? ''),
-                setCommands(
-                    process.env.COMMUNITY_SERVER_ID ?? '',
-                    communityCommands
-                ),
-                setCommands(
-                    process.env.COMMUNITY_APPEAL_SERVER_ID ?? '',
-                    appealCommands
-                ),
-                setCommands(process.env.DEV_SERVER_ID, devCommands),
-                setCommands(),
-            ]);
-    }
+    const [communityServerCommandsManager, appealServerCommandsManager] =
+        await Promise.all([
+            setCommands(process.env.COMMUNITY_SERVER_ID, communityCommands),
+            setCommands(process.env.COMMUNITY_APPEAL_SERVER_ID, appealCommands),
+            setCommands(process.env.DEV_SERVER_ID, devCommands),
+            setCommands(),
+        ]);
     if (communityServerCommandsManager) {
         await setCommandPermissions(communityServerCommandsManager);
     }
