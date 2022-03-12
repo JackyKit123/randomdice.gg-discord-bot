@@ -313,9 +313,9 @@ export default async function interactionCreate(
             }
             if (interaction.isUserContextMenu()) {
                 switch (interaction.commandName) {
-                    case 'Accept':
-                    case 'appeal-reject':
-                    case 'appeal-falsebanned':
+                    case 'Accept Appeal':
+                    case 'Reject Appeal':
+                    case 'Not Guilty':
                         await closeAppeal(interaction);
                         break;
                     default:
