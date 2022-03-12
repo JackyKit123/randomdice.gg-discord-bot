@@ -2,7 +2,6 @@ import { database } from 'register/firebase';
 import stringSimilarity from 'string-similarity';
 import {
     ApplicationCommandData,
-    Client,
     CommandInteraction,
     DiscordAPIError,
     Message,
@@ -132,30 +131,6 @@ export async function autoReaction(message: Message): Promise<void> {
                             return;
                         default:
                             throw err;
-                    }
-                }
-            }
-        )
-    );
-}
-
-export async function fetchAutoReactionRegistry(client: Client): Promise<void> {
-    const guild = await client.guilds.fetch(
-        process.env.COMMUNITY_SERVER_ID || ''
-    );
-    await Promise.all(
-        Object.keys(cache['discord_bot/community/customreact'] || {}).map(
-            async uid => {
-                try {
-                    await guild.members.fetch(uid);
-                } catch (err) {
-                    if ((err as DiscordAPIError).message === 'Unknown Member') {
-                        await database
-                            .ref('discord_bot/community/customreact')
-                            .child(uid)
-                            .remove();
-                    } else {
-                        throw err;
                     }
                 }
             }

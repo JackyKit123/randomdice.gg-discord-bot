@@ -1,5 +1,4 @@
 import { Client } from 'discord.js';
-import { fetchApps } from 'community discord/apply';
 import { purgeRolesOnReboot as purgeClownRoles } from 'community discord/currency/fun commands/clown';
 import { fetchGeneralOnBoot } from 'community discord/chatrevivePing';
 import { fetchExistingCrewAds } from 'community discord/checkCrewAds';
@@ -7,7 +6,6 @@ import { pickCoinsInit } from 'community discord/currency/coinbomb';
 import { weeklyAutoReset } from 'community discord/currency/leaderboard';
 import { setRaffleTimerOnBoot } from 'community discord/currency/raffle';
 import infoVC from 'community discord/infoVC';
-import { fetchAutoReactionRegistry } from 'community discord/myEmoji';
 import { fetchSpyLogOnBoot } from 'community discord/spy';
 import { registerTimer } from 'community discord/timer';
 import logMessage from 'util/logMessage';
@@ -30,7 +28,6 @@ export default async function ready(client: Client<true>): Promise<void> {
         console.log(bootMessage);
         await Promise.all([
             purgeClownRoles(client),
-            fetchApps(client),
             fetchGeneralOnBoot(client),
             pickCoinsInit(client),
             fetchExistingCrewAds(client),
@@ -44,7 +41,6 @@ export default async function ready(client: Client<true>): Promise<void> {
             weeklyAutoReset(client),
             registerTimer(client),
             infoVC(client),
-            fetchAutoReactionRegistry(client),
         ]);
     } catch (err) {
         await logMessage(

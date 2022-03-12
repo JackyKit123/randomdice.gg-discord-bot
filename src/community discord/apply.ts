@@ -4,7 +4,6 @@ import {
     ApplicationCommandData,
     ButtonInteraction,
     CategoryChannel,
-    Client,
     CommandInteraction,
     MessageActionRow,
     MessageButton,
@@ -324,26 +323,6 @@ export async function closeApplication(
             );
             break;
         default:
-    }
-}
-
-// TODO: check if this is still needed after changing reaction trigger to button
-export async function fetchApps(client: Client): Promise<void> {
-    const guild = await client.guilds.fetch(
-        process.env.COMMUNITY_SERVER_ID as string
-    );
-    const applications = guild.channels.cache.get(
-        channelIds['💼 | Applications']
-    );
-    if (applications instanceof CategoryChannel) {
-        applications.children.forEach(async child => {
-            if (child.isText()) {
-                await child.messages.fetch(
-                    { limit: 100 },
-                    { cache: true, force: false }
-                );
-            }
-        });
     }
 }
 
