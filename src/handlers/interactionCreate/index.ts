@@ -290,16 +290,26 @@ export default async function interactionCreate(
         }
         if (
             interaction.inCachedGuild() &&
-            interaction.isCommand() &&
             interaction.guildId === process.env.COMMUNITY_APPEAL_SERVER_ID
         ) {
-            switch (interaction.commandName) {
-                case 'accept':
-                case 'reject':
-                case 'falsebanned':
-                    await closeAppeal(interaction);
-                    break;
-                default:
+            if (interaction.isCommand())
+                switch (interaction.commandName) {
+                    case 'accept':
+                    case 'reject':
+                    case 'falsebanned':
+                        await closeAppeal(interaction);
+                        break;
+                    default:
+                }
+            if (interaction.isButton()) {
+                switch (interaction.customId) {
+                    case 'appeal-accept':
+                    case 'appeal-reject':
+                    case 'appeal-falsebanned':
+                        await closeAppeal(interaction);
+                        break;
+                    default:
+                }
             }
         }
         if (interaction.isCommand()) {
