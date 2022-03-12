@@ -1,11 +1,5 @@
 import roleIds from 'config/roleId';
-import {
-    ApplicationCommandData,
-    Client,
-    CommandInteraction,
-    GuildAuditLogsEntry,
-    GuildAuditLogsResolvable,
-} from 'discord.js';
+import { ApplicationCommandData, Client, CommandInteraction } from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import { clown as clownEmoji } from 'config/emojiId';
@@ -17,11 +11,11 @@ export default async function clown(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, member, channel } = interaction;
+    const { options, member, channel, commandName } = interaction;
 
     if (
         !channel ||
-        (await cooldown(interaction, '!clown', {
+        (await cooldown(interaction, commandName, {
             default: 60 * 1000 * 5,
             donator: 60 * 1000 * 1,
         })) ||
@@ -118,56 +112,50 @@ export default async function clown(
     }
 }
 
-export async function purgeRolesOnReboot(client: Client): Promise<void> {
+export async function fixClownNicknamesOnReboot(client: Client): Promise<void> {
     const guild = client.guilds.cache.get(
         process.env.COMMUNITY_SERVER_ID ?? ''
     );
     if (!client.user || !guild) return;
-    const roleUpdateLog = await guild.fetchAuditLogs({
-        user: client.user,
-        type: 'MEMBER_ROLE_UPDATE',
-    });
-    const nickUpdateLog = await guild.fetchAuditLogs({
-        user: client.user,
-        type: 'MEMBER_UPDATE',
-    });
-    const getLast10Minutes = <T extends GuildAuditLogsResolvable = 'ALL'>(
-        entry: GuildAuditLogsEntry<T>
-    ) => Date.now() - entry.createdTimestamp <= 1000 * 60 * 10;
-
-    await Promise.all([
-        ...roleUpdateLog.entries.filter(getLast10Minutes).map(async entry => {
-            if (!entry.target) return;
-            const member = await guild.members.fetch(entry.target.id);
-            if (member.roles.cache.has(roleIds['🤡']))
-                await member.roles.remove(roleIds['🤡']);
-        }),
-        ...nickUpdateLog.entries.filter(getLast10Minutes).map(async entry => {
-            const memberNicknameUpdated: string[] = [];
-            if (!entry.target) return;
-            const member = await guild.members.fetch(entry.target.id);
-            entry.changes?.forEach(async change => {
-                if (change.key === 'nick') {
-                    if (
-                        typeof change.new === 'string' &&
-                        /^\u{1F921}{1,10}$/u.test(change.new)
-                    ) {
+    await Promise.all(
+        (
+            await guild.fetchAuditLogs({
+                user: client.user,
+                type: 'MEMBER_UPDATE',
+            })
+        ).entries
+            .filter(
+                ({ createdTimestamp }) =>
+                    Date.now() - createdTimestamp <= 1000 * 60 * 10
+            )
+            .map(async ({ target, changes }) => {
+                const memberNicknameUpdated: string[] = [];
+                if (!target) return;
+                const member = await guild.members.fetch(target.id);
+                changes?.forEach(async change => {
+                    if (change.key === 'nick') {
                         if (
-                            typeof change.old === 'string' &&
-                            /^\u{1F921}{1,10}$/u.test(change.old) &&
-                            memberNicknameUpdated.includes(member.id)
+                            typeof change.new === 'string' &&
+                            /^\u{1F921}{1,10}$/u.test(change.new)
                         ) {
-                            return;
+                            if (
+                                typeof change.old === 'string' &&
+                                /^\u{1F921}{1,10}$/u.test(change.old) &&
+                                memberNicknameUpdated.includes(member.id)
+                            ) {
+                                return;
+                            }
+                            await member.setNickname(
+                                typeof change.old === 'string'
+                                    ? change.old
+                                    : null
+                            );
+                            memberNicknameUpdated.push(member.id);
                         }
-                        await member.setNickname(
-                            typeof change.old === 'string' ? change.old : null
-                        );
-                        memberNicknameUpdated.push(member.id);
                     }
-                }
-            });
-        }),
-    ]);
+                });
+            })
+    );
 }
 
 export const commandData: ApplicationCommandData = {
