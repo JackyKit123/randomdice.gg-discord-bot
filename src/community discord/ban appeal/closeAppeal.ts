@@ -8,6 +8,7 @@ import {
     Guild,
     GuildBasedChannel,
     MessageEmbed,
+    UserContextMenuInteraction,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 
@@ -33,7 +34,10 @@ export async function archiveAppeal(
 }
 
 export default async function closeAppeal(
-    interaction: CommandInteraction | ButtonInteraction
+    interaction:
+        | CommandInteraction
+        | ButtonInteraction
+        | UserContextMenuInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
     const { client, member, guild, channel } = interaction;
@@ -201,20 +205,23 @@ export default async function closeAppeal(
     await archiveAppeal(guild, channel);
 
     switch (
-        interaction instanceof CommandInteraction
-            ? interaction.commandName
-            : interaction.customId
+        interaction instanceof ButtonInteraction
+            ? interaction.customId
+            : interaction.commandName
     ) {
         case 'accept':
         case 'appeal-accept':
+        case 'Accept Appeal':
             await accept();
             break;
         case 'reject':
         case 'appeal-reject':
+        case 'Reject Appeal':
             await reject();
             break;
         case 'falsebanned':
         case 'appeal-falsebanned':
+        case 'Not Guilty':
             await falsebanned();
             break;
         default:
@@ -269,5 +276,17 @@ export const commandData: ApplicationCommandData[] = [
                 type: 'STRING',
             },
         ],
+    },
+    {
+        name: 'Accept Appeal',
+        type: 'USER',
+    },
+    {
+        name: 'Reject Appeal',
+        type: 'USER',
+    },
+    {
+        name: 'Not Guilty',
+        type: 'USER',
     },
 ];

@@ -311,6 +311,16 @@ export default async function interactionCreate(
                     default:
                 }
             }
+            if (interaction.isUserContextMenu()) {
+                switch (interaction.commandName) {
+                    case 'Accept':
+                    case 'appeal-reject':
+                    case 'appeal-falsebanned':
+                        await closeAppeal(interaction);
+                        break;
+                    default:
+                }
+            }
         }
         if (interaction.isCommand()) {
             await baseCommands(interaction, interaction.commandName);
