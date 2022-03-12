@@ -42,7 +42,7 @@ export default async function createAppealChanel(
     const auditLogs = await communityDiscord.fetchAuditLogs({
         type: 'MEMBER_BAN_ADD',
     });
-    const ban = communityDiscord.bans.cache.get(id);
+    const ban = await communityDiscord.bans.fetch(id);
     let banTimestamp = 0;
     auditLogs.entries.forEach(entry => {
         if (entry.target?.id === id) {

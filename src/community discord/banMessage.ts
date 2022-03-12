@@ -2,7 +2,8 @@ import channelIds from 'config/channelIds';
 import { GuildBan, MessageEmbed } from 'discord.js';
 
 export default async function banMessage(ban: GuildBan): Promise<void> {
-    const { guild, user, reason } = ban;
+    const { guild, user } = ban;
+    const { reason } = await ban.fetch();
     const general = guild?.channels.cache.get(channelIds.general);
 
     if (!general?.isText()) return;
