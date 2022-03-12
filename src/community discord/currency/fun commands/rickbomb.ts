@@ -16,7 +16,8 @@ import commandCost from './commandCost';
 const wait = promisify(setTimeout);
 
 export default async function rickBomb(
-    interaction: CommandInteraction
+    interaction: CommandInteraction,
+    replyToInteraction = true
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
     const {
@@ -52,10 +53,12 @@ export default async function rickBomb(
     }
     if (!(await commandCost(interaction, 500))) return;
 
-    await interaction.reply({
-        content: `${rickCoin} is on the way!`,
-        ephemeral: true,
-    });
+    if (replyToInteraction) {
+        await interaction.reply({
+            content: `${rickCoin} is on the way!`,
+            ephemeral: true,
+        });
+    }
     const rand = Math.random();
     let rngMultiplier: number;
     if (rand > 0.5) {

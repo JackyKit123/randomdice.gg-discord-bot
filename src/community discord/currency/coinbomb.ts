@@ -450,6 +450,7 @@ export async function spawnCoinbomb(
 
     let type: BatchType | undefined;
 
+    await interaction.reply(`${user} has spawned a coinbomb!`);
     switch (arg?.toLowerCase()) {
         case goldenPickaxe:
         case 'goldenpick':
@@ -468,12 +469,11 @@ export async function spawnCoinbomb(
             type = 'large';
             break;
         case 'rick':
-            await rickBomb(interaction);
+            await rickBomb(interaction, false);
             return;
         default:
     }
 
-    await interaction.reply(`${user} has spawned a coinbomb!`);
     await pickCoins(client, channel, false, type);
 }
 
