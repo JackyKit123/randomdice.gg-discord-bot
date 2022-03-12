@@ -29,7 +29,7 @@ async function transformApiMessage(
     return message;
 }
 
-export async function reply<TEphemeral extends true | undefined = undefined>(
+export async function reply<TEphemeral extends boolean | undefined = undefined>(
     input:
         | Message
         | ButtonInteraction

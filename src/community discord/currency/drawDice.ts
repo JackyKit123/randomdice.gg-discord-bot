@@ -44,7 +44,7 @@ export default async function drawDice(
         memberChallengeState.set(member.user.id, challengeState);
         await interaction.reply({
             components: challengeState.message.components,
-            content: `You are being challenged to solve the captcha, you have ${
+            content: `${member} You are being challenged to solve the captcha, you have ${
                 challengeState.trialsLeft
             } tr${
                 challengeState.trialsLeft === 1 ? 'y' : 'ies'
@@ -78,7 +78,7 @@ export default async function drawDice(
             );
         }
 
-        if (math.std(memberDDintervals) > 300) {
+        if (math.std(memberDDintervals) > 600) {
             ddTimestamp.set(member.user.id, memberDDtimestamp.slice(1, 20));
         } else {
             const random5words = new Array(5)

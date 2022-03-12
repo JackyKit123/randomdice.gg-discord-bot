@@ -44,42 +44,47 @@ export default async function Cooldown(
         now - userCooldown <=
         (userIsDonator ? cooldown.donator : cooldown.default)
     ) {
-        await reply(input, {
-            embeds: [
-                new Discord.MessageEmbed()
-                    .setTitle('Slow Down!')
-                    .setColor('#6ba4a5')
-                    .setDescription(
-                        `Your command is still on \`${parseMsIntoReadableText(
-                            (userIsDonator
-                                ? cooldown.donator
-                                : cooldown.default) -
-                                (now - userCooldown)
-                        )}\` cooldown.${
-                            cooldown.donator === cooldown.default
-                                ? ''
-                                : ` ${
-                                      userIsDonator
-                                          ? 'Since you are a [Patreon donator](https://www.patreon.com/RandomDiceCommunityWebsite), your cooldown is reduced'
-                                          : '[Patreon donators](https://www.patreon.com/RandomDiceCommunityWebsite) can have their command cooldown reduced'
-                                  } from \`${parseMsIntoReadableText(
-                                      cooldown.default
-                                  )}\` to \`${parseMsIntoReadableText(
-                                      cooldown.donator
-                                  )}\`${
-                                      userIsDonator
-                                          ? ''
-                                          : '\nIf you have subscribed to patreon, please login and link your account on [randomdice.gg website](https://randomdice.gg).'
-                                  }`
-                        }`
-                    )
-                    .setFooter(
-                        userIsDonator
-                            ? 'Nice You are a donator!'
-                            : 'https://randomdice.gg/about/patreon'
-                    ),
-            ],
-        });
+        await reply(
+            input,
+            {
+                embeds: [
+                    new Discord.MessageEmbed()
+                        .setTitle('Slow Down!')
+                        .setColor('#6ba4a5')
+                        .setDescription(
+                            `Your command is still on \`${parseMsIntoReadableText(
+                                (userIsDonator
+                                    ? cooldown.donator
+                                    : cooldown.default) -
+                                    (now - userCooldown)
+                            )}\` cooldown.${
+                                cooldown.donator === cooldown.default
+                                    ? ''
+                                    : ` ${
+                                          userIsDonator
+                                              ? 'Since you are a [Patreon donator](https://www.patreon.com/RandomDiceCommunityWebsite), your cooldown is reduced'
+                                              : '[Patreon donators](https://www.patreon.com/RandomDiceCommunityWebsite) can have their command cooldown reduced'
+                                      } from \`${parseMsIntoReadableText(
+                                          cooldown.default
+                                      )}\` to \`${parseMsIntoReadableText(
+                                          cooldown.donator
+                                      )}\`${
+                                          userIsDonator
+                                              ? ''
+                                              : '\nIf you have subscribed to patreon, please login and link your account on [randomdice.gg website](https://randomdice.gg).'
+                                      }`
+                            }`
+                        )
+                        .setFooter({
+                            text: userIsDonator
+                                ? 'Nice You are a donator!'
+                                : 'https://randomdice.gg/about/patreon',
+                        }),
+                ],
+            },
+            input instanceof ButtonInteraction ||
+                input instanceof ContextMenuInteraction
+        );
         return true;
     }
 

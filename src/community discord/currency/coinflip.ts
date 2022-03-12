@@ -47,7 +47,7 @@ export default async function coinflip(
 
     if (balance < 100) {
         await interaction.reply(
-            `You do not even have ${coinDice} 100 to bet on a coin flip.`
+            `${user} You do not even have ${coinDice} 100 to bet on a coin flip.`
         );
         return;
     }
@@ -77,7 +77,7 @@ export default async function coinflip(
 
     if (amount > balance) {
         await interaction.reply(
-            'You cannot coinflip that much, you are not rich enough.'
+            `${user} You cannot coinflip that much, you are not rich enough.`
         );
         return;
     }

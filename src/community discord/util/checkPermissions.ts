@@ -30,6 +30,7 @@ export default async function checkPermission(
                             .join(' ')}`
                     ),
             ],
+            ephemeral: !(interaction instanceof CommandInteraction),
         });
         return false;
     }

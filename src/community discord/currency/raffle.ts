@@ -211,6 +211,7 @@ const noActiveRaffleResponse = async (
                 .setColor('#ff0000')
                 .setDescription('There is no active raffle at the moment'),
         ],
+        ephemeral: interaction instanceof ButtonInteraction,
     });
 
 async function joinRaffle(
@@ -242,13 +243,13 @@ async function joinRaffle(
     if (/max/i.test(ticketAmountArg)) {
         if (prevEntry === entries.maxEntries) {
             await interaction.reply(
-                `You have already entered with max entries (${entries.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
+                `${member} You have already entered with max entries (${entries.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
             );
             return;
         }
         if (balance < entries.ticketCost) {
             await interaction.reply(
-                `The cost per ticket in this raffle is ${coinDice} ${entries.ticketCost} but you only have ${coinDice} ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
+                `${member} The cost per ticket in this raffle is ${coinDice} ${entries.ticketCost} but you only have ${coinDice} ${balance}. You can't even join with 1 ticket, let alone \`max\`.`
             );
             return;
         }
@@ -267,7 +268,7 @@ async function joinRaffle(
     }
     if (currEntry + prevEntry > entries.maxEntries) {
         await interaction.reply(
-            `You have already entered with ${prevEntry} ticket(s), the max entires allowance per person for this raffle is ${
+            `${member} You have already entered with ${prevEntry} ticket(s), the max entires allowance per person for this raffle is ${
                 entries.maxEntries
             } ticket(s). You can only join with ${
                 entries.maxEntries - prevEntry
@@ -277,7 +278,7 @@ async function joinRaffle(
     }
     if (balance < currEntry * entries.ticketCost) {
         await interaction.reply(
-            `You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is ${coinDice} **${numberFormat.format(
+            `${member} You don't have enough dice coins to enter with ${currEntry} ticket(s). The total cost for ${currEntry} ticket(s) is ${coinDice} **${numberFormat.format(
                 currEntry * entries.ticketCost
             )}** but you have only ${coinDice} **${numberFormat.format(
                 balance
@@ -288,7 +289,7 @@ async function joinRaffle(
 
     await yesNoButton(
         interaction,
-        `You are entering the raffle with \`${ticketAmountArg}\` entries, which will cost you ${coinDice} ${
+        `${member} You are entering the raffle with \`${ticketAmountArg}\` entries, which will cost you ${coinDice} ${
             currEntry * entries.ticketCost
         }, press yes if you wish to continue.`,
         async () => {
@@ -313,7 +314,7 @@ async function joinRaffle(
                 );
 
             await interaction.editReply({
-                content: `You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
+                content: `${member} You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
                     currEntry * entries.ticketCost
                 )}**${
                     prevEntry > 0

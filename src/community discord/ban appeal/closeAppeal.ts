@@ -17,13 +17,6 @@ export default async function closeAppeal(
 
     const { COMMUNITY_SERVER_ID } = process.env;
 
-    if (!member.permissions.has('BAN_MEMBERS')) {
-        await interaction.reply(
-            'You do not have sufficient permission to execute this command.'
-        );
-        return;
-    }
-
     if (!COMMUNITY_SERVER_ID) {
         throw new Error('Missing `COMMUNITY_SERVER_ID` env in bot code.');
     }
@@ -52,16 +45,26 @@ export default async function closeAppeal(
     const logChannel = guild.channels.cache.get(appealServerChannelId.log);
 
     if (!target) {
-        await interaction.reply(
-            'Please provide a valid member to close the appeal.'
-        );
+        await interaction.reply({
+            content: 'Please provide a valid member to close the appeal.',
+            ephemeral: interaction instanceof ButtonInteraction,
+        });
         return;
     }
 
     if (target.id === member.id) {
         await interaction.reply({
             content: 'You cannot close your own appeal.',
-            ephemeral: true,
+            ephemeral: interaction instanceof ButtonInteraction,
+        });
+        return;
+    }
+
+    if (!member.permissions.has('BAN_MEMBERS')) {
+        await interaction.reply({
+            content:
+                'You do not have sufficient permission to execute this command.',
+            ephemeral: interaction instanceof ButtonInteraction,
         });
         return;
     }
