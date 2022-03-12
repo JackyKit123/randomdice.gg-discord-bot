@@ -96,7 +96,7 @@ export default async function closeAppeal(
             );
         } finally {
             await guild.members.ban(target, {
-                reason: 'Appeal accepted.',
+                reason: `Appeal accepted. ${reason ?? ''}`.trim(),
             });
             const appealLog = logEmbed
                 .setTitle('Appeal accepted')
@@ -113,7 +113,7 @@ export default async function closeAppeal(
             await target.send('Your appeal is rejected.');
         } finally {
             await guild.members.ban(target, {
-                reason: 'Appeal rejected.',
+                reason: `Appeal rejected. ${reason ?? ''}`.trim(),
             });
             const appealLog = logEmbed
                 .setTitle('Appeal rejected')
@@ -138,7 +138,7 @@ export default async function closeAppeal(
         } finally {
             await guild.members.kick(
                 target,
-                'Member is not guilty, appeal closed.'
+                `Member is not guilty, appeal closed. ${reason ?? ''}`.trim()
             );
             const appealLog = logEmbed
                 .setTitle('Member is not guilty')
@@ -216,6 +216,11 @@ export const commandData: ApplicationCommandData[] = [
                 description: 'The member to accept the appeal for.',
                 type: 'USER',
             },
+            {
+                name: 'reason',
+                description: 'The reason for accepting the appeal.',
+                type: 'STRING',
+            },
         ],
     },
     {
@@ -227,6 +232,11 @@ export const commandData: ApplicationCommandData[] = [
                 description: 'The member to reject the appeal for.',
                 type: 'USER',
             },
+            {
+                name: 'reason',
+                description: 'The reason for accepting the appeal.',
+                type: 'STRING',
+            },
         ],
     },
     {
@@ -237,6 +247,11 @@ export const commandData: ApplicationCommandData[] = [
                 name: 'member',
                 description: 'The member to close the appeal for.',
                 type: 'USER',
+            },
+            {
+                name: 'reason',
+                description: 'The reason for accepting the appeal.',
+                type: 'STRING',
             },
         ],
     },
