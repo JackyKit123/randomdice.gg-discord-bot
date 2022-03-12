@@ -10,12 +10,7 @@ import {
 export default async function banOnLeave(
     member: GuildMember | PartialGuildMember
 ): Promise<void> {
-    const {
-        guild,
-        roles,
-        user: { tag },
-        client: { user },
-    } = member;
+    const { guild, roles, user, client } = member;
 
     if (!user) return;
 
@@ -45,7 +40,10 @@ export default async function banOnLeave(
         })
         .setTimestamp()
         .setDescription('Member Left.')
-        .addField('Appeal closed by', `${user.username ?? ''}\n${user}`.trim())
+        .addField(
+            'Appeal closed by',
+            `${client.user?.username ?? ''}\n${client.user}`.trim()
+        )
         .setTitle('Appeal rejected')
         .setColor('#ff3434');
 
@@ -75,7 +73,8 @@ export default async function banOnLeave(
             appealRoom = appealRoomsWithoutMember.first();
         } else {
             appealRoom = appealRoomsWithoutMember.find(
-                channel => channel.name === tag.replace('#', '')
+                channel =>
+                    channel.name === `${user.username}-${user.discriminator}`
             );
         }
         if (appealRoom?.isText()) {

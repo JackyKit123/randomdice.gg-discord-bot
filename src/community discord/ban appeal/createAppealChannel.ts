@@ -89,7 +89,7 @@ export default async function createAppealChanel(
         appealServerChannelId['Appeal Room']
     );
     const appealRoom = await guild.channels.create(
-        `${member.user.username}${member.user.discriminator}`,
+        `${member.user.username}-${member.user.discriminator}`,
         {
             parent:
                 appealRoomCat instanceof CategoryChannel
