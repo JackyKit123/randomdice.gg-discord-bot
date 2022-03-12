@@ -242,89 +242,99 @@ export default async function pickCoins(
                 | InteractionCollector<MessageComponentInteraction>,
             collect: Message | MessageComponentInteraction
         ) => {
-            const message = collect instanceof Message ? collect : sentMessage;
-            const member = guild.members.cache.get(
-                collect.member?.user.id || ''
-            );
-            if (!member) return;
-            const memberHasReward = collected.get(member);
-            if (
-                collected.size >= maxCollectorAllowed ||
-                (memberHasReward && collect instanceof Message)
-            )
-                return;
-            if (
-                !(
-                    channel.messages.cache.some(
-                        msg =>
-                            msg.author && // msg author is nullable
-                            msg.author.id === member.id &&
-                            sentMessage.createdTimestamp -
-                                msg.createdTimestamp <
-                                1000 * 60 &&
-                            msg.createdTimestamp < sentMessage.createdTimestamp
-                    ) ||
-                    channel.messages.cache
-                        .filter(
+            try {
+                const message =
+                    collect instanceof Message ? collect : sentMessage;
+                const member = guild.members.cache.get(
+                    collect.member?.user.id || ''
+                );
+                if (!member) return;
+                const memberHasReward = collected.get(member);
+                if (
+                    collected.size >= maxCollectorAllowed ||
+                    (memberHasReward && collect instanceof Message)
+                )
+                    return;
+                if (
+                    !(
+                        channel.messages.cache.some(
                             msg =>
                                 msg.author && // msg author is nullable
-                                !msg.author?.bot &&
+                                msg.author.id === member.id &&
+                                sentMessage.createdTimestamp -
+                                    msg.createdTimestamp <
+                                    1000 * 60 &&
                                 msg.createdTimestamp <
                                     sentMessage.createdTimestamp
-                        )
-                        .last(10)
-                        .some(msg => msg.author.id === member.id)
-                )
-            ) {
-                await collect.reply({
-                    content: `${member}, no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`,
-                    ephemeral: true,
-                });
-                return;
-            }
-            if (
-                collect instanceof MessageComponentInteraction &&
-                isGoldenPickaxe === true &&
-                collect.customId === goldenPickaxe
-            ) {
-                isGoldenPickaxe = collect.user.id;
-            }
-            collected.set(
-                member,
-                (memberHasReward ?? 0) +
-                    rngReward * (isGoldenPickaxe === member.id ? 10 : 1)
-            );
-            const balance = await getBalance(message, true, member);
-            if (balance === null) return;
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/balance`)
-                .set(
-                    balance +
+                        ) ||
+                        channel.messages.cache
+                            .filter(
+                                msg =>
+                                    msg.author && // msg author is nullable
+                                    !msg.author?.bot &&
+                                    msg.createdTimestamp <
+                                        sentMessage.createdTimestamp
+                            )
+                            .last(10)
+                            .some(msg => msg.author.id === member.id)
+                    )
+                ) {
+                    await collect.reply({
+                        content: `${member}, no sniping. You must be talking in ${channel} for the last 1 minute or had 1 message in the last 10 messages to earn the reward.`,
+                        ephemeral: true,
+                    });
+                    return;
+                }
+                if (
+                    collect instanceof MessageComponentInteraction &&
+                    isGoldenPickaxe === true &&
+                    collect.customId === goldenPickaxe
+                ) {
+                    isGoldenPickaxe = collect.user.id;
+                }
+                collected.set(
+                    member,
+                    (memberHasReward ?? 0) +
                         rngReward * (isGoldenPickaxe === member.id ? 10 : 1)
                 );
-            if (!(collect instanceof Message)) {
-                await collect.update({
-                    content: `${
-                        typeof isGoldenPickaxe === 'string'
-                            ? content.replace(
-                                  /${goldenPickaxe}.*${goldenPickaxe}/,
-                                  `<@${isGoldenPickaxe}> has picked up the ${goldenPickaxe}, earning 10x the mining speed!`
-                              )
-                            : content
-                    }${endMessage(collected, isGoldenPickaxe)}`,
-                    components: getComponents(isGoldenPickaxe),
-                });
-            } else if (rngReward < 1000 && rngReward >= 100) {
-                await collect.react(coinDice);
-            } else if (rngReward > 1000) {
-                await channel.send(
-                    `${member} has collected the prize of ${coinDice} ${numberFormat.format(
-                        rngReward
-                    )}. Congratulations!`
+                const balance = await getBalance(message, true, member);
+                if (balance === null) return;
+                await database
+                    .ref(`discord_bot/community/currency/${member.id}/balance`)
+                    .set(
+                        balance +
+                            rngReward * (isGoldenPickaxe === member.id ? 10 : 1)
+                    );
+                if (!(collect instanceof Message)) {
+                    await collect.update({
+                        content: `${
+                            typeof isGoldenPickaxe === 'string'
+                                ? content.replace(
+                                      /${goldenPickaxe}.*${goldenPickaxe}/,
+                                      `<@${isGoldenPickaxe}> has picked up the ${goldenPickaxe}, earning 10x the mining speed!`
+                                  )
+                                : content
+                        }${endMessage(collected, isGoldenPickaxe)}`,
+                        components: getComponents(isGoldenPickaxe),
+                    });
+                } else if (rngReward < 1000 && rngReward >= 100) {
+                    await collect.react(coinDice);
+                } else if (rngReward > 1000) {
+                    await channel.send(
+                        `${member} has collected the prize of ${coinDice} ${numberFormat.format(
+                            rngReward
+                        )}. Congratulations!`
+                    );
+                }
+                if (collected.size >= maxCollectorAllowed) {
+                    collector.stop();
+                }
+            } catch (err) {
+                await logMessage(
+                    client,
+                    'warning',
+                    (err as Error).stack ?? (err as Error).message ?? err
                 );
-            }
-            if (collected.size >= maxCollectorAllowed) {
-                collector.stop();
             }
         };
         const onEnd = async (
