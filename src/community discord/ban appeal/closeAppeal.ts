@@ -62,7 +62,7 @@ export default async function closeAppeal(
 
     const target =
         (interaction instanceof CommandInteraction &&
-            interaction.options.getMember('member')) ??
+            interaction.options.getMember('member')) ||
         (membersInAppealRoom.size === 1 &&
             (await guild.members.fetch(membersInAppealRoom.first()?.id ?? '')));
 
