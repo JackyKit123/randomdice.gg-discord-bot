@@ -5,9 +5,32 @@ import {
     CategoryChannel,
     Collection,
     CommandInteraction,
+    Guild,
+    GuildBasedChannel,
     MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
+
+export async function archiveAppeal(
+    guild: Guild,
+    channel: GuildBasedChannel | null
+): Promise<void> {
+    const archiveCategories = guild.channels.cache.filter(
+        chl =>
+            /archives/i.test(chl.name) &&
+            chl instanceof CategoryChannel &&
+            chl.children.size < 50
+    ) as Collection<string, CategoryChannel>;
+    const archiveCategory =
+        archiveCategories.last() ??
+        (await guild.channels.create('Archives', {
+            type: 'GUILD_CATEGORY',
+            position: -1,
+        }));
+
+    if (channel?.type === 'GUILD_TEXT')
+        await channel.setParent(archiveCategory);
+}
 
 export default async function closeAppeal(
     interaction: CommandInteraction | ButtonInteraction
@@ -87,12 +110,14 @@ export default async function closeAppeal(
     const accept = async (): Promise<void> => {
         await communityDiscord.members.unban(
             target,
-            'Appealed accepted in appeal server.'
+            `Appealed accepted in appeal server. ${reason ?? ''}`.trim()
         );
 
         try {
             await target.send(
-                'Your appeal is accepted, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+                `Your appeal is accepted.\n${
+                    reason ? `Reason: ${reason}\n` : ''
+                }You may now return to this main server. https://discord.gg/ZrXRpZq2mq`
             );
         } finally {
             await guild.members.ban(target, {
@@ -110,10 +135,12 @@ export default async function closeAppeal(
 
     const reject = async (): Promise<void> => {
         try {
-            await target.send('Your appeal is rejected.');
+            await target.send(
+                `Your appeal is rejected.${reason ? `\nReason: ${reason}` : ''}`
+            );
         } finally {
             await guild.members.ban(target, {
-                reason: `Appeal rejected. ${reason ?? ''}`.trim(),
+                reason: `Appeal rejected.\n${reason ?? ''}`.trim(),
             });
             const appealLog = logEmbed
                 .setTitle('Appeal rejected')
@@ -128,7 +155,9 @@ export default async function closeAppeal(
     const falsebanned = async (): Promise<void> => {
         await communityDiscord.members.unban(
             target,
-            'Appealed accepted in appeal server, member is not guilty.'
+            `Appealed accepted in appeal server, member is not guilty. ${
+                reason ?? ''
+            }`.trim()
         );
 
         try {
@@ -169,21 +198,7 @@ export default async function closeAppeal(
         return;
     }
 
-    const archiveCategories = guild.channels.cache.filter(
-        chl =>
-            /archives/i.test(chl.name) &&
-            chl instanceof CategoryChannel &&
-            chl.children.size < 50
-    ) as Collection<string, CategoryChannel>;
-    const archiveCategory =
-        archiveCategories.last() ??
-        (await guild.channels.create('Archives', {
-            type: 'GUILD_CATEGORY',
-            position: -1,
-        }));
-
-    if (channel?.type === 'GUILD_TEXT')
-        await channel.setParent(archiveCategory);
+    await archiveAppeal(guild, channel);
 
     switch (
         interaction instanceof CommandInteraction
