@@ -125,7 +125,7 @@ export default async function closeAppeal(
             );
         } finally {
             await guild.members.ban(target, {
-                reason: `Appeal accepted. ${reason ?? ''}`.trim(),
+                reason: `Appeal accepted.\n${reason || ''}`.trim(),
             });
             const appealLog = logEmbed
                 .setTitle('Appeal accepted')
@@ -144,7 +144,7 @@ export default async function closeAppeal(
             );
         } finally {
             await guild.members.ban(target, {
-                reason: `Appeal rejected.\n${reason ?? ''}`.trim(),
+                reason: `Appeal rejected.\n${reason || ''}`.trim(),
             });
             const appealLog = logEmbed
                 .setTitle('Appeal rejected')
