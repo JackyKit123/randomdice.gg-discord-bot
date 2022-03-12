@@ -130,10 +130,8 @@ export const commandData = (guides: DeckGuide[]): ApplicationCommandData => ({
     name: 'guide',
     description: 'get the guide for a deck',
     options: [
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
         {
-            type: 3,
+            type: 'STRING',
             name: 'deck-name',
             description:
                 'the name of the deck, use /guide list to see all deck guides',
