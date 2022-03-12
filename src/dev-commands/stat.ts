@@ -3,12 +3,17 @@ import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 export default async function statistic(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { client, channel, options } = interaction;
+    const {
+        client: { guilds, users, user },
+        channel,
+        options,
+    } = interaction;
 
     if (options.getString('env', true) !== process.env.NODE_ENV) return;
 
-    const guildCount = client.guilds.cache.size;
-    const guildData = client.guilds.cache.map(guild => {
+    const guildCount = guilds.cache.size;
+    const userCount = users.cache.size;
+    const guildData = guilds.cache.map(guild => {
         let memberCountString = guild.memberCount.toString();
         while (memberCountString.length < 6) {
             memberCountString = ` ${memberCountString}`;
@@ -18,7 +23,7 @@ export default async function statistic(
 
     if (!channel) return;
     await interaction.reply(
-        `I am ${client.user?.toString()}, I am now serving in **${guildCount}** discord servers.\n`
+        `I am ${user}, I am now serving **${userCount}** users in **${guildCount}** discord servers.\n`
     );
     await Promise.all(
         new Array(Math.ceil(guildData.length / 20))
