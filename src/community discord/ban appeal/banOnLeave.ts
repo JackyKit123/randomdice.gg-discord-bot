@@ -17,7 +17,23 @@ export default async function banOnLeave(
         client: { user },
     } = member;
 
-    if (roles.cache.hasAny(...Object.values(appealServerRoleIds))) return;
+    if (!user) return;
+
+    const auditLogsBans = await guild.fetchAuditLogs({
+        limit: 3,
+        type: 'MEMBER_BAN_ADD',
+    });
+    const auditLogsKicks = await guild.fetchAuditLogs({
+        limit: 3,
+        type: 'MEMBER_KICK',
+    });
+
+    if (
+        auditLogsBans.entries.some(({ target }) => target?.id === member.id) ||
+        auditLogsKicks.entries.some(({ target }) => target?.id === member.id) ||
+        roles.cache.hasAny(...Object.values(appealServerRoleIds))
+    )
+        return;
 
     await member.ban({
         reason: 'Appeal rejected. Member Left.',
@@ -29,7 +45,7 @@ export default async function banOnLeave(
         })
         .setTimestamp()
         .setDescription('Member Left.')
-        .addField('Appeal closed by', `${user?.username ?? ''}\n${user}`.trim())
+        .addField('Appeal closed by', `${user.username ?? ''}\n${user}`.trim())
         .setTitle('Appeal rejected')
         .setColor('#ff3434');
 
