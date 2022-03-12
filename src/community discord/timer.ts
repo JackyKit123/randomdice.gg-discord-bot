@@ -14,6 +14,7 @@ import { database } from 'register/firebase';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
+import banOnTimerEnds from './ban appeal/banOnTimerEnds';
 
 const wait = promisify(setTimeout);
 
@@ -50,7 +51,7 @@ function tickTimer(
     endTime: number,
     key: string
 ): void {
-    const { embeds, channel, reactions, guild, id } = message;
+    const { embeds, channel, reactions, guild, id, client } = message;
     const embed = embeds?.[0];
     if (!embed || !cache['discord_bot/community/timer'][key]) {
         killTimerFromDB(key);
@@ -118,6 +119,14 @@ function tickTimer(
                     await originalMessage.reply(messageOption);
                 } else {
                     await channel.send(messageOption);
+                }
+                if (
+                    embed.title ===
+                        'You have 24 hours to respond to this appeal ticket or you will be banned' &&
+                    guild?.id === process.env.COMMUNITY_APPEAL_SERVER_ID &&
+                    hostId === client.user?.id
+                ) {
+                    await banOnTimerEnds(channel);
                 }
             }
         } catch (err) {
