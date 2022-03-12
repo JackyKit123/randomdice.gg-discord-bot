@@ -109,7 +109,7 @@ export default async function createAppealChanel(
             iconURL: ban.user.displayAvatarURL({ dynamic: true }),
         })
         .addField(
-            'Reason',
+            'Ban Reason',
             ban.reason?.replace(
                 '\nFeel free to [appeal here](https://discord.gg/yJBdSRZJmS) if you found this ban to be unjustified.',
                 ''
