@@ -338,13 +338,13 @@ export default async function interactionCreate(
                 interaction.isContextMenu()
             ) {
                 if (interaction.replied) {
-                    await interaction.reply(
+                    await interaction.followUp(
                         `Oops, something went wrong:\n${
                             (err as Error).message ?? err
                         }`
                     );
                 } else {
-                    await interaction.followUp(
+                    await interaction.reply(
                         `Oops, something went wrong:\n${
                             (err as Error).message ?? err
                         }`
