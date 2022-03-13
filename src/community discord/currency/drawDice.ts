@@ -196,19 +196,23 @@ export default async function drawDice(
         const tierRng = Math.floor(Math.random() * 100);
         if (tierRng < 60) {
             outcome.reward += 1;
+            outcome.tier = 'Common';
         } else if (tierRng < 90) {
             outcome.reward += 10;
+            outcome.tier = 'Rare';
             if (outcome.color === '#999999') {
                 outcome.color = '#006eff';
             }
         } else if (tierRng < 99) {
             outcome.reward += 40;
+            outcome.tier = 'Unique';
             if (outcome.color !== '#ffdd00') {
                 outcome.color = '#cc00ff';
             }
         } else {
             outcome.reward += 100;
             outcome.color = '#ffdd00';
+            outcome.tier = 'Legendary';
         }
         const tierToDraw = dice.filter(die => die.rarity === outcome.tier);
         if (tierToDraw.length === 0) {
