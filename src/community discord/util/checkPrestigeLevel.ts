@@ -18,10 +18,11 @@ export const getPrestigeIcon = (
     client: Client,
     level: number
 ): string | undefined => {
-    const prestigeRoleName = prestigeRoles[level];
+    const prestigeRoleName = client.guilds.cache
+        .get(process.env.COMMUNITY_SERVER_ID ?? '')
+        ?.roles.cache.get(prestigeRoles[level])?.name;
     const devServer = client.guilds.cache.get(process.env.DEV_SERVER_ID ?? '');
-    if (!devServer) return '';
-    const prestigeRoleIconEmoji = devServer.emojis.cache.find(
+    const prestigeRoleIconEmoji = devServer?.emojis.cache.find(
         emoji => emoji.name === prestigeRoleName?.replace(' ', '_')
     );
     return prestigeRoleIconEmoji?.toString();
