@@ -14,8 +14,12 @@ import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import cache, { Dice } from 'util/cache';
 import channelIds from 'config/channelIds';
-import { coinDice, nullDice, shuffleDiceLegendary } from 'config/emojiId';
-import logMessage from 'util/logMessage';
+import {
+    coinDice,
+    nullDice,
+    rickCoin,
+    shuffleDiceLegendary,
+} from 'config/emojiId';
 import { getBalance } from './balance';
 import isBotChannels from '../util/isBotChannels';
 
@@ -30,7 +34,7 @@ export default async function drawDice(
     interaction: CommandInteraction | ButtonInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, channel, guild, client } = interaction;
+    const { member, channel, guild } = interaction;
     if (!channel) return;
     const numberFormat = new Intl.NumberFormat();
     let challengeState = memberChallengeState.get(member.user.id);
@@ -175,11 +179,6 @@ export default async function drawDice(
     }
     const emoji = cache['discord_bot/emoji'];
     let { dice } = cache;
-    if (!dice.length) {
-        await interaction.reply('CacheError: Please contact an admin.');
-        await logMessage(client, 'warning', 'dice cache is empty');
-        return;
-    }
     let { diceDrawn, prestige } =
         cache['discord_bot/community/currency'][member.user.id];
     const outcome: {
@@ -197,25 +196,25 @@ export default async function drawDice(
         const tierRng = Math.floor(Math.random() * 100);
         if (tierRng < 60) {
             outcome.reward += 1;
-            outcome.tier = 'Common';
         } else if (tierRng < 90) {
             outcome.reward += 10;
-            outcome.tier = 'Rare';
             if (outcome.color === '#999999') {
                 outcome.color = '#006eff';
             }
         } else if (tierRng < 99) {
             outcome.reward += 40;
-            outcome.tier = 'Unique';
             if (outcome.color !== '#ffdd00') {
                 outcome.color = '#cc00ff';
             }
         } else {
             outcome.reward += 100;
             outcome.color = '#ffdd00';
-            outcome.tier = 'Legendary';
         }
         const tierToDraw = dice.filter(die => die.rarity === outcome.tier);
+        if (tierToDraw.length === 0) {
+            outcome.color = '#ffdd00';
+            return 'jackpot';
+        }
         const randomDraw =
             tierToDraw[Math.floor(tierToDraw.length * Math.random())];
         dice = dice.filter(die => die.id !== randomDraw.id);
@@ -226,6 +225,7 @@ export default async function drawDice(
         return randomDraw;
     });
 
+    outcome.reward = drawnDice.includes('jackpot') ? 10000 : outcome.reward;
     outcome.reward *= isBotChannels(channel) ? 1 : -10;
     await database
         .ref(`discord_bot/community/currency/${member.user.id}/diceDrawn`)
@@ -268,10 +268,33 @@ export default async function drawDice(
         {
             name: `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
             value: isBotChannels(channel)
-                ? drawnDice.map(randomDraw => emoji[randomDraw.id]).join(' ')
-                : `${coinDice}${coinDice}${coinDice}${coinDice}${coinDice}**JACKPOT**${coinDice}${coinDice}${coinDice}${coinDice}${coinDice}\nYou lost ${coinDice} ${outcome.reward} instead since you are using this command in ${channel}\n<#${channelIds['💫 | VIP Channels']}> <#${channelIds['🤖 | Bot Channels']}> exist for a reason to let you to spam your commands.`,
+                ? `${
+                      drawnDice.includes('jackpot')
+                          ? rickCoin.repeat(10)
+                          : (drawnDice as Dice[])
+                                .map(randomDraw => emoji[randomDraw.id])
+                                .join(' ')
+                  }`
+                : `${rickCoin.repeat(5)}**JACKPOT**${rickCoin.repeat(
+                      5
+                  )}\nYou lost ${coinDice} ${
+                      outcome.reward
+                  } instead since you are using this command in ${channel}\n<#${
+                      channelIds['💫 | VIP Channels']
+                  }> <#${
+                      channelIds['🤖 | Bot Channels']
+                  }> exist for a reason to let you to spam your commands.`,
             inline: false,
         },
+        ...(drawnDice.includes('jackpot')
+            ? [
+                  {
+                      name: 'JACKPOT',
+                      value: '**__Rick Astley has come to visit you!\nAnd brought you some big money!__**',
+                      inline: false,
+                  },
+              ]
+            : []),
         {
             name: 'Current Balance',
             value: `${coinDice} ${numberFormat.format(
