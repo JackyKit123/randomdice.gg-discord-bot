@@ -15,6 +15,7 @@ import cooldown from 'util/cooldown';
 import cache, { Dice } from 'util/cache';
 import channelIds from 'config/channelIds';
 import { coinDice, nullDice, shuffleDiceLegendary } from 'config/emojiId';
+import logMessage from 'util/logMessage';
 import { getBalance } from './balance';
 import isBotChannels from '../util/isBotChannels';
 
@@ -29,7 +30,7 @@ export default async function drawDice(
     interaction: CommandInteraction | ButtonInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, channel, guild } = interaction;
+    const { member, channel, guild, client } = interaction;
     if (!channel) return;
     const numberFormat = new Intl.NumberFormat();
     let challengeState = memberChallengeState.get(member.user.id);
@@ -174,6 +175,11 @@ export default async function drawDice(
     }
     const emoji = cache['discord_bot/emoji'];
     let { dice } = cache;
+    if (!dice.length) {
+        await interaction.reply('CacheError: Please contact an admin.');
+        await logMessage(client, 'warning', 'dice cache is empty');
+        return;
+    }
     let { diceDrawn, prestige } =
         cache['discord_bot/community/currency'][member.user.id];
     const outcome: {
@@ -185,7 +191,7 @@ export default async function drawDice(
         color: '#999999',
         tier: 'Common',
     };
-    diceDrawn = diceDrawn || {};
+    diceDrawn = diceDrawn ?? {};
     prestige = prestige || 1;
     const drawnDice = new Array(prestige).fill('').map(() => {
         const tierRng = Math.floor(Math.random() * 100);
