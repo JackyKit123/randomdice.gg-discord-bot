@@ -173,7 +173,7 @@ export default async function drawDice(
         }
     }
     const emoji = cache['discord_bot/emoji'];
-    let dice = [...cache.dice];
+    let { dice } = cache;
     let { diceDrawn, prestige } =
         cache['discord_bot/community/currency'][member.user.id];
     const outcome: {
