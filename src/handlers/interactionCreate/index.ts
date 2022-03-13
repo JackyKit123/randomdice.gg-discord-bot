@@ -50,6 +50,7 @@ import closeAppeal from 'community discord/ban appeal/closeAppeal';
 
 import channelIds from 'config/channelIds';
 import { nullDice } from 'config/emojiId';
+import { spyLogBanHandler } from 'community discord/spy';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -111,6 +112,9 @@ export default async function interactionCreate(
                     case 'raffle-join-50':
                     case 'raffle-join-max':
                         await joinRaffleButton(interaction);
+                        break;
+                    case 'spy-log-ban':
+                        await spyLogBanHandler(interaction);
                         break;
                     default:
                 }

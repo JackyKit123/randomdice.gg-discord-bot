@@ -5,7 +5,6 @@ import {
     User,
 } from 'discord.js';
 import { removeAfkListener } from 'community discord/afk';
-import { spyLogBanHandler } from 'community discord/spy';
 import logMessage from 'util/logMessage';
 
 export default async function messageReactionAdd(
@@ -23,7 +22,6 @@ export default async function messageReactionAdd(
             process.env.COMMUNITY_SERVER_ID === guild?.id &&
             process.env.NODE_ENV === 'production'
         ) {
-            spyLogBanHandler(nonPartialReaction, user);
             removeAfkListener(nonPartialReaction, user);
         }
     } catch (err) {

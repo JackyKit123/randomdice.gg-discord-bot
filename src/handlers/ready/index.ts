@@ -1,12 +1,10 @@
 import { Client } from 'discord.js';
 import { fixClownNicknamesOnReboot } from 'community discord/currency/fun commands/clown';
 import { fetchGeneralOnBoot } from 'community discord/chatrevivePing';
-import { fetchExistingCrewAds } from 'community discord/checkCrewAds';
 import { pickCoinsInit } from 'community discord/currency/coinbomb';
 import { weeklyAutoReset } from 'community discord/currency/leaderboard';
 import { setRaffleTimerOnBoot } from 'community discord/currency/raffle';
 import infoVC from 'community discord/infoVC';
-import { fetchSpyLogOnBoot } from 'community discord/spy';
 import { registerTimer } from 'community discord/timer';
 import logMessage from 'util/logMessage';
 import { fetchAll } from 'util/cache';
@@ -32,15 +30,13 @@ export default async function ready(client: Client<true>): Promise<void> {
             purgeRolesOnReboot(client, 'rick'),
             fixClownNicknamesOnReboot(client),
             fetchGeneralOnBoot(client),
-            pickCoinsInit(client),
-            fetchExistingCrewAds(client),
-            fetchSpyLogOnBoot(client),
             fetchAll(),
         ]);
         // call these after database ready
         await Promise.all([
             registerSlashCommands(client),
             setRaffleTimerOnBoot(client),
+            pickCoinsInit(client),
             weeklyAutoReset(client),
             registerTimer(client),
             infoVC(client),

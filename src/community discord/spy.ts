@@ -1,49 +1,35 @@
-import * as Discord from 'discord.js';
+import {
+    ButtonInteraction,
+    DiscordAPIError,
+    Guild,
+    Message,
+    MessageActionRow,
+    MessageButton,
+    MessageEmbed,
+    User,
+} from 'discord.js';
 import channelIds from 'config/channelIds';
 import { moderatorRoleIds } from 'config/roleId';
 import { banHammer } from 'config/emojiId';
 
-const bannedCache: string[] = [];
-
-async function fetchIsBanned(
-    guild: Discord.Guild,
-    user: Discord.User
-): Promise<boolean> {
-    try {
-        if (!bannedCache.includes(user.id)) {
-            const banUser = await guild.bans.fetch(user);
-            bannedCache.push(banUser.user.id);
-        }
-        return true;
-    } catch (err) {
-        if ((err as Discord.DiscordAPIError).message === 'Unknown Ban')
-            return false;
-        throw err;
-    }
-}
-
-async function fetchMember(
-    guild: Discord.Guild,
-    user: Discord.User
-): Promise<boolean> {
+async function fetchMember(guild: Guild, user: User): Promise<boolean> {
     try {
         await guild.members.fetch(user);
         return true;
     } catch (err) {
-        if ((err as Discord.DiscordAPIError).message === 'Unknown Member')
-            return false;
+        if ((err as DiscordAPIError).message === 'Unknown Member') return false;
         throw err;
     }
 }
 
-export default async function spy(message: Discord.Message): Promise<void> {
+export default async function spy(message: Message): Promise<void> {
     const { guild, member, content, client, author, channel, attachments } =
         message;
     if (
         !guild ||
         !member ||
         guild.id !== '818961659086766111' ||
-        !channel.isText()
+        channel.type !== 'GUILD_TEXT'
     )
         return;
 
@@ -54,7 +40,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
         channelIds['hack-discord-spy-log']
     );
     if (!communityDiscord || !spyLog) return;
-    const isBanned = await fetchIsBanned(communityDiscord, author);
+    const isBanned = communityDiscord.bans.cache.has(author.id);
     const isCommunityDiscordMember = isBanned
         ? false
         : await fetchMember(communityDiscord, author);
@@ -63,7 +49,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
         /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(carry\w*)|(carried)|(c(?:lass)? ?15)|(\$)\b/gi;
     const triggered = Array.from(content.matchAll(sensitiveWords));
     const [sliced1, sliced2] = [content.slice(0, 1024), content.slice(1024)];
-    let embed = new Discord.MessageEmbed()
+    let embed = new MessageEmbed()
         .setAuthor({
             name: author.tag,
             iconURL: author.displayAvatarURL({ dynamic: true }),
@@ -78,7 +64,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
         );
     }
     embed = embed
-        .addField('In Channel', `#${(channel as Discord.GuildChannel).name}`)
+        .addField('In Channel', `#${channel.name}`)
         .setFooter({
             text: guild.name,
             iconURL: guild.iconURL({ dynamic: true }) ?? undefined,
@@ -109,7 +95,7 @@ export default async function spy(message: Discord.Message): Promise<void> {
             attachments.map(attachment => attachment.url).join('\n')
         );
     }
-    const sentMessage = await spyLog.send({
+    await spyLog.send({
         content: triggered.length
             ? `${
                   isBanned
@@ -122,17 +108,21 @@ export default async function spy(message: Discord.Message): Promise<void> {
                   .join(' ')}`
             : undefined,
         embeds: [embed],
+        components: [
+            new MessageActionRow().addComponents([
+                new MessageButton()
+                    .setCustomId('spy-log-ban')
+                    .setLabel('BAN')
+                    .setStyle('DANGER')
+                    .setEmoji(banHammer),
+            ]),
+        ],
     });
-    if (!isBanned) await sentMessage.react(banHammer);
 }
 
-async function cleanUpMessage(
-    message: Discord.Message,
-    id: string
-): Promise<void> {
-    const { embeds, author, reactions, client } = message;
-    if (!embeds[0] || author.id !== (client.user as Discord.ClientUser).id)
-        return;
+async function cleanUpMessage(message: Message, id: string): Promise<void> {
+    const { embeds, author, client } = message;
+    if (!embeds[0] || !client.user || author.id !== client.user.id) return;
     const embed = embeds[0];
     const { fields } = embed;
     const memberBannedDisplayed = fields.some(
@@ -143,35 +133,28 @@ async function cleanUpMessage(
         id !== fields[0]?.value?.match(/ID: (\d{18})$/m)?.[1]
     )
         return;
+
     if (!memberBannedDisplayed) {
         embed.fields = fields.filter(
             field => field.name !== 'User is member in this discord'
         );
+        embed.color = 0;
         embed.fields[1].value = '✔️';
-        await message.edit({ embeds: [embed] });
-    }
-    embed.color = 0;
-    if (reactions.cache.size) {
-        await reactions.removeAll();
+        await message.edit({ embeds: [embed], components: [] });
     }
 }
 
 export async function spyLogBanHandler(
-    reaction: Discord.MessageReaction,
-    userInitial: Discord.User | Discord.PartialUser
+    interaction: ButtonInteraction
 ): Promise<void> {
-    const { message, client } = reaction;
-    const { channel, guild, embeds, author } = message;
-    const user = userInitial.partial
-        ? await client.users.fetch(userInitial.id)
-        : userInitial;
+    if (!interaction.inCachedGuild()) return;
+    const { message, member } = interaction;
+    const { channel, guild, embeds } = message;
+
     if (
-        !guild ||
-        !guild.members.cache.get(user.id)?.permissions.has('BAN_MEMBERS') ||
+        !member.permissions.has('BAN_MEMBERS') ||
         channel.id !== channelIds['hack-discord-spy-log'] ||
-        !embeds[0] ||
-        author?.id !== (client.user as Discord.ClientUser).id ||
-        reaction.emoji.identifier !== banHammer
+        !embeds[0]
     )
         return;
 
@@ -185,15 +168,4 @@ export async function spyLogBanHandler(
         reason: 'Random Dice Hack Discord related activity\nFeel free to [appeal here](https://discord.gg/yJBdSRZJmS) if you found this ban to be unjustified.',
     });
     channel.messages.cache.forEach(m => cleanUpMessage(m, id));
-}
-
-export async function fetchSpyLogOnBoot(client: Discord.Client): Promise<void> {
-    const guild = await client.guilds.fetch(
-        process.env.COMMUNITY_SERVER_ID || ''
-    );
-    const channel = guild.channels.cache.get(
-        channelIds['hack-discord-spy-log']
-    );
-    if (!channel?.isText()) return;
-    await channel.messages.fetch();
 }

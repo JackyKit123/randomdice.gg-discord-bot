@@ -417,10 +417,10 @@ export default async function pickCoins(
 }
 
 export async function pickCoinsInit(client: Client): Promise<void> {
-    const guild = await client.guilds.fetch(
+    const guild = client.guilds.cache.get(
         process.env.COMMUNITY_SERVER_ID || ''
     );
-    const channel = guild.channels.cache.get(
+    const channel = guild?.channels.cache.get(
         process.env.NODE_ENV === 'production'
             ? channelIds.general // #general
             : channelIds['jackykit-playground-v2'] // #jackykit-playground
