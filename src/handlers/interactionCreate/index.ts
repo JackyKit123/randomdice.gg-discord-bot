@@ -337,11 +337,19 @@ export default async function interactionCreate(
                 interaction.isCommand() ||
                 interaction.isContextMenu()
             ) {
-                await interaction.reply(
-                    `Oops, something went wrong:\n${
-                        (err as Error).message ?? err
-                    }`
-                );
+                if (interaction.replied) {
+                    await interaction.reply(
+                        `Oops, something went wrong:\n${
+                            (err as Error).message ?? err
+                        }`
+                    );
+                } else {
+                    await interaction.followUp(
+                        `Oops, something went wrong:\n${
+                            (err as Error).message ?? err
+                        }`
+                    );
+                }
             }
         } finally {
             let commandName = '';
