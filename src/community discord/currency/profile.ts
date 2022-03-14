@@ -294,10 +294,30 @@ const getProfileButtons = (
     disableButton: (button: string, index: number) => boolean,
     memberProfile: MemberCurrencyProfile
 ) => {
-    const emojis = ['👤', '⏲️', '🎰', nullDice, '❌'];
     if (memberProfile.nuked) {
-        emojis.push('☢️');
+        const emojis = ['👤', '⏲️', '🎰', nullDice, '☢️'];
+        return [
+            new MessageActionRow().addComponents(
+                emojis.map((button, i) =>
+                    new MessageButton()
+                        .setCustomId(`profile-${button}`)
+                        .setEmoji(button)
+                        .setDisabled(disableButton(button, i))
+                        .setStyle(
+                            disableButton(button, i) ? 'SECONDARY' : 'PRIMARY'
+                        )
+                )
+            ),
+            new MessageActionRow().addComponents([
+                new MessageButton()
+                    .setCustomId('profile-❌')
+                    .setEmoji('❌')
+                    .setStyle('DANGER'),
+            ]),
+        ];
     }
+    const emojis = ['👤', '⏲️', '🎰', nullDice, '❌'];
+
     return [
         new MessageActionRow().addComponents(
             emojis.map((button, i) =>
