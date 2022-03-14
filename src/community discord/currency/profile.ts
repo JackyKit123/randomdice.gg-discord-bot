@@ -283,7 +283,11 @@ const getNukeProfilePage = (
 ) => {
     return getDefaultEmbed(member)
         .setTitle('This is a weird place....')
-        .setDescription(nukeWaste.repeat((memberProfile?.nuked ?? 0) * 10))
+        .setDescription(
+            new Array(memberProfile?.nuked ?? 0)
+                .fill(nukeWaste.repeat((memberProfile?.nuked ?? 0) * 10))
+                .join('\n')
+        )
         .addField(
             'I wonder what these are...',
             '> *What is the story behind this place?*\n> *Why are these here?*\n> *What can I do here?*\n> *How can I get out?*\n> *What is this place?*'
