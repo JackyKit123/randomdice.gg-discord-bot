@@ -23,8 +23,9 @@ export default async function nuke(
     const { member, guild } = interaction;
 
     const prestigeLevel = getPrestigeLevel(member);
+    const profile = cacheData['discord_bot/community/currency']?.[member.id];
 
-    if (prestigeLevel !== 10) {
+    if (prestigeLevel !== 10 || profile?.prestige !== 10) {
         await interaction.reply(
             'Nuke is only available for users with Prestige X.'
         );
@@ -152,10 +153,7 @@ export default async function nuke(
                                     )
                                 );
                             }
-                            const nuked =
-                                cacheData['discord_bot/community/currency']?.[
-                                    member.id
-                                ]?.nuked ?? 0;
+                            const nuked = profile?.nuked ?? 0;
                             await database
                                 .ref(
                                     `discord_bot/community/currency/${member.id}`
