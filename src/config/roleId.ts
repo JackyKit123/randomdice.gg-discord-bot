@@ -84,9 +84,15 @@ export const appealServerRoleIds = {
     'Trial Moderator': '807533306076856320',
 };
 
-export const tier1RoleIds = [roleIds['Prestige I']];
+export const tier1RoleIds = [
+    roleIds['$5 Patreon'],
+    roleIds['Server Booster'],
+    roleIds['Prestige I'],
+    roleIds['Weekly Top 5'],
+];
 
 export const tier2RoleIds = [
+    roleIds['$5 Patreon'],
     roleIds['Server Booster'],
     roleIds['Prestige II'],
     roleIds['Weekly Top 5'],
