@@ -284,9 +284,9 @@ const getNukeProfilePage = (
     return getDefaultEmbed(member)
         .setTitle('This is a weird place....')
         .setDescription(
-            new Array(memberProfile?.nuked ?? 0)
+            `‎${new Array(memberProfile?.nuked ?? 0)
                 .fill(nukeWaste.repeat(10))
-                .join('\n')
+                .join('\n')}`
         )
         .addField(
             'I wonder what these are...',
