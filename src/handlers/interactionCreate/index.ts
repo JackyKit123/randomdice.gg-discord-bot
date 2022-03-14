@@ -96,6 +96,7 @@ export default async function interactionCreate(
                     case 'profile-⏲️':
                     case 'profile-🎰':
                     case `profile-${nullDice}`:
+                    case `profile-☢️`:
                     case 'profile-❌':
                         await profileButtons(interaction);
                         break;

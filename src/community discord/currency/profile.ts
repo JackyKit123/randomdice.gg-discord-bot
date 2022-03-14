@@ -13,7 +13,7 @@ import {
 import moment from 'moment';
 import cache, { MemberCurrencyProfile } from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
-import { coinDice, nullDice } from 'config/emojiId';
+import { coinDice, nukeWaste, nullDice } from 'config/emojiId';
 import { prestigeRoles } from 'config/roleId';
 import {
     getPrestigeIcon,
@@ -277,26 +277,46 @@ const getDDProfilePage = (
         });
 };
 
+const getNukeProfilePage = (
+    member: GuildMember,
+    memberProfile: MemberCurrencyProfile
+) => {
+    return getDefaultEmbed(member)
+        .setTitle('This is a weird place....')
+        .setDescription(nukeWaste.repeat((memberProfile?.nuked ?? 0) * 10))
+        .addField(
+            'I wonder what these are...',
+            '> *What is the story behind this place?*\n> *Why are these here?*\n> *What can I do here?*\n> *How can I get out?*\n> *What is this place?*'
+        );
+};
+
 const getProfileButtons = (
-    disableButton: (button: string, index: number) => boolean
-) => [
-    new MessageActionRow().addComponents(
-        ['👤', '⏲️', '🎰', nullDice, '❌'].map((button, i) =>
-            new MessageButton()
-                .setCustomId(`profile-${button}`)
-                .setEmoji(button)
-                .setDisabled(disableButton(button, i))
-                .setStyle(
-                    // eslint-disable-next-line no-nested-ternary
-                    disableButton(button, i)
-                        ? 'SECONDARY'
-                        : button === '❌'
-                        ? 'DANGER'
-                        : 'PRIMARY'
-                )
-        )
-    ),
-];
+    disableButton: (button: string, index: number) => boolean,
+    memberProfile: MemberCurrencyProfile
+) => {
+    const emojis = ['👤', '⏲️', '🎰', nullDice, '❌'];
+    if (memberProfile.nuked) {
+        emojis.push('☢️');
+    }
+    return [
+        new MessageActionRow().addComponents(
+            emojis.map((button, i) =>
+                new MessageButton()
+                    .setCustomId(`profile-${button}`)
+                    .setEmoji(button)
+                    .setDisabled(disableButton(button, i))
+                    .setStyle(
+                        // eslint-disable-next-line no-nested-ternary
+                        disableButton(button, i)
+                            ? 'SECONDARY'
+                            : button === '❌'
+                            ? 'DANGER'
+                            : 'PRIMARY'
+                    )
+            )
+        ),
+    ];
+};
 
 const sentProfileMessages = new Map<
     Message,
@@ -319,9 +339,10 @@ export default async function profile(
     const balance = await getBalance(interaction, false, target);
     if (balance === null) return;
 
+    const memberProfile = cache['discord_bot/community/currency'][target.id];
     const sentMessage = await interaction.reply({
         embeds: [getGeneralProfilePage(target, balance, channel)],
-        components: getProfileButtons((_, i) => i === 0),
+        components: getProfileButtons((_, i) => i === 0, memberProfile),
         fetchReply: true,
     });
     sentProfileMessages.set(sentMessage, { member, target });
@@ -332,9 +353,6 @@ export async function profileButtons(
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
     const { customId, message, user, channel } = interaction;
-    const components = getProfileButtons(
-        button => `profile-${button}` === customId
-    );
     const sentProfileMessage = sentProfileMessages.get(message);
     if (!sentProfileMessage) return;
     const { member, target } = sentProfileMessage;
@@ -348,6 +366,10 @@ export async function profileButtons(
     }
 
     const memberProfile = cache['discord_bot/community/currency'][target.id];
+    const components = getProfileButtons(
+        button => `profile-${button}` === customId,
+        memberProfile
+    );
 
     switch (interaction.customId) {
         case 'profile-👤':
@@ -377,6 +399,12 @@ export async function profileButtons(
         case `profile-${nullDice}`:
             await interaction.update({
                 embeds: [getDDProfilePage(target, memberProfile)],
+                components,
+            });
+            break;
+        case 'profile-☢️':
+            await interaction.update({
+                embeds: [getNukeProfilePage(target, memberProfile)],
                 components,
             });
             break;

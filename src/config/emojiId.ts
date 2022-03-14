@@ -19,3 +19,4 @@ export const banHammer = '<:banned:868148038311489578>';
 export const alert = '<a:alert:952779096314757211>';
 
 export const nuke = '<a:nuke:952781322051530813>';
+export const nukeWaste = '<:nuke_residue:952796890154549308>';
