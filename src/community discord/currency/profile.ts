@@ -285,7 +285,7 @@ const getNukeProfilePage = (
         .setTitle('This is a weird place....')
         .setDescription(
             new Array(memberProfile?.nuked ?? 0)
-                .fill(nukeWaste.repeat((memberProfile?.nuked ?? 0) * 10))
+                .fill(nukeWaste.repeat(10))
                 .join('\n')
         )
         .addField(
