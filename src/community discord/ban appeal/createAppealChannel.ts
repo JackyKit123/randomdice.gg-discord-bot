@@ -5,6 +5,7 @@ import logMessage from 'util/logMessage';
 import {
     CategoryChannel,
     ClientUser,
+    DiscordAPIError,
     GuildMember,
     MessageActionRow,
     MessageButton,
@@ -42,7 +43,12 @@ export default async function createAppealChanel(
     const auditLogs = await communityDiscord.fetchAuditLogs({
         type: 'MEMBER_BAN_ADD',
     });
-    const ban = await communityDiscord.bans.fetch(id);
+    let ban;
+    try {
+        ban = await communityDiscord.bans.fetch(id);
+    } catch (err) {
+        if ((err as DiscordAPIError).message !== 'Unknown Ban') throw err;
+    }
     let banTimestamp = 0;
     auditLogs.entries.forEach(entry => {
         if (entry.target?.id === id) {
