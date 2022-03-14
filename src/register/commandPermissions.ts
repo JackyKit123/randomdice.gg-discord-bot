@@ -67,6 +67,17 @@ export default async function setCommandPermissions(
                         adminAndEventManagerPermissions
                     );
                     break;
+                case 'nuke':
+                    await command.permissions.set({
+                        permissions: [
+                            {
+                                type: 'ROLE',
+                                permission: true,
+                                id: roleId['Prestige X'],
+                            },
+                        ],
+                    });
+                    break;
                 case 'accept':
                 case 'reject':
                 case 'falsebanned':

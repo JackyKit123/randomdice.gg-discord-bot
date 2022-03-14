@@ -30,6 +30,7 @@ import { commandData as wordle } from 'community discord/wordle';
 import { commandData as afk } from 'community discord/afk';
 import { commandData as balance } from 'community discord/currency/balance';
 import { commandData as advertise } from 'community discord/promote';
+
 import { commandData as dd } from 'community discord/currency/drawDice';
 import { commandData as profile } from 'community discord/currency/profile';
 import { commandData as coinflip } from 'community discord/currency/coinflip';
@@ -40,6 +41,8 @@ import { commandData as timed } from 'community discord/currency/timed';
 import { commandData as currency } from 'community discord/currency/currency';
 import { commandData as coinbomb } from 'community discord/currency/coinbomb';
 import { commandData as multiplier } from 'community discord/currency/multiplier';
+import { commandData as nuke } from 'community discord/currency/nuke';
+
 import { commandData as welcomerick } from 'community discord/currency/fun commands/welcomerick';
 import { commandData as bon } from 'community discord/currency/fun commands/bon';
 import { commandData as imitate } from 'community discord/currency/fun commands/imitate';
@@ -113,6 +116,7 @@ export default async function registerSlashCommands(
         rickbomb,
         bedtime,
         afk,
+        nuke,
     ];
 
     const devCommands: ApplicationCommandDataResolvable[] = [

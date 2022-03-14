@@ -165,6 +165,7 @@ export interface MemberCurrencyProfile {
         lose: number;
         gain: number;
     };
+    nuked?: number;
     ignoreFunCommandPrompt?: string[];
 }
 

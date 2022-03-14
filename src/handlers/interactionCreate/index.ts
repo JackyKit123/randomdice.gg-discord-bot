@@ -30,6 +30,7 @@ import timed from 'community discord/currency/timed';
 import currency from 'community discord/currency/currency';
 import { spawnCoinbomb } from 'community discord/currency/coinbomb';
 import multiplier from 'community discord/currency/multiplier';
+import nuke from 'community discord/currency/nuke';
 
 import bon from 'community discord/currency/fun commands/bon';
 import welcomerick from 'community discord/currency/fun commands/welcomerick';
@@ -244,6 +245,9 @@ export default async function interactionCreate(
                     case 'rickbomb':
                     case 'rickcoin':
                         await rickbomb(interaction);
+                        break;
+                    case 'nuke':
+                        await nuke(interaction);
                         break;
                     default:
                 }
