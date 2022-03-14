@@ -162,7 +162,7 @@ export default async function timed(
                     : ''
             }!${
                 !isBotChannels(channel)
-                    ? `\n${channelIds['💫 | VIP Channels']} ${channelIds['🤖 | Bot Channels']} exist for a reason to let you to spam your commands.`
+                    ? `\n<#${channelIds['💫 | VIP Channels']}> <#${channelIds['🤖 | Bot Channels']}> exist for a reason to let you to spam your commands.`
                     : ''
             }`
         );
