@@ -215,7 +215,7 @@ export default async function moderation(
             await unmute(targetMember as GuildMember, reason, member);
             break;
         case 'hackwarn':
-            await hackwarn(target, member, channel);
+            await hackwarn(targetMember as GuildMember, member, channel);
             break;
         case 'hackban':
             await hackban(target, member);

@@ -9,12 +9,12 @@ import { ban, warn } from '.';
 
 // eslint-disable-next-line import/prefer-default-export
 export async function hackwarn(
-    target: User,
+    target: GuildMember,
     moderator: GuildMember,
     channel: TextBasedChannel | null
 ): Promise<void> {
     await warn(
-        target,
+        target.user,
         'As per the Discord Terms of Service and 111% Terms of Service we do not allow our members to be in any servers related to the discussion of hacking tools or products, please leave those servers within the 24 hours or you will be banned from our server. Thank you for your cooperation',
         moderator
     );
@@ -22,7 +22,7 @@ export async function hackwarn(
         await setTimer(
             channel,
             moderator,
-            `Ban ${target ?? 'this member'} in 24 hours.`,
+            `Ban ${target.displayName ?? 'this member'} in 24 hours.`,
             1000 * 60 * 60 * 24
         );
 }
