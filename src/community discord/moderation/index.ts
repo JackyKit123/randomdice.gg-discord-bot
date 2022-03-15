@@ -137,14 +137,12 @@ export default async function moderation(
     }
 
     if (
-        member.id === guild.ownerId &&
-        !(
-            (targetMember &&
-                targetMember.roles.highest.position >=
-                    member.roles.highest.position) ||
+        member.id !== guild.ownerId &&
+        ((targetMember &&
+            targetMember.roles.highest.position >=
+                member.roles.highest.position) ||
             target.id === guild.ownerId ||
-            target.id === clientUser?.id
-        )
+            target.id === clientUser?.id)
     ) {
         await interaction.reply(
             `You do not have enough permission to ${commandName} ${target}.`
