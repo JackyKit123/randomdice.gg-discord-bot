@@ -12,12 +12,13 @@ import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
 import { suppressCannotDmUser } from 'util/suppressErrors';
 import { sendBanMessage } from './banMessage';
 import { writeModLog } from './modlog';
+import { hackban, hackwarn } from './quickMod';
 
-const warn = async (
+export const warn = async (
     target: User,
     reason: string | null,
     moderator: GuildMember
-) => {
+): Promise<void> => {
     await target
         .send(
             `You have been warned by ${moderator} in ${
@@ -119,6 +120,7 @@ export default async function moderation(
         options,
         commandName,
         guild,
+        channel,
         client: { user: clientUser },
     } = interaction;
     const reason = options.getString('reason');
@@ -167,8 +169,10 @@ export default async function moderation(
     }
 
     if (
-        (commandName.includes('mute') && !targetMember) ||
-        commandName === 'kick'
+        (commandName.includes('mute') ||
+            commandName.includes('warn') ||
+            commandName.includes('kick')) &&
+        !targetMember
     ) {
         await interaction.reply(`${target} is not in this server.`);
         return;
@@ -211,6 +215,12 @@ export default async function moderation(
             break;
         case 'unmute':
             await unmute(targetMember as GuildMember, reason, member);
+            break;
+        case 'hackwarn':
+            await hackwarn(target, member, channel);
+            break;
+        case 'hackban':
+            await hackban(target, member);
             break;
         default:
     }

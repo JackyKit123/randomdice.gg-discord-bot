@@ -20,7 +20,6 @@ import cache from 'util/cache';
 import { baseCommands } from 'register/commandCase';
 import yesNoButton from 'util/yesNoButton';
 import channelIds from 'config/channelIds';
-import { hackwarnTimer } from 'community discord/timer';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { content, channel, guild, author, member, client } = message;
@@ -55,7 +54,6 @@ export default async function messageCreate(message: Message): Promise<void> {
         ) {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
-                hackwarnTimer(message),
                 autoClassCritRole(message),
                 solveMathEquation(message),
                 pokeballTrap(message),

@@ -258,6 +258,8 @@ export default async function interactionCreate(
                     case 'kick':
                     case 'unban':
                     case 'unmute':
+                    case 'hackwarn':
+                    case 'hackban':
                         await moderation(interaction);
                         break;
                     case 'modlog':

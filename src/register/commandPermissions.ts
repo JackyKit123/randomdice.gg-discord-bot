@@ -69,10 +69,12 @@ export default async function setCommandPermissions(
                 case 'unmute':
                 case 'kick':
                 case 'modlog':
+                case 'hackwarn':
                     await command.permissions.set(adminAndModOnly);
                     break;
                 case 'ban':
                 case 'unban':
+                case 'hackban':
                     await command.permissions.set(adminAndNoTrialMod);
                     break;
                 case 'eventping':
