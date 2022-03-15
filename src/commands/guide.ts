@@ -1,21 +1,25 @@
 import {
     ApplicationCommandData,
     CommandInteraction,
-    DiscordAPIError,
     Message,
+    MessageActionRow,
+    MessageButton,
     MessageEmbed,
 } from 'discord.js';
 import cache, { DeckGuide } from 'util/cache';
 import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { edit, reply } from 'util/typesafeReply';
+import { reply } from 'util/typesafeReply';
 import { mapChoices } from 'register/commandData';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export const getGuideData = (
     target?: DeckGuide
-): { embeds: MessageEmbed[] } | string => {
+):
+    | { embeds: MessageEmbed[] }
+    | string
+    | { content: string; components: MessageActionRow[] } => {
     const [battlefields, emojiList] = [
         cache['wiki/battlefield'],
         cache['discord_bot/emoji'],
@@ -25,6 +29,25 @@ export const getGuideData = (
     const emojiDiceList = diceList.map(list => list.map(die => emojiList[die]));
 
     const paragraph = parseText(guide).split('\n');
+
+    if (paragraph.length >= 5000) {
+        return {
+            content: `This guide is too long to be displayed within Discord, please view it on the website here.`,
+            components: [
+                new MessageActionRow().addComponents([
+                    new MessageButton()
+                        .setStyle('LINK')
+                        .setURL(
+                            `https://randomdice.gg/decks/guide/${encodeURI(
+                                name
+                            )}`
+                        )
+                        .setLabel('View on website'),
+                ]),
+            ],
+        };
+    }
+
     const embedFields = [
         ...emojiDiceList.map((list, i, decks) => ({
             // eslint-disable-next-line no-nested-ternary
@@ -113,34 +136,18 @@ export default async function deckGuide(
         g => g.name.toLowerCase() === guideName.toLowerCase()
     );
 
-    try {
-        if (guideData) {
-            await reply(input, getGuideData(guideData));
-            return;
-        }
-
-        await bestMatchFollowUp(
-            input,
-            guideName,
-            guides,
-            ' is not a guide written.',
-            getGuideData
-        );
-    } catch (err) {
-        if (
-            !(
-                err instanceof DiscordAPIError &&
-                err.message.includes('Embed size exceeds maximum size of 6000')
-            )
-        )
-            throw err;
-        await edit(
-            input,
-            `This guide is too long to display. View it on the website https://randomdice.gg/decks/guide/${encodeURI(
-                guideName
-            )}`
-        );
+    if (guideData) {
+        await reply(input, getGuideData(guideData));
+        return;
     }
+
+    await bestMatchFollowUp(
+        input,
+        guideName,
+        guides,
+        ' is not a guide written.',
+        getGuideData
+    );
 }
 
 export const commandData = (guides: DeckGuide[]): ApplicationCommandData => ({
