@@ -1,17 +1,17 @@
-import banMessage from 'community discord/moderation/banMessage';
 import logMessage from 'util/logMessage';
 import { GuildBan } from 'discord.js';
-import { writeModLogOnGenericBan } from 'community discord/moderation/modlog';
+import { writeModLogOnGenericUnban } from 'community discord/moderation/modlog';
 
-export default async function guildBanAdd(ban: GuildBan): Promise<void> {
+export default async function guildBanRemove(ban: GuildBan): Promise<void> {
     const { guild, client } = ban;
 
     let asyncPromisesCapturer: Promise<unknown>[] = [];
+
     if (
         process.env.COMMUNITY_SERVER_ID === guild.id &&
         process.env.NODE_ENV === 'production'
     ) {
-        asyncPromisesCapturer = [banMessage(ban), writeModLogOnGenericBan(ban)];
+        asyncPromisesCapturer = [writeModLogOnGenericUnban(ban)];
     }
 
     try {
@@ -20,7 +20,7 @@ export default async function guildBanAdd(ban: GuildBan): Promise<void> {
         await logMessage(
             client,
             'warning',
-            `Oops! Something went wrong when handling \`guildBanAdd\`\n${
+            `Oops! Something went wrong when handling \`guildBanRemove\`\n${
                 (error as Error).stack ?? (error as Error).message ?? error
             }`
         );

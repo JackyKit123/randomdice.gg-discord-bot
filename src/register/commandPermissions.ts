@@ -32,6 +32,12 @@ const adminAndModOnly: {
     permissions: [adminPermission, ...modPermissions],
 };
 
+const adminAndNoTrialMod: {
+    permissions: ApplicationCommandPermissions[];
+} = {
+    permissions: [adminPermission, getPermission(roleId.Moderator)],
+};
+
 const adminAndEventManagerPermissions: {
     permissions: ApplicationCommandPermissions[];
 } = {
@@ -58,7 +64,16 @@ export default async function setCommandPermissions(
                     break;
                 case 'closereport':
                 case 'unshush':
+                case 'warn':
+                case 'mute':
+                case 'unmute':
+                case 'kick':
+                case 'modlog':
                     await command.permissions.set(adminAndModOnly);
+                    break;
+                case 'ban':
+                case 'unban':
+                    await command.permissions.set(adminAndNoTrialMod);
                     break;
                 case 'eventping':
                 case 'coinbomb':

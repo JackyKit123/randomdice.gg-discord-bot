@@ -57,7 +57,9 @@ import { commandData as fetchInvites } from 'dev-commands/fetchInvites';
 import { commandData as stat } from 'dev-commands/stat';
 import { commandData as version } from 'dev-commands/version';
 
-import { commandData as closeAppeal } from 'community discord/ban appeal/closeAppeal';
+import { commandData as moderation } from 'community discord/moderation';
+import { commandData as modlog } from 'community discord/moderation/modlog';
+import { commandData as closeAppeal } from 'community discord/moderation/ban appeal/closeAppeal';
 
 import cacheData from 'util/cache';
 import setCommandPermissions from './commandPermissions';
@@ -117,6 +119,8 @@ export default async function registerSlashCommands(
         bedtime,
         afk,
         nuke,
+        ...moderation,
+        ...modlog,
     ];
 
     const devCommands: ApplicationCommandDataResolvable[] = [

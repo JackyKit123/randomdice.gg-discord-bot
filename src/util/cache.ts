@@ -215,6 +215,15 @@ interface Tournament {
     timestamp: number;
 }
 
+export interface ModLog {
+    case: number;
+    moderator: string;
+    offender: string;
+    action: 'warn' | 'mute' | 'unmute' | 'ban' | 'unban' | 'kick';
+    timestamp: number;
+    reason: string | null;
+}
+
 interface CacheObject {
     // eslint-disable-next-line camelcase
     decks_guide: DeckGuide[];
@@ -234,6 +243,7 @@ interface CacheObject {
     'discord_bot/community/customroles': CustomRoles;
     'discord_bot/community/timer': TimerData;
     'discord_bot/community/tournament': Tournament | null;
+    'discord_bot/community/modlog': ModLog[];
     'wiki/boss': Boss[];
     'wiki/tips': Tip[];
     'wiki/battlefield': Battlefield[];
@@ -282,6 +292,7 @@ const cacheData = {
     'discord_bot/community/customreact': {} as CustomReact,
     'discord_bot/community/customroles': {} as CustomRoles,
     'discord_bot/community/timer': {} as TimerData,
+    'discord_bot/community/modlog': [] as ModLog[],
     'wiki/boss': [] as Boss[],
     'wiki/tips': [] as Tip[],
     'wiki/battlefield': [] as Battlefield[],

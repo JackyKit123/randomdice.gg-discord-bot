@@ -14,7 +14,7 @@ import { database } from 'register/firebase';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
-import banOnTimerEnds from './ban appeal/banOnTimerEnds';
+import banOnTimerEnds from './moderation/ban appeal/banOnTimerEnds';
 
 const wait = promisify(setTimeout);
 

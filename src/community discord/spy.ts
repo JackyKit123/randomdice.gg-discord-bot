@@ -11,6 +11,8 @@ import {
 import channelIds from 'config/channelIds';
 import { moderatorRoleIds } from 'config/roleId';
 import { banHammer } from 'config/emojiId';
+import { ban } from './moderation';
+import { writeModLog } from './moderation/modlog';
 
 async function fetchMember(guild: Guild, user: User): Promise<boolean> {
     try {
@@ -164,8 +166,31 @@ export async function spyLogBanHandler(
     if (!id) return;
     const banned = await guild.bans.fetch();
     if (banned.some(({ user: u }) => u.id === id)) return;
-    await guild.members.ban(id, {
-        reason: 'Random Dice Hack Discord related activity\nFeel free to [appeal here](https://discord.gg/yJBdSRZJmS) if you found this ban to be unjustified.',
-    });
+    try {
+        const target = await guild.members.fetch(id);
+        await writeModLog(
+            target.user,
+            'Random Dice Hack Discord related activity',
+            member.user,
+            'ban'
+        );
+        await ban(
+            target.user,
+            'Random Dice Hack Discord related activity',
+            member,
+            null
+        );
+    } catch (err) {
+        if (
+            !(
+                err instanceof DiscordAPIError &&
+                err.message === 'Unknown Member'
+            )
+        )
+            throw err;
+        await guild.members.ban(id, {
+            reason: 'Random Dice Hack Discord related activity',
+        });
+    }
     channel.messages.cache.forEach(m => cleanUpMessage(m, id));
 }

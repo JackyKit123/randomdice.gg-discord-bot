@@ -47,11 +47,13 @@ import statistic from 'dev-commands/stat';
 import reboot from 'dev-commands/reboot';
 import version from 'dev-commands/version';
 
-import closeAppeal from 'community discord/ban appeal/closeAppeal';
+import closeAppeal from 'community discord/moderation/ban appeal/closeAppeal';
 
 import channelIds from 'config/channelIds';
 import { nullDice } from 'config/emojiId';
 import { spyLogBanHandler } from 'community discord/spy';
+import moderation from 'community discord/moderation';
+import modlog from 'community discord/moderation/modlog';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -249,6 +251,17 @@ export default async function interactionCreate(
                         break;
                     case 'nuke':
                         await nuke(interaction);
+                        break;
+                    case 'warn':
+                    case 'mute':
+                    case 'ban':
+                    case 'kick':
+                    case 'unban':
+                    case 'unmute':
+                        await moderation(interaction);
+                        break;
+                    case 'modlog':
+                        await modlog(interaction);
                         break;
                     default:
                 }

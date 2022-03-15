@@ -1,9 +1,11 @@
 import { Client } from 'discord.js';
 import guildBanAdd from './guildBanAdd';
+import guildBanRemove from './guildBanRemove';
 import guildCreate from './guildCreate';
 import guildMemberAdd from './guildMemberAdd';
 import guildMemberRemove from './guildMemberRemove';
 import interactionCreate from './interactionCreate';
+import guildMemberUpdate from './guildMemberUpdate';
 import messageCreate from './messageCreate';
 import messageDelete from './messageDelete';
 import messageReactionAdd from './messageReactionAdd';
@@ -23,5 +25,7 @@ export default function botEventHandlers(client: Client): void {
         .on('messageDelete', messageDelete)
         .on('messageUpdate', messageUpdate)
         .on('typingStart', typingStart)
-        .on('guildBanAdd', guildBanAdd);
+        .on('guildBanAdd', guildBanAdd)
+        .on('guildBanRemove', guildBanRemove)
+        .on('guildMemberUpdate', guildMemberUpdate);
 }

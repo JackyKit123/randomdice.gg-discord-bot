@@ -1,4 +1,4 @@
-import createAppealChanel from 'community discord/ban appeal/createAppealChannel';
+import createAppealChanel from 'community discord/moderation/ban appeal/createAppealChannel';
 import welcomeReward from 'community discord/currency/welcomeReward';
 import logMessage from 'util/logMessage';
 import { GuildMember } from 'discord.js';

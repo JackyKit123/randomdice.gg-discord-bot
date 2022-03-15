@@ -11,6 +11,8 @@ import {
     UserContextMenuInteraction,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
+import { suppressCannotDmUser } from 'util/suppressErrors';
+import { writeModLog } from '../modlog';
 
 export async function archiveAppeal(
     guild: Guild,
@@ -112,74 +114,73 @@ export default async function closeAppeal(
     }
 
     const accept = async (): Promise<void> => {
-        await communityDiscord.members.unban(
-            target,
-            `Appealed accepted in appeal server. ${reason ?? ''}`.trim()
-        );
-
-        try {
-            await target.send(
+        const acceptReason = `Appealed accepted in appeal server. ${
+            reason ?? ''
+        }`.trim();
+        await communityDiscord.members.unban(target, acceptReason);
+        await target
+            .send(
                 `Your appeal is accepted.\n${
                     reason ? `Reason: ${reason}\n` : ''
                 }You may now return to this main server. https://discord.gg/ZrXRpZq2mq`
-            );
-        } finally {
-            await guild.members.ban(target, {
-                reason: `Appeal accepted.\n${reason || ''}`.trim(),
-            });
-            const appealLog = logEmbed
-                .setTitle('Appeal accepted')
-                .setColor('#e5ffe5');
-            await interaction.reply({ embeds: [appealLog] });
-            if (logChannel?.isText()) {
-                await logChannel.send({ embeds: [appealLog] });
-            }
+            )
+            .catch(suppressCannotDmUser);
+
+        await guild.members.ban(target, {
+            reason: `Appeal accepted.\n${reason || ''}`.trim(),
+        });
+        await writeModLog(target.user, acceptReason, member.user, 'unban');
+        const appealLog = logEmbed
+            .setTitle('Appeal accepted')
+            .setColor('#e5ffe5');
+        await interaction.reply({ embeds: [appealLog] });
+        if (logChannel?.isText()) {
+            await logChannel.send({ embeds: [appealLog] });
         }
     };
 
     const reject = async (): Promise<void> => {
-        try {
-            await target.send(
+        await target
+            .send(
                 `Your appeal is rejected.${reason ? `\nReason: ${reason}` : ''}`
-            );
-        } finally {
-            await guild.members.ban(target, {
-                reason: `Appeal rejected.\n${reason || ''}`.trim(),
-            });
-            const appealLog = logEmbed
-                .setTitle('Appeal rejected')
-                .setColor('#ff3434');
-            await interaction.reply({ embeds: [appealLog] });
-            if (logChannel?.isText()) {
-                await logChannel.send({ embeds: [appealLog] });
-            }
+            )
+            .catch(suppressCannotDmUser);
+
+        await guild.members.ban(target, {
+            reason: `Appeal rejected.\n${reason || ''}`.trim(),
+        });
+        const appealLog = logEmbed
+            .setTitle('Appeal rejected')
+            .setColor('#ff3434');
+        await interaction.reply({ embeds: [appealLog] });
+        if (logChannel?.isText()) {
+            await logChannel.send({ embeds: [appealLog] });
         }
     };
 
     const falsebanned = async (): Promise<void> => {
-        await communityDiscord.members.unban(
-            target,
+        const falsebannedReason =
             `Appealed accepted in appeal server, member is not guilty. ${
                 reason ?? ''
-            }`.trim()
-        );
-
-        try {
-            await target.send(
+            }`.trim();
+        await communityDiscord.members.unban(target, falsebannedReason);
+        await writeModLog(target.user, falsebannedReason, member.user, 'unban');
+        await target
+            .send(
                 'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
-            );
-        } finally {
-            await guild.members.kick(
-                target,
-                `Member is not guilty, appeal closed. ${reason ?? ''}`.trim()
-            );
-            const appealLog = logEmbed
-                .setTitle('Member is not guilty')
-                .setColor('#e5ffe5');
-            await interaction.reply({ embeds: [appealLog] });
-            if (logChannel?.isText()) {
-                await logChannel.send({ embeds: [appealLog] });
-            }
+            )
+            .catch(suppressCannotDmUser);
+
+        await guild.members.kick(
+            target,
+            `Member is not guilty, appeal closed. ${reason ?? ''}`.trim()
+        );
+        const appealLog = logEmbed
+            .setTitle('Member is not guilty')
+            .setColor('#e5ffe5');
+        await interaction.reply({ embeds: [appealLog] });
+        if (logChannel?.isText()) {
+            await logChannel.send({ embeds: [appealLog] });
         }
     };
 

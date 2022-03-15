@@ -5,13 +5,14 @@ import logMessage from 'util/logMessage';
 import {
     CategoryChannel,
     ClientUser,
-    DiscordAPIError,
     GuildMember,
     MessageActionRow,
     MessageButton,
     MessageEmbed,
 } from 'discord.js';
-import { setTimer } from '../timer';
+import cacheData from 'util/cache';
+import { suppressUnknownBan } from 'util/suppressErrors';
+import { setTimer } from 'community discord/timer';
 
 export default async function createAppealChanel(
     member: GuildMember
@@ -39,22 +40,8 @@ export default async function createAppealChanel(
     }
 
     const logChannel = guild.channels.cache.get(appealServerChannelId.log);
+    const ban = await communityDiscord.bans.fetch(id).catch(suppressUnknownBan);
 
-    const auditLogs = await communityDiscord.fetchAuditLogs({
-        type: 'MEMBER_BAN_ADD',
-    });
-    let ban;
-    try {
-        ban = await communityDiscord.bans.fetch(id);
-    } catch (err) {
-        if ((err as DiscordAPIError).message !== 'Unknown Ban') throw err;
-    }
-    let banTimestamp = 0;
-    auditLogs.entries.forEach(entry => {
-        if (entry.target?.id === id) {
-            banTimestamp = entry.createdTimestamp;
-        }
-    });
     const communityMember = communityDiscord.members.cache.get(id);
     if (!ban) {
         if (communityMember?.roles.cache.has(roleIds.Moderator)) {
@@ -107,25 +94,23 @@ export default async function createAppealChanel(
     await appealRoom.permissionOverwrites.edit(member, {
         VIEW_CHANNEL: true,
     });
-    let banInfo = new MessageEmbed()
+    const banDataInCache = cacheData['discord_bot/community/modlog'].filter(
+        ({ reason, offender }) =>
+            (reason ? reason === ban.reason : true) && offender === ban.user.id
+    );
+    const latestBan = banDataInCache[banDataInCache.length - 1];
+    const banInfo = new MessageEmbed()
         .setTitle('Ban Info')
         .setColor('#6ba4a5')
         .setAuthor({
             name: ban.user.tag,
             iconURL: ban.user.displayAvatarURL({ dynamic: true }),
         })
-        .addField(
-            'Ban Reason',
-            ban.reason?.replace(
-                '\nFeel free to [appeal here](https://discord.gg/yJBdSRZJmS) if you found this ban to be unjustified.',
-                ''
-            ) ?? 'Not provided'
-        );
-    if (banTimestamp) {
-        banInfo = banInfo
-            .setTimestamp(banTimestamp)
-            .setFooter({ text: 'Banned at: ' });
-    }
+        .addField('Ban Reason', latestBan.reason ?? 'Not provided')
+        .addField('Banned by', `<@${latestBan.moderator}`)
+        .setTimestamp(latestBan.timestamp)
+        .setFooter({ text: 'Banned at: ' });
+
     await appealRoom.send({
         content: member.toString(),
         embeds: [

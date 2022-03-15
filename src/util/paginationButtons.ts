@@ -19,32 +19,40 @@ export default function getPaginationComponents(
     initialPage = 0
 ): { components: MessageActionRow[]; collectorHandler: HandlerFunction } {
     let currentPage = initialPage;
-    const buttons = [
-        new MessageButton()
-            .setEmoji('⏪')
-            .setStyle('PRIMARY')
-            .setCustomId('first')
-            .setDisabled(initialPage === 0),
-        new MessageButton()
-            .setEmoji('◀️')
-            .setStyle('PRIMARY')
-            .setCustomId('prev')
-            .setDisabled(initialPage === 0),
-        new MessageButton()
-            .setEmoji('▶️')
-            .setStyle('PRIMARY')
-            .setCustomId('next')
-            .setDisabled(initialPage === totalPages),
-        new MessageButton()
-            .setEmoji('⏩')
-            .setStyle('PRIMARY')
-            .setCustomId('last')
-            .setDisabled(initialPage === totalPages),
-        new MessageButton()
-            .setEmoji('❌')
-            .setStyle('DANGER')
-            .setCustomId('close'),
-    ];
+    const buttons =
+        totalPages <= 1
+            ? [
+                  new MessageButton()
+                      .setEmoji('❌')
+                      .setStyle('DANGER')
+                      .setCustomId('close'),
+              ]
+            : [
+                  new MessageButton()
+                      .setEmoji('⏪')
+                      .setStyle('PRIMARY')
+                      .setCustomId('first')
+                      .setDisabled(initialPage === 0),
+                  new MessageButton()
+                      .setEmoji('◀️')
+                      .setStyle('PRIMARY')
+                      .setCustomId('prev')
+                      .setDisabled(initialPage === 0),
+                  new MessageButton()
+                      .setEmoji('▶️')
+                      .setStyle('PRIMARY')
+                      .setCustomId('next')
+                      .setDisabled(initialPage === totalPages),
+                  new MessageButton()
+                      .setEmoji('⏩')
+                      .setStyle('PRIMARY')
+                      .setCustomId('last')
+                      .setDisabled(initialPage === totalPages),
+                  new MessageButton()
+                      .setEmoji('❌')
+                      .setStyle('DANGER')
+                      .setCustomId('close'),
+              ];
     const select = new MessageSelectMenu()
         .setCustomId('select')
         .setPlaceholder('Page')
@@ -60,7 +68,7 @@ export default function getPaginationComponents(
         );
 
     let components = [new MessageActionRow().addComponents(buttons)];
-    if (totalPages <= 25) {
+    if (totalPages <= 25 && totalPages > 1) {
         components = [
             ...components,
             new MessageActionRow().addComponents(select),
