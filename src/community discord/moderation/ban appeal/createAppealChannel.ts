@@ -111,7 +111,11 @@ export default async function createAppealChanel(
         )
         .addField('Member', `${member}`, true);
     if (latestBan.moderator) {
-        banInfo = banInfo.addField('Moderator', `${latestBan.moderator}`, true);
+        banInfo = banInfo.addField(
+            'Moderator',
+            `<@${latestBan.moderator}>`,
+            true
+        );
     }
     if (latestBan.timestamp) {
         banInfo = banInfo
