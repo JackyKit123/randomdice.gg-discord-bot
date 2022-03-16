@@ -107,7 +107,7 @@ export default async function createAppealChanel(
         })
         .addField('Ban Reason', latestBan.reason ?? 'Not provided')
         .addField('Member', `${member}`, true)
-        .addField('Banned by', `<@${latestBan.moderator}`, true)
+        .addField('Banned by', `<@${latestBan.moderator}>`, true)
         .setTimestamp(latestBan.timestamp)
         .setFooter({ text: 'Banned at: ' });
 
