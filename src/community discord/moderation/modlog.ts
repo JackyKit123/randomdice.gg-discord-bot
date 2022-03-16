@@ -16,6 +16,7 @@ import {
 import { database } from 'register/firebase';
 import cacheData, { ModLog } from 'util/cache';
 import getPaginationComponents from 'util/paginationButtons';
+import { suppressUnknownUser } from 'util/suppressErrors';
 
 function capitalize(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -77,12 +78,16 @@ export default async function modlog(
         await deleteModLogEntry(interaction);
         return;
     }
-    const target = options.getMember('member', true);
+    const target = options.getUser('member', true);
+    const targetMember = await guild.members
+        .fetch(target.id)
+        .catch(suppressUnknownUser);
 
     if (!(await checkPermission(interaction, ...moderatorRoleIds))) return;
 
     if (
-        (target.roles.highest.position > member.roles.highest.position ||
+        targetMember &&
+        (targetMember.roles.highest.position > member.roles.highest.position ||
             target.id === guild.ownerId) &&
         member.id !== guild.ownerId
     ) {
@@ -116,9 +121,9 @@ export default async function modlog(
         ? new Array(Math.ceil(cases.length / 5)).fill('').map((_, i) =>
               new MessageEmbed()
                   .setAuthor({
-                      name: `${target.displayName}'s ${
-                          type !== 'all' ? capitalize(type) : 'Mod'
-                      } Log`,
+                      name: `${
+                          targetMember?.displayName ?? target.username
+                      }'s ${type !== 'all' ? capitalize(type) : 'Mod'} Log`,
                       iconURL: target.displayAvatarURL({ dynamic: true }),
                   })
                   .addFields(
@@ -135,9 +140,9 @@ export default async function modlog(
         : [
               new MessageEmbed()
                   .setAuthor({
-                      name: `${target.displayName}'s ${
-                          type !== 'all' ? capitalize(type) : 'Mod'
-                      } Log`,
+                      name: `${
+                          targetMember?.displayName ?? target.username
+                      }'s ${type !== 'all' ? capitalize(type) : 'Mod'} Log`,
                       iconURL: target.displayAvatarURL({ dynamic: true }),
                   })
                   .setDescription(
