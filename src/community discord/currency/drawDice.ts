@@ -20,6 +20,7 @@ import {
     rickCoin,
     shuffleDiceLegendary,
 } from 'config/emojiId';
+import { getPrestigeLevel } from 'community discord/util/checkPrestigeLevel';
 import { getBalance } from './balance';
 import isBotChannels from '../util/isBotChannels';
 
@@ -179,8 +180,7 @@ export default async function drawDice(
     }
     const emoji = cache['discord_bot/emoji'];
     let { dice } = cache;
-    let { diceDrawn, prestige } =
-        cache['discord_bot/community/currency'][member.user.id];
+    let { diceDrawn } = cache['discord_bot/community/currency'][member.user.id];
     const outcome: {
         reward: number;
         color: `#${string}`;
@@ -191,7 +191,7 @@ export default async function drawDice(
         tier: 'Common',
     };
     diceDrawn = diceDrawn ?? {};
-    prestige = prestige || 1;
+    const prestige = getPrestigeLevel(member) || 1;
     const drawnDice = new Array(prestige).fill('').map(() => {
         const tierRng = Math.floor(Math.random() * 100);
         if (tierRng < 60) {

@@ -14,10 +14,10 @@ import moment from 'moment';
 import cache, { MemberCurrencyProfile } from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
 import { coinDice, nukeWaste, nullDice } from 'config/emojiId';
-import { prestigeRoles } from 'config/roleId';
 import {
     getPrestigeIcon,
     getPrestigeLevel,
+    getPrestigeLevelName,
 } from 'community discord/util/checkPrestigeLevel';
 import { getBalance } from './balance';
 import { duplicatedRoleMulti } from './chatCoins';
@@ -49,7 +49,7 @@ const getGeneralProfilePage = (
     balance: number,
     channel: GuildTextBasedChannel | null
 ) => {
-    const { guild, client } = member;
+    const { client } = member;
 
     const getOtherBadges = (): string =>
         member.roles.cache
@@ -88,12 +88,12 @@ const getGeneralProfilePage = (
         .setTitle('General Profile')
         .setDescription(
             `${
-                memberProfile.prestige > 0
-                    ? `**${guild.roles.cache
-                          .get(prestigeRoles[memberProfile.prestige])
-                          ?.name.toUpperCase()}** ${getPrestigeIcon(
+                prestigeLevel > 0
+                    ? `**${getPrestigeLevelName(
+                          member
+                      ).toUpperCase()}** ${getPrestigeIcon(
                           client,
-                          memberProfile.prestige
+                          prestigeLevel
                       )}`
                     : ' '
             }${getOtherBadges() ? `\n\n${getOtherBadges()}\n‎` : ''}`
