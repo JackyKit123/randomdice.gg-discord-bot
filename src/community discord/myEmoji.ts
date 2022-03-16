@@ -3,13 +3,16 @@ import stringSimilarity from 'string-similarity';
 import {
     ApplicationCommandData,
     CommandInteraction,
-    DiscordAPIError,
     Message,
     MessageAttachment,
 } from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { tier3RoleIds } from 'config/roleId';
+import {
+    suppressReactionBlocked,
+    suppressUnknownMessage,
+} from 'util/suppressErrors';
 import checkPermission from './util/checkPermissions';
 
 export default async function myEmoji(
@@ -115,24 +118,17 @@ export async function autoReaction(message: Message): Promise<void> {
                             0.7
                     );
                 };
-                try {
-                    if (
-                        content.includes(uid) ||
-                        words.some(
-                            (_, i) =>
-                                match(username, i) || match(displayName, i)
-                        )
+
+                if (
+                    content.includes(uid) ||
+                    words.some(
+                        (_, i) => match(username, i) || match(displayName, i)
                     )
-                        await message.react(emojiID);
-                } catch (err) {
-                    switch ((err as DiscordAPIError).message) {
-                        case 'Reaction Blocked':
-                        case 'Unknown Message':
-                            return;
-                        default:
-                            throw err;
-                    }
-                }
+                )
+                    await message
+                        .react(emojiID)
+                        .catch(suppressUnknownMessage)
+                        .catch(suppressReactionBlocked);
             }
         )
     );
