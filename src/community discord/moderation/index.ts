@@ -123,7 +123,7 @@ export default async function moderation(
         channel,
         client: { user: clientUser },
     } = interaction;
-    const reason = options.getString('reason');
+    let reason = options.getString('reason');
     const target = options.getUser('member', true);
     const targetMember = guild.members.cache.get(target.id);
     const durationArg = options.getString('duration');
@@ -176,11 +176,19 @@ export default async function moderation(
         return;
     }
 
+    if (commandName === 'hackwarn') {
+        reason =
+            'As per the Discord Terms of Service and 111% Terms of Service we do not allow our members to be in any servers related to the discussion of hacking tools or products, please leave those servers within the 24 hours or you will be banned from our server. Thank you for your cooperation';
+    }
+    if (commandName === 'hackban') {
+        reason = 'Random Dice hack discord related activity';
+    }
+
     await writeModLog(
         target,
         reason,
         member.user,
-        commandName as ModLog['action']
+        commandName.replace('hack', '') as ModLog['action']
     );
 
     let duration: number | null = null;
