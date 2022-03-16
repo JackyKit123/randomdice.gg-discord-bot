@@ -63,10 +63,12 @@ export default async function closeAppeal(
     );
 
     const target =
-        (interaction instanceof CommandInteraction &&
-            interaction.options.getMember('member')) ||
-        (membersInAppealRoom.size === 1 &&
-            (await guild.members.fetch(membersInAppealRoom.first()?.id ?? '')));
+        (interaction instanceof CommandInteraction
+            ? interaction.options.getMember('member')
+            : null) ||
+        (membersInAppealRoom.size === 1
+            ? await guild.members.fetch(membersInAppealRoom.first()?.id ?? '')
+            : null);
 
     const reason =
         interaction instanceof CommandInteraction &&
@@ -129,7 +131,7 @@ export default async function closeAppeal(
         );
 
     if (reason) {
-        logEmbed = logEmbed.setDescription(reason);
+        logEmbed = logEmbed.addField('Case close reason', reason);
     }
 
     const respondOnAppealClose = async (embed: MessageEmbed) => {

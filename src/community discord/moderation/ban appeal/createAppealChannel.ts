@@ -98,18 +98,30 @@ export default async function createAppealChanel(
         ({ offender, action }) => offender === id && action === 'ban'
     );
     const latestBan = banDataInCache[banDataInCache.length - 1];
-    const banInfo = new MessageEmbed()
+    let banInfo = new MessageEmbed()
         .setTitle('Ban Info')
         .setColor('#6ba4a5')
         .setAuthor({
             name: ban.user.tag,
             iconURL: ban.user.displayAvatarURL({ dynamic: true }),
         })
-        .addField('Ban Reason', latestBan.reason ?? 'Not provided')
-        .addField('Member', `${member}`, true)
-        .addField('Banned by', `<@${latestBan.moderator}>`, true)
-        .setTimestamp(latestBan.timestamp)
-        .setFooter({ text: 'Banned at: ' });
+        .addField(
+            'Ban Reason',
+            latestBan.reason ?? ban.reason ?? 'Not provided'
+        )
+        .addField('Member', `${member}`, true);
+    if (latestBan.moderator) {
+        banInfo = banInfo.addField('Moderator', `${latestBan.moderator}`, true);
+    }
+    if (latestBan.timestamp) {
+        banInfo = banInfo
+            .setTimestamp(latestBan.timestamp)
+            .setFooter({ text: 'Banned at: ' });
+    } else {
+        banInfo = banInfo
+            .setTimestamp()
+            .setFooter({ text: 'Appeal created at: ' });
+    }
 
     await appealRoom.send({
         content: member.toString(),
