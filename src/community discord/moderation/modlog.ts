@@ -16,7 +16,10 @@ import {
 import { database } from 'register/firebase';
 import cacheData, { ModLog } from 'util/cache';
 import getPaginationComponents from 'util/paginationButtons';
-import { suppressUnknownUser } from 'util/suppressErrors';
+import {
+    suppressCannotUnknownMember,
+    suppressUnknownUser,
+} from 'util/suppressErrors';
 
 function capitalize(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -81,7 +84,8 @@ export default async function modlog(
     const target = options.getUser('member', true);
     const targetMember = await guild.members
         .fetch(target.id)
-        .catch(suppressUnknownUser);
+        .catch(suppressUnknownUser)
+        .catch(suppressCannotUnknownMember);
 
     if (!(await checkPermission(interaction, ...moderatorRoleIds))) return;
 

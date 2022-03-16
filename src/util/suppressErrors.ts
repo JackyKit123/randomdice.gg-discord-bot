@@ -14,3 +14,8 @@ export const suppressUnknownUser = (error: DiscordAPIError): null => {
     if (error.code !== Constants.APIErrors.UNKNOWN_USER) throw error;
     return null;
 };
+
+export const suppressCannotUnknownMember = (error: DiscordAPIError): null => {
+    if (error.code !== Constants.APIErrors.UNKNOWN_MEMBER) throw error;
+    return null;
+};
