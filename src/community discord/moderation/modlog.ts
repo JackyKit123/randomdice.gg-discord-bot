@@ -9,6 +9,7 @@ import {
     GuildAuditLogsEntry,
     GuildBan,
     GuildMember,
+    Message,
     MessageEmbed,
     PartialGuildMember,
     User,
@@ -25,50 +26,88 @@ function capitalize(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-async function deleteModLogEntry(
+async function getExistingModLogEntry(
     interaction: CommandInteraction
-): Promise<void> {
-    if (!interaction.inCachedGuild()) return;
+): Promise<{
+    modlog: ModLog;
+    logMessage?: Message;
+} | null> {
+    if (!interaction.inCachedGuild()) return null;
     const {
         options,
         guild,
         client: { user: clientUser },
     } = interaction;
+    if (!clientUser) return null;
+
     const caseNumber = options.getInteger('case', true);
     const cases = cacheData['discord_bot/community/modlog'];
-    let caseExist = false;
-    const filteredCases = cases.filter(c => {
-        if (c.case !== caseNumber) return true;
-        caseExist = true;
-        return false;
-    });
-    if (!caseExist) {
+    const logChannel = guild?.channels.cache.get(channelIds['public-mod-log']);
+    if (!logChannel?.isText()) {
+        await interaction.reply(
+            'The mod log channel is not located, please contact an admin.'
+        );
+        return null;
+    }
+    const existingModlogCase = cases.find(log => log.case === caseNumber);
+    if (!existingModlogCase) {
         await interaction.reply(
             `Case #${caseNumber} does not exist, or has already been deleted.`
         );
-        return;
+        return null;
     }
-    await database.ref(`discord_bot/community/modlog`).set(filteredCases);
 
-    const logChannel = guild?.channels.cache.get(channelIds['public-mod-log']);
-    if (logChannel?.isText() && clientUser) {
-        const messages = await logChannel.messages.fetch({ limit: 100 });
-        await Promise.all(
-            messages.map(async message => {
-                if (clientUser.id !== message.author.id) return;
-                const { embeds } = message;
-                const embed = embeds[0];
-                if (!embed) return;
-                const { author } = embed;
-                if (!author) return;
-                const { name } = author;
-                if (!name) return;
-                if (name !== `Case ${caseNumber}`) return;
-                await message.delete();
-            })
+    const messages = await logChannel.messages.fetch({ limit: 100 });
+    const message = messages.find(
+        m =>
+            clientUser.id === m.author.id &&
+            m?.embeds?.[0]?.author?.name === `Case ${caseNumber}`
+    );
+    return {
+        modlog: existingModlogCase,
+        logMessage: message,
+    };
+}
+
+async function deleteModLogEntry(
+    interaction: CommandInteraction
+): Promise<void> {
+    const existingEntry = await getExistingModLogEntry(interaction);
+    if (!existingEntry?.modlog) return;
+    const filteredCases = cacheData['discord_bot/community/modlog'].filter(
+        log => log.case !== existingEntry.modlog.case
+    );
+    await database.ref(`discord_bot/community/modlog`).set(filteredCases);
+    if (existingEntry.logMessage) await existingEntry.logMessage.delete();
+    await interaction.reply(
+        `Case #${existingEntry.modlog.case} has been deleted.`
+    );
+}
+
+async function editModLogEntryReason(
+    interaction: CommandInteraction
+): Promise<void> {
+    const existingEntry = await getExistingModLogEntry(interaction);
+    const reason = interaction.options.getString('reason', true);
+    if (!existingEntry?.modlog) return;
+    const edited = { ...existingEntry.modlog, reason };
+    await database
+        .ref(`discord_bot/community/modlog`)
+        .set(
+            cacheData['discord_bot/community/modlog'].map(log =>
+                log.case === edited.case ? edited : log
+            )
         );
+
+    if (existingEntry.logMessage) {
+        const editedEmbed = existingEntry.logMessage.embeds[0];
+        await existingEntry.logMessage.edit({
+            embeds: [editedEmbed.setDescription(reason)],
+        });
     }
-    await interaction.reply(`Case #${caseNumber} has been deleted.`);
+    await interaction.reply(
+        `The reason for case #${existingEntry.modlog.case} has been edited.`
+    );
 }
 
 export default async function modlog(
@@ -77,9 +116,16 @@ export default async function modlog(
     if (!interaction.inCachedGuild()) return;
     const { user, options, member, guild } = interaction;
     const subCommand = options.getSubcommand();
-    if (subCommand === 'remove') {
-        await deleteModLogEntry(interaction);
-        return;
+    switch (subCommand) {
+        case 'remove':
+            await deleteModLogEntry(interaction);
+            return;
+        case 'edit-reason':
+            await editModLogEntryReason(interaction);
+            return;
+        case 'inspect':
+            break;
+        default:
     }
     const target = options.getUser('member', true);
     const targetMember = await guild.members
@@ -386,6 +432,27 @@ export const commandData: ApplicationCommandData[] = [
                         name: 'case',
                         description: 'The case number of the entry to remove.',
                         type: 'INTEGER',
+                        minValue: 1,
+                        required: true,
+                    },
+                ],
+            },
+            {
+                name: 'edit-reason',
+                description: 'Edit the reason for a mod log entry.',
+                type: 'SUB_COMMAND',
+                options: [
+                    {
+                        name: 'case',
+                        description: 'The case number of the entry to edit.',
+                        type: 'INTEGER',
+                        minValue: 1,
+                        required: true,
+                    },
+                    {
+                        name: 'reason',
+                        description: 'The new reason for the entry.',
+                        type: 'STRING',
                         required: true,
                     },
                 ],
