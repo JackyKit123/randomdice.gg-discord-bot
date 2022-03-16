@@ -17,7 +17,7 @@ import { database } from 'register/firebase';
 import cacheData, { ModLog } from 'util/cache';
 import getPaginationComponents from 'util/paginationButtons';
 import {
-    suppressCannotUnknownMember,
+    suppressUnknownMember,
     suppressUnknownUser,
 } from 'util/suppressErrors';
 
@@ -85,7 +85,7 @@ export default async function modlog(
     const targetMember = await guild.members
         .fetch(target.id)
         .catch(suppressUnknownUser)
-        .catch(suppressCannotUnknownMember);
+        .catch(suppressUnknownMember);
 
     if (!(await checkPermission(interaction, ...moderatorRoleIds))) return;
 

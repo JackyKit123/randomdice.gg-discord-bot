@@ -3,7 +3,6 @@ import {
     Client,
     Collection,
     CommandInteraction,
-    DiscordAPIError,
     GuildMember,
     GuildTextBasedChannel,
     InteractionCollector,
@@ -19,6 +18,7 @@ import logMessage from 'util/logMessage';
 import rickBomb from 'community discord/currency/fun commands/rickbomb';
 import { coinDice, goldenPickaxe, pickaxe } from 'config/emojiId';
 import channelIds from 'config/channelIds';
+import { suppressUnknownMessage } from 'util/suppressErrors';
 import { getBalance } from './balance';
 
 const wait = promisify(setTimeout);
@@ -330,11 +330,7 @@ export default async function pickCoins(
                     collector.stop();
                 }
             } catch (err) {
-                await logMessage(
-                    client,
-                    'warning',
-                    (err as Error).stack ?? (err as Error).message ?? err
-                );
+                await logMessage(client, 'warning', err);
             }
         };
         const onEnd = async (
@@ -355,16 +351,13 @@ export default async function pickCoins(
                     )} this time.`
                 );
             } else {
-                try {
-                    await wait(1000);
-                    await sentMessage.edit({
+                await wait(1000);
+                await sentMessage
+                    .edit({
                         content: endMessage(collected, isGoldenPickaxe),
                         components: [],
-                    });
-                } catch (err) {
-                    if ((err as DiscordAPIError).message !== 'Unknown Message')
-                        throw err;
-                }
+                    })
+                    .catch(suppressUnknownMessage);
             }
 
             if (!recursive) return;
@@ -412,7 +405,7 @@ export default async function pickCoins(
                 .on('end', () => onEnd());
         }
     } catch (err) {
-        await logMessage(client, 'warning', (err as DiscordAPIError).stack);
+        await logMessage(client, 'warning', err);
     }
 }
 

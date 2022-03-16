@@ -6,7 +6,7 @@ import reboot from 'dev-commands/reboot';
 export default async function log(
     client: Client,
     severity: 'info' | 'warning' | 'error',
-    message = ''
+    message: unknown = ''
 ): Promise<Message | ReturnType<WebhookClient['send']>> {
     const logChannel = client.channels.cache.get(
         process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
@@ -20,7 +20,11 @@ export default async function log(
         content: severity === 'error' ? pingDevs : undefined,
         embeds: [
             getBrandingEmbed()
-                .setDescription(message)
+                .setDescription(
+                    message instanceof Error
+                        ? message.stack ?? message.message
+                        : String(message)
+                )
                 .setTitle(`${severity[0].toUpperCase()}${severity.slice(1)}`)
                 .setColor(
                     // eslint-disable-next-line no-nested-ternary

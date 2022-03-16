@@ -1,5 +1,4 @@
 import {
-    DiscordAPIError,
     Message,
     MessageActionRow,
     MessageButton,
@@ -7,6 +6,7 @@ import {
     MessageSelectMenu,
     User,
 } from 'discord.js';
+import { suppressUnknownMessage } from './suppressErrors';
 
 type HandlerFunction = (
     sentMessage: Message,
@@ -80,72 +80,66 @@ export default function getPaginationComponents(
         initiateUser,
         embeds
     ) => {
-        const collector = sentMessage.createMessageComponentCollector({
-            filter: interaction => interaction.user.id === initiateUser.id,
-            time: 180000,
-        });
-
-        collector.on('collect', async interaction => {
-            const lastPage = totalPages - 1;
-            switch (interaction.customId) {
-                case 'first':
-                    currentPage = 0;
-                    break;
-                case 'prev':
-                    currentPage -= 1;
-                    break;
-                case 'next':
-                    currentPage += 1;
-                    break;
-                case 'last':
-                    currentPage = lastPage;
-                    break;
-                case 'select':
-                    if (interaction.isSelectMenu()) {
-                        currentPage = Number(interaction.values[0]);
-                    }
-                    break;
-                case 'close':
-                    collector.stop();
-                    return;
-                default:
-                    return;
-            }
-            let updatedComponents = [
-                new MessageActionRow().addComponents(
-                    buttons.map(component =>
-                        component.setDisabled(
-                            ((component.customId === 'first' ||
-                                component.customId === 'prev') &&
-                                currentPage === 0) ||
-                                ((component.customId === 'next' ||
-                                    component.customId === 'last') &&
-                                    currentPage === lastPage)
+        const collector = sentMessage
+            .createMessageComponentCollector({
+                filter: interaction => interaction.user.id === initiateUser.id,
+                time: 180000,
+            })
+            .on('collect', async interaction => {
+                const lastPage = totalPages - 1;
+                switch (interaction.customId) {
+                    case 'first':
+                        currentPage = 0;
+                        break;
+                    case 'prev':
+                        currentPage -= 1;
+                        break;
+                    case 'next':
+                        currentPage += 1;
+                        break;
+                    case 'last':
+                        currentPage = lastPage;
+                        break;
+                    case 'select':
+                        if (interaction.isSelectMenu()) {
+                            currentPage = Number(interaction.values[0]);
+                        }
+                        break;
+                    case 'close':
+                        collector.stop();
+                        return;
+                    default:
+                        return;
+                }
+                let updatedComponents = [
+                    new MessageActionRow().addComponents(
+                        buttons.map(component =>
+                            component.setDisabled(
+                                ((component.customId === 'first' ||
+                                    component.customId === 'prev') &&
+                                    currentPage === 0) ||
+                                    ((component.customId === 'next' ||
+                                        component.customId === 'last') &&
+                                        currentPage === lastPage)
+                            )
                         )
-                    )
-                ),
-            ];
-            if (totalPages <= 25) {
-                updatedComponents = [
-                    ...updatedComponents,
-                    new MessageActionRow().addComponents(select),
+                    ),
                 ];
-            }
-            if (sentMessage.editable)
-                await interaction.update({
-                    embeds: [embeds[currentPage]],
-                    components: updatedComponents,
-                });
-        });
-
-        collector.on('end', async () => {
-            try {
-                await sentMessage.delete();
-            } catch (err) {
-                if ((err as DiscordAPIError).message !== 'Unknown Message')
-                    throw err;
-            }
-        });
+                if (totalPages <= 25) {
+                    updatedComponents = [
+                        ...updatedComponents,
+                        new MessageActionRow().addComponents(select),
+                    ];
+                }
+                if (sentMessage.editable)
+                    await interaction.update({
+                        embeds: [embeds[currentPage]],
+                        components: updatedComponents,
+                    });
+            })
+            .on('end', async () => {
+                await sentMessage.delete().catch(suppressUnknownMessage);
+            });
     };
 
     return {

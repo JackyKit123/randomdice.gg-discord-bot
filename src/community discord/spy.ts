@@ -1,28 +1,19 @@
 import {
     ButtonInteraction,
-    DiscordAPIError,
-    Guild,
     Message,
     MessageActionRow,
     MessageButton,
     MessageEmbed,
-    User,
 } from 'discord.js';
 import channelIds from 'config/channelIds';
 import { moderatorRoleIds } from 'config/roleId';
 import { banHammer } from 'config/emojiId';
+import {
+    suppressUnknownMember,
+    suppressUnknownMessage,
+} from 'util/suppressErrors';
 import { ban } from './moderation';
 import { writeModLog } from './moderation/modlog';
-
-async function fetchMember(guild: Guild, user: User): Promise<boolean> {
-    try {
-        await guild.members.fetch(user);
-        return true;
-    } catch (err) {
-        if ((err as DiscordAPIError).message === 'Unknown Member') return false;
-        throw err;
-    }
-}
 
 export default async function spy(message: Message): Promise<void> {
     const { guild, member, content, client, author, channel, attachments } =
@@ -43,9 +34,9 @@ export default async function spy(message: Message): Promise<void> {
     );
     if (!communityDiscord || !spyLog) return;
     const isBanned = communityDiscord.bans.cache.has(author.id);
-    const isCommunityDiscordMember = isBanned
-        ? false
-        : await fetchMember(communityDiscord, author);
+    const isCommunityDiscordMember =
+        !isBanned &&
+        !!(await guild.members.fetch(author).catch(suppressUnknownMember));
     if (!spyLog?.isText()) return;
     const sensitiveWords =
         /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(carry\w*)|(carried)|(c(?:lass)? ?15)|(\$)\b/gi;
@@ -166,31 +157,21 @@ export async function spyLogBanHandler(
     if (!id) return;
     const banned = await guild.bans.fetch();
     if (banned.some(({ user: u }) => u.id === id)) return;
-    try {
-        const target = await guild.members.fetch(id);
-        await writeModLog(
-            target.user,
-            'Random Dice Hack Discord related activity',
-            member.user,
-            'ban'
-        );
-        await ban(
-            target.user,
-            'Random Dice Hack Discord related activity',
-            member,
-            null
-        );
-    } catch (err) {
-        if (
-            !(
-                err instanceof DiscordAPIError &&
-                err.message === 'Unknown Member'
-            )
-        )
-            throw err;
-        await guild.members.ban(id, {
-            reason: 'Random Dice Hack Discord related activity',
-        });
-    }
-    channel.messages.cache.forEach(m => cleanUpMessage(m, id));
+
+    const target = await guild.members.fetch(id);
+    await writeModLog(
+        target.user,
+        'Random Dice Hack Discord related activity',
+        member.user,
+        'ban'
+    );
+    await ban(
+        target.user,
+        'Random Dice Hack Discord related activity',
+        member,
+        null
+    ).catch(suppressUnknownMember);
+    channel.messages.cache.forEach(m =>
+        cleanUpMessage(m, id).catch(suppressUnknownMessage)
+    );
 }

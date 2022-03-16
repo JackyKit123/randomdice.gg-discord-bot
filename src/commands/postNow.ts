@@ -1,66 +1,100 @@
-// eslint-disable-next-line
-import Discord, {
+import {
     ApplicationCommandDataResolvable,
+    Client,
     CommandInteraction,
-    DiscordAPIError,
+    Guild,
+    GuildMember,
     Message,
     MessageEmbed,
 } from 'discord.js';
 import firebase from 'firebase-admin';
 import { database } from 'register/firebase';
-import cache from 'util/cache';
+import cache, { Registry } from 'util/cache';
 import logMessage from 'util/logMessage';
 import cooldown from 'util/cooldown';
 import { edit, reply } from 'util/typesafeReply';
+import {
+    suppressMissingAccess,
+    suppressUnknownChannel,
+    suppressUnknownMessage,
+} from 'util/suppressErrors';
 import { getNewsInfo } from './news';
 import { getGuideData } from './guide';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
+async function getChannel(
+    client: Client,
+    config: Registry['key'],
+    type: keyof Registry['key'],
+    guildId: string
+) {
+    const { channels, user: clientUser } = client;
+    if (!clientUser) return null;
+
+    const channel = await channels
+        .fetch(config[type])
+        .catch(suppressUnknownChannel)
+        .catch(suppressMissingAccess);
+
+    if (!(channel?.type === 'GUILD_TEXT' || channel?.type === 'GUILD_NEWS')) {
+        database
+            .ref('discord_bot/registry')
+            .child(guildId)
+            .child(type)
+            .set(null);
+        return null;
+    }
+
+    const channelPermission = channel.permissionsFor(clientUser);
+    const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
+    const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
+    const cantDeleteMessage = !channelPermission?.has('MANAGE_MESSAGES');
+    if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
+        if (cantViewChannel) {
+            await logMessage(
+                client,
+                'info',
+                `Attempted to send ${type} in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
+            );
+        }
+        if (cantSendMessage) {
+            await logMessage(
+                client,
+                'info',
+                `Attempted to send ${type} in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
+            );
+        }
+        if (cantDeleteMessage) {
+            await logMessage(
+                client,
+                'info',
+                `Attempted to send ${type} in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
+            );
+        }
+        await database
+            .ref('discord_bot/registry')
+            .child(channel.guild.id)
+            .child('guide')
+            .set(null);
+        return null;
+    }
+    const fetched = (await channel.messages.fetch({ limit: 100 })).filter(
+        message =>
+            message.author.id === client.user?.id &&
+            new Date().valueOf() - message.createdTimestamp <= 86400000 * 14
+    );
+    await channel.bulkDelete(fetched);
+    return channel;
+}
 export async function postGuide(
-    client: Discord.Client,
-    member?: Discord.GuildMember,
+    client: Client,
+    member?: GuildMember,
     updateListener?: {
         snapshot: firebase.database.DataSnapshot;
         event: 'added' | 'updated' | 'removed';
     }
 ): Promise<void> {
     const registeredGuilds = cache['discord_bot/registry'];
-    const registeredChannels = (
-        await Promise.all(
-            (Object.entries(registeredGuilds) as [string, { guide?: string }][])
-                .filter(([guildId, config]) =>
-                    member ? member.guild.id === guildId : config.guide
-                )
-                .map(async ([guildId, config]) => {
-                    if (!config.guide) {
-                        throw new Error('missing registered guide channel.');
-                    }
-                    try {
-                        const guideChannel = await client.channels.fetch(
-                            config.guide
-                        );
-
-                        if (!guideChannel?.isText())
-                            throw new Error('Unknown Channel');
-                        return guideChannel;
-                    } catch (err) {
-                        if (
-                            ['Unknown Channel', 'Missing Access'].includes(
-                                (err as DiscordAPIError | Error).message
-                            )
-                        ) {
-                            database
-                                .ref('discord_bot/registry')
-                                .child(guildId)
-                                .child('guide')
-                                .set(null);
-                            return undefined;
-                        }
-                        throw err;
-                    }
-                })
-        )
-    ).filter(channel => channel) as Discord.TextChannel[];
     const guides = cache.decks_guide;
 
     const embeds = ['PvP', 'Co-op', 'Crew']
@@ -71,52 +105,12 @@ export async function postGuide(
             guide => (getGuideData(guide) as { embeds: MessageEmbed[] }).embeds
         );
     await Promise.all(
-        registeredChannels.map(async channel => {
-            const channelPermission = channel.permissionsFor(
-                client.user as Discord.ClientUser
-            );
-            const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
-            const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
-            const cantDeleteMessage =
-                !channelPermission?.has('MANAGE_MESSAGES');
-            if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
-                if (cantViewChannel) {
-                    await logMessage(
-                        client,
-                        'info',
-                        `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
-                    );
-                }
-                if (cantSendMessage) {
-                    await logMessage(
-                        client,
-                        'info',
-                        `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
-                    );
-                }
-                if (cantDeleteMessage) {
-                    await logMessage(
-                        client,
-                        'info',
-                        `Attempted to send guides in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
-                    );
-                }
-                await database
-                    .ref('discord_bot/registry')
-                    .child(channel.guild.id)
-                    .child('guide')
-                    .set(null);
-                return;
-            }
-            const fetched = (
-                await channel.messages.fetch({ limit: 100 })
-            ).filter(
-                message =>
-                    message.author.id === client.user?.id &&
-                    new Date().valueOf() - message.createdTimestamp <=
-                        86400000 * 14
-            );
-            await channel.bulkDelete(fetched);
+        Object.entries(registeredGuilds).map(async ([guildId, config]) => {
+            if (member && member?.guild.id !== guildId) return;
+
+            const channel = await getChannel(client, config, 'guide', guildId);
+            if (!channel) return;
+
             const statusMessage = await channel.send({
                 embeds: [
                     getBrandingEmbed()
@@ -131,10 +125,14 @@ export async function postGuide(
                                               ? 'archived'
                                               : updateListener.event
                                       }.`
-                                    : `\`.gg postnow guide\` is executed.`
+                                    : `\`postnow guide\` command is executed.`
                             } Refreshing all deck guides.`
                         )
-                        .setDescription(`Requested By: ${member?.toString()}`),
+                        .setDescription(
+                            member
+                                ? `Requested By: ${member.toString()}`
+                                : 'Auto Refresh'
+                        ),
                 ],
             });
             const messageIds = (
@@ -190,12 +188,12 @@ export async function postGuide(
                             value: `[Click here to jump](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${messageIds[i]?.id})`,
                         }))
                 );
-            try {
-                await statusMessage.edit({ embeds: [guideListEmbed] });
-            } catch {
-                if (!statusMessage.editedAt)
-                    await channel.send({ embeds: [guideListEmbed] });
-            }
+
+            const edited = await statusMessage
+                .edit({ embeds: [guideListEmbed] })
+                .catch(suppressUnknownMessage);
+
+            if (!edited) await channel.send({ embeds: [guideListEmbed] });
 
             await channel.send({
                 embeds: [
@@ -237,97 +235,17 @@ export async function postGuide(
     );
 }
 
-export async function postNews(
-    client: Discord.Client,
-    guild?: Discord.Guild
-): Promise<void> {
+export async function postNews(client: Client, guild?: Guild): Promise<void> {
     const registeredGuilds = cache['discord_bot/registry'];
-    const registeredChannels = (
-        await Promise.all(
-            (Object.entries(registeredGuilds) as [string, { news?: string }][])
-                .filter(([guildId, config]) =>
-                    guild ? guild.id === guildId : config.news
-                )
-                .map(async ([guildId, config]) => {
-                    if (!config.news) {
-                        throw new Error('missing registered news channel.');
-                    }
-                    try {
-                        const guideChannel = await client.channels.fetch(
-                            config.news
-                        );
-
-                        if (!guideChannel?.isText())
-                            throw new Error('Unknown Channel');
-                        return guideChannel;
-                    } catch (err) {
-                        if (
-                            ['Unknown Channel', 'Missing Access'].includes(
-                                (err as DiscordAPIError | Error).message
-                            )
-                        ) {
-                            database
-                                .ref('discord_bot/registry')
-                                .child(guildId)
-                                .child('news')
-                                .set(null);
-                            return undefined;
-                        }
-                        throw err;
-                    }
-                })
-        )
-    ).filter(channel => channel) as Discord.TextChannel[];
-
     const { ytUrl, embed } = getNewsInfo();
 
     await Promise.all(
-        registeredChannels.map(async channel => {
-            const channelPermission = channel.permissionsFor(
-                client.user as Discord.ClientUser
-            );
-            const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
-            const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
-            const cantDeleteMessage =
-                !channelPermission?.has('MANAGE_MESSAGES');
-            if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
-                if (cantViewChannel) {
-                    await logMessage(
-                        client,
-                        'info',
-                        `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
-                    );
-                }
-                if (cantSendMessage) {
-                    await logMessage(
-                        client,
-                        'info',
-                        `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
-                    );
-                }
-                if (cantDeleteMessage) {
-                    await logMessage(
-                        client,
-                        'info',
-                        `Attempted to send news in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
-                    );
-                }
-                await database
-                    .ref('discord_bot/registry')
-                    .child(channel.guild.id)
-                    .child('news')
-                    .set(null);
-                return;
-            }
-            const fetched = (
-                await channel.messages.fetch({ limit: 100 })
-            ).filter(
-                message =>
-                    message.author.id === client.user?.id &&
-                    new Date().valueOf() - message.createdTimestamp <=
-                        86400000 * 14
-            );
-            await channel.bulkDelete(fetched);
+        Object.entries(registeredGuilds).map(async ([guildId, config]) => {
+            if (guild && guild.id !== guildId) return;
+
+            const channel = await getChannel(client, config, 'guide', guildId);
+            if (!channel) return;
+
             await channel.send({ embeds: [embed] });
             if (ytUrl) {
                 await channel.send(ytUrl);

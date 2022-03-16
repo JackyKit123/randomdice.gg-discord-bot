@@ -15,7 +15,7 @@ export const suppressUnknownUser = (error: DiscordAPIError): null => {
     return null;
 };
 
-export const suppressCannotUnknownMember = (error: DiscordAPIError): null => {
+export const suppressUnknownMember = (error: DiscordAPIError): null => {
     if (error.code !== Constants.APIErrors.UNKNOWN_MEMBER) throw error;
     return null;
 };
@@ -27,5 +27,15 @@ export const suppressUnknownMessage = (error: DiscordAPIError): null => {
 
 export const suppressReactionBlocked = (error: DiscordAPIError): null => {
     if (error.code !== Constants.APIErrors.REACTION_BLOCKED) throw error;
+    return null;
+};
+
+export const suppressUnknownChannel = (error: DiscordAPIError): null => {
+    if (error.code !== Constants.APIErrors.UNKNOWN_CHANNEL) throw error;
+    return null;
+};
+
+export const suppressMissingAccess = (error: DiscordAPIError): null => {
+    if (error.code !== Constants.APIErrors.MISSING_ACCESS) throw error;
     return null;
 };

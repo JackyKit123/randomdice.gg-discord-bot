@@ -2,7 +2,6 @@ import logMessage from 'util/logMessage';
 import Discord, {
     ApplicationCommandData,
     CommandInteraction,
-    DiscordAPIError,
     MessageActionRow,
     MessageButton,
     User,
@@ -193,9 +192,7 @@ export default async function gtn(
                     client,
                     'warning',
                     `Oops! something went wrong in guess the number!\n${
-                        (err as DiscordAPIError).stack ??
-                        (err as Error).message ??
-                        err
+                        (err as Error).stack ?? (err as Error).message ?? err
                     }`
                 );
             }

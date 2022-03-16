@@ -2,12 +2,12 @@ import {
     ButtonInteraction,
     CommandInteraction,
     ContextMenuInteraction,
-    DiscordAPIError,
     Message,
     ReplyMessageOptions,
     WebhookEditMessageOptions,
 } from 'discord.js';
 import { APIMessage } from 'discord.js/node_modules/discord-api-types';
+import { suppressCannotDmUser } from './suppressErrors';
 
 async function transformApiMessage(
     input:
@@ -48,18 +48,13 @@ export async function reply<TEphemeral extends boolean | undefined = undefined>(
 
     if (input instanceof Message) {
         if (ephemeral) {
-            try {
-                await input.author.send(finalOption);
-            } catch (err) {
-                if (
-                    (err as DiscordAPIError).message ===
-                    'Cannot send messages to this user'
-                ) {
-                    await input.reply(
-                        'I am unable to DM you the message because you have disabled DMs, consider using slash `/` command or enabling DMs.'
-                    );
-                }
-            }
+            const dmMessage = await input.author
+                .send(finalOption)
+                .catch(suppressCannotDmUser);
+            if (!dmMessage)
+                await input.reply(
+                    'I am unable to DM you the message because you have disabled DMs, consider using slash `/` command or enabling DMs.'
+                );
         } else {
             return input.reply(finalOption) as Promise<
                 TEphemeral extends true ? undefined : Message<boolean>

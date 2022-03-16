@@ -3,7 +3,6 @@ import {
     ApplicationCommandData,
     Client,
     CommandInteraction,
-    DiscordAPIError,
     Guild,
     GuildMember,
     Message,
@@ -14,6 +13,7 @@ import { database } from 'register/firebase';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
+import { suppressUnknownMessage } from 'util/suppressErrors';
 import banOnTimerEnds from './moderation/ban appeal/banOnTimerEnds';
 
 const wait = promisify(setTimeout);
@@ -45,12 +45,12 @@ function parseTimeText(time: number): string {
         .join(' ')}__`;
 }
 
-function tickTimer(
+async function tickTimer(
     message: Message,
     hostId: string,
     endTime: number,
     key: string
-): void {
+): Promise<void> {
     const { embeds, channel, reactions, guild, id, client } = message;
     const embed = embeds?.[0];
     if (!embed || !cache['discord_bot/community/timer'][key]) {
@@ -59,83 +59,68 @@ function tickTimer(
     }
     const tick = async () => {
         const now = Date.now();
-        try {
-            if (now <= endTime) {
-                const newText = parseTimeText(endTime - now);
-                if (newText !== embed.description) {
-                    await message.edit({
-                        embeds: [embed.setDescription(newText)],
-                    });
-                }
-                await wait(5000);
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                tick();
-            } else {
-                killTimerFromDB(key);
+        if (now <= endTime) {
+            const newText = parseTimeText(endTime - now);
+            if (newText !== embed.description) {
                 await message.edit({
-                    embeds: [embed.setDescription('**Timer Ended**')],
+                    embeds: [embed.setDescription(newText)],
                 });
-                const timerReact = reactions.cache.find(
-                    reaction => reaction.emoji.identifier === timeDice
-                );
-                const userList = (await timerReact?.users.fetch())
-                    ?.filter(user => !user.bot && user.id !== hostId)
-                    .map(user => user.toString())
-                    .join(' ');
-                let originalMessage: Message | undefined;
-                try {
-                    originalMessage = await channel.messages.fetch(id);
-                } catch (err) {
-                    if (
-                        (err as DiscordAPIError).message !== 'Unknown Message'
-                    ) {
-                        throw err;
-                    }
-                }
-
-                const messageOption = {
-                    content: `<@${hostId}> ${
-                        // eslint-disable-next-line no-nested-ternary
-                        userList
-                            ? userList.length < 2048
-                                ? userList
-                                : `Too many user reacted to the timer, cannot ping everyone.\n${userList.slice(
-                                      0,
-                                      89
-                                  )}`
-                            : ''
-                    }`,
-                    embeds: [
-                        new MessageEmbed().setDescription(
-                            `The [timer](https://discord.com/channels/${
-                                (guild as Guild).id
-                            }/${channel.id}/${id})${
-                                embed.title ? ` for **${embed.title}**` : ''
-                            } has ended.`
-                        ),
-                    ],
-                };
-                if (originalMessage) {
-                    await originalMessage.reply(messageOption);
-                } else {
-                    await channel.send(messageOption);
-                }
-                if (
-                    embed.title ===
-                        'You have 24 hours to respond to this appeal ticket or you will be banned' &&
-                    guild?.id === process.env.COMMUNITY_APPEAL_SERVER_ID &&
-                    hostId === client.user?.id
-                ) {
-                    await banOnTimerEnds(channel);
-                }
             }
-        } catch (err) {
+            await wait(5000);
+            await tick();
+        } else {
             killTimerFromDB(key);
-            if ((err as DiscordAPIError).message !== 'Unknown Message')
-                throw new Error((err as DiscordAPIError).message);
+            await message.edit({
+                embeds: [embed.setDescription('**Timer Ended**')],
+            });
+            const timerReact = reactions.cache.find(
+                reaction => reaction.emoji.identifier === timeDice
+            );
+            const userList = (await timerReact?.users.fetch())
+                ?.filter(user => !user.bot && user.id !== hostId)
+                .map(user => user.toString())
+                .join(' ');
+            const messageOption = {
+                content: `<@${hostId}> ${
+                    // eslint-disable-next-line no-nested-ternary
+                    userList
+                        ? userList.length < 2048
+                            ? userList
+                            : `Too many user reacted to the timer, cannot ping everyone.\n${userList.slice(
+                                  0,
+                                  89
+                              )}`
+                        : ''
+                }`,
+                embeds: [
+                    new MessageEmbed().setDescription(
+                        `The [timer](https://discord.com/channels/${
+                            (guild as Guild).id
+                        }/${channel.id}/${id})${
+                            embed.title ? ` for **${embed.title}**` : ''
+                        } has ended.`
+                    ),
+                ],
+            };
+            const originalMessage = await channel.messages
+                .fetch(id)
+                .catch(suppressUnknownMessage);
+            if (originalMessage) {
+                await originalMessage.reply(messageOption);
+            } else {
+                await channel.send(messageOption);
+            }
+            if (
+                embed.title ===
+                    'You have 24 hours to respond to this appeal ticket or you will be banned' &&
+                guild?.id === process.env.COMMUNITY_APPEAL_SERVER_ID &&
+                hostId === client.user?.id
+            ) {
+                await banOnTimerEnds(channel);
+            }
         }
     };
-    tick();
+    await tick();
 }
 
 export async function setTimer(
@@ -209,16 +194,11 @@ export default async function timerCommand(
             return;
         }
         killTimerFromDB(key);
-        try {
-            const existingTimerMessage = await timerChannel.messages.fetch(
-                timerId
-            );
-            await existingTimerMessage.delete();
-        } catch (err) {
-            if ((err as DiscordAPIError).message !== 'Unknown Message') {
-                throw err;
-            }
-        }
+        (
+            await timerChannel.messages
+                .fetch(timerId)
+                .catch(suppressUnknownMessage)
+        )?.delete();
         await interaction.reply('Killed timer.');
         return;
     }
