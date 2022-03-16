@@ -95,8 +95,7 @@ export default async function createAppealChanel(
         VIEW_CHANNEL: true,
     });
     const banDataInCache = cacheData['discord_bot/community/modlog'].filter(
-        ({ reason, offender }) =>
-            (reason ? reason === ban.reason : true) && offender === ban.user.id
+        ({ offender, action }) => offender === id && action === 'ban'
     );
     const latestBan = banDataInCache[banDataInCache.length - 1];
     const banInfo = new MessageEmbed()
