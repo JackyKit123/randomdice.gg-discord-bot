@@ -106,7 +106,8 @@ export default async function createAppealChanel(
             iconURL: ban.user.displayAvatarURL({ dynamic: true }),
         })
         .addField('Ban Reason', latestBan.reason ?? 'Not provided')
-        .addField('Banned by', `<@${latestBan.moderator}`)
+        .addField('Member', `${member}`, true)
+        .addField('Banned by', `<@${latestBan.moderator}`, true)
         .setTimestamp(latestBan.timestamp)
         .setFooter({ text: 'Banned at: ' });
 

@@ -98,20 +98,48 @@ export default async function closeAppeal(
         return;
     }
 
-    let logEmbed = new MessageEmbed()
-        .setAuthor({
+    const existingAppealLog = logChannel?.isText()
+        ? (await logChannel.messages.fetch({ limit: 100 })).find(
+              ({ author, embeds }) => {
+                  if (author.id !== client.user?.id) return false;
+                  const [embed] = embeds;
+                  if (!embed) return false;
+                  const { title, fields } = embed;
+                  if (title !== 'Ban Appeal Created') return false;
+                  if (fields[1].value !== target.toString().replace('!', ''))
+                      return false;
+                  return true;
+              }
+          )
+        : undefined;
+
+    let logEmbed = (
+        existingAppealLog?.embeds[0] ||
+        new MessageEmbed().setAuthor({
             name: target.user.tag,
             iconURL: target.displayAvatarURL({ dynamic: true }),
         })
+    )
         .setTimestamp()
+        .setFooter({ text: 'Case closed: ' })
         .addField(
             'Appeal closed by',
-            `${member.displayName}\n${member.toString()}`
+            `${member.displayName}\n${member.toString()}`,
+            true
         );
 
     if (reason) {
         logEmbed = logEmbed.setDescription(reason);
     }
+
+    const respondOnAppealClose = async (embed: MessageEmbed) => {
+        await interaction.reply({ embeds: [embed] });
+        if (existingAppealLog) {
+            await existingAppealLog.edit({ embeds: [embed] });
+        } else if (logChannel?.isText()) {
+            await logChannel.send({ embeds: [embed] });
+        }
+    };
 
     const accept = async (): Promise<void> => {
         const acceptReason = `Appealed accepted in appeal server. ${
@@ -130,13 +158,9 @@ export default async function closeAppeal(
             reason: `Appeal accepted.\n${reason || ''}`.trim(),
         });
         await writeModLog(target.user, acceptReason, member.user, 'unban');
-        const appealLog = logEmbed
-            .setTitle('Appeal accepted')
-            .setColor('#e5ffe5');
-        await interaction.reply({ embeds: [appealLog] });
-        if (logChannel?.isText()) {
-            await logChannel.send({ embeds: [appealLog] });
-        }
+        await respondOnAppealClose(
+            logEmbed.setTitle('Appeal accepted').setColor('#e5ffe5')
+        );
     };
 
     const reject = async (): Promise<void> => {
@@ -149,13 +173,9 @@ export default async function closeAppeal(
         await guild.members.ban(target, {
             reason: `Appeal rejected.\n${reason || ''}`.trim(),
         });
-        const appealLog = logEmbed
-            .setTitle('Appeal rejected')
-            .setColor('#ff3434');
-        await interaction.reply({ embeds: [appealLog] });
-        if (logChannel?.isText()) {
-            await logChannel.send({ embeds: [appealLog] });
-        }
+        await respondOnAppealClose(
+            logEmbed.setTitle('Appeal rejected').setColor('#ff3434')
+        );
     };
 
     const falsebanned = async (): Promise<void> => {
@@ -175,13 +195,9 @@ export default async function closeAppeal(
             target,
             `Member is not guilty, appeal closed. ${reason ?? ''}`.trim()
         );
-        const appealLog = logEmbed
-            .setTitle('Member is not guilty')
-            .setColor('#e5ffe5');
-        await interaction.reply({ embeds: [appealLog] });
-        if (logChannel?.isText()) {
-            await logChannel.send({ embeds: [appealLog] });
-        }
+        await respondOnAppealClose(
+            logEmbed.setTitle('Member is not guilty').setColor('#e5ffe5')
+        );
     };
 
     const executorRole = member.roles.highest;
