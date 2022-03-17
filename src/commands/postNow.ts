@@ -1,5 +1,6 @@
 import {
     ApplicationCommandDataResolvable,
+    ButtonInteraction,
     Client,
     CommandInteraction,
     Guild,
@@ -258,17 +259,17 @@ export async function postNews(client: Client, guild?: Guild): Promise<void> {
 }
 
 export default async function postNow(
-    interaction: CommandInteraction,
+    interaction: CommandInteraction | ButtonInteraction,
     typeArg?: 'guide' | 'news'
 ): Promise<void> {
     if (!interaction.inCachedGuild()) {
         await interaction.reply('This command is only available in guilds.');
         return;
     }
-    const { member, guild, client, commandName, options } = interaction;
+    const { member, guild, client } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, 'postNow', {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
@@ -289,8 +290,11 @@ export default async function postNow(
         return;
     }
 
-    const type =
-        typeArg ?? (options.getString('type', true) as 'guide' | 'news');
+    const type = (
+        interaction instanceof ButtonInteraction
+            ? typeArg
+            : interaction.options.getString('type', true)
+    ) as 'guide' | 'news';
 
     if (interaction.replied) {
         await interaction.editReply({

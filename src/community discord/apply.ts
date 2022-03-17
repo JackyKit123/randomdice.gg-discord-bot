@@ -297,7 +297,7 @@ export async function closeApplication(
             await yesNoButton(
                 interaction,
                 'Please confirm again that you are ready to submit.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.',
-                async () => {
+                async button => {
                     await channel.permissionOverwrites.edit(
                         guild.roles.everyone,
                         {
@@ -307,6 +307,7 @@ export async function closeApplication(
                             reason: 'Application Submit',
                         }
                     );
+                    await button.reply('Application submitted!');
                     await channel.send(`Locked down ${channel}`);
                     await channel.send(
                         `<@&${
@@ -416,7 +417,7 @@ export async function configApps(
                         "Here's a preview of how the application would look like, press ✅ in 1 minute to confirm, press ❌ to cancel",
                     embeds: [getApplicationEmbed(questionsArgs)],
                 },
-                async () => {
+                async button => {
                     await ref.set(
                         existingApplications.concat({
                             isOpen: true,
@@ -425,7 +426,7 @@ export async function configApps(
                         })
                     );
                     await updateCommandOptions();
-                    await interaction.editReply({
+                    await button.reply({
                         content: `Added ${position} application and it's opened for application.`,
                         embeds: [],
                         components: [],
@@ -448,7 +449,7 @@ export async function configApps(
                         "Here's a preview of how the application would look like, press ✅ in 1 minute to confirm, press ❌ to cancel",
                     embeds: [getApplicationEmbed(questionsArgs)],
                 },
-                async () => {
+                async button => {
                     await ref.set(
                         existingApplications.map(app => {
                             if (
@@ -461,7 +462,7 @@ export async function configApps(
                             return app;
                         })
                     );
-                    await interaction.editReply({
+                    await button.reply({
                         content: `Edited ${position} application.`,
                         embeds: [],
                         components: [],
@@ -488,7 +489,7 @@ export async function configApps(
                         ),
                     ],
                 },
-                async () => {
+                async button => {
                     await ref.set(
                         existingApplications.filter(
                             app =>
@@ -497,7 +498,7 @@ export async function configApps(
                         )
                     );
                     await updateCommandOptions();
-                    await interaction.editReply({
+                    await button.reply({
                         content: `Removed ${position} application.`,
                         embeds: [],
                         components: [],

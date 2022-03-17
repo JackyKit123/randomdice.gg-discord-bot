@@ -81,7 +81,7 @@ export async function register(interaction: CommandInteraction): Promise<void> {
     await yesNoButton(
         interaction,
         `Registered Channel ${channel} to provide ${type}. Post ${type} in ${channel} now?`,
-        async () => postNow(interaction, type)
+        async button => postNow(button, type)
     );
 }
 

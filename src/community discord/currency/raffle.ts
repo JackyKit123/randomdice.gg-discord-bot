@@ -220,7 +220,7 @@ async function joinRaffle(
     ticketAmountArg: string
 ) {
     if (!interaction.inCachedGuild()) return;
-    const { member, channel } = interaction;
+    const { member } = interaction;
 
     const balance = await getBalance(interaction);
     if (balance === null) return;
@@ -293,7 +293,7 @@ async function joinRaffle(
         `${member} You are entering the raffle with \`${ticketAmountArg}\` entries, which will cost you ${coinDice} ${
             currEntry * entries.ticketCost
         }, press yes if you wish to continue.`,
-        async () => {
+        async button => {
             entries.tickets = entries.tickets || {};
             for (
                 let i = currentEntries.length;
@@ -314,7 +314,7 @@ async function joinRaffle(
                     (gambleProfile?.lose || 0) + currEntry * entries.ticketCost
                 );
 
-            await interaction.editReply({
+            await button.reply({
                 content: `${member} You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
                     currEntry * entries.ticketCost
                 )}**${
@@ -330,7 +330,7 @@ async function joinRaffle(
                 components: [],
             });
             if (!member.roles.cache.has(roleIds['Raffle Ping'])) {
-                await channel?.send({
+                await button.followUp({
                     embeds: [
                         new MessageEmbed()
                             .setTitle('Tip!')
@@ -495,14 +495,14 @@ export default async function raffle(
             await yesNoButton(
                 interaction,
                 '⚠️ WARNING ⚠️\n Are you sure you want to cancel the raffle, the action is irreversible.',
-                async () => {
+                async button => {
                     await ref.set({
                         endTimestamp: 0,
                         hostId: 0,
                         maxEntries: 0,
                         ticketCost: 0,
                     });
-                    await interaction.editReply({
+                    await button.reply({
                         content: `${user} has cancelled the raffle.`,
                         components: [],
                     });
