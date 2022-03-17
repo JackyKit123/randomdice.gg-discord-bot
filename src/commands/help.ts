@@ -24,9 +24,7 @@ export default async function help(
     }
     const helpMessage = getBrandingEmbed()
         .setTitle('List of Commands')
-        .setDescription(
-            'Here is a list of commands, randomdice.gg bot suffix is `.gg`'
-        )
+        .setDescription('Here is a list of commands')
         .addFields(
             cache['discord_bot/help'].map(categories => ({
                 name: categories.category,
@@ -40,9 +38,7 @@ export default async function help(
         );
     const communityHelpMessage = getBrandingEmbed()
         .setTitle('Community Server Specific Commands')
-        .setDescription(
-            'Here is a list of commands, random dice community discord specific commands suffix is `!`'
-        )
+        .setDescription('Here is a list of commands for community discord only')
         .addFields(
             cache['discord_bot/community/help'].map(categories => ({
                 name: categories.category,
