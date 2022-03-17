@@ -9,6 +9,7 @@ import {
     CategoryChannel,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
+import getMessageLink from 'util/getMessageLink';
 import parseMsIntoReadableText from 'util/parseMS';
 
 export async function closeReport(
@@ -202,7 +203,8 @@ export async function report(
         .setDescription(content)
         .addField(
             'Member Info',
-            `**Name:** ${member.user.username}#${member.user.discriminator} ${member}` +
+            `${
+                `**Name:** ${member.user.username}#${member.user.discriminator} ${member}` +
                 '\n' +
                 `**Joined at:** ${parseMsIntoReadableText(
                     now - (member.joinedTimestamp || now),
@@ -213,8 +215,15 @@ export async function report(
                     now - member.user.createdTimestamp,
                     true
                 )} ago` +
-                '\n' +
-                `**Reported from:** ${channel} [Jump to context](https://www.discordapp.com/channels/${guild.id}/${channel?.id}/${messageId})`
+                '\n'
+            }${
+                messageId && channel
+                    ? `**Reported from:** ${channel} [Jump to context](${getMessageLink(
+                          messageId,
+                          channel
+                      )})`
+                    : ''
+            }`
         )
         .setFooter({ text: `Report ID: ${interaction.id}` })
         .setTimestamp(createdTimestamp);

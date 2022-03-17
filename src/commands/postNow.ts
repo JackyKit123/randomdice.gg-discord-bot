@@ -19,6 +19,7 @@ import {
     suppressUnknownMessage,
 } from 'util/suppressErrors';
 import { getTimeDiceEmoji } from 'config/emojiId';
+import getMessageLink from 'util/getMessageLink';
 import { getNewsInfo } from './news';
 import { getGuideData } from './guide';
 import getBrandingEmbed from './util/getBrandingEmbed';
@@ -147,13 +148,13 @@ export async function postGuide(
                                 // eslint-disable-next-line no-param-reassign
                                 embed.fields[
                                     existFieldIndex
-                                ].value = `[Click Here to navigate back to the top.](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id})`;
+                                ].value = `[Click Here to navigate back to the top.](${statusMessage.url})`;
                             } else {
                                 embed
                                     .addField('‎', '‎')
                                     .addField(
                                         'Finished Reading?',
-                                        `[Click Here to navigate back to the top.](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id})`
+                                        `[Click Here to navigate back to the top.](${statusMessage.url})`
                                     );
                             }
                         }
@@ -186,7 +187,10 @@ export async function postGuide(
                         )
                         .map((guide, i) => ({
                             name: `${guide.name} (${guide.type})`,
-                            value: `[Click here to jump](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${messageIds[i]?.id})`,
+                            value: `[Click here to jump](${getMessageLink(
+                                messageIds[i].id,
+                                channel
+                            )})`,
                         }))
                 );
 
@@ -214,13 +218,12 @@ export async function postGuide(
                         .setDescription(
                             updateListener?.event === 'added' ||
                                 updateListener?.event === 'updated'
-                                ? `Navigate to the update guide by [clicking here](https://discordapp.com/channels/${
-                                      channel.guild.id
-                                  }/${channel.id}/${
+                                ? `Navigate to the update guide by [clicking here](${getMessageLink(
                                       messageIds.find(id => id.isUpdated)?.id ||
-                                      statusMessage.id
-                                  }).`
-                                : `Navigate to the list of guides for quick navigation by [clicking here](https://discordapp.com/channels/${channel.guild.id}/${channel.id}/${statusMessage.id}).`
+                                          statusMessage.id,
+                                      channel
+                                  )}).`
+                                : `Navigate to the list of guides for quick navigation by [clicking here](${statusMessage.url}).`
                         )
                         .setFooter({
                             text: updateListener
