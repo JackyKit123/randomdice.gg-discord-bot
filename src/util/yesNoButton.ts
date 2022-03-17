@@ -27,7 +27,7 @@ export async function onYesNoButtonClick(
     }
 
     if (interaction.user.id !== yesNoButtonOrigin.interaction.user.id) {
-        interaction.reply({
+        await interaction.reply({
             content:
                 'You cannot use this button because you did not initiate this command.',
             ephemeral: true,
