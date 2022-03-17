@@ -18,6 +18,7 @@ import {
     suppressUnknownChannel,
     suppressUnknownMessage,
 } from 'util/suppressErrors';
+import { getTimeDiceEmoji } from 'config/emojiId';
 import { getNewsInfo } from './news';
 import { getGuideData } from './guide';
 import getBrandingEmbed from './util/getBrandingEmbed';
@@ -227,7 +228,8 @@ export async function postGuide(
                                 : `Requested by ${member?.user.tag}`,
                             iconURL:
                                 member?.displayAvatarURL({ dynamic: true }) ??
-                                'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Dice%20Images%2FTime?alt=media&token=5c459fc5-4059-4099-b93d-f4bc86debf6d',
+                                getTimeDiceEmoji(client)?.url ??
+                                undefined,
                         }),
                 ],
             });

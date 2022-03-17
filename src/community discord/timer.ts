@@ -75,7 +75,7 @@ async function tickTimer(
                 embeds: [embed.setDescription('**Timer Ended**')],
             });
             const timerReact = reactions.cache.find(
-                reaction => reaction.emoji.identifier === timeDice
+                reaction => reaction.emoji.toString() === timeDice
             );
             const userList = (await timerReact?.users.fetch())
                 ?.filter(user => !user.bot && user.id !== hostId)
