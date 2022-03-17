@@ -27,10 +27,14 @@ export default async function coinflip(
 
     if (
         !channel ||
-        (await cooldown(interaction, '/coinflip', {
-            default: 10 * 1000,
-            donator: 5 * 1000,
-        }))
+        (await cooldown(
+            interaction,
+            {
+                default: 10 * 1000,
+                donator: 5 * 1000,
+            },
+            'coinflip'
+        ))
     )
         return;
 

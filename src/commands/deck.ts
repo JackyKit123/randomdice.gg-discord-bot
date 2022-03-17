@@ -12,10 +12,10 @@ export default async function decklist(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { commandName, options } = interaction;
+    const { options } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 30 * 1000,
             donator: 5 * 1000,
         })

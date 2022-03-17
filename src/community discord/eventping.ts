@@ -18,7 +18,7 @@ export default async function eventPing(
     if (
         !channel ||
         !(await checkPermission(interaction, ...eventManagerRoleIds)) ||
-        (await cooldown(interaction, '!eventping', {
+        (await cooldown(interaction, {
             default: 60 * 1000,
             donator: 60 * 1000,
         }))

@@ -26,7 +26,7 @@ export default async function bedtime(
             }
         }
         if (
-            (await cooldown(interaction, '!bedtime', {
+            (await cooldown(interaction, {
                 default: 60 * 1000,
                 donator: 30 * 1000,
             })) ||

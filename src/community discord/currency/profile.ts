@@ -20,6 +20,7 @@ import {
     getPrestigeLevelName,
 } from 'community discord/util/checkPrestigeLevel';
 import { isJackykit } from 'config/users';
+import cooldown from 'util/cooldown';
 import { getBalance } from './balance';
 import { duplicatedRoleMulti } from './chatCoins';
 
@@ -158,7 +159,7 @@ const getCooldownPage = (
     member: GuildMember,
     memberProfile: MemberCurrencyProfile
 ) => {
-    function cooldown(
+    function recurringRewardCooldown(
         timestamp = 0,
         mode: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly'
     ): string {
@@ -200,19 +201,22 @@ const getCooldownPage = (
                 memberProfile.dailyStreak && memberProfile.dailyStreak > 1
                     ? `🔥 **${memberProfile.dailyStreak}** Daily Streak\n`
                     : ''
-            }**Hourly**\n${cooldown(
+            }**Hourly**\n${recurringRewardCooldown(
                 memberProfile.hourly || 0,
                 'hourly'
-            )}\n**Daily**\n${cooldown(
+            )}\n**Daily**\n${recurringRewardCooldown(
                 memberProfile.daily || 0,
                 'daily'
-            )}\n**Weekly**\n${cooldown(
+            )}\n**Weekly**\n${recurringRewardCooldown(
                 memberProfile.weekly || 0,
                 'weekly'
-            )}\n**Monthly**\n${cooldown(
+            )}\n**Monthly**\n${recurringRewardCooldown(
                 memberProfile.monthly || 0,
                 'monthly'
-            )}\n**Yearly**\n${cooldown(memberProfile.yearly || 0, 'yearly')}`
+            )}\n**Yearly**\n${recurringRewardCooldown(
+                memberProfile.yearly || 0,
+                'yearly'
+            )}`
         )
         .setFooter({
             text: 'Showing page ⏲️ Cooldown, click the buttons to flip pages',
@@ -355,9 +359,20 @@ export default async function profile(
     interaction: CommandInteraction | UserContextMenuInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { channel, guild, options, member } = interaction;
+    const { channel, options, member } = interaction;
 
-    if (!member || !guild || !channel) return;
+    if (
+        (await cooldown(
+            interaction,
+            {
+                default: 60 * 1000,
+                donator: 10 * 1000,
+            },
+            'profile'
+        )) ||
+        !channel
+    )
+        return;
 
     const target = options.getMember('user') ?? member;
 

@@ -12,14 +12,14 @@ export default async function lfg(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, channel, commandName } = interaction;
+    const { member, channel } = interaction;
 
     const msg = interaction.options.getString('message');
 
     if (!channel) return;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 600 * 1000,
             donator: 600 * 1000,
         })

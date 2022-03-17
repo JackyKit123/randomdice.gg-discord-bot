@@ -42,10 +42,8 @@ export const getNewsInfo = (): {
 export default async function sendNews(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { commandName } = interaction;
-
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })

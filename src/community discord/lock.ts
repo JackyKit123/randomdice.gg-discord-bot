@@ -20,7 +20,7 @@ export default async function lockUnlock(
 
     if (
         !channel ||
-        (await cooldown(interaction, commandName, {
+        (await cooldown(interaction, {
             default: 2 * 1000,
             donator: 2 * 1000,
         }))

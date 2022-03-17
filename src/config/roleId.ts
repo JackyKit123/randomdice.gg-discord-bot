@@ -123,3 +123,10 @@ export const prestigeRoles: { [level: number]: string } = {
     9: roleIds['Prestige IX'],
     10: roleIds['Prestige X'],
 };
+
+export const patreonRolesIds = [
+    roleIds['$5 Patreon'],
+    roleIds['$10 Patreon'],
+    roleIds['$20 Patreon'],
+    roleIds['$50 Patreon'],
+];

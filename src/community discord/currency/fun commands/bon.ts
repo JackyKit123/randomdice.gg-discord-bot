@@ -11,10 +11,10 @@ export default async function bon(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, user, guild, commandName } = interaction;
+    const { options, user, guild } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 30 * 1000,
         })

@@ -269,10 +269,14 @@ export default async function postNow(
     const { member, guild, client } = interaction;
 
     if (
-        await cooldown(interaction, 'postNow', {
-            default: 60 * 1000,
-            donator: 10 * 1000,
-        })
+        await cooldown(
+            interaction,
+            {
+                default: 60 * 1000,
+                donator: 10 * 1000,
+            },
+            'postnow'
+        )
     ) {
         return;
     }

@@ -20,12 +20,7 @@ export default async function rickBomb(
     replyToInteraction = true
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const {
-        guild,
-        options,
-        channel: originalChannel,
-        commandName,
-    } = interaction;
+    const { guild, options, channel: originalChannel } = interaction;
     let channel = originalChannel;
 
     if (!channel) return;
@@ -37,7 +32,7 @@ export default async function rickBomb(
     }
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000 * 5,
             donator: 60 * 1000 * 1,
         })

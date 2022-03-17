@@ -359,10 +359,14 @@ export async function joinRaffleButton(
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
     if (
-        await cooldown(interaction, 'raffle', {
-            default: 10 * 1000,
-            donator: 10 * 1000,
-        })
+        await cooldown(
+            interaction,
+            {
+                default: 10 * 1000,
+                donator: 10 * 1000,
+            },
+            'raffle'
+        )
     ) {
         return;
     }
@@ -374,7 +378,7 @@ export default async function raffle(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { channel, options, guild, user, commandName } = interaction;
+    const { channel, options, guild, user } = interaction;
 
     if (
         channel?.id !== channelIds['dice-coins-raffle'] &&
@@ -389,7 +393,7 @@ export default async function raffle(
     }
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 10 * 1000,
             donator: 10 * 1000,
         })

@@ -17,10 +17,10 @@ export async function register(interaction: CommandInteraction): Promise<void> {
         return;
     }
 
-    const { client, member, guild, commandName, options } = interaction;
+    const { client, member, guild, options } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 5 * 1000,
             donator: 1 * 1000,
         })

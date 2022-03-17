@@ -7,10 +7,10 @@ import getBrandingEmbed from './util/getBrandingEmbed';
 export default async function help(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { commandName, guild } = interaction;
+    const { guild } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })

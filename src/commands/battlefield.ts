@@ -13,9 +13,9 @@ import getBrandingEmbed from './util/getBrandingEmbed';
 export default async function dice(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { commandName, options } = interaction;
+    const { options } = interaction;
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })

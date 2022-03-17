@@ -16,11 +16,11 @@ export default async function currency(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, guild, member, commandName } = interaction;
+    const { options, guild, member } = interaction;
 
     const numberFormat = new Intl.NumberFormat();
     if (
-        (await cooldown(interaction, commandName, {
+        (await cooldown(interaction, {
             default: 60 * 1000,
             donator: 60 * 1000,
         })) ||

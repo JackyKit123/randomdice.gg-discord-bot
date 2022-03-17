@@ -7,10 +7,10 @@ import getBrandingEmbed from './util/getBrandingEmbed';
 export default async function drawUntil(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { commandName, options } = interaction;
+    const { options } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 30 * 1000,
             donator: 5 * 1000,
         })

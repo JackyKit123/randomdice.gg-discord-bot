@@ -109,17 +109,21 @@ export default async function balance(
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
 
-    const { options, member, commandName } = interaction;
+    const { options, member } = interaction;
 
     const target = options.getMember('user') ?? member;
     const bal = await getBalance(interaction, false, target);
 
     if (
         bal === null ||
-        (await cooldown(interaction, commandName, {
-            default: 10 * 1000,
-            donator: 2 * 1000,
-        }))
+        (await cooldown(
+            interaction,
+            {
+                default: 10 * 1000,
+                donator: 2 * 1000,
+            },
+            'balance'
+        ))
     ) {
         return;
     }

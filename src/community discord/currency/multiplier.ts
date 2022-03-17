@@ -15,10 +15,10 @@ export default async function multiplierConfig(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, member, guild, commandName } = interaction;
+    const { options, member, guild } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })

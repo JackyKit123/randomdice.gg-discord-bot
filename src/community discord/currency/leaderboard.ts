@@ -204,10 +204,10 @@ export default async function leaderboard(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { client, guild, commandName, member, options } = interaction;
+    const { client, guild, member, options } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })

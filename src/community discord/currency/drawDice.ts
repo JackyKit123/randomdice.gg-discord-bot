@@ -68,10 +68,14 @@ export default async function drawDice(
     ddTimestamp.set(member.user.id, [...memberDDtimestamp, Date.now()]);
 
     if (
-        await cooldown(interaction, `!drawdice`, {
-            default: 3.5 * 1000,
-            donator: 1 * 1000,
-        })
+        await cooldown(
+            interaction,
+            {
+                default: 3.5 * 1000,
+                donator: 1 * 1000,
+            },
+            'dd'
+        )
     ) {
         return;
     }

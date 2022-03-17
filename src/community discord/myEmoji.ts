@@ -19,7 +19,7 @@ export default async function myEmoji(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, guild, commandName } = interaction;
+    const { member, guild } = interaction;
 
     if (!(await checkPermission(interaction, ...tier3RoleIds))) return;
 
@@ -64,7 +64,7 @@ export default async function myEmoji(
         );
     }
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 10 * 60 * 1000,
             donator: 60 * 1000,
         })

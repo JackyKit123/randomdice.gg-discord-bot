@@ -139,10 +139,10 @@ export default async function Apply(
     if (!interaction.inCachedGuild()) return;
     const position = interaction.options.getString('position', true);
 
-    const { guild, member, commandName } = interaction;
+    const { guild, member } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 1000 * 60 * 10,
             donator: 1000 * 60 * 10,
         })
@@ -332,7 +332,7 @@ export async function configApps(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { guild, commandName, member } = interaction;
+    const { guild, member } = interaction;
 
     const subcommand = interaction.options.getSubcommand(true);
     const position = interaction.options.getString('position', true);
@@ -346,7 +346,7 @@ export async function configApps(
     const existingApplications = cache['discord_bot/community/applications'];
 
     if (
-        (await cooldown(interaction, commandName, {
+        (await cooldown(interaction, {
             default: 5 * 1000,
             donator: 5 * 1000,
         })) ||

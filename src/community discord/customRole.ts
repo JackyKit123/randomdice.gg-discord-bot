@@ -19,7 +19,7 @@ export default async function customRole(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, guild, channel, commandName } = interaction;
+    const { member, guild, channel } = interaction;
 
     if (!channel || !(await checkPermission(interaction, ...tier2RoleIds)))
         return;
@@ -45,7 +45,7 @@ export default async function customRole(
     }
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 1000 * 60 * 60,
             donator: 1000 * 60 * 10,
         })

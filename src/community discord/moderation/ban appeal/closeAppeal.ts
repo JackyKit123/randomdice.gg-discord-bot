@@ -12,7 +12,6 @@ import {
     MessageEmbed,
     UserContextMenuInteraction,
 } from 'discord.js';
-import cooldown from 'util/cooldown';
 import { suppressCannotDmUser } from 'util/suppressErrors';
 import { writeModLog } from '../modlog';
 
@@ -201,15 +200,6 @@ export default async function closeAppeal(
         await interaction.reply(
             'You do not have sufficient permission to ban or unban this user.'
         );
-        return;
-    }
-
-    if (
-        await cooldown(interaction, 'close appeal', {
-            default: 60 * 1000,
-            donator: 60 * 1000,
-        })
-    ) {
         return;
     }
 

@@ -9,10 +9,8 @@ import cooldown from 'util/cooldown';
 export default async function contact(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { commandName } = interaction;
-
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })

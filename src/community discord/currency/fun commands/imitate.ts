@@ -1,4 +1,5 @@
 import { ApplicationCommandData, CommandInteraction } from 'discord.js';
+import cooldown from 'util/cooldown';
 import commandCost from './commandCost';
 
 export default async function imitate(
@@ -11,6 +12,14 @@ export default async function imitate(
 
     const webhooks = await guild.fetchWebhooks();
     const webhook = webhooks.find(wh => wh.name.toLowerCase() === commandName);
+
+    if (
+        await cooldown(interaction, {
+            default: 20 * 1000,
+            donator: 2 * 1000,
+        })
+    )
+        return;
 
     if (!webhook) {
         await interaction.reply(`Error, your idol not found.`);

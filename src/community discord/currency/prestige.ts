@@ -24,10 +24,14 @@ export default async function prestige(
     const { client, member, guild } = interaction;
     const numberFormat = new Intl.NumberFormat();
     if (
-        await cooldown(interaction, `!prestige`, {
-            default: 20 * 1000,
-            donator: 5 * 1000,
-        })
+        await cooldown(
+            interaction,
+            {
+                default: 20 * 1000,
+                donator: 5 * 1000,
+            },
+            'prestige'
+        )
     )
         return;
 

@@ -1,6 +1,5 @@
 import Discord from 'discord.js';
 import axios from 'axios';
-import cooldown from 'util/cooldown';
 import { replaceAllMentionToText } from 'util/fetchMention';
 
 const conversationTimeout = new Map<string, NodeJS.Timeout>();
@@ -15,14 +14,6 @@ export default async function cleverBot(
     if (!input) return;
     input = replaceAllMentionToText(input, guild);
     input = encodeURIComponent(input);
-    if (
-        await cooldown(message, 'cleverbot', {
-            default: 20 * 1000,
-            donator: 2 * 1000,
-        })
-    ) {
-        return;
-    }
 
     const cs = conversationIds.get(channel.id);
     const res = await axios.get(

@@ -15,7 +15,7 @@ export default async function sendLinks(
     const { commandName, client, options } = interaction;
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })

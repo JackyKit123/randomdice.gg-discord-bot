@@ -69,7 +69,7 @@ const hasRole = (roleList: string[], member: GuildMember, roleId: string) =>
 
 export async function myClass(interaction: CommandInteraction): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, options, commandName } = interaction;
+    const { member, options } = interaction;
 
     const classArg = options.getString('class', true);
     const newRoleId = getClassRoleId(classArg);
@@ -88,7 +88,7 @@ export async function myClass(interaction: CommandInteraction): Promise<void> {
     }
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
@@ -110,7 +110,7 @@ export async function myClass(interaction: CommandInteraction): Promise<void> {
 
 export async function myCrit(interaction: CommandInteraction): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, options, commandName } = interaction;
+    const { member, options } = interaction;
 
     const critArg = options.getInteger('crit', true);
     const newRoleId = getCritRoleId(member, critArg);
@@ -121,7 +121,7 @@ export async function myCrit(interaction: CommandInteraction): Promise<void> {
     }
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })

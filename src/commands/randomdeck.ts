@@ -9,10 +9,8 @@ const wait = promisify(setTimeout);
 export default async function RandomDeck(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { commandName } = interaction;
-
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 20 * 1000,
             donator: 5 * 1000,
         })

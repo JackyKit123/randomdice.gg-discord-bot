@@ -16,10 +16,10 @@ export async function closeReport(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { channel, guild, member, commandName } = interaction;
+    const { channel, guild, member } = interaction;
 
     if (
-        (await cooldown(interaction, commandName, {
+        (await cooldown(interaction, {
             default: 10 * 1000,
             donator: 10 * 1000,
         })) ||
@@ -176,10 +176,14 @@ export async function report(
               }`;
 
     if (
-        await cooldown(interaction, '!report', {
-            default: 10 * 1000,
-            donator: 10 * 1000,
-        })
+        await cooldown(
+            interaction,
+            {
+                default: 10 * 1000,
+                donator: 10 * 1000,
+            },
+            'report'
+        )
     ) {
         return;
     }

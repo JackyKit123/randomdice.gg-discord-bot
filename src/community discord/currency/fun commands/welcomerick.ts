@@ -21,7 +21,7 @@ export default async function welcomerick(
     const { options, guild } = interaction;
 
     if (
-        await cooldown(interaction, '!welcomerick', {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 30 * 1000,
         })

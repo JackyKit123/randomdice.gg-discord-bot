@@ -9,11 +9,11 @@ import getBrandingEmbed from './util/getBrandingEmbed';
 export default async function cardcalc(
     interaction: CommandInteraction
 ): Promise<void> {
-    const { commandName, options } = interaction;
+    const { options } = interaction;
     const waves = options.getInteger('waves', true);
 
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })

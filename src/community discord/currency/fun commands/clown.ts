@@ -13,11 +13,11 @@ export default async function clown(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, member, channel, commandName } = interaction;
+    const { options, member, channel } = interaction;
 
     if (
         !channel ||
-        (await cooldown(interaction, commandName, {
+        (await cooldown(interaction, {
             default: 60 * 1000 * 5,
             donator: 60 * 1000 * 1,
         })) ||

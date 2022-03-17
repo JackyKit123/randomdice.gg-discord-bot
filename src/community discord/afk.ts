@@ -31,7 +31,7 @@ export default async function afk(
 
     if (
         !(await checkPermission(interaction, ...tier2RoleIds)) ||
-        (await cooldown(interaction, '!afk', {
+        (await cooldown(interaction, {
             default: 30 * 1000,
             donator: 30 * 1000,
         }))

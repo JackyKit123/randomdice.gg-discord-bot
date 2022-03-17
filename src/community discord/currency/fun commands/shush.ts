@@ -17,14 +17,14 @@ export default async function shush(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, member, user, commandName } = interaction;
+    const { options, member, user } = interaction;
 
     let target = options.getMember('member', true);
     if (isJackykit(target)) {
         target = member;
     }
     if (
-        await cooldown(interaction, commandName, {
+        await cooldown(interaction, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })

@@ -103,7 +103,7 @@ export default async function snipe(
 
     if (
         !channel ||
-        (await cooldown(interaction, commandName, {
+        (await cooldown(interaction, {
             default: 10 * 1000,
             donator: 2 * 1000,
         }))
