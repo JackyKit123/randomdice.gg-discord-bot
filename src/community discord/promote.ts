@@ -1,5 +1,5 @@
 import channelIds from 'config/channelIds';
-import { tier4RoleIds } from 'config/roleId';
+import { tier5RoleIds } from 'config/roleId';
 import {
     ApplicationCommandData,
     CommandInteraction,
@@ -118,7 +118,7 @@ export default async function advertise(
     if (!interaction.inCachedGuild()) return;
     const { guild, member, user } = interaction;
 
-    if (!(await checkPermission(interaction, ...tier4RoleIds))) return;
+    if (!(await checkPermission(interaction, ...tier5RoleIds))) return;
 
     const promotionChannel = guild.channels.cache.get(
         channelIds['promotion-and-ads']
