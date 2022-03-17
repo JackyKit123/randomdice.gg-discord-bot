@@ -11,7 +11,6 @@ import {
 import colorParser from 'color-parser';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import { tier2RoleIds } from 'config/roleId';
 import checkPermission from './util/checkPermissions';
 
@@ -40,7 +39,7 @@ export default async function customRole(
 
     const color = colorParser(colorArg);
     if (!color) {
-        await reply(interaction, `\`${colorArg}\` is not a valid color.`);
+        await interaction.reply(`\`${colorArg}\` is not a valid color.`);
         return;
     }
 
@@ -71,7 +70,7 @@ export default async function customRole(
                 manageRoleOptions,
                 `/customrole update for ${member.user.tag}`
             );
-            await reply(interaction, `Updated ${role}.`);
+            await interaction.reply(`Updated ${role}.`);
             return;
         }
     }
@@ -84,7 +83,7 @@ export default async function customRole(
         .child(member.id)
         .set(role.id);
     await member.roles.add(role);
-    await reply(interaction, `Added ${role} to you.`);
+    await interaction.reply(`Added ${role} to you.`);
 }
 
 export async function deleteCustomRole(

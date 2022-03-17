@@ -13,7 +13,6 @@ import cooldown from 'util/cooldown';
 import cache from 'util/cache';
 import { coinDice } from 'config/emojiId';
 import { getPrestigeLevelName } from 'community discord/util/checkPrestigeLevel';
-import { reply } from 'util/typesafeReply';
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -65,9 +64,12 @@ export async function getBalance(
     const profile = cache['discord_bot/community/currency'][target.id];
 
     if (!profile?.initiated) {
-        if (target.id !== member.id && !silence) {
-            await reply(
-                input,
+        if (
+            target.id !== member.id &&
+            !silence &&
+            !(input instanceof Message)
+        ) {
+            await input.reply(
                 'They have not started using currency command yet.'
             );
             return null;
