@@ -9,7 +9,7 @@ import { registerTimer } from 'community discord/timer';
 import logMessage from 'util/logMessage';
 import { fetchDatabase } from 'util/cache';
 import updateListener from 'util/updateListener';
-import purgeRolesOnReboot from 'util/purgeRolesOnReboot';
+import purgeRolesOnReboot from 'community discord/util/purgeRolesOnReboot';
 import registerSlashCommands from 'register/commandData';
 
 export default async function ready(client: Client<true>): Promise<void> {
