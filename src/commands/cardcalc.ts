@@ -1,3 +1,4 @@
+import { cardBoxImageUrl } from 'config/url';
 import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
@@ -46,9 +47,7 @@ export default async function cardcalc(
     await reply(input, {
         embeds: [
             getBrandingEmbed()
-                .setThumbnail(
-                    'https://firebasestorage.googleapis.com/v0/b/random-dice-web.appspot.com/o/Box%20Images%2FCard%20Box?alt=media&token=19c0a784-306d-4cd9-9b6e-4985384796aa'
-                )
+                .setThumbnail(cardBoxImageUrl)
                 .addField('Cards earned', String(cards), true)
                 .addField(
                     'Chests Obtained',

@@ -1,3 +1,4 @@
+import { isCommunityDiscord, isDevTestDiscord } from 'config/guild';
 import {
     ApplicationCommandData,
     CommandInteraction,
@@ -68,7 +69,7 @@ export default async function help(
             }))
         );
 
-    if (guild?.id === process.env.COMMUNITY_SERVER_ID) {
+    if (isCommunityDiscord(guild)) {
         await reply(
             input,
             {
@@ -78,7 +79,7 @@ export default async function help(
             },
             true
         );
-    } else if (guild?.id === process.env.DEV_SERVER_ID) {
+    } else if (isDevTestDiscord(guild)) {
         await reply(
             input,
             {

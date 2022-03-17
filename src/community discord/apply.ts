@@ -1,4 +1,5 @@
 import channelIds from 'config/channelIds';
+import { isCommunityDiscord } from 'config/guild';
 import roleIds from 'config/roleId';
 import {
     ApplicationCommandData,
@@ -265,7 +266,7 @@ export async function closeApplication(
     )?.title;
 
     if (
-        guild.id !== process.env.COMMUNITY_SERVER_ID ||
+        !isCommunityDiscord(guild) ||
         !(clientUser?.id === author.id) ||
         !applicationName ||
         !channel?.isText() ||

@@ -3,30 +3,29 @@ import { deleteCustomRoleOnGuildLeave } from 'community discord/customRole';
 import logMessage from 'util/logMessage';
 import { GuildMember, PartialGuildMember } from 'discord.js';
 import { writeModLogOnGenericKick } from 'community discord/moderation/modlog';
+import { banAppealDiscordId, communityDiscordId } from 'config/guild';
+import { isProd } from 'config/env';
 
 export default async function guildMemberRemove(
     member: GuildMember | PartialGuildMember
 ): Promise<void> {
     const { guild, client } = member;
 
-    const asyncPromisesCapturer: Promise<unknown>[] = [];
-    if (process.env.NODE_ENV === 'production') {
-        switch (guild.id) {
-            case process.env.COMMUNITY_SERVER_ID:
-                asyncPromisesCapturer.push(
-                    deleteCustomRoleOnGuildLeave(member),
-                    writeModLogOnGenericKick(member)
-                );
-                break;
-            case process.env.COMMUNITY_APPEAL_SERVER_ID:
-                asyncPromisesCapturer.push(banOnLeave(member));
-                break;
-            default:
-        }
-    }
-
     try {
-        await Promise.all(asyncPromisesCapturer);
+        if (isProd) {
+            switch (guild.id) {
+                case communityDiscordId:
+                    await Promise.all([
+                        (deleteCustomRoleOnGuildLeave(member),
+                        writeModLogOnGenericKick(member)),
+                    ]);
+                    break;
+                case banAppealDiscordId:
+                    await banOnLeave(member);
+                    break;
+                default:
+            }
+        }
     } catch (err) {
         await logMessage(
             client,

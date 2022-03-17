@@ -1,11 +1,13 @@
 /* eslint-disable no-console */
 import firebase from 'firebase-admin';
 import { database } from 'register/firebase';
-import Discord from 'discord.js';
+import { Client } from 'discord.js';
 import logMessage from 'util/logMessage';
+import { isDev } from 'config/env';
+import { getDevTestDiscord } from 'config/guild';
 import * as post from '../commands/postNow';
 
-export default function listener(client: Discord.Client): void {
+export default function listener(client: Client<true>): void {
     const posting = {
         guide: false,
         news: false,
@@ -14,11 +16,9 @@ export default function listener(client: Discord.Client): void {
         guide: true,
         news: true,
     };
-    const guild = client.guilds.cache.get(process.env.DEV_SERVER_ID || '');
+    const guild = getDevTestDiscord(client);
     const member =
-        process.env.NODE_ENV === 'development' && client.user
-            ? guild?.members.cache.get(client.user.id)
-            : undefined;
+        (isDev && guild?.members.cache.get(client.user.id)) || undefined;
     const postGuideListener = async (
         snapshot: firebase.database.DataSnapshot,
         event: 'added' | 'updated' | 'removed'

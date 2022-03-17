@@ -1,5 +1,6 @@
 import checkPermission from 'community discord/util/checkPermissions';
 import { moderatorRoleIds } from 'config/roleId';
+import { banAppealDiscordInvitePermaLink } from 'config/url';
 import {
     ApplicationCommandData,
     ApplicationCommandOptionData,
@@ -50,18 +51,19 @@ export const ban = async (
     moderator: GuildMember,
     deleteMessageDays: number | null
 ): Promise<void> => {
+    const { guild, user } = moderator;
     await target
         .send(
-            `You have been banned in ${moderator.guild.name}.\nReason: ${
+            `You have been banned in ${guild.name}.\nReason: ${
                 reason ?? 'Not provided'
-            }.\nFeel free to appeal here https://discord.gg/yJBdSRZJmS if you found this ban to be unjustified.`
+            }.\nFeel free to appeal here ${banAppealDiscordInvitePermaLink} if you found this ban to be unjustified.`
         )
         .catch(suppressCannotDmUser);
-    await moderator.guild.members.ban(target, {
+    await guild.members.ban(target, {
         reason: reason ?? undefined,
         days: deleteMessageDays || undefined,
     });
-    await sendBanMessage(moderator.guild, target, reason, moderator.user);
+    await sendBanMessage(guild, target, reason, user);
 };
 
 const unban = async (

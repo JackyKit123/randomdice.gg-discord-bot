@@ -6,6 +6,8 @@ import {
 } from 'discord.js';
 import { removeAfkListener } from 'community discord/afk';
 import logMessage from 'util/logMessage';
+import { isCommunityDiscord } from 'config/guild';
+import { isProd } from 'config/env';
 
 export default async function messageReactionAdd(
     reaction: MessageReaction | PartialMessageReaction,
@@ -17,12 +19,8 @@ export default async function messageReactionAdd(
         : reaction;
 
     try {
-        if (
-            !user.bot &&
-            process.env.COMMUNITY_SERVER_ID === guild?.id &&
-            process.env.NODE_ENV === 'production'
-        ) {
-            removeAfkListener(nonPartialReaction, user);
+        if (!user.bot && isCommunityDiscord(guild) && isProd) {
+            await removeAfkListener(nonPartialReaction, user);
         }
     } catch (err) {
         await logMessage(

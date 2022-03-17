@@ -63,6 +63,11 @@ import { commandData as quickMod } from 'community discord/moderation/quickMod';
 import { commandData as closeAppeal } from 'community discord/moderation/ban appeal/closeAppeal';
 
 import cacheData from 'util/cache';
+import {
+    banAppealDiscordId,
+    communityDiscordId,
+    devTestDiscordId,
+} from 'config/guild';
 import setCommandPermissions from './commandPermissions';
 
 export default async function registerSlashCommands(
@@ -145,9 +150,9 @@ export default async function registerSlashCommands(
 
     const [communityServerCommandsManager, appealServerCommandsManager] =
         await Promise.all([
-            setCommands(process.env.COMMUNITY_SERVER_ID, communityCommands),
-            setCommands(process.env.COMMUNITY_APPEAL_SERVER_ID, appealCommands),
-            setCommands(process.env.DEV_SERVER_ID, devCommands),
+            setCommands(communityDiscordId, communityCommands),
+            setCommands(banAppealDiscordId, appealCommands),
+            setCommands(devTestDiscordId, devCommands),
             setCommands(),
         ]);
     if (communityServerCommandsManager) {

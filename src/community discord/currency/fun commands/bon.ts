@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import {
     ApplicationCommandData,
     CommandInteraction,
@@ -24,7 +25,7 @@ export default async function bon(
     const reason = options.getString('reason') || 'no reason';
 
     if (!(await commandCost(interaction, 1000))) return;
-    const general = guild?.channels.cache.get('804222694488932364');
+    const general = guild.channels.cache.get(channelIds.general);
     await interaction.reply(`Goodbye ${target}, get fucking bonned!`);
     if (general?.isText())
         await general.send({

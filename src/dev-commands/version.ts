@@ -1,3 +1,4 @@
+import { isDev } from 'config/env';
 import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 
 export default async function version(
@@ -8,9 +9,7 @@ export default async function version(
 
     await interaction.reply(
         `Hi! I am version **\`${
-            process.env.NODE_ENV === 'development'
-                ? 'development'
-                : process.env.HEROKU_RELEASE_VERSION
+            isDev ? 'development' : process.env.HEROKU_RELEASE_VERSION
         }\`** of ${interaction.client.user?.toString()}.`
     );
 }

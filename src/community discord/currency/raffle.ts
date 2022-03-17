@@ -19,6 +19,7 @@ import channelIds from 'config/channelIds';
 import roleIds, { eventManagerRoleIds } from 'config/roleId';
 import checkPermission from 'community discord/util/checkPermissions';
 import yesNoButton from 'util/yesNoButton';
+import { getCommunityDiscord } from 'config/guild';
 import { getBalance } from './balance';
 
 const numberFormat = new Intl.NumberFormat();
@@ -535,11 +536,7 @@ export async function addRafflePingRole(
 }
 
 export async function setRaffleTimerOnBoot(client: Client): Promise<void> {
-    const guild = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID ?? ''
-    );
-    if (!guild) return;
-    await announceWinner(guild);
+    await announceWinner(getCommunityDiscord(client));
 }
 
 export const commandData: ApplicationCommandData = {

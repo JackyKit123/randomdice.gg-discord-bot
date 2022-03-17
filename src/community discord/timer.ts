@@ -1,4 +1,5 @@
 import { timeDice } from 'config/emojiId';
+import { isBanAppealDiscord } from 'config/guild';
 import {
     ApplicationCommandData,
     Client,
@@ -113,7 +114,7 @@ async function tickTimer(
             if (
                 embed.title ===
                     'You have 24 hours to respond to this appeal ticket or you will be banned' &&
-                guild?.id === process.env.COMMUNITY_APPEAL_SERVER_ID &&
+                isBanAppealDiscord(guild) &&
                 hostId === client.user?.id
             ) {
                 await banOnTimerEnds(channel);
@@ -142,8 +143,9 @@ export async function setTimer(
                 .setColor(member.displayHexColor)
                 .setFooter({
                     text: 'Timer ends at',
-                    iconURL:
-                        'https://cdn.discordapp.com/emojis/804524690440847381.png?v=1',
+                    iconURL: member.guild.emojis.cache.find(
+                        emoji => emoji.toString() === timeDice
+                    )?.url,
                 })
                 .setTimestamp(endTime)
                 .setDescription(parseTimeText(time)),

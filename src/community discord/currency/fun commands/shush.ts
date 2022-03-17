@@ -1,4 +1,5 @@
 import { pokeball } from 'config/emojiId';
+import { isCarlBot, isJackykit } from 'config/users';
 import {
     ApplicationCommandData,
     BaseGuildTextChannel,
@@ -7,8 +8,10 @@ import {
     User,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
+import { promisify } from 'util';
 import commandCost from './commandCost';
 
+const wait = promisify(setTimeout);
 let shushMember: { by: User; victim: string }[] = [];
 export default async function shush(
     interaction: CommandInteraction
@@ -17,7 +20,7 @@ export default async function shush(
     const { options, member, user, commandName } = interaction;
 
     let target = options.getMember('member', true);
-    if (target.id === '195174308052467712') {
+    if (isJackykit(target)) {
         target = member;
     }
     if (
@@ -52,17 +55,17 @@ export default async function shush(
             users: [],
         },
     });
-    setTimeout(async () => {
-        if (!target || !shushMember.some(m => m.victim === target.id)) return;
-        shushMember = shushMember.filter(m => m.victim !== target.id);
-        await interaction.reply({
-            content: `${user}, your pokemon ${target} has escaped from ${pokeball}.`,
-            allowedMentions: {
-                parse: [],
-                users: [],
-            },
-        });
-    }, 1000 * 10);
+    await wait(1000 * 10);
+
+    if (!shushMember.some(m => m.victim === target.id)) return;
+    shushMember = shushMember.filter(m => m.victim !== target.id);
+    await interaction.followUp({
+        content: `${user}, your pokemon ${target} has escaped from ${pokeball}.`,
+        allowedMentions: {
+            parse: [],
+            users: [],
+        },
+    });
 }
 
 export async function unShush(interaction: CommandInteraction): Promise<void> {
@@ -177,7 +180,7 @@ export async function pokeballTrap(message: Message): Promise<void> {
                 .last(2)
                 .find(
                     m =>
-                        m.author.id === '235148962103951360' &&
+                        isCarlBot(m.author.id) &&
                         !m.embeds.length &&
                         !m.attachments.size
                 )
@@ -185,7 +188,7 @@ export async function pokeballTrap(message: Message): Promise<void> {
             channel
                 .createMessageCollector({
                     filter: m =>
-                        m.author.id === '235148962103951360' &&
+                        isCarlBot(m.author.id) &&
                         !m.embeds.length &&
                         !m.attachments.size,
                     max: 1,

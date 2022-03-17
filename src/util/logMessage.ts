@@ -1,6 +1,9 @@
 import getBrandingEmbed from 'commands/util/getBrandingEmbed';
 import { Client, Message, MessageEmbed, WebhookClient } from 'discord.js';
 import reboot from 'dev-commands/reboot';
+import { devUsersMentions } from 'config/users';
+import { devTestServerChannelId } from 'config/channelIds';
+import { getDevTestDiscord } from 'config/guild';
 
 // eslint-disable-next-line consistent-return
 export default async function log(
@@ -8,16 +11,8 @@ export default async function log(
     severity: 'info' | 'warning' | 'error',
     message: unknown = ''
 ): Promise<Message | ReturnType<WebhookClient['send']>> {
-    const logChannel = client.channels.cache.get(
-        process.env.DEV_SERVER_LOG_CHANNEL_ID || ''
-    );
-
-    const pingDevs = process.env.DEV_USERS_ID?.split(',')
-        .map(id => `<@${id}>`)
-        .join(' ');
-
     const messageOption = {
-        content: severity === 'error' ? pingDevs : undefined,
+        content: severity === 'error' ? devUsersMentions : undefined,
         embeds: [
             getBrandingEmbed()
                 .setDescription(
@@ -47,6 +42,9 @@ export default async function log(
     });
 
     try {
+        const logChannel = getDevTestDiscord(client).channels.cache.get(
+            devTestServerChannelId['bot-log']
+        );
         return logChannel?.isText()
             ? logChannel.send(messageOption)
             : webhookLogging.send({
@@ -56,7 +54,7 @@ export default async function log(
     } catch (networkError) {
         try {
             return webhookLogging.send({
-                content: `⚠️⚠️⚠️⚠️⚠️\n${pingDevs}\nNormal logging has failed. This message is being sent using the webhook instead.\n⚠️⚠️⚠️⚠️⚠️`,
+                content: `⚠️⚠️⚠️⚠️⚠️\n${devUsersMentions}\nNormal logging has failed. This message is being sent using the webhook instead.\n⚠️⚠️⚠️⚠️⚠️`,
                 embeds: [
                     new MessageEmbed()
                         .setColor('#ff0000')

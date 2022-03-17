@@ -1,3 +1,5 @@
+import { randomDiceWebsiteUrl } from 'config/url';
+import { isJackykit } from 'config/users';
 import Discord, {
     ButtonInteraction,
     CommandInteraction,
@@ -25,9 +27,7 @@ export default async function Cooldown(
         (input as Discord.Interaction).user ||
         (input as Discord.Message).author;
 
-    if (process.env.DEV_USERS_ID?.includes(author.id)) {
-        return false;
-    }
+    if (isJackykit(author)) return false;
 
     const now = Date.now().valueOf();
     const commandCooldownList = commandCooldown.get(command) || new Map();
@@ -71,14 +71,14 @@ export default async function Cooldown(
                                       )}\`${
                                           userIsDonator
                                               ? ''
-                                              : '\nIf you have subscribed to patreon, please login and link your account on [randomdice.gg website](https://randomdice.gg).'
+                                              : `\nIf you have subscribed to patreon, please login and link your account on [randomdice.gg website](${randomDiceWebsiteUrl()}).`
                                       }`
                             }`
                         )
                         .setFooter({
                             text: userIsDonator
                                 ? 'Nice You are a donator!'
-                                : 'https://randomdice.gg/about/patreon',
+                                : randomDiceWebsiteUrl('/about/patreon'),
                         }),
                 ],
             },

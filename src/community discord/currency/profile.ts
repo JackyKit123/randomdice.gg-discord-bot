@@ -19,6 +19,7 @@ import {
     getPrestigeLevel,
     getPrestigeLevelName,
 } from 'community discord/util/checkPrestigeLevel';
+import { isJackykit } from 'config/users';
 import { getBalance } from './balance';
 import { duplicatedRoleMulti } from './chatCoins';
 
@@ -131,7 +132,7 @@ const getGeneralProfilePage = (
             'Your Server Rank',
             `**#${
                 Object.entries(currency)
-                    .filter(([uid]) => uid !== '195174308052467712')
+                    .filter(([uid]) => !isJackykit(uid))
                     .sort(
                         ([, profileA], [, profileB]) =>
                             profileB.balance - profileA.balance

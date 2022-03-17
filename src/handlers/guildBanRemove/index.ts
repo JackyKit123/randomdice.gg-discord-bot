@@ -1,21 +1,16 @@
 import logMessage from 'util/logMessage';
 import { GuildBan } from 'discord.js';
 import { writeModLogOnGenericUnban } from 'community discord/moderation/modlog';
+import { isCommunityDiscord } from 'config/guild';
+import { isProd } from 'config/env';
 
 export default async function guildBanRemove(ban: GuildBan): Promise<void> {
     const { guild, client } = ban;
 
-    let asyncPromisesCapturer: Promise<unknown>[] = [];
-
-    if (
-        process.env.COMMUNITY_SERVER_ID === guild.id &&
-        process.env.NODE_ENV === 'production'
-    ) {
-        asyncPromisesCapturer = [writeModLogOnGenericUnban(ban)];
-    }
-
     try {
-        await Promise.all(asyncPromisesCapturer);
+        if (isCommunityDiscord(guild) && isProd) {
+            await writeModLogOnGenericUnban(ban);
+        }
     } catch (error) {
         await logMessage(
             client,

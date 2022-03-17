@@ -19,6 +19,8 @@ import rickBomb from 'community discord/currency/fun commands/rickbomb';
 import { coinDice, goldenPickaxe, pickaxe } from 'config/emojiId';
 import channelIds from 'config/channelIds';
 import { suppressUnknownMessage } from 'util/suppressErrors';
+import { getCommunityDiscord } from 'config/guild';
+import { isProd } from 'config/env';
 import { getBalance } from './balance';
 
 const wait = promisify(setTimeout);
@@ -410,11 +412,9 @@ export default async function pickCoins(
 }
 
 export async function pickCoinsInit(client: Client): Promise<void> {
-    const guild = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID || ''
-    );
+    const guild = getCommunityDiscord(client);
     const channel = guild?.channels.cache.get(
-        process.env.NODE_ENV === 'production'
+        isProd
             ? channelIds.general // #general
             : channelIds['jackykit-playground-v2'] // #jackykit-playground
     );
@@ -422,7 +422,7 @@ export async function pickCoinsInit(client: Client): Promise<void> {
     if (channel?.type !== 'GUILD_TEXT' || !channel?.isText()) {
         return;
     }
-    if (process.env.NODE_ENV === 'production') {
+    if (isProd) {
         await wait(
             (
                 await channel.messages.fetch({ limit: 50 })

@@ -2,26 +2,26 @@ import createAppealChanel from 'community discord/moderation/ban appeal/createAp
 import welcomeReward from 'community discord/currency/welcomeReward';
 import logMessage from 'util/logMessage';
 import { GuildMember } from 'discord.js';
+import { banAppealDiscordId, communityDiscordId } from 'config/guild';
+import { isProd } from 'config/env';
 
 export default async function guildMemberAdd(
     member: GuildMember
 ): Promise<void> {
     const { guild, client } = member;
 
-    const asyncPromisesCapturer: Promise<unknown>[] = [];
-    if (process.env.NODE_ENV === 'production') {
-        switch (guild.id) {
-            case process.env.COMMUNITY_SERVER_ID:
-                asyncPromisesCapturer.push(welcomeReward(member));
-                break;
-            case process.env.COMMUNITY_APPEAL_SERVER_ID:
-                asyncPromisesCapturer.push(createAppealChanel(member));
-                break;
-            default:
-        }
-    }
     try {
-        await Promise.all(asyncPromisesCapturer);
+        if (isProd) {
+            switch (guild.id) {
+                case communityDiscordId:
+                    await welcomeReward(member);
+                    break;
+                case banAppealDiscordId:
+                    await createAppealChanel(member);
+                    break;
+                default:
+            }
+        }
     } catch (err) {
         await logMessage(
             client,

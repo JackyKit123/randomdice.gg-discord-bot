@@ -54,300 +54,309 @@ import { nullDice } from 'config/emojiId';
 import { spyLogBanHandler } from 'community discord/spy';
 import moderation from 'community discord/moderation';
 import modlog from 'community discord/moderation/modlog';
+import {
+    banAppealDiscordId,
+    communityDiscordId,
+    devTestDiscordId,
+    isDevTestDiscord,
+} from 'config/guild';
+import { isDev, isProd } from 'config/env';
 
 export default async function interactionCreate(
     interaction: Interaction
 ): Promise<void> {
-    const { user, guild, client, channel } = interaction;
-
-    if (
-        (process.env.NODE_ENV === 'development' &&
-            guild &&
-            guild.id !== process.env.DEV_SERVER_ID &&
-            channel?.id !== channelIds['jackykit-playground-v2']) ||
-        (process.env.NODE_ENV === 'production' &&
-            (guild?.id === process.env.DEV_SERVER_ID ||
-                channel?.id === channelIds['jackykit-playground-v2']))
-    )
-        return;
-
-    const asyncPromisesCapturer: Promise<unknown>[] = [];
+    const { guildId, channelId, client, guild, user } = interaction;
+    const testChannelId = channelIds['jackykit-playground-v2'];
 
     try {
-        if (
-            interaction.inCachedGuild() &&
-            interaction.guildId === process.env.COMMUNITY_SERVER_ID
-        ) {
-            asyncPromisesCapturer.push(
-                removeAfkListener(interaction, interaction.user)
-            );
-            if (interaction.isButton()) {
-                switch (interaction.customId) {
-                    case 'dd':
-                        await drawDice(interaction);
-                        break;
-                    case 'application-submit':
-                    case 'application-cancel':
-                        await closeApplication(interaction);
-                        break;
-                    case 'delete-snipe':
-                    case 'trash-snipe':
-                        await deleteSnipe(interaction);
-                        break;
-                    case 'profile-👤':
-                    case 'profile-⏲️':
-                    case 'profile-🎰':
-                    case `profile-${nullDice}`:
-                    case `profile-☢️`:
-                    case 'profile-❌':
-                        await profileButtons(interaction);
-                        break;
-                    case 'coinflip-head':
-                    case 'coinflip-tail':
-                        await coinflip(interaction);
-                        break;
-                    case 'get-raffle-ping-role':
-                        await addRafflePingRole(interaction);
-                        break;
-                    case 'raffle-join-1':
-                    case 'raffle-join-5':
-                    case 'raffle-join-10':
-                    case 'raffle-join-20':
-                    case 'raffle-join-50':
-                    case 'raffle-join-max':
-                        await joinRaffleButton(interaction);
-                        break;
-                    case 'spy-log-ban':
-                        await spyLogBanHandler(interaction);
-                        break;
-                    default:
-                }
+        const asyncPromisesCapturer: Promise<unknown>[] = [];
+        if (interaction.inCachedGuild()) {
+            if (
+                interaction.isCommand() &&
+                ((isDev && isDevTestDiscord(guild)) ||
+                    (isDev && channelId === testChannelId) ||
+                    (isProd && isDevTestDiscord(guild)) ||
+                    (isProd && channelId === testChannelId))
+            ) {
+                asyncPromisesCapturer.push(
+                    baseCommands(interaction, interaction.commandName)
+                );
             }
-            if (interaction.isCommand()) {
-                switch (interaction.commandName) {
-                    case 'snipe':
-                    case 'editsnipe':
-                        await snipe(interaction);
-                        break;
-                    case 'application':
-                        await configApps(interaction);
-                        break;
-                    case 'apply':
-                        await apply(interaction);
-                        break;
-                    case 'report':
-                        await report(interaction);
-                        break;
-                    case 'closereport':
-                        await closeReport(interaction);
-                        break;
-                    case 'lock':
-                    case 'unlock':
-                        await lock(interaction);
-                        break;
-                    case 'timer':
-                        await timer(interaction);
-                        break;
-                    case 'lfg':
-                        await lfg(interaction);
-                        break;
-                    case 'gtn':
-                        await gtn(interaction);
-                        break;
-                    case 'eventping':
-                        await eventPing(interaction);
-                        break;
-                    case 'customrole':
-                        await customRole(interaction);
-                        break;
-                    case 'myemoji':
-                        await myEmoji(interaction);
-                        break;
-                    case 'myclass':
-                        await myClass(interaction);
-                        break;
-                    case 'mycrit':
-                        await myCrit(interaction);
-                        break;
-                    case 'advertise':
-                        await advertise(interaction);
-                        break;
-                    case 'dd':
-                        await drawDice(interaction);
-                        break;
-                    case 'wordle':
-                        await wordle(interaction);
-                        break;
-                    case 'balance':
-                        await balance(interaction);
-                        break;
-                    case 'profile':
-                        await profile(interaction);
-                        break;
-                    case 'coinflip':
-                        await coinflip(interaction);
-                        break;
-                    case 'leaderboard':
-                        await leaderboard(interaction);
-                        break;
-                    case 'prestige':
-                        await prestige(interaction);
-                        break;
-                    case 'raffle':
-                        await raffle(interaction);
-                        break;
-                    case 'hourly':
-                        await timed(interaction, 'hourly');
-                        break;
-                    case 'daily':
-                        await timed(interaction, 'daily');
-                        break;
-                    case 'weekly':
-                        await timed(interaction, 'weekly');
-                        break;
-                    case 'monthly':
-                        await timed(interaction, 'monthly');
-                        break;
-                    case 'yearly':
-                        await timed(interaction, 'yearly');
-                        break;
-                    case 'currency-audit':
-                        await currency(interaction);
-                        break;
-                    case 'coinbomb':
-                        await spawnCoinbomb(interaction);
-                        break;
-                    case 'multiplier':
-                        await multiplier(interaction);
-                        break;
-                    case 'bon':
-                        await bon(interaction);
-                        break;
-                    case 'welcomerick':
-                        await welcomerick(interaction);
-                        break;
-                    case 'afk':
-                        await afk(interaction);
-                        break;
-                    case 'bedtime':
-                        await bedtime(interaction);
-                        break;
-                    case 'yomama':
-                    case 'moongirl':
-                        await imitate(interaction);
-                        break;
-                    case 'clown':
-                        await clown(interaction);
-                        break;
-                    case 'shush':
-                        await shush(interaction);
-                        break;
-                    case 'unshush':
-                        await unShush(interaction);
-                        break;
-                    case 'rickbomb':
-                    case 'rickcoin':
-                        await rickbomb(interaction);
-                        break;
-                    case 'nuke':
-                        await nuke(interaction);
-                        break;
-                    case 'warn':
-                    case 'mute':
-                    case 'ban':
-                    case 'kick':
-                    case 'unban':
-                    case 'unmute':
-                    case 'hackwarn':
-                    case 'hackban':
-                        await moderation(interaction);
-                        break;
-                    case 'modlog':
-                        await modlog(interaction);
-                        break;
-                    default:
-                }
-            }
-            if (interaction.isUserContextMenu()) {
-                switch (interaction.commandName) {
-                    case 'Check Balance':
-                        await balance(interaction);
-                        break;
-                    case 'Show Profile':
-                        await profile(interaction);
-                        break;
-                    default:
-                }
-            }
-            if (interaction.isContextMenu()) {
-                switch (interaction.commandName) {
-                    case 'Report this message':
-                        await report(interaction);
-                        break;
-                    default:
-                }
-            }
-        }
-        if (
-            interaction.inCachedGuild() &&
-            interaction.isCommand() &&
-            interaction.guildId === process.env.DEV_SERVER_ID
-        ) {
-            switch (interaction.commandName) {
-                case 'createinvites':
-                    await fetchInvites(interaction);
+            switch (guildId) {
+                case devTestDiscordId:
+                    if (interaction.isCommand()) {
+                        switch (interaction.commandName) {
+                            case 'createinvites':
+                                await fetchInvites(interaction);
+                                break;
+                            case 'setemoji':
+                                await setEmoji(interaction);
+                                break;
+                            case 'statistic':
+                                await statistic(interaction);
+                                break;
+                            case 'reboot':
+                                await reboot(interaction);
+                                break;
+                            case 'version':
+                                await version(interaction);
+                                break;
+                            default:
+                        }
+                    }
                     break;
-                case 'setemoji':
-                    await setEmoji(interaction);
+                case communityDiscordId:
+                    if (
+                        (isDev &&
+                            channelId !==
+                                channelIds['jackykit-playground-v2']) ||
+                        (isProd && channelId === testChannelId)
+                    )
+                        return;
+
+                    asyncPromisesCapturer.push(
+                        removeAfkListener(interaction, interaction.user)
+                    );
+                    if (interaction.isButton()) {
+                        switch (interaction.customId) {
+                            case 'dd':
+                                await drawDice(interaction);
+                                break;
+                            case 'application-submit':
+                            case 'application-cancel':
+                                await closeApplication(interaction);
+                                break;
+                            case 'delete-snipe':
+                            case 'trash-snipe':
+                                await deleteSnipe(interaction);
+                                break;
+                            case 'profile-👤':
+                            case 'profile-⏲️':
+                            case 'profile-🎰':
+                            case `profile-${nullDice}`:
+                            case `profile-☢️`:
+                            case 'profile-❌':
+                                await profileButtons(interaction);
+                                break;
+                            case 'coinflip-head':
+                            case 'coinflip-tail':
+                                await coinflip(interaction);
+                                break;
+                            case 'get-raffle-ping-role':
+                                await addRafflePingRole(interaction);
+                                break;
+                            case 'raffle-join-1':
+                            case 'raffle-join-5':
+                            case 'raffle-join-10':
+                            case 'raffle-join-20':
+                            case 'raffle-join-50':
+                            case 'raffle-join-max':
+                                await joinRaffleButton(interaction);
+                                break;
+                            case 'spy-log-ban':
+                                await spyLogBanHandler(interaction);
+                                break;
+                            default:
+                        }
+                    }
+                    if (interaction.isCommand()) {
+                        switch (interaction.commandName) {
+                            case 'snipe':
+                            case 'editsnipe':
+                                await snipe(interaction);
+                                break;
+                            case 'application':
+                                await configApps(interaction);
+                                break;
+                            case 'apply':
+                                await apply(interaction);
+                                break;
+                            case 'report':
+                                await report(interaction);
+                                break;
+                            case 'closereport':
+                                await closeReport(interaction);
+                                break;
+                            case 'lock':
+                            case 'unlock':
+                                await lock(interaction);
+                                break;
+                            case 'timer':
+                                await timer(interaction);
+                                break;
+                            case 'lfg':
+                                await lfg(interaction);
+                                break;
+                            case 'gtn':
+                                await gtn(interaction);
+                                break;
+                            case 'eventping':
+                                await eventPing(interaction);
+                                break;
+                            case 'customrole':
+                                await customRole(interaction);
+                                break;
+                            case 'myemoji':
+                                await myEmoji(interaction);
+                                break;
+                            case 'myclass':
+                                await myClass(interaction);
+                                break;
+                            case 'mycrit':
+                                await myCrit(interaction);
+                                break;
+                            case 'advertise':
+                                await advertise(interaction);
+                                break;
+                            case 'dd':
+                                await drawDice(interaction);
+                                break;
+                            case 'wordle':
+                                await wordle(interaction);
+                                break;
+                            case 'balance':
+                                await balance(interaction);
+                                break;
+                            case 'profile':
+                                await profile(interaction);
+                                break;
+                            case 'coinflip':
+                                await coinflip(interaction);
+                                break;
+                            case 'leaderboard':
+                                await leaderboard(interaction);
+                                break;
+                            case 'prestige':
+                                await prestige(interaction);
+                                break;
+                            case 'raffle':
+                                await raffle(interaction);
+                                break;
+                            case 'hourly':
+                                await timed(interaction, 'hourly');
+                                break;
+                            case 'daily':
+                                await timed(interaction, 'daily');
+                                break;
+                            case 'weekly':
+                                await timed(interaction, 'weekly');
+                                break;
+                            case 'monthly':
+                                await timed(interaction, 'monthly');
+                                break;
+                            case 'yearly':
+                                await timed(interaction, 'yearly');
+                                break;
+                            case 'currency-audit':
+                                await currency(interaction);
+                                break;
+                            case 'coinbomb':
+                                await spawnCoinbomb(interaction);
+                                break;
+                            case 'multiplier':
+                                await multiplier(interaction);
+                                break;
+                            case 'bon':
+                                await bon(interaction);
+                                break;
+                            case 'welcomerick':
+                                await welcomerick(interaction);
+                                break;
+                            case 'afk':
+                                await afk(interaction);
+                                break;
+                            case 'bedtime':
+                                await bedtime(interaction);
+                                break;
+                            case 'yomama':
+                            case 'moongirl':
+                                await imitate(interaction);
+                                break;
+                            case 'clown':
+                                await clown(interaction);
+                                break;
+                            case 'shush':
+                                await shush(interaction);
+                                break;
+                            case 'unshush':
+                                await unShush(interaction);
+                                break;
+                            case 'rickbomb':
+                            case 'rickcoin':
+                                await rickbomb(interaction);
+                                break;
+                            case 'nuke':
+                                await nuke(interaction);
+                                break;
+                            case 'warn':
+                            case 'mute':
+                            case 'ban':
+                            case 'kick':
+                            case 'unban':
+                            case 'unmute':
+                            case 'hackwarn':
+                            case 'hackban':
+                                await moderation(interaction);
+                                break;
+                            case 'modlog':
+                                await modlog(interaction);
+                                break;
+                            default:
+                        }
+                    }
+                    if (interaction.isUserContextMenu()) {
+                        switch (interaction.commandName) {
+                            case 'Check Balance':
+                                await balance(interaction);
+                                break;
+                            case 'Show Profile':
+                                await profile(interaction);
+                                break;
+                            default:
+                        }
+                    }
+                    if (interaction.isContextMenu()) {
+                        switch (interaction.commandName) {
+                            case 'Report this message':
+                                await report(interaction);
+                                break;
+                            default:
+                        }
+                    }
                     break;
-                case 'stat':
-                    await statistic(interaction);
-                    break;
-                case 'reboot':
-                    await reboot(interaction);
-                    break;
-                case 'version':
-                    await version(interaction);
+                case banAppealDiscordId:
+                    if (interaction.isCommand())
+                        switch (interaction.commandName) {
+                            case 'accept':
+                            case 'reject':
+                            case 'falsebanned':
+                                await closeAppeal(interaction);
+                                break;
+                            default:
+                        }
+                    if (interaction.isButton()) {
+                        switch (interaction.customId) {
+                            case 'appeal-accept':
+                            case 'appeal-reject':
+                            case 'appeal-falsebanned':
+                                await closeAppeal(interaction);
+                                break;
+                            default:
+                        }
+                    }
+                    if (interaction.isUserContextMenu()) {
+                        switch (interaction.commandName) {
+                            case 'Accept Appeal':
+                            case 'Reject Appeal':
+                            case 'Not Guilty':
+                                await closeAppeal(interaction);
+                                break;
+                            default:
+                        }
+                    }
                     break;
                 default:
             }
-        }
-        if (
-            interaction.inCachedGuild() &&
-            interaction.guildId === process.env.COMMUNITY_APPEAL_SERVER_ID
-        ) {
-            if (interaction.isCommand())
-                switch (interaction.commandName) {
-                    case 'accept':
-                    case 'reject':
-                    case 'falsebanned':
-                        await closeAppeal(interaction);
-                        break;
-                    default:
-                }
-            if (interaction.isButton()) {
-                switch (interaction.customId) {
-                    case 'appeal-accept':
-                    case 'appeal-reject':
-                    case 'appeal-falsebanned':
-                        await closeAppeal(interaction);
-                        break;
-                    default:
-                }
-            }
-            if (interaction.isUserContextMenu()) {
-                switch (interaction.commandName) {
-                    case 'Accept Appeal':
-                    case 'Reject Appeal':
-                    case 'Not Guilty':
-                        await closeAppeal(interaction);
-                        break;
-                    default:
-                }
-            }
-        }
-        if (interaction.isCommand()) {
-            await baseCommands(interaction, interaction.commandName);
         }
         await Promise.all(asyncPromisesCapturer);
     } catch (err) {
@@ -357,7 +366,7 @@ export default async function interactionCreate(
                 interaction.isCommand() ||
                 interaction.isContextMenu()
             ) {
-                if (interaction.replied) {
+                if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(
                         `Oops, something went wrong:\n${
                             (err as Error).message ?? err

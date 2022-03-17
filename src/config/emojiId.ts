@@ -1,3 +1,6 @@
+import { Client, Emoji } from 'discord.js';
+import { getDevTestDiscord } from './guild';
+
 export const nullDice = '<:Dice_TierX_Null:807019807312183366>';
 export const coinDice = '<:dicecoin:839981846419079178>';
 export const shuffleDice = '<a:Dice_TierX_RandomCommon:830670733004242974>';
@@ -20,3 +23,8 @@ export const alert = '<a:alert:952779096314757211>';
 
 export const nuke = '<a:nuke:952781322051530813>';
 export const nukeWaste = '<:nuclear_waste:952796890154549308>';
+
+export const getCoinDiceEmoji = (client: Client): Emoji | undefined =>
+    getDevTestDiscord(client).emojis.cache.find(
+        emoji => emoji.toString() === coinDice
+    );

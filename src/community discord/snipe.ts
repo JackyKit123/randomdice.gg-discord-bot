@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isCommunityDiscord } from 'config/guild';
 import { tier2RoleIds, tier3RoleIds } from 'config/roleId';
 import {
     ApplicationCommandData,
@@ -60,7 +61,7 @@ export async function snipeListener(
 
     const { guild, channel, author } = message;
 
-    if (guild?.id !== process.env.COMMUNITY_SERVER_ID || author.bot) {
+    if (!isCommunityDiscord(guild) || author.bot) {
         return;
     }
 

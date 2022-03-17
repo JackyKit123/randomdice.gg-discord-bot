@@ -11,6 +11,7 @@ import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { reply } from 'util/typesafeReply';
 import { mapChoices } from 'register/commandData';
+import { randomDiceWebsiteUrl } from 'config/url';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
@@ -28,9 +29,9 @@ export const getGuideData = (
     const { diceList, name, type, guide, archived, battlefield } = target;
     const emojiDiceList = diceList.map(list => list.map(die => emojiList[die]));
 
-    const paragraph = parseText(guide).split('\n');
+    const paragraphs = parseText(guide);
 
-    if (paragraph.length >= 5000) {
+    if (paragraphs.length >= 5000) {
         return {
             content: `This guide is too long to be displayed within Discord, please view it on the website here.`,
             components: [
@@ -38,9 +39,9 @@ export const getGuideData = (
                     new MessageButton()
                         .setStyle('LINK')
                         .setURL(
-                            `https://randomdice.gg/decks/guide/${encodeURI(
-                                name
-                            )}`
+                            randomDiceWebsiteUrl(
+                                `/decks/guide/${encodeURI(name)}`
+                            )
                         )
                         .setLabel('View on website'),
                 ]),
@@ -64,7 +65,8 @@ export const getGuideData = (
                   },
               ]
             : []),
-        ...paragraph
+        ...paragraphs
+            .split('\n')
             .filter(p => p !== '')
             .map((p, i) => ({
                 name: i === 0 ? 'Guide' : '‎',

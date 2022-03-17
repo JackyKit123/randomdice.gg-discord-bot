@@ -1,3 +1,4 @@
+import { getCommunityDiscord } from 'config/guild';
 import roleIds from 'config/roleId';
 import { Client } from 'discord.js';
 
@@ -5,9 +6,7 @@ export default async function purgeRolesOnReboot(
     client: Client,
     roleId: keyof typeof roleIds
 ): Promise<void> {
-    const guild = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID ?? ''
-    );
+    const guild = getCommunityDiscord(client);
     if (!client.user || !guild) return;
 
     await Promise.all(

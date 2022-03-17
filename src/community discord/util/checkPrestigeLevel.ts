@@ -1,3 +1,4 @@
+import { getCommunityDiscord } from 'config/guild';
 import { prestigeRoles } from 'config/roleId';
 import { Client, GuildMember } from 'discord.js';
 
@@ -18,9 +19,9 @@ export const getPrestigeIcon = (
     client: Client,
     level: number
 ): string | undefined => {
-    const prestigeRoleName = client.guilds.cache
-        .get(process.env.COMMUNITY_SERVER_ID ?? '')
-        ?.roles.cache.get(prestigeRoles[level])?.name;
+    const prestigeRoleName = getCommunityDiscord(client).roles.cache.get(
+        prestigeRoles[level]
+    )?.name;
     const devServer = client.guilds.cache.get(process.env.DEV_SERVER_ID ?? '');
     const prestigeRoleIconEmoji = devServer?.emojis.cache.find(
         emoji => emoji.name === prestigeRoleName?.replace(' ', '_')

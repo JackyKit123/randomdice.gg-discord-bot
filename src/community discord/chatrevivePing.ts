@@ -1,4 +1,5 @@
 import channelIds from 'config/channelIds';
+import { getCommunityDiscord } from 'config/guild';
 import roleIds from 'config/roleId';
 import Discord from 'discord.js';
 
@@ -26,9 +27,7 @@ export default async function chatRevivePing(
 export async function fetchGeneralOnBoot(
     client: Discord.Client
 ): Promise<void> {
-    const guild = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID ?? ''
-    );
+    const guild = getCommunityDiscord(client);
     const general = guild?.channels.cache.get(channelIds.general);
     if (!general?.isText()) return;
     try {

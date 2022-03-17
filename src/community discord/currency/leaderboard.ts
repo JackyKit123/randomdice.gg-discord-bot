@@ -11,10 +11,13 @@ import cooldown from 'util/cooldown';
 import getPaginationComponents from 'util/paginationButtons';
 import channelIds from 'config/channelIds';
 import roleIds, { tier2RoleIds } from 'config/roleId';
-import { coinDice } from 'config/emojiId';
+import { coinDice, getCoinDiceEmoji } from 'config/emojiId';
 import checkPermission from 'community discord/util/checkPermissions';
 import { promisify } from 'util';
 import { suppressUnknownMember } from 'util/suppressErrors';
+import { getCommunityDiscord } from 'config/guild';
+import { isJackykit } from 'config/users';
+import { communityDiscordInvitePermaLink } from 'config/url';
 import { deleteCustomRole } from '../customRole';
 
 const wait = promisify(setTimeout);
@@ -54,7 +57,7 @@ function sortLeaderboard(
                 case 'gamble':
                     return !!profile.gamble;
                 case 'default':
-                    return id !== '195174308052467712';
+                    return !isJackykit(id);
                 default:
                     return true;
             }
@@ -68,19 +71,7 @@ function sortLeaderboard(
 }
 
 async function resetWeekly(client: Client): Promise<void> {
-    const guild = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID ?? ''
-    );
-    if (!guild) {
-        await logMessage(
-            client,
-            'warning',
-            `Unable to get guild ${
-                process.env.COMMUNITY_SERVER_ID ?? ''
-            } when resetting weekly.`
-        );
-        return;
-    }
+    const guild = getCommunityDiscord(client);
     const channel = guild.channels.cache.get(channelIds['weekly-top-5']);
     if (!channel?.isText()) {
         await logMessage(
@@ -104,9 +95,7 @@ async function resetWeekly(client: Client): Promise<void> {
         embeds: [
             new MessageEmbed()
                 .setColor('#6ba4a5')
-                .setThumbnail(
-                    'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
-                )
+                .setThumbnail(getCoinDiceEmoji(client)?.url ?? '')
                 .setTitle(`Top 5 Weekly Winners`)
                 .setAuthor({
                     name: 'Randomdice.gg Server',
@@ -114,7 +103,7 @@ async function resetWeekly(client: Client): Promise<void> {
                         guild.iconURL({
                             dynamic: true,
                         }) ?? undefined,
-                    url: `https://discord.gg/randomdice`,
+                    url: communityDiscordInvitePermaLink,
                 })
                 .addFields(sortedWeekly.slice(0, 5)),
         ],
@@ -215,7 +204,7 @@ export default async function leaderboard(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { guild, commandName, member, options } = interaction;
+    const { client, guild, commandName, member, options } = interaction;
 
     if (
         await cooldown(interaction, commandName, {
@@ -241,34 +230,36 @@ export default async function leaderboard(
         currentPage = pageNumbers - 1;
     }
 
-    const embeds = Array(pageNumbers)
-        .fill('')
-        .map((_, i) =>
-            new MessageEmbed()
-                .setColor('#6ba4a5')
-                .setThumbnail(
-                    'https://cdn.discordapp.com/emojis/813149167585067008.png?v=1'
-                )
-                .setTitle(
-                    // eslint-disable-next-line no-nested-ternary
-                    isWeekly
-                        ? 'Most Active People this week'
-                        : isGamble
-                        ? 'Biggest Gambler of all time'
-                        : `Richest People in the Server`
-                )
-                .setAuthor({
-                    name: 'Randomdice.gg Server',
-                    iconURL:
-                        guild.iconURL({
-                            dynamic: true,
-                        }) ?? undefined,
-                    url: 'https://discord.gg/randomdice',
-                })
-                .addFields(fields.slice(i * 10, i * 10 + 10))
-                .setTimestamp()
-                .setFooter({ text: `Showing page ${i + 1} of ${pageNumbers}.` })
-        );
+    const embeds = await Promise.all(
+        Array(pageNumbers)
+            .fill('')
+            .map(async (_, i) =>
+                new MessageEmbed()
+                    .setColor('#6ba4a5')
+                    .setThumbnail(getCoinDiceEmoji(client)?.url ?? '')
+                    .setTitle(
+                        // eslint-disable-next-line no-nested-ternary
+                        isWeekly
+                            ? 'Most Active People this week'
+                            : isGamble
+                            ? 'Biggest Gambler of all time'
+                            : `Richest People in the Server`
+                    )
+                    .setAuthor({
+                        name: 'Randomdice.gg Server',
+                        iconURL:
+                            guild.iconURL({
+                                dynamic: true,
+                            }) ?? undefined,
+                        url: communityDiscordInvitePermaLink,
+                    })
+                    .addFields(fields.slice(i * 10, i * 10 + 10))
+                    .setTimestamp()
+                    .setFooter({
+                        text: `Showing page ${i + 1} of ${pageNumbers}.`,
+                    })
+            )
+    );
 
     const { components, collectorHandler } = getPaginationComponents(
         pageNumbers,

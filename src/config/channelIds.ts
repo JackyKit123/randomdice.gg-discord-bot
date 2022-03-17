@@ -97,3 +97,8 @@ export const appealServerChannelId = {
     'Appeal Room': '805035618765242369',
     'ban-appeal-discussion': '805035618765242371',
 };
+
+export const devTestServerChannelId = {
+    'bot-log': '757766843502034977',
+    test: '952043884383449129',
+};

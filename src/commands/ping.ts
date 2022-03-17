@@ -1,3 +1,4 @@
+import { randomDiceIconUrl } from 'config/url';
 import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
@@ -22,7 +23,7 @@ export default async function ping(
     }
 
     const embed = getBrandingEmbed()
-        .setThumbnail('https://randomdice.gg/android-chrome-512x512.png')
+        .setThumbnail(randomDiceIconUrl)
         .setAuthor(null)
         .setTitle('Pong!');
 

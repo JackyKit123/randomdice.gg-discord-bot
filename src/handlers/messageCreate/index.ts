@@ -20,6 +20,8 @@ import cache from 'util/cache';
 import { baseCommands } from 'register/commandCase';
 import yesNoButton from 'util/yesNoButton';
 import channelIds from 'config/channelIds';
+import { isCommunityDiscord, isDevTestDiscord } from 'config/guild';
+import { isDev, isProd } from 'config/env';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { content, channel, guild, author, member, client } = message;
@@ -27,14 +29,11 @@ export default async function messageCreate(message: Message): Promise<void> {
     let asyncPromisesCapturer: Promise<void>[] = [];
 
     try {
-        if (process.env.NODE_ENV === 'production') {
+        if (isProd) {
             asyncPromisesCapturer = [...asyncPromisesCapturer, spy(message)];
         }
 
-        if (
-            process.env.COMMUNITY_SERVER_ID === guild?.id &&
-            process.env.NODE_ENV === 'production'
-        ) {
+        if (isCommunityDiscord(guild) && isProd) {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
                 voteReward(message),
@@ -43,13 +42,12 @@ export default async function messageCreate(message: Message): Promise<void> {
         }
         if (
             !author.bot &&
-            process.env.COMMUNITY_SERVER_ID === guild?.id &&
+            isCommunityDiscord(guild) &&
             member &&
             !(
-                (process.env.NODE_ENV === 'production' &&
+                (isProd &&
                     channel.id === channelIds['jackykit-playground-v2']) ||
-                (process.env.NODE_ENV === 'development' &&
-                    channel.id !== channelIds['jackykit-playground-v2'])
+                (isDev && channel.id !== channelIds['jackykit-playground-v2'])
             )
         ) {
             asyncPromisesCapturer = [
@@ -70,17 +68,11 @@ export default async function messageCreate(message: Message): Promise<void> {
         }
 
         if (
-            // ignoring other servers in development, ignoring dev channel in production
-            (process.env.DEV_SERVER_ID &&
-                process.env.NODE_ENV === 'development' &&
-                guild?.id !== process.env.DEV_SERVER_ID) ||
-            (process.env.NODE_ENV === 'production' &&
-                guild?.id === process.env.DEV_SERVER_ID)
+            /^\.gg ?/i.test(suffix) &&
+            !author.bot &&
+            ((isDev && isDevTestDiscord(guild)) ||
+                (isProd && !isDevTestDiscord(guild)))
         ) {
-            return;
-        }
-
-        if (/^\.gg ?/i.test(suffix) && !author.bot) {
             if (!command?.toLowerCase()) {
                 await message.reply(
                     'Hi! I am awake and I am listening to your commands. Need help? type `.gg help`'

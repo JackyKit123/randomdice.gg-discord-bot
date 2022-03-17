@@ -16,6 +16,7 @@ import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import parseMsIntoReadableText from 'util/parseMS';
 import { tier2RoleIds } from 'config/roleId';
+import { isCommunityDiscord } from 'config/guild';
 import checkPermission from './util/checkPermissions';
 
 const wait = promisify(setTimeout);
@@ -124,11 +125,10 @@ export async function removeAfkListener(
     user: User | PartialUser
 ): Promise<void> {
     const channel = arg instanceof MessageReaction ? arg.message.channel : arg;
-    const { COMMUNITY_SERVER_ID } = process.env;
-    if (channel.type !== 'GUILD_TEXT' || !COMMUNITY_SERVER_ID) return;
+    if (channel.type !== 'GUILD_TEXT') return;
     const { guild } = channel;
     const member = guild.members.cache.get(user.id);
-    if (!member || !guild || guild.id !== COMMUNITY_SERVER_ID) return;
+    if (!member || !isCommunityDiscord(guild)) return;
     await afkHandler(channel, member);
 }
 

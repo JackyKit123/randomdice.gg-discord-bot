@@ -3,6 +3,8 @@ import { ApplicationCommandData, Client, CommandInteraction } from 'discord.js';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import { clown as clownEmoji } from 'config/emojiId';
+import { getCommunityDiscord } from 'config/guild';
+import { isJackykit } from 'config/users';
 import commandCost from './commandCost';
 
 const wait = promisify(setTimeout);
@@ -42,11 +44,7 @@ export default async function clown(
         await interaction.editReply(
             `${member}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
         );
-    } else if (
-        member.id === '195174308052467712' ||
-        (['722951439567290458', '415166565550653442'].includes(target.id) &&
-            Math.random() < 0.95)
-    ) {
+    } else if (isJackykit(member)) {
         await interaction.editReply(
             `${target} got clowned by ${member}.${clownEmoji}`
         );
@@ -62,9 +60,7 @@ export default async function clown(
         clownedABot = true;
         target = member;
     } else if (
-        target.id === '195174308052467712' ||
-        (['722951439567290458', '415166565550653442'].includes(target.id) &&
-            Math.random() < 0.95) ||
+        isJackykit(target) ||
         (target.id !== member.id && Math.random() < 0.6)
     ) {
         await interaction.editReply(
@@ -78,9 +74,7 @@ export default async function clown(
     }
     const originalName = target.displayName;
     const howClown =
-        clownedABot || member.id === '195174308052467712'
-            ? 10
-            : Math.ceil(Math.random() * 10);
+        clownedABot || isJackykit(member) ? 10 : Math.ceil(Math.random() * 10);
     try {
         await target.roles.add(roleIds['🤡']);
         await target.setNickname('🤡'.repeat(howClown));
@@ -112,11 +106,10 @@ export default async function clown(
     }
 }
 
-export async function fixClownNicknamesOnReboot(client: Client): Promise<void> {
-    const guild = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID ?? ''
-    );
-    if (!client.user || !guild) return;
+export async function fixClownNicknamesOnReboot(
+    client: Client<true>
+): Promise<void> {
+    const guild = getCommunityDiscord(client);
     await Promise.all(
         (
             await guild.fetchAuditLogs({

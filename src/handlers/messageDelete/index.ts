@@ -1,13 +1,14 @@
 import { Message, PartialMessage } from 'discord.js';
 import { snipeListener } from 'community discord/snipe';
 import logMessage from 'util/logMessage';
+import { isCommunityDiscord } from 'config/guild';
 
 export default async function messageDelete(
     message: Message | PartialMessage
 ): Promise<void> {
     const { guild, author, client } = message;
     try {
-        if (process.env.COMMUNITY_SERVER_ID === guild?.id) {
+        if (isCommunityDiscord(guild)) {
             await snipeListener('delete', message);
         }
     } catch (err) {

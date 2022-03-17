@@ -1,3 +1,4 @@
+import { randomDiceIconUrl } from 'config/url';
 import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
@@ -192,7 +193,7 @@ export default async function decklist(
                     text: `randomdice.gg Deck List #page ${
                         i + 1
                     }/${pageNumbers}`,
-                    iconURL: 'https://randomdice.gg/android-chrome-512x512.png',
+                    iconURL: randomDiceIconUrl,
                 })
         );
 

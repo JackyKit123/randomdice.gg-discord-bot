@@ -1,3 +1,4 @@
+import { randomDiceWebsiteUrl } from 'config/url';
 import {
     ApplicationCommandData,
     ClientUser,
@@ -13,6 +14,7 @@ import getBrandingEmbed from './util/getBrandingEmbed';
 export default async function sendLinks(
     input: Message | CommandInteraction
 ): Promise<void> {
+    const { client } = input;
     const command =
         input instanceof Message
             ? input.content.split(' ')[1]
@@ -33,9 +35,9 @@ export default async function sendLinks(
                     ? input.content.split(' ').slice(0, 2).join(' ')
                     : input.options.getString('path');
             if (path?.startsWith('/')) {
-                await reply(input, `https://randomdice.gg${encodeURI(path)}`);
+                await reply(input, randomDiceWebsiteUrl(encodeURI(path)));
             } else {
-                await reply(input, 'https://randomdice.gg/');
+                await reply(input, randomDiceWebsiteUrl());
             }
             break;
         }
@@ -50,7 +52,9 @@ export default async function sendLinks(
                 input,
                 `You can click this link to invite ${(
                     input.client.user as ClientUser
-                ).toString()} to your own server.\nhttps://discord.com/oauth2/authorize?client_id=723917706641801316&permissions=355393&scope=bot`
+                ).toString()} to your own server.\nhttps://discord.com/oauth2/authorize?client_id=${
+                    client.user?.id
+                }&permissions=355393&scope=bot`
             );
             break;
         case 'support':

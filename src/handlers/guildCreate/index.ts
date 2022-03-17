@@ -1,6 +1,7 @@
 import { Guild, GuildBasedChannel } from 'discord.js';
 import logMessage from 'util/logMessage';
 import { createInvite } from 'dev-commands/fetchInvites';
+import { communityDiscordInvitePermaLink } from 'config/url';
 
 export default async function handler(guild: Guild): Promise<void> {
     const { client, systemChannel, channels, name } = guild;
@@ -28,7 +29,7 @@ export default async function handler(guild: Guild): Promise<void> {
 
     if (msgChannel?.isText()) {
         await msgChannel.send(
-            'Thank you for the invitation, you may do `/help` to view a list of commands. You may also join the community discord here at https://discord.gg/ZrXRpZq2mq'
+            `Thank you for the invitation, you may do \` /help\` to view a list of commands. You may also join the community discord here at ${communityDiscordInvitePermaLink}`
         );
     }
 }

@@ -12,23 +12,17 @@ import {
     suppressUnknownMember,
     suppressUnknownMessage,
 } from 'util/suppressErrors';
+import { getCommunityDiscord, isHackDiscord } from 'config/guild';
 import { ban } from './moderation';
 import { writeModLog } from './moderation/modlog';
 
 export default async function spy(message: Message): Promise<void> {
     const { guild, member, content, client, author, channel, attachments } =
         message;
-    if (
-        !guild ||
-        !member ||
-        guild.id !== '818961659086766111' ||
-        channel.type !== 'GUILD_TEXT'
-    )
+    if (!member || !isHackDiscord(guild) || channel.type !== 'GUILD_TEXT')
         return;
 
-    const communityDiscord = client.guilds.cache.get(
-        process.env.COMMUNITY_SERVER_ID ?? ''
-    );
+    const communityDiscord = getCommunityDiscord(client);
     const spyLog = communityDiscord?.channels.cache.get(
         channelIds['hack-discord-spy-log']
     );

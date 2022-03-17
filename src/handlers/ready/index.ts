@@ -7,14 +7,13 @@ import { setRaffleTimerOnBoot } from 'community discord/currency/raffle';
 import infoVC from 'community discord/infoVC';
 import { registerTimer } from 'community discord/timer';
 import logMessage from 'util/logMessage';
-import { fetchAll } from 'util/cache';
+import { fetchDatabase } from 'util/cache';
 import updateListener from 'util/updateListener';
 import purgeRolesOnReboot from 'util/purgeRolesOnReboot';
 import registerSlashCommands from 'register/commandData';
 
 export default async function ready(client: Client<true>): Promise<void> {
-    // eslint-disable-next-line no-unused-expressions
-    client.user?.setActivity('.gg help', {
+    client.user.setActivity('/help', {
         type: 'PLAYING',
     });
     const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
@@ -30,7 +29,7 @@ export default async function ready(client: Client<true>): Promise<void> {
             purgeRolesOnReboot(client, 'rick'),
             fixClownNicknamesOnReboot(client),
             fetchGeneralOnBoot(client),
-            fetchAll(),
+            fetchDatabase(),
         ]);
         // call these after database ready
         await Promise.all([

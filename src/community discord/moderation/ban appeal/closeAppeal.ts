@@ -1,4 +1,6 @@
 import { appealServerChannelId } from 'config/channelIds';
+import { getCommunityDiscord } from 'config/guild';
+import { communityDiscordInvitePermaLink } from 'config/url';
 import {
     ApplicationCommandData,
     ButtonInteraction,
@@ -44,17 +46,7 @@ export default async function closeAppeal(
     if (!interaction.inCachedGuild()) return;
     const { client, member, guild, channel } = interaction;
 
-    const { COMMUNITY_SERVER_ID } = process.env;
-
-    if (!COMMUNITY_SERVER_ID) {
-        throw new Error('Missing `COMMUNITY_SERVER_ID` env in bot code.');
-    }
-
-    const communityDiscord = client.guilds.cache.get(COMMUNITY_SERVER_ID);
-
-    if (!communityDiscord) {
-        throw new Error('Community Discord server is not located.');
-    }
+    const communityDiscord = getCommunityDiscord(client);
 
     if (!channel || !channel.isText() || channel.isThread()) return;
 
@@ -152,7 +144,7 @@ export default async function closeAppeal(
             .send(
                 `Your appeal is accepted.\n${
                     reason ? `Reason: ${reason}\n` : ''
-                }You may now return to this main server. https://discord.gg/ZrXRpZq2mq`
+                }You may now return to this main server. ${communityDiscordInvitePermaLink}`
             )
             .catch(suppressCannotDmUser);
 
@@ -189,7 +181,7 @@ export default async function closeAppeal(
         await writeModLog(target.user, falsebannedReason, member.user, 'unban');
         await target
             .send(
-                'Your appeal is accepted, you are found to be clean, you may now return to this main server. https://discord.gg/ZrXRpZq2mq'
+                `Your appeal is accepted, you are found to be clean, you may now return to this main server. ${communityDiscordInvitePermaLink}`
             )
             .catch(suppressCannotDmUser);
 

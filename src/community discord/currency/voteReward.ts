@@ -1,5 +1,6 @@
 import channelIds from 'config/channelIds';
 import { coinDice } from 'config/emojiId';
+import { isDSLbot } from 'config/users';
 import Discord from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
@@ -11,7 +12,7 @@ export default async function voteReward(
     const { author, channel, embeds, guild } = message;
 
     if (
-        author.id !== '479688142908162059' ||
+        isDSLbot(author) ||
         channel.id !== channelIds['thank-you-supporters'] ||
         !guild
     )

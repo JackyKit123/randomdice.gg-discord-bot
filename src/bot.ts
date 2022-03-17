@@ -3,6 +3,7 @@ import initFirebase from 'register/firebase';
 import logMessage from 'util/logMessage';
 import reboot from 'dev-commands/reboot';
 import botEventHandlers from 'handlers';
+import { devUsersMentions } from 'config/users';
 
 // eslint-disable-next-line no-console
 console.log('Starting client...');
@@ -30,16 +31,26 @@ initFirebase();
 
 botEventHandlers(client);
 
-client.login(process.env.BOT_TOKEN);
+(async () => {
+    try {
+        await client.login(process.env.BOT_TOKEN);
+    } catch (err) {
+        await logMessage(
+            client,
+            'error',
+            `Critical Error, bot is unable to login:\n${
+                err instanceof Error ? err.stack ?? err.message : err
+            }`
+        );
+    }
+})();
 
 process.on('uncaughtException', async error => {
     try {
         await logMessage(
             client,
             'error',
-            `${process.env.DEV_USERS_ID?.split(',').map(
-                uid => `<@${uid}>`
-            )}\n**__Critical Error__**\n**Unhandled Exception**\n${error.stack}`
+            `${devUsersMentions}\n**__Critical Error__**\n**Unhandled Exception**\n${error.stack}`
         );
     } finally {
         try {

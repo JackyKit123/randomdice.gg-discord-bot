@@ -1,5 +1,6 @@
 import checkPermission from 'community discord/util/checkPermissions';
 import channelIds from 'config/channelIds';
+import { getCommunityDiscord } from 'config/guild';
 import { moderatorRoleIds } from 'config/roleId';
 import {
     ApplicationCommandData,
@@ -217,10 +218,9 @@ export async function writeModLog(
     moderator: User,
     action: ModLog['action']
 ): Promise<void> {
-    const { client } = moderator;
-    const logChannel = client.guilds.cache
-        .get(process.env.COMMUNITY_SERVER_ID ?? '')
-        ?.channels.cache.get(channelIds['public-mod-log']);
+    const logChannel = getCommunityDiscord(moderator.client).channels.cache.get(
+        channelIds['public-mod-log']
+    );
 
     const cases = cacheData['discord_bot/community/modlog'];
     const sortedCases = cases.sort((a, b) => a.case - b.case);

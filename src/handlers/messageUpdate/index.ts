@@ -1,13 +1,14 @@
 import { snipeListener } from 'community discord/snipe';
 import logMessage from 'util/logMessage';
 import { Message, PartialMessage } from 'discord.js';
+import { isCommunityDiscord } from 'config/guild';
 
 export default async function messageUpdate(
     message: Message | PartialMessage
 ): Promise<void> {
     const { guild, author, client } = message;
     try {
-        if (process.env.COMMUNITY_SERVER_ID === guild?.id) {
+        if (isCommunityDiscord(guild)) {
             await snipeListener('edit', message);
         }
     } catch (err) {

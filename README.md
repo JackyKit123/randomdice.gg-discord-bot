@@ -27,24 +27,12 @@ Include the following environment variables in a .env
             <td>Token for discord bot</td>
         </tr>
         <tr>
-            <td>DEV_SERVER_ID (optional)</td>
-            <td>Discord server id for end-to-end test</td>
-        </tr>
-        <tr>
-            <td>DEV_SERVER_LOG_CHANNEL_ID (optional)</td>
-            <td>Discord channel id for bot logging</td>
-        </tr>
-        <tr>
             <td>FIREBASE_ADMIN_PRIVATE_KEY</td>
             <td>Private key for accessing firebase database</td>
         </tr>
         <tr>
             <td>FIREBASE_ADMIN_CLIENT_EMAIL</td>
             <td>Client email for firebase service account</td>
-        </tr>
-        <tr>
-            <td>DEV_USERS_ID</td>
-            <td>List of discord user id for the bot developers</td>
         </tr>
     </tbody>
 </table>

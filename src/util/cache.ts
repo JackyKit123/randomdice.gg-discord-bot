@@ -300,7 +300,7 @@ const cacheData = {
 };
 export default cacheData;
 
-export async function fetchAll(): Promise<void> {
+export async function fetchDatabase(): Promise<void> {
     await Promise.all(
         Object.keys(cacheData).map(async key => {
             const ref = database.ref(key);

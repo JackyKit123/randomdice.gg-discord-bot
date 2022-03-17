@@ -1,7 +1,6 @@
 import { appealServerChannelId } from 'config/channelIds';
 import { banHammer } from 'config/emojiId';
 import roleIds, { appealServerRoleIds } from 'config/roleId';
-import logMessage from 'util/logMessage';
 import {
     CategoryChannel,
     ClientUser,
@@ -13,31 +12,13 @@ import {
 import cacheData from 'util/cache';
 import { suppressUnknownBan } from 'util/suppressErrors';
 import { setTimer } from 'community discord/timer';
+import { getCommunityDiscord } from 'config/guild';
 
 export default async function createAppealChanel(
     member: GuildMember
 ): Promise<void> {
     const { client, id, guild } = member;
-    const { COMMUNITY_SERVER_ID } = process.env;
-
-    if (!COMMUNITY_SERVER_ID) {
-        await logMessage(
-            client,
-            'error',
-            'Missing COMMUNITY_SERVER_ID in .env file. Please add it.'
-        );
-        return;
-    }
-
-    const communityDiscord = client.guilds.cache.get(COMMUNITY_SERVER_ID);
-    if (!communityDiscord) {
-        await logMessage(
-            client,
-            'error',
-            'Community Discord server is not located.'
-        );
-        return;
-    }
+    const communityDiscord = getCommunityDiscord(client);
 
     const logChannel = guild.channels.cache.get(appealServerChannelId.log);
     const ban = await communityDiscord.bans.fetch(id).catch(suppressUnknownBan);
