@@ -159,8 +159,10 @@ export async function setTimer(
         hostId: member.id,
         endTime,
     });
-    tickTimer(timerMessage, member.id, endTime, ref.key as string);
-    await timerMessage.react(timeDice);
+    await Promise.all([
+        tickTimer(timerMessage, member.id, endTime, ref.key as string),
+        timerMessage.react(timeDice),
+    ]);
 }
 
 export default async function timerCommand(
@@ -225,7 +227,7 @@ export async function registerTimer(client: Client): Promise<void> {
     const data = cache['discord_bot/community/timer'];
     Object.entries(data || {}).forEach(async ([key, timer]) => {
         try {
-            const guild = await client.guilds.fetch(timer.guildId);
+            const guild = client.guilds.cache.get(timer.guildId);
             if (!guild) {
                 killTimerFromDB(key);
                 return;
@@ -243,7 +245,7 @@ export async function registerTimer(client: Client): Promise<void> {
                 return;
             }
 
-            tickTimer(message, timer.hostId, timer.endTime, key);
+            await tickTimer(message, timer.hostId, timer.endTime, key);
         } catch (err) {
             killTimerFromDB(key);
         }
