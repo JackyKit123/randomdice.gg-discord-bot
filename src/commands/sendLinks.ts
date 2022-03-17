@@ -3,62 +3,49 @@ import {
     ApplicationCommandData,
     ClientUser,
     CommandInteraction,
-    Message,
     MessageActionRow,
     MessageButton,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function sendLinks(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { client } = input;
-    const command =
-        input instanceof Message
-            ? input.content.split(' ')[1]
-            : input.commandName;
+    const { commandName, client, options } = interaction;
 
     if (
-        await cooldown(input, '.gg link', {
+        await cooldown(interaction, commandName, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
     ) {
         return;
     }
-    switch (command) {
+    switch (commandName) {
         case 'website': {
-            const path =
-                input instanceof Message
-                    ? input.content.split(' ').slice(0, 2).join(' ')
-                    : input.options.getString('path');
-            if (path?.startsWith('/')) {
-                await reply(input, randomDiceWebsiteUrl(encodeURI(path)));
-            } else {
-                await reply(input, randomDiceWebsiteUrl());
-            }
+            const path = options.getString('path');
+            await interaction.reply(
+                randomDiceWebsiteUrl(encodeURI(path ?? '/'))
+            );
             break;
         }
         case 'app':
-            await reply(
-                input,
+            await interaction.reply(
                 'https://play.google.com/store/apps/details?id=gg.randomdice.twa'
             );
             break;
         case 'invite':
-            await reply(
-                input,
+            await interaction.reply(
                 `You can click this link to invite ${(
-                    input.client.user as ClientUser
+                    interaction.client.user as ClientUser
                 ).toString()} to your own server.\nhttps://discord.com/oauth2/authorize?client_id=${
                     client.user?.id
                 }&permissions=355393&scope=bot`
             );
             break;
         case 'support':
-            await reply(input, {
+            await interaction.reply({
                 embeds: [
                     getBrandingEmbed()
                         .setTitle('Support Us')

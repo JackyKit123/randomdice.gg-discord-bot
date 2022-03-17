@@ -1,13 +1,11 @@
 import {
     ApplicationCommandData,
     CommandInteraction,
-    Message,
     MessageEmbed,
 } from 'discord.js';
 import cache from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export const getNewsInfo = (): {
@@ -42,10 +40,12 @@ export const getNewsInfo = (): {
 };
 
 export default async function sendNews(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    const { commandName } = interaction;
+
     if (
-        await cooldown(input, '.gg news', {
+        await cooldown(interaction, commandName, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
@@ -55,9 +55,9 @@ export default async function sendNews(
 
     const { ytUrl, embed } = getNewsInfo();
 
-    await reply(input, { embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
     if (ytUrl) {
-        await input?.channel?.send(ytUrl);
+        await interaction.followUp(ytUrl);
     }
 }
 

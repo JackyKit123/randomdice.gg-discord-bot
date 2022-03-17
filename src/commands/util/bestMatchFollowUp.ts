@@ -1,17 +1,12 @@
-import {
-    CommandInteraction,
-    Message,
-    WebhookEditMessageOptions,
-} from 'discord.js';
+import { CommandInteraction, WebhookEditMessageOptions } from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
-import { edit, reply } from 'util/typesafeReply';
 import yesNoButton from 'util/yesNoButton';
 
 export default async function bestMatchFollowUp<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     TValue extends { name: string } & Record<string, any>
 >(
-    input: Message | CommandInteraction,
+    interaction: CommandInteraction,
     originalValue: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     listOfValues: TValue[],
@@ -24,29 +19,18 @@ export default async function bestMatchFollowUp<
     );
 
     if (bestMatch.rating < 0.3) {
-        await reply(input, `${originalValue}${invalidMessage}`);
+        await interaction.reply(`${originalValue}${invalidMessage}`);
         return;
     }
 
     await yesNoButton(
-        input,
+        interaction,
         `${originalValue}${invalidMessage} Did you mean \`${bestMatch.target}\`?`,
-        async sentMessage => {
+        async button => {
             const newResponse = followUp(
                 listOfValues.find(value => value.name === bestMatch.target)
             );
-            const messageOption: WebhookEditMessageOptions =
-                typeof newResponse === 'string'
-                    ? { content: newResponse, components: [] }
-                    : {
-                          ...newResponse,
-                          components: [],
-                          content: undefined,
-                      };
-            await edit(
-                input instanceof CommandInteraction ? input : sentMessage,
-                messageOption
-            );
+            await button.reply(newResponse);
         }
     );
 }

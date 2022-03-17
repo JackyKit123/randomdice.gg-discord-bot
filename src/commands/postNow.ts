@@ -4,7 +4,6 @@ import {
     CommandInteraction,
     Guild,
     GuildMember,
-    Message,
     MessageEmbed,
 } from 'discord.js';
 import firebase from 'firebase-admin';
@@ -12,7 +11,6 @@ import { database } from 'register/firebase';
 import cache, { Registry } from 'util/cache';
 import logMessage from 'util/logMessage';
 import cooldown from 'util/cooldown';
-import { edit, reply } from 'util/typesafeReply';
 import {
     suppressMissingAccess,
     suppressUnknownChannel,
@@ -260,16 +258,17 @@ export async function postNews(client: Client, guild?: Guild): Promise<void> {
 }
 
 export default async function postNow(
-    input: Message | CommandInteraction,
-    typeArg?: string
+    interaction: CommandInteraction,
+    typeArg?: 'guide' | 'news'
 ): Promise<void> {
-    const { member, guild, client } = input;
-    if (!member || !guild) {
+    if (!interaction.inCachedGuild()) {
+        await interaction.reply('This command is only available in guilds.');
         return;
     }
+    const { member, guild, client, commandName, options } = interaction;
 
     if (
-        await cooldown(input, '.gg postnow', {
+        await cooldown(interaction, commandName, {
             default: 60 * 1000,
             donator: 10 * 1000,
         })
@@ -282,7 +281,7 @@ export default async function postNow(
             .get(member.user.id)
             ?.permissions.has('MANAGE_MESSAGES')
     ) {
-        await reply(input, {
+        await interaction.reply({
             content:
                 'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`',
             components: [],
@@ -290,50 +289,33 @@ export default async function postNow(
         return;
     }
 
-    // eslint-disable-next-line no-param-reassign
     const type =
-        typeArg ??
-        (input instanceof Message
-            ? input.content.split(' ')[2]
-            : input.options.getString('type') ?? '');
-    if (!type) {
-        await reply(
-            input,
-            `Usage of the command: \`\`\`.gg postnow <guide|news>\`\`\``
-        );
-        return;
-    }
+        typeArg ?? (options.getString('type', true) as 'guide' | 'news');
 
-    if (type === 'guide' || type === 'news') {
-        const statusMessage = await (typeArg ? edit : reply)(input, {
+    if (interaction.replied) {
+        await interaction.editReply({
             content: `Now posting ${type}...`,
             components: [],
         });
-
-        try {
-            if (type === 'guide') {
-                await postGuide(
-                    client,
-                    guild.members.cache.get(member.user.id)
-                );
-            } else if (type === 'news') {
-                await postNews(client, guild);
-            }
-        } catch {
-            // do nothing
-        } finally {
-            await edit(
-                input instanceof Message ? statusMessage : input,
-                `Finished Posting ${type}`
-            );
-        }
-        return;
+    } else {
+        await interaction.reply({
+            content: `Now posting ${type}...`,
+            components: [],
+        });
     }
 
-    await reply(input, {
-        content: `\`${type}\` is not a valid type, supported type: \`guide\` \`news\``,
-        components: [],
-    });
+    try {
+        if (type === 'guide') {
+            await postGuide(client, guild.members.cache.get(member.user.id));
+        }
+        if (type === 'news') {
+            await postNews(client, guild);
+        }
+    } catch {
+        // do nothing
+    } finally {
+        await interaction.editReply(`Finished Posting ${type}`);
+    }
 }
 
 export const commandData: ApplicationCommandDataResolvable = {

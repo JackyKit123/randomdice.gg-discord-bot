@@ -1,106 +1,70 @@
-import logMessage from 'util/logMessage';
 import {
     ButtonInteraction,
     CommandInteraction,
-    Message,
     MessageActionRow,
     MessageButton,
     ReplyMessageOptions,
 } from 'discord.js';
-import { edit, reply } from './typesafeReply';
+
+const awaitingYesNoButton = new Map<
+    string,
+    {
+        interaction: CommandInteraction | ButtonInteraction;
+        onYes: (i: ButtonInteraction) => unknown;
+    }
+>();
+
+export async function onYesNoButtonClick(
+    interaction: ButtonInteraction
+): Promise<void> {
+    const yesNoButtonOrigin = awaitingYesNoButton.get(interaction.message.id);
+
+    if (!yesNoButtonOrigin) {
+        await interaction.reply(
+            'This button is too old to be used anymore. Please initiate a new command.'
+        );
+        return;
+    }
+
+    if (interaction.user.id !== yesNoButtonOrigin.interaction.user.id) {
+        interaction.reply({
+            content:
+                'You cannot use this button because you did not initiate this command.',
+            ephemeral: true,
+        });
+        return;
+    }
+    if (interaction.customId === 'yes-no-button-✅') {
+        await yesNoButtonOrigin.onYes(interaction);
+    }
+    await yesNoButtonOrigin.interaction.deleteReply();
+}
 
 export default async function yesNoButton(
-    input: Message | CommandInteraction | ButtonInteraction,
+    interaction: CommandInteraction | ButtonInteraction,
     promptQuestion: string | ReplyMessageOptions,
-    onYes: (sentMessage: Message) => unknown
+    onYes: (i: ButtonInteraction) => unknown
 ): Promise<void> {
-    const sentMessage = await reply(input, {
+    const sentMessage = await interaction.reply({
         ...(typeof promptQuestion === 'string'
             ? { content: promptQuestion }
             : promptQuestion),
         components: [
             new MessageActionRow().addComponents([
                 new MessageButton()
-                    .setCustomId('yes')
+                    .setCustomId('yes-no-button-✅')
                     .setLabel('Yes')
                     .setEmoji('✅')
                     .setStyle('SUCCESS'),
                 new MessageButton()
-                    .setCustomId('no')
+                    .setCustomId('yes-no-button-❌')
                     .setLabel('No')
                     .setEmoji('❌')
                     .setStyle('DANGER'),
             ]),
         ],
+        fetchReply: true,
     });
 
-    let answeredYes = false;
-
-    const collector = sentMessage.createMessageComponentCollector({
-        time: 60000,
-    });
-    collector
-        .on('collect', async collected => {
-            try {
-                if (
-                    collected.user.id !==
-                    (
-                        (input as Message).author ||
-                        (input as CommandInteraction).user
-                    ).id
-                ) {
-                    collected.reply({
-                        content:
-                            'You cannot use this button because you did not initiate this command.',
-                        ephemeral: true,
-                    });
-                    return;
-                }
-                if (collected.customId === 'yes') {
-                    answeredYes = true;
-                    await onYes(sentMessage);
-                } else if (collected.customId === 'no') {
-                    if (input instanceof Message) {
-                        await sentMessage.delete();
-                    } else {
-                        await input.deleteReply();
-                        collector.stop('answered no');
-                    }
-                }
-            } catch (err) {
-                await logMessage(
-                    input.client,
-                    'warning',
-                    `Oops, something went wrong while collecting message component in <#${
-                        input.channelId
-                    }> : ${
-                        (err as Error).stack ?? (err as Error).message ?? err
-                    }`
-                );
-            }
-        })
-        .on('end', async (_, reason) => {
-            if (!answeredYes && reason !== 'answered no') {
-                try {
-                    await edit(
-                        input instanceof CommandInteraction
-                            ? input
-                            : sentMessage,
-                        promptQuestion
-                    );
-                } catch (err) {
-                    await logMessage(
-                        input.client,
-                        'warning',
-                        `Oops, something went wrong while collecting message component in <#${
-                            input.channelId
-                        }> : ${
-                            (err as Error).stack ??
-                            (err as Error).message ??
-                            err
-                        }`
-                    );
-                }
-            }
-        });
+    awaitingYesNoButton.set(sentMessage.id, { interaction, onYes });
 }

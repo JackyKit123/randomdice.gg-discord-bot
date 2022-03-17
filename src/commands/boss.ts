@@ -1,42 +1,31 @@
 import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
-    Message,
     ReplyMessageOptions,
 } from 'discord.js';
 import cache, { Boss } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import { mapChoices } from 'register/commandData';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function boss(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    const { commandName, options } = interaction;
     if (
-        await cooldown(input, '.gg boss', {
+        await cooldown(interaction, commandName, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
     ) {
         return;
     }
-    const bossName =
-        input instanceof Message
-            ? input.content.replace(/^\\?\.gg boss ?/, '')
-            : input.options.getString('boss') ?? '';
-    if (!bossName) {
-        await reply(
-            input,
-            'Please include the boss name in command parameter.'
-        );
-        return;
-    }
+    const bossName = options.getString('boss', true);
     const bossList = cache['wiki/boss'];
     const bossInfo = bossList.find(
-        b => b.name.toLowerCase() === bossName.toLowerCase()
+        ({ name }) => name.toLowerCase() === bossName.toLowerCase()
     );
 
     const getBossInfo = (target?: Boss): string | ReplyMessageOptions => {
@@ -62,12 +51,12 @@ export default async function boss(
     };
 
     if (bossInfo) {
-        await reply(input, getBossInfo(bossInfo));
+        await interaction.reply(getBossInfo(bossInfo));
         return;
     }
 
     await bestMatchFollowUp(
-        input,
+        interaction,
         bossName,
         bossList,
         ' is not a valid boss.',
@@ -82,7 +71,7 @@ export const commandData = (
     description: 'get the information about a boss',
     options: [
         {
-            type: 3,
+            type: 'STRING',
             name: 'boss',
             description: 'the name of the boss',
             required: true,

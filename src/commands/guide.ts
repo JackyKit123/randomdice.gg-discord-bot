@@ -1,7 +1,6 @@
 import {
     ApplicationCommandData,
     CommandInteraction,
-    Message,
     MessageActionRow,
     MessageButton,
     MessageEmbed,
@@ -9,7 +8,6 @@ import {
 import cache, { DeckGuide } from 'util/cache';
 import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import { mapChoices } from 'register/commandData';
 import { randomDiceWebsiteUrl } from 'config/url';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
@@ -96,27 +94,19 @@ export const getGuideData = (
 };
 
 export default async function deckGuide(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    const { commandName, options } = interaction;
+
     if (
-        await cooldown(input, '.gg guide', {
+        await cooldown(interaction, commandName, {
             default: 30 * 1000,
             donator: 5 * 1000,
         })
     ) {
         return;
     }
-    const guideName =
-        input instanceof Message
-            ? input.content.replace(/^\\?\.gg guide ?/i, '')
-            : input.options.getString('deck-name') ?? '';
-    if (!guideName) {
-        await reply(
-            input,
-            'Please include the guide name or use parameter `list` to list guides'
-        );
-        return;
-    }
+    const guideName = options.getString('deck-name', true);
     const guides = cache.decks_guide;
     const guideList = getBrandingEmbed('/decks/guide')
         .setTitle('Random Dice Deck Guides List')
@@ -131,20 +121,20 @@ export default async function deckGuide(
         );
 
     if (guideName === 'list') {
-        await reply(input, { embeds: [guideList] });
+        await interaction.reply({ embeds: [guideList] });
         return;
     }
     const guideData = guides.find(
-        g => g.name.toLowerCase() === guideName.toLowerCase()
+        ({ name }) => name.toLowerCase() === guideName.toLowerCase()
     );
 
     if (guideData) {
-        await reply(input, getGuideData(guideData));
+        await interaction.reply(getGuideData(guideData));
         return;
     }
 
     await bestMatchFollowUp(
-        input,
+        interaction,
         guideName,
         guides,
         ' is not a guide written.',

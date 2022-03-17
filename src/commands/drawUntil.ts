@@ -1,19 +1,16 @@
-import {
-    ApplicationCommandData,
-    CommandInteraction,
-    Message,
-} from 'discord.js';
+import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
-import { edit, reply } from 'util/typesafeReply';
 import { getAscendingNumberArray } from 'register/commandData';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function drawUntil(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    const { commandName, options } = interaction;
+
     if (
-        await cooldown(input, '.gg drawuntil', {
+        await cooldown(interaction, commandName, {
             default: 30 * 1000,
             donator: 5 * 1000,
         })
@@ -21,33 +18,8 @@ export default async function drawUntil(
         return;
     }
 
-    const command =
-        input instanceof Message
-            ? input.content.replace(/^\.gg drawuntil ?/i, '')
-            : 'c7';
-
-    if (!command) {
-        await reply(
-            input,
-            'How much do you want to simulate the draw? e.g. `.gg drawUntil c15`.'
-        );
-        return;
-    }
-
-    const targetClass =
-        input instanceof Message
-            ? Number(command.match(/^c?(\d+)/)?.[1])
-            : input.options.getInteger('class') ?? 0;
-
-    if (!targetClass || Number(targetClass) < 7 || Number(targetClass) > 15) {
-        await reply(
-            input,
-            'Invalid argument. The range for drawUntil should be c7 - c15. e.g. `.gg drawUntil c15`'
-        );
-        return;
-    }
-
-    const sentMessage = await reply(input, 'Running Simulation...');
+    const targetClass = options.getInteger('class', true);
+    await interaction.deferReply();
     const legendaryPoolSize = cache.dice.filter(
         d => d.rarity === 'Legendary'
     ).length;
@@ -164,7 +136,7 @@ export default async function drawUntil(
             String((KingsBirthAll * 2) / simulationRuns)
         );
 
-    await edit(input instanceof CommandInteraction ? input : sentMessage, {
+    await interaction.followUp({
         embeds: [messageEmbed],
     });
 }
@@ -175,7 +147,7 @@ export const commandData = (): ApplicationCommandData => ({
         'simulate a draw until a certain legendary class die is earned',
     options: [
         {
-            type: 4,
+            type: 'INTEGER',
             name: 'class',
             description: 'the targeted class of the legendary die',
             required: true,

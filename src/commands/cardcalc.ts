@@ -2,31 +2,22 @@ import { cardBoxImageUrl } from 'config/url';
 import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
-    Message,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function cardcalc(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const arg =
-        input instanceof Message
-            ? input.content.replace('.gg cardcalc', '').trim()
-            : input.options.getInteger('waves') ?? 0;
-    const waves = Number(arg);
+    const { commandName, options } = interaction;
+    const waves = options.getInteger('waves', true);
+
     if (
-        await cooldown(input, '.gg cardcalc', {
+        await cooldown(interaction, commandName, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
     ) {
-        return;
-    }
-
-    if (!Number.isInteger(waves) || Number(waves) < 0) {
-        await reply(input, 'Waves argument must be a positive integer.');
         return;
     }
 
@@ -44,7 +35,7 @@ export default async function cardcalc(
         cards += ((waves - 45) % 2) * 2; // 2 card for each non boss wave
     }
 
-    await reply(input, {
+    await interaction.reply({
         embeds: [
             getBrandingEmbed()
                 .setThumbnail(cardBoxImageUrl)
@@ -67,7 +58,7 @@ export const commandData: ApplicationCommandDataResolvable = {
     description: 'calculate the amount of cards at certain waves count',
     options: [
         {
-            type: 4,
+            type: 'INTEGER',
             name: 'waves',
             description: 'the waves count',
             required: true,

@@ -1,6 +1,21 @@
 import { Interaction } from 'discord.js';
 import logMessage from 'util/logMessage';
-import { baseCommands } from 'register/commandCase';
+
+import ping from 'commands/ping';
+import { register, unregister } from 'commands/register';
+import postNow from 'commands/postNow';
+import dice from 'commands/dice';
+import drawUntil from 'commands/drawUntil';
+import battlefield from 'commands/battlefield';
+import guide from 'commands/guide';
+import deck from 'commands/deck';
+import boss from 'commands/boss';
+import news from 'commands/news';
+import cardcalc from 'commands/cardcalc';
+import randomdeck from 'commands/randomdeck';
+import help from 'commands/help';
+import sendLinks from 'commands/sendLinks';
+import sendContact from 'commands/sendContact';
 
 import snipe, { deleteSnipe } from 'community discord/snipe';
 import apply, { configApps, closeApplication } from 'community discord/apply';
@@ -61,6 +76,7 @@ import {
     isDevTestDiscord,
 } from 'config/guild';
 import { isDev, isProd } from 'config/env';
+import { onYesNoButtonClick } from 'util/yesNoButton';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -70,18 +86,82 @@ export default async function interactionCreate(
 
     try {
         const asyncPromisesCapturer: Promise<unknown>[] = [];
-        if (interaction.inCachedGuild()) {
-            if (
-                interaction.isCommand() &&
-                ((isDev && isDevTestDiscord(guild)) ||
-                    (isDev && channelId === testChannelId) ||
-                    (isProd && isDevTestDiscord(guild)) ||
-                    (isProd && channelId === testChannelId))
-            ) {
-                asyncPromisesCapturer.push(
-                    baseCommands(interaction, interaction.commandName)
-                );
+        if (
+            (isDev && isDevTestDiscord(guild)) ||
+            (isDev && channelId === testChannelId) ||
+            (isProd && !isDevTestDiscord(guild)) ||
+            (isProd && channelId !== testChannelId) ||
+            !interaction.inGuild()
+        ) {
+            if (interaction.isCommand()) {
+                switch (interaction.commandName) {
+                    case 'ping':
+                        await ping(interaction);
+                        break;
+                    case 'register':
+                        await register(interaction);
+                        break;
+                    case 'unregister':
+                        await unregister(interaction);
+                        break;
+                    case 'postnow':
+                    case 'post-now':
+                        await postNow(interaction);
+                        break;
+                    case 'dice':
+                        await dice(interaction);
+                        break;
+                    case 'guide':
+                        await guide(interaction);
+                        break;
+                    case 'deck':
+                        await deck(interaction);
+                        break;
+                    case 'boss':
+                        await boss(interaction);
+                        break;
+                    case 'battlefield':
+                        await battlefield(interaction);
+                        break;
+                    case 'news':
+                        await news(interaction);
+                        break;
+                    case 'cardcalc':
+                        await cardcalc(interaction);
+                        break;
+                    case 'drawuntil':
+                    case 'draw-until':
+                        await drawUntil(interaction);
+                        break;
+                    case 'randomdeck':
+                        await randomdeck(interaction);
+                        break;
+                    case 'help':
+                        await help(interaction);
+                        break;
+                    case 'website':
+                    case 'app':
+                    case 'invite':
+                    case 'support':
+                        await sendLinks(interaction);
+                        break;
+                    case 'contact':
+                        await sendContact(interaction);
+                        break;
+                    default:
+                }
             }
+            if (interaction.isButton()) {
+                switch (interaction.customId) {
+                    case 'yes-no-button-✅':
+                    case 'yes-no-button-❌':
+                        await onYesNoButtonClick(interaction);
+                        break;
+                    default:
+                }
+            }
+        }
+        if (interaction.inCachedGuild()) {
             switch (guildId) {
                 case devTestDiscordId:
                     if (interaction.isCommand()) {
@@ -107,9 +187,7 @@ export default async function interactionCreate(
                     break;
                 case communityDiscordId:
                     if (
-                        (isDev &&
-                            channelId !==
-                                channelIds['jackykit-playground-v2']) ||
+                        (isDev && channelId !== testChannelId) ||
                         (isProd && channelId === testChannelId)
                     )
                         return;

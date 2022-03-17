@@ -1,23 +1,23 @@
 import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
-    Message,
     WebhookEditMessageOptions,
 } from 'discord.js';
 
 import cache, { Dice } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import { getAscendingNumberArray, mapChoices } from 'register/commandData';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function dice(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    const { commandName, options } = interaction;
+
     if (
-        await cooldown(input, '.gg dice', {
+        await cooldown(interaction, commandName, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
@@ -25,18 +25,12 @@ export default async function dice(
         return;
     }
 
-    const command =
-        input instanceof Message
-            ? input.content.replace(/^\.gg dice ?/i, '')
-            : input.options.getString('die') ?? '';
-
+    const dieName = options.getString('die', true);
     const diceList = cache.dice;
-    const dieName = command.toLowerCase().replace(/-.*/, '').trim();
-    if (!dieName) {
-        await reply(input, 'Please specify a die name.');
-        return;
-    }
-    const die = diceList.find(d => dieName === d.name.toLowerCase());
+    const die = diceList.find(
+        ({ name }) => dieName.toLowerCase() === name.toLowerCase()
+    );
+
     const getDiceInfo = (target?: Dice): string | WebhookEditMessageOptions => {
         let minClass: number;
         if (!target) return 'No dice found.';
@@ -54,11 +48,11 @@ export default async function dice(
                 minClass = 1;
         }
 
-        const firstArgs = command.indexOf('-');
+        const firstArgs = dieName.indexOf('-');
         if (firstArgs > -1) {
             const otherArgs = [
-                ...command
-                    .slice(firstArgs, command.length)
+                ...dieName
+                    .slice(firstArgs, dieName.length)
                     .replace(/(?:-l|--level|-c|--class)[=| +]\w+/gi, '')
                     .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
             ];
@@ -70,13 +64,13 @@ export default async function dice(
         }
 
         const dieClassArgs = [
-            ...command
-                .slice(firstArgs, command.length)
+            ...dieName
+                .slice(firstArgs, dieName.length)
                 .matchAll(/(?:-c|--class)[=| +](\w+)/gi),
         ];
         const dieLevelArgs = [
-            ...command
-                .slice(firstArgs, command.length)
+            ...dieName
+                .slice(firstArgs, dieName.length)
                 .matchAll(/(?:-l|--level)[=| +](\w+)/gi),
         ];
         if (dieClassArgs.length > 1 || dieLevelArgs.length > 1) {
@@ -93,12 +87,12 @@ export default async function dice(
             }
         }
         const dieClassArg =
-            input instanceof CommandInteraction
-                ? input.options.getInteger('class')
+            interaction instanceof CommandInteraction
+                ? interaction.options.getInteger('class')
                 : dieClassArgs[0]?.[1];
         const dieLevelArg =
-            input instanceof CommandInteraction
-                ? input.options.getInteger('level')
+            interaction instanceof CommandInteraction
+                ? interaction.options.getInteger('level')
                 : dieLevelArgs[0]?.[1];
         const dieClass = Number(dieClassArg || minClass);
         const dieLevel = Number(dieLevelArg || 1);
@@ -207,19 +201,13 @@ export default async function dice(
     };
 
     if (die) {
-        await reply(input, getDiceInfo(die));
+        await interaction.reply(getDiceInfo(die));
         return;
     }
 
-    const firstOptionalArgs = command.indexOf('-');
-    const wrongDiceName =
-        firstOptionalArgs > -1
-            ? command.slice(0, firstOptionalArgs).trim()
-            : command;
-
     await bestMatchFollowUp(
-        input,
-        wrongDiceName,
+        interaction,
+        dieName,
         diceList,
         ' is not a valid dice.',
         getDiceInfo
@@ -233,14 +221,14 @@ export const commandData = (
     description: 'get the information about a die',
     options: [
         {
-            type: 3,
+            type: 'STRING',
             name: 'die',
             description: 'the name of the die',
             required: true,
             choices: mapChoices(diceList),
         },
         {
-            type: 4,
+            type: 'INTEGER',
             name: 'class',
             description: 'the class of the die',
             minValue: 1,
@@ -248,7 +236,7 @@ export const commandData = (
             choices: getAscendingNumberArray(15, 'Class'),
         },
         {
-            type: 4,
+            type: 'INTEGER',
             name: 'level',
             description: 'the level of the die',
             minValue: 1,

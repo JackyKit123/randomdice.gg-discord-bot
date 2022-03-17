@@ -3,19 +3,16 @@ import {
     randomDiceWebsiteUrl,
 } from 'config/url';
 import { devUsersId, devUsersMentions } from 'config/users';
-import {
-    ApplicationCommandData,
-    CommandInteraction,
-    Message,
-} from 'discord.js';
+import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 
 export default async function contact(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    const { commandName } = interaction;
+
     if (
-        await cooldown(input, '.gg contact', {
+        await cooldown(interaction, commandName, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
@@ -23,13 +20,13 @@ export default async function contact(
         return;
     }
 
-    const contactMessage = `${`The developer${
-        devUsersId.length > 1 ? 's' : ''
-    } of this bot and ${randomDiceWebsiteUrl()} ${
-        devUsersId.length > 1 ? 'are' : 'is'
-    } ${devUsersMentions}. You can reach the developers via admin@randomdice.gg or by joining the randomdice discord.`}\nThe randomdice discord is ${communityDiscordInvitePermaLink}`;
-
-    await reply(input, contactMessage);
+    await interaction.reply(
+        `${`The developer${
+            devUsersId.length > 1 ? 's' : ''
+        } of this bot and ${randomDiceWebsiteUrl()} ${
+            devUsersId.length > 1 ? 'are' : 'is'
+        } ${devUsersMentions}. You can reach the developers via admin@randomdice.gg or by joining the randomdice discord.`}\nThe randomdice discord is ${communityDiscordInvitePermaLink}`
+    );
 }
 
 export const commandData: ApplicationCommandData = {

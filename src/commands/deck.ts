@@ -2,19 +2,20 @@ import { randomDiceIconUrl } from 'config/url';
 import {
     ApplicationCommandDataResolvable,
     CommandInteraction,
-    Message,
 } from 'discord.js';
 import cache, { Deck } from 'util/cache';
 import cooldown from 'util/cooldown';
 import getPaginationComponents from 'util/paginationButtons';
-import { reply } from 'util/typesafeReply';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function decklist(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { commandName, options } = interaction;
+
     if (
-        await cooldown(input, '.gg deck', {
+        await cooldown(interaction, commandName, {
             default: 30 * 1000,
             donator: 5 * 1000,
         })
@@ -22,136 +23,18 @@ export default async function decklist(
         return;
     }
 
-    let type = 'pvp';
-    let legendaryClassArgs: RegExpMatchArray[] = [];
-    let pageArgs: RegExpMatchArray[] = [];
-
-    if (input instanceof Message) {
-        const command = input.content.replace(/^\\?\.gg deck ?/i, '');
-        type = command.split(' ')?.[0];
-        if (!type.match(/^(pvp|co-op|coop|crew)$/i)) {
-            await reply(
-                input,
-                `${
-                    type ? `\`${type}\` is not a valid deck type, p` : 'P'
-                }lease specify deck type in: \`PvP\` \`Co-op\` \`Crew\``
-            );
-            return;
-        }
-
-        const firstArgs = command.replace(/^co-op ?/i, '').indexOf('-');
-        if (firstArgs > -1) {
-            const otherArgs = [
-                ...command
-                    .replace(/^co-op ?/i, '')
-                    .slice(firstArgs, command.length)
-                    .replace(/(?:-l|--legendary|-p|--page)[=| +]\w+/gi, '')
-                    .matchAll(/--?\w+(?:[=| +]\w+)?/gi),
-            ];
-            if (otherArgs.length) {
-                await reply(
-                    input,
-                    `Unknown arguments: ${otherArgs.map(
-                        ([arg]) => `\`${arg}\``
-                    )}. Acceptable arguments are \`--legendary\` \`--page\` or alias \`-l\` \`-p\``
-                );
-                return;
-            }
-        }
-
-        legendaryClassArgs = [
-            ...command
-                .slice(firstArgs, command.length)
-                .matchAll(/(?:-l|--legendary)[=| +](\w+)/gi),
-        ];
-        pageArgs = [
-            ...command
-                .slice(firstArgs, command.length)
-                .matchAll(/(?:-p|--page)[=| +](\w+)/gi),
-        ];
-
-        if (legendaryClassArgs.length > 1 || pageArgs.length > 1) {
-            if (legendaryClassArgs.length > 1) {
-                await reply(
-                    input,
-                    `Duplicated arguments for legendary class settings: ${legendaryClassArgs
-                        .map(arg => `\`${arg?.[0]}\``)
-                        .join(' ')}`
-                );
-            }
-
-            if (pageArgs.length > 1) {
-                await reply(
-                    input,
-                    `Duplicated arguments for page: ${pageArgs
-                        .map(arg => `\`${arg?.[0]}\``)
-                        .join(' ')}`
-                );
-            }
-            return;
-        }
-    }
-
-    const legendaryClassArg =
-        input instanceof CommandInteraction
-            ? input.options.getString('legendary-class') ?? ''
-            : legendaryClassArgs[0]?.[1];
-    const pageArg =
-        input instanceof CommandInteraction
-            ? input.options.getInteger('page') ?? 1
-            : pageArgs[0]?.[1];
-    let legendaryClass = legendaryClassArg || 'default';
-    const page = Number(pageArg || 1);
-
-    if (
-        !legendaryClass.match('(c7|c8|c9|c10|default|7|8|9|10)') ||
-        Number.isNaN(page) ||
-        page < 1
-    ) {
-        if (Number.isNaN(page)) {
-            await reply(
-                input,
-                `Invalid arguments for page, \`${pageArg}\` is not a number.`
-            );
-        } else if (page < 1) {
-            await reply(
-                input,
-                `Invalid arguments for page, page number \`${page}\` should be at least 1.`
-            );
-        }
-
-        if (!legendaryClass.match('(c7|c8|c9|c10|default|7|8|9|10)')) {
-            await reply(
-                input,
-                `Invalid arguments for legendary class setting, \`${pageArg}\` is not a acceptable. You may specify \`c7\` \`c8\` \`c9\` \`c10\``
-            );
-        }
-        return;
-    }
-
-    if (legendaryClass.match('7')) {
-        legendaryClass = 'default';
-    }
-
-    if (legendaryClass.match(/^(8|9|10)$/)) {
-        legendaryClass = `c${legendaryClass}`;
-    }
+    const type = options.getString('deck-type', true);
+    const legendaryClass = options.getString('legendary-class') ?? 'default';
+    const page = options.getInteger('page') ?? 1;
 
     const [emoji, decks, battlefields] = [
         cache['discord_bot/emoji'],
         cache.decks,
         cache['wiki/battlefield'],
     ];
-    const deckType = (
-        {
-            pvp: 'PvP',
-            coop: 'Co-op',
-            'co-op': 'Co-op',
-            crew: 'Crew',
-        } as { [key: string]: string }
-    )[type.toLowerCase()];
+
     const fields = decks
-        .filter(deck => deckType === deck.type)
+        .filter(deck => type === deck.type)
         .map(deckInfo => ({
             rating:
                 deckInfo.rating[legendaryClass as keyof Deck['rating']] ||
@@ -185,8 +68,8 @@ export default async function decklist(
     const embeds = Array(pageNumbers)
         .fill('')
         .map((_, i) =>
-            getBrandingEmbed(`/decks/${deckType}`)
-                .setTitle(`Random Dice ${deckType} Deck List`)
+            getBrandingEmbed(`/decks/${type}`)
+                .setTitle(`Random Dice ${type} Deck List`)
                 .setDescription('Each deck is listed below with a rating.')
                 .addFields(fields.slice(i * 10, i * 10 + 10))
                 .setFooter({
@@ -201,16 +84,13 @@ export default async function decklist(
         pageNumbers,
         currentPage
     );
-    const sentMessage = await reply(input, {
+    const sentMessage = await interaction.reply({
         embeds: [embeds[currentPage]],
         components,
+        fetchReply: true,
     });
 
-    collectorHandler(
-        sentMessage,
-        (input as Message).author ?? (input as CommandInteraction).user,
-        embeds
-    );
+    collectorHandler(sentMessage, interaction.user, embeds);
 }
 
 export const commandData: ApplicationCommandDataResolvable = {
@@ -218,7 +98,7 @@ export const commandData: ApplicationCommandDataResolvable = {
     description: 'retrieve the deck list',
     options: [
         {
-            type: 3,
+            type: 'STRING',
             name: 'deck-type',
             description: 'the type of deck',
             required: true,
@@ -238,7 +118,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             ],
         },
         {
-            type: 3,
+            type: 'STRING',
             name: 'legendary-class',
             description: 'the legendary class of the deck',
             choices: [
@@ -261,7 +141,7 @@ export const commandData: ApplicationCommandDataResolvable = {
             ],
         },
         {
-            type: 4,
+            type: 'INTEGER',
             name: 'page',
             description: 'the page number',
             minValue: 1,

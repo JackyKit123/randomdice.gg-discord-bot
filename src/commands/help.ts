@@ -1,21 +1,16 @@
 import { isCommunityDiscord, isDevTestDiscord } from 'config/guild';
-import {
-    ApplicationCommandData,
-    CommandInteraction,
-    Message,
-} from 'discord.js';
+import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
-import { reply } from 'util/typesafeReply';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 export default async function help(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
-    const { guild } = input;
+    const { commandName, guild } = interaction;
 
     if (
-        await cooldown(input, '.gg help', {
+        await cooldown(interaction, commandName, {
             default: 10 * 1000,
             donator: 2 * 1000,
         })
@@ -66,27 +61,21 @@ export default async function help(
         );
 
     if (isCommunityDiscord(guild)) {
-        await reply(
-            input,
-            {
-                content:
-                    'Since you are request this `/help` in the community discord. There are two sets of commands for this bot, one is for the generic random dice commands. While the others are a the list of commands specific towards the community discord only.',
-                embeds: [helpMessage, communityHelpMessage],
-            },
-            true
-        );
+        await interaction.reply({
+            content:
+                'Since you are request this `/help` in the community discord. There are two sets of commands for this bot, one is for the generic random dice commands. While the others are a the list of commands specific towards the community discord only.',
+            embeds: [helpMessage, communityHelpMessage],
+            ephemeral: true,
+        });
     } else if (isDevTestDiscord(guild)) {
-        await reply(
-            input,
-            {
-                content:
-                    'Since you are request this `/help` in the development discord. There are two sets of commands for this bot, one is for the generic random dice commands. While the others are a the list of commands specific towards the bot developers only.',
-                embeds: [helpMessage, devHelpMessage],
-            },
-            true
-        );
+        await interaction.reply({
+            content:
+                'Since you are request this `/help` in the development discord. There are two sets of commands for this bot, one is for the generic random dice commands. While the others are a the list of commands specific towards the bot developers only.',
+            embeds: [helpMessage, devHelpMessage],
+            ephemeral: true,
+        });
     } else {
-        await reply(input, { embeds: [helpMessage] }, true);
+        await interaction.reply({ embeds: [helpMessage], ephemeral: true });
     }
 }
 

@@ -1,21 +1,18 @@
 import { shuffleDice, shuffleDiceLegendary } from 'config/emojiId';
-import {
-    ApplicationCommandData,
-    CommandInteraction,
-    Message,
-} from 'discord.js';
+import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 import { promisify } from 'util';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
-import { edit, reply } from 'util/typesafeReply';
 
 const wait = promisify(setTimeout);
 
 export default async function RandomDeck(
-    input: Message | CommandInteraction
+    interaction: CommandInteraction
 ): Promise<void> {
+    const { commandName } = interaction;
+
     if (
-        await cooldown(input, '.gg randomdeck', {
+        await cooldown(interaction, commandName, {
             default: 20 * 1000,
             donator: 5 * 1000,
         })
@@ -42,13 +39,12 @@ export default async function RandomDeck(
                 Math.random() > 0.5 ? shuffleDiceLegendary : shuffleDice
             );
 
-    const sentMessage = await reply(input, getShuffleAnimation().join(''));
+    await interaction.reply(getShuffleAnimation().join(''));
     for (let x = 1; x <= 5; x += 1) {
         // eslint-disable-next-line no-await-in-loop
         await wait(300);
         // eslint-disable-next-line no-await-in-loop
-        await edit(
-            input instanceof Message ? sentMessage : input,
+        await interaction.editReply(
             [...pick5dice.slice(0, x), ...getShuffleAnimation().slice(x)].join(
                 ''
             )
