@@ -1,13 +1,12 @@
-/* eslint-disable no-console */
 import firebase from 'firebase-admin';
 import { database } from 'register/firebase';
 import { Client } from 'discord.js';
 import logMessage from 'util/logMessage';
 import { isDev } from 'config/env';
 import { getDevTestDiscord } from 'config/guild';
-import * as post from '../commands/postNow';
+import * as post from './postNow';
 
-export default function listener(client: Client<true>): void {
+export default function databaseListener(client: Client<true>): void {
     const posting = {
         guide: false,
         news: false,

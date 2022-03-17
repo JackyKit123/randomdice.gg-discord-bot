@@ -8,7 +8,7 @@ import infoVC from 'community discord/infoVC';
 import { registerTimer } from 'community discord/timer';
 import logMessage from 'util/logMessage';
 import { fetchDatabase } from 'util/cache';
-import updateListener from 'util/updateListener';
+import databaseListener from 'commands/databaseListener';
 import purgeRolesOnReboot from 'community discord/util/purgeRolesOnReboot';
 import registerSlashCommands from 'register/commandData';
 
@@ -20,7 +20,7 @@ export default async function ready(client: Client<true>): Promise<void> {
         process.env.NODE_ENV
     }`;
     try {
-        updateListener(client);
+        databaseListener(client);
         await logMessage(client, 'info', bootMessage);
         // eslint-disable-next-line no-console
         console.log(bootMessage);
