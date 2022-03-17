@@ -69,7 +69,7 @@ async function Cooldown<
         (userIsDonator ? cooldown.donator : cooldown.default)
     ) {
         await interaction.reply({
-            content: (!interaction.isCommand() && user.toString()) || '',
+            content: (!interaction.isCommand() && user.toString()) || undefined,
             embeds: [
                 new MessageEmbed()
                     .setTitle('Slow Down!')
