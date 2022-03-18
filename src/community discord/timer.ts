@@ -62,9 +62,25 @@ async function tickTimer(
         const now = Date.now();
         if (now <= endTime) {
             const newText = parseTimeText(endTime - now);
-            await message.edit({
-                embeds: [embed.setDescription(newText)],
-            });
+            try {
+                await message.edit({
+                    embeds: [embed.setDescription(newText)],
+                });
+            } catch (err) {
+                await message.edit({
+                    embeds: [
+                        embed
+                            .setDescription(newText)
+                            .addField(
+                                'Error',
+                                (err as Error).message ?? String(err)
+                            )
+                            .setFooter({
+                                text: 'This timer has stopped ticking.',
+                            }),
+                    ],
+                });
+            }
             await wait(Math.min(5000, endTime - now));
             await tick();
         } else {
