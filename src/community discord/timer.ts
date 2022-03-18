@@ -146,11 +146,11 @@ export async function setTimer(
     channel: TextBasedChannel,
     member: GuildMember,
     title: string,
-    time: number
+    time: number,
+    interaction?: CommandInteraction
 ): Promise<void> {
     const endTime = Date.now() + time;
-
-    const timerMessage = await channel.send({
+    const messageOption = {
         embeds: [
             new MessageEmbed()
                 .setAuthor({
@@ -168,7 +168,24 @@ export async function setTimer(
                 .setTimestamp(endTime)
                 .setDescription(parseTimeText(time)),
         ],
-    });
+    };
+
+    let timerMessage: Message;
+    if (interaction) {
+        if (!interaction.inCachedGuild()) {
+            await interaction.reply(
+                'This command can only be used in a guild.'
+            );
+            return;
+        }
+        timerMessage = await interaction.reply({
+            ...messageOption,
+            fetchReply: true,
+        });
+    } else {
+        timerMessage = await channel.send(messageOption);
+    }
+
     const ref = database.ref('discord_bot/community/timer').push();
     await ref.set({
         guildId: member.guild.id,
@@ -236,9 +253,8 @@ export default async function timerCommand(
         );
         return;
     }
-    await interaction.deferReply();
-    await setTimer(channel, member, msg, time);
-    await interaction.deleteReply();
+
+    await setTimer(channel, member, msg, time, interaction);
 }
 
 export async function registerTimer(client: Client): Promise<void> {
