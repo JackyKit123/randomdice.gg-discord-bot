@@ -6,7 +6,7 @@ import { weeklyAutoReset } from 'community discord/currency/leaderboard';
 import { setRaffleTimerOnBoot } from 'community discord/currency/raffle';
 import infoVC from 'community discord/infoVC';
 import { registerTimer } from 'community discord/timer';
-import logMessage from 'util/logMessage';
+import logMessage, { logError } from 'util/logMessage';
 import { fetchDatabase } from 'util/cache';
 import databaseListener from 'commands/databaseListener';
 import purgeRolesOnReboot from 'community discord/util/purgeRolesOnReboot';
@@ -41,12 +41,6 @@ export default async function ready(client: Client<true>): Promise<void> {
             infoVC(client),
         ]);
     } catch (err) {
-        await logMessage(
-            client,
-            'warning',
-            `Oops, something went wrong in client#Ready : ${
-                (err as Error).stack ?? (err as Error).message ?? err
-            }`
-        );
+        await logError(client, err, 'client#ready', client);
     }
 }

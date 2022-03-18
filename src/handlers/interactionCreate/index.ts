@@ -1,5 +1,5 @@
 import { Interaction } from 'discord.js';
-import logMessage from 'util/logMessage';
+import { logError } from 'util/logMessage';
 
 import ping from 'commands/ping';
 import { register, unregister } from 'commands/register';
@@ -81,7 +81,7 @@ import { onYesNoButtonClick } from 'util/yesNoButton';
 export default async function interactionCreate(
     interaction: Interaction
 ): Promise<void> {
-    const { guildId, channelId, client, guild, user } = interaction;
+    const { guildId, channelId, client, guild } = interaction;
     const testChannelId = channelIds['jackykit-playground-v2'];
 
     try {
@@ -459,25 +459,7 @@ export default async function interactionCreate(
                 }
             }
         } finally {
-            let commandName = '';
-            if (
-                interaction.isCommand() ||
-                interaction.isContextMenu() ||
-                interaction.isUserContextMenu()
-            ) {
-                ({ commandName } = interaction);
-            } else if (interaction.isMessageComponent()) {
-                commandName = interaction.customId;
-            }
-            await logMessage(
-                client,
-                'warning',
-                `Oops, something went wrong when executing ${
-                    interaction.type
-                } interaction \`${commandName}\` in ${
-                    guild ? `server ${guild.name}` : `DM with <@${user.id}>`
-                } : ${(err as Error).stack ?? (err as Error).message ?? err}`
-            );
+            await logError(client, err, 'interaction#Create', interaction);
         }
     }
 }

@@ -1,4 +1,4 @@
-import logMessage from 'util/logMessage';
+import { logError } from 'util/logMessage';
 import { GuildMember, PartialGuildMember } from 'discord.js';
 import { writeModLogOnGenericMute } from 'community discord/moderation/modlog';
 import { isCommunityDiscord } from 'config/guild';
@@ -15,12 +15,6 @@ export default async function guildMemberUpdate(
             await writeModLogOnGenericMute(oldMember, newMember);
         }
     } catch (error) {
-        await logMessage(
-            client,
-            'warning',
-            `Oops! Something went wrong when handling \`memberUpdate\`\n${
-                (error as Error).stack ?? (error as Error).message ?? error
-            }`
-        );
+        await logError(client, error, 'client#guildMemberUpdate', newMember);
     }
 }

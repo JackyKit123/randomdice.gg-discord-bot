@@ -5,7 +5,7 @@ import {
     User,
 } from 'discord.js';
 import { removeAfkListener } from 'community discord/afk';
-import logMessage from 'util/logMessage';
+import { logError } from 'util/logMessage';
 import { isCommunityDiscord } from 'config/guild';
 import { isProd } from 'config/env';
 
@@ -23,12 +23,6 @@ export default async function messageReactionAdd(
             await removeAfkListener(nonPartialReaction, user);
         }
     } catch (err) {
-        await logMessage(
-            client,
-            'warning',
-            `Oops, something went wrong when handling message reaction in ${
-                guild ? `server ${guild.name}` : `DM with <@${user.id}>`
-            } : ${(err as Error).stack ?? (err as Error).message ?? err}`
-        );
+        await logError(client, err, 'client#messageReactionAdd', reaction);
     }
 }

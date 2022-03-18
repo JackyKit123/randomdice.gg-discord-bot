@@ -1,6 +1,6 @@
 import banOnLeave from 'community discord/moderation/ban appeal/banOnLeave';
 import { deleteCustomRoleOnGuildLeave } from 'community discord/customRole';
-import logMessage from 'util/logMessage';
+import { logError } from 'util/logMessage';
 import { GuildMember, PartialGuildMember } from 'discord.js';
 import { writeModLogOnGenericKick } from 'community discord/moderation/modlog';
 import { banAppealDiscordId, communityDiscordId } from 'config/guild';
@@ -16,8 +16,8 @@ export default async function guildMemberRemove(
             switch (guild.id) {
                 case communityDiscordId:
                     await Promise.all([
-                        (deleteCustomRoleOnGuildLeave(member),
-                        writeModLogOnGenericKick(member)),
+                        deleteCustomRoleOnGuildLeave(member),
+                        writeModLogOnGenericKick(member),
                     ]);
                     break;
                 case banAppealDiscordId:
@@ -27,12 +27,6 @@ export default async function guildMemberRemove(
             }
         }
     } catch (err) {
-        await logMessage(
-            client,
-            'warning',
-            `Oops, something went wrong when listening to guildMemberRemove in server ${
-                guild.name
-            }.\n${(err as Error).stack ?? (err as Error).message ?? err}`
-        );
+        await logError(client, err, 'client#guildMemberRemove', member);
     }
 }

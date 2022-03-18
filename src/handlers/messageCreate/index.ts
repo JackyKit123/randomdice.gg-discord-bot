@@ -14,7 +14,7 @@ import { autoClassCritRole } from 'community discord/rdRole';
 import solveMathEquation from 'community discord/solveMathEquation';
 import spy from 'community discord/spy';
 import voteAutoResponder from 'community discord/voteAutoResponder';
-import logMessage from 'util/logMessage';
+import { logError } from 'util/logMessage';
 import channelIds from 'config/channelIds';
 import { isCommunityDiscord, isDevTestDiscord } from 'config/guild';
 import { isDev, isProd } from 'config/env';
@@ -98,15 +98,12 @@ export default async function messageCreate(message: Message): Promise<void> {
         }
         await Promise.all(asyncPromisesCapturer);
     } catch (err) {
-        await logMessage(
-            client,
-            'warning',
-            `Oops, something went wrong when attempting to execute:\`${content}\` in ${
-                guild ? `server ${guild.name}` : `DM with <@${author.id}>`
-            } : ${(err as Error).stack ?? (err as Error).message ?? err}`
-        );
-        await message.reply(
-            `Oops, something went wrong: ${(err as Error).message}`
-        );
+        try {
+            await message.reply(
+                `Oops, something went wrong: ${(err as Error).message}`
+            );
+        } finally {
+            await logError(client, err, 'client#messageCreate', message);
+        }
     }
 }
