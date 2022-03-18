@@ -67,19 +67,23 @@ async function tickTimer(
                     embeds: [embed.setDescription(newText)],
                 });
             } catch (err) {
-                await message.edit({
-                    embeds: [
-                        embed
-                            .setDescription(newText)
-                            .addField(
-                                'Error',
-                                (err as Error).message ?? String(err)
-                            )
-                            .setFooter({
-                                text: 'This timer has stopped ticking.',
-                            }),
-                    ],
-                });
+                try {
+                    await message.edit({
+                        embeds: [
+                            embed
+                                .setDescription(newText)
+                                .addField(
+                                    'Error',
+                                    (err as Error).message ?? String(err)
+                                )
+                                .setFooter({
+                                    text: 'This timer has stopped ticking.',
+                                }),
+                        ],
+                    });
+                } catch {
+                    throw err;
+                }
             }
             await wait(Math.min(5000, endTime - now));
             await tick();
