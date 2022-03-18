@@ -20,7 +20,7 @@ export default async function createAppealChanel(
     const { client, id, guild } = member;
     const communityDiscord = getCommunityDiscord(client);
 
-    const logChannel = await guild.channels.fetch(appealServerChannelId.log);
+    const logChannel = guild.channels.cache.get(appealServerChannelId.log);
     const ban = await communityDiscord.bans.fetch(id).catch(suppressUnknownBan);
 
     const communityMember = communityDiscord.members.cache.get(id);
