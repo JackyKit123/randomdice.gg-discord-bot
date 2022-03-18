@@ -62,12 +62,10 @@ async function tickTimer(
         const now = Date.now();
         if (now <= endTime) {
             const newText = parseTimeText(endTime - now);
-            if (newText !== embed.description) {
-                await message.edit({
-                    embeds: [embed.setDescription(newText)],
-                });
-            }
-            await wait(5000);
+            await message.edit({
+                embeds: [embed.setDescription(newText)],
+            });
+            await wait(Math.min(5000, endTime - now));
             await tick();
         } else {
             killTimerFromDB(key);
