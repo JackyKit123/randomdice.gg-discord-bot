@@ -24,10 +24,11 @@ export default async function banOnTimerEnds(
     )
         return;
 
-    await reject(
+    const responseEmbed = await reject(
         member,
         client.user,
-        'Appeal rejected. Member did not respond to the appeal within 24 hours.'
+        'Member did not respond to the appeal within 24 hours.'
     );
+    await channel.send({ embeds: [responseEmbed] });
     await archiveAppeal(channel);
 }
