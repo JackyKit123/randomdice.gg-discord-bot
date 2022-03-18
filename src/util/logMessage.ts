@@ -55,7 +55,10 @@ export default async function log(
 ): Promise<Message | ReturnType<WebhookClient['send']>> {
     const messageOption = {
         content: severity === 'error' ? devUsersMentions : undefined,
-        embeds: [getEmbed(severity, message)],
+        embeds:
+            message instanceof MessageEmbed
+                ? [message]
+                : [getEmbed(severity, message)],
     };
 
     const webhookLogging = new WebhookClient({
