@@ -7,18 +7,22 @@ import {
     CategoryChannel,
     Collection,
     CommandInteraction,
-    Guild,
-    GuildBasedChannel,
+    GuildMember,
     MessageEmbed,
+    NewsChannel,
+    PartialGuildMember,
+    TextChannel,
+    User,
     UserContextMenuInteraction,
 } from 'discord.js';
-import { suppressCannotDmUser } from 'util/suppressErrors';
+import { suppressCannotDmUser, suppressUnknownBan } from 'util/suppressErrors';
 import { writeModLog } from '../modlog';
 
 export async function archiveAppeal(
-    guild: Guild,
-    channel: GuildBasedChannel | null
+    channel: NewsChannel | TextChannel
 ): Promise<void> {
+    if (!channel) return;
+    const { guild } = channel;
     const archiveCategories = guild.channels.cache.filter(
         chl =>
             /archives/i.test(chl.name) &&
@@ -36,60 +40,15 @@ export async function archiveAppeal(
         await channel.setParent(archiveCategory);
 }
 
-export default async function closeAppeal(
-    interaction:
-        | CommandInteraction
-        | ButtonInteraction
-        | UserContextMenuInteraction
-): Promise<void> {
-    if (!interaction.inCachedGuild()) return;
-    const { client, member, guild, channel } = interaction;
+const closeAppealLog = async (
+    target: GuildMember | PartialGuildMember,
+    moderator: User,
+    action: 'accept' | 'reject' | 'falsebanned',
+    closeAppealReason: string | null
+) => {
+    const { guild, client } = target;
 
-    const communityDiscord = getCommunityDiscord(client);
-
-    if (!channel || !channel.isText() || channel.isThread()) return;
-
-    const membersInAppealRoom = channel.permissionOverwrites.cache.filter(
-        overwrite => overwrite.type === 'member'
-    );
-
-    const target =
-        (interaction instanceof CommandInteraction
-            ? interaction.options.getMember('member')
-            : null) ||
-        (membersInAppealRoom.size === 1
-            ? await guild.members.fetch(membersInAppealRoom.first()?.id ?? '')
-            : null);
-
-    const reason =
-        interaction instanceof CommandInteraction &&
-        interaction.options.getString('reason');
     const logChannel = guild.channels.cache.get(appealServerChannelId.log);
-
-    if (!target) {
-        await interaction.reply({
-            content: 'Please provide a valid member to close the appeal.',
-            ephemeral: interaction instanceof ButtonInteraction,
-        });
-        return;
-    }
-
-    if (target.id === member.id) {
-        await interaction.reply({
-            content: 'You cannot close your own appeal.',
-            ephemeral: interaction instanceof ButtonInteraction,
-        });
-        return;
-    }
-
-    if (!member.permissions.has('BAN_MEMBERS')) {
-        await interaction.reply({
-            content:
-                'You do not have sufficient permission to execute this command.',
-            ephemeral: interaction instanceof ButtonInteraction,
-        });
-        return;
-    }
 
     const existingAppealLog = logChannel?.isText()
         ? (await logChannel.messages.fetch({ limit: 100 })).find(
@@ -117,81 +76,160 @@ export default async function closeAppeal(
         .setFooter({ text: 'Case closed: ' })
         .addField(
             'Appeal closed by',
-            `${member.displayName}\n${member.toString()}`,
+            `${moderator.username}\n${moderator}`,
             true
         );
 
-    if (reason) {
-        logEmbed = logEmbed.addField('Case close reason', reason);
+    if (closeAppealReason) {
+        logEmbed = logEmbed.addField('Case close reason', closeAppealReason);
     }
 
-    const respondOnAppealClose = async (embed: MessageEmbed) => {
-        await interaction.reply({ embeds: [embed] });
-        if (existingAppealLog) {
-            await existingAppealLog.edit({ embeds: [embed] });
-        } else if (logChannel?.isText()) {
-            await logChannel.send({ embeds: [embed] });
-        }
-    };
+    switch (action) {
+        case 'accept':
+            logEmbed = logEmbed.setTitle('Appeal accepted').setColor('#e5ffe5');
+            break;
+        case 'reject':
+            logEmbed = logEmbed.setTitle('Appeal rejected').setColor('#ff3434');
+            break;
+        case 'falsebanned':
+            logEmbed = logEmbed
+                .setTitle('Member is not guilty')
+                .setColor('#e5ffe5');
+            break;
+        default:
+    }
 
-    const accept = async (): Promise<void> => {
-        const acceptReason = `Appealed accepted in appeal server. ${
+    if (existingAppealLog) {
+        await existingAppealLog.edit({ embeds: [logEmbed] });
+    } else if (logChannel?.isText()) {
+        await logChannel.send({ embeds: [logEmbed] });
+    }
+
+    return logEmbed;
+};
+
+export const accept = async (
+    target: GuildMember,
+    moderator: User,
+    reason: string | null
+): Promise<MessageEmbed> => {
+    const communityDiscord = getCommunityDiscord(target.client);
+
+    const acceptReason = `Appealed accepted in appeal server. ${
+        reason ?? ''
+    }`.trim();
+    await communityDiscord.members
+        .unban(target, acceptReason)
+        .catch(suppressUnknownBan);
+
+    await writeModLog(target.user, acceptReason, moderator, 'unban');
+
+    await target
+        .send(
+            `Your appeal is accepted.\n${
+                reason ? `Reason: ${reason}\n` : ''
+            }You may now return to this main server. ${communityDiscordInvitePermaLink}`
+        )
+        .catch(suppressCannotDmUser);
+    await target.ban({
+        reason: `Appeal accepted.\n${reason || ''}`.trim(),
+    });
+
+    return closeAppealLog(target, moderator, 'accept', reason);
+};
+
+export const reject = async (
+    target: GuildMember | PartialGuildMember,
+    moderator: User,
+    reason: string | null
+): Promise<MessageEmbed> => {
+    await target
+        .send(`Your appeal is rejected.${reason ? `\nReason: ${reason}` : ''}`)
+        .catch(suppressCannotDmUser);
+    await target.ban({
+        reason: `Appeal rejected.\n${reason || ''}`.trim(),
+    });
+    return closeAppealLog(target, moderator, 'reject', reason);
+};
+
+export const falsebanned = async (
+    target: GuildMember,
+    moderator: User,
+    reason: string | null
+): Promise<MessageEmbed> => {
+    const { client } = target;
+    const communityDiscord = getCommunityDiscord(client);
+
+    const falsebannedReason =
+        `Appealed accepted in appeal server, member is not guilty. ${
             reason ?? ''
         }`.trim();
-        await communityDiscord.members.unban(target, acceptReason);
-        await target
-            .send(
-                `Your appeal is accepted.\n${
-                    reason ? `Reason: ${reason}\n` : ''
-                }You may now return to this main server. ${communityDiscordInvitePermaLink}`
-            )
-            .catch(suppressCannotDmUser);
+    await communityDiscord.members.unban(target, falsebannedReason);
+    await writeModLog(target.user, falsebannedReason, moderator, 'unban');
+    await target
+        .send(
+            `Your appeal is accepted, you are found to be clean, you may now return to this main server. ${communityDiscordInvitePermaLink}`
+        )
+        .catch(suppressCannotDmUser);
 
-        await guild.members.ban(target, {
-            reason: `Appeal accepted.\n${reason || ''}`.trim(),
+    await target.kick(
+        `Member is not guilty, appeal closed. ${reason ?? ''}`.trim()
+    );
+    return closeAppealLog(target, moderator, 'falsebanned', reason);
+};
+
+export default async function closeAppeal(
+    interaction:
+        | CommandInteraction
+        | ButtonInteraction
+        | UserContextMenuInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const { member, guild, channel } = interaction;
+
+    if (!channel || !channel.isText() || channel.isThread()) return;
+
+    const membersInAppealRoom = channel.permissionOverwrites.cache.filter(
+        overwrite => overwrite.type === 'member'
+    );
+
+    const target =
+        (interaction instanceof CommandInteraction
+            ? interaction.options.getMember('member')
+            : null) ||
+        (membersInAppealRoom.size === 1
+            ? await guild.members.fetch(membersInAppealRoom.first()?.id ?? '')
+            : null);
+
+    const reason =
+        (interaction instanceof CommandInteraction &&
+            interaction.options.getString('reason')) ||
+        null;
+
+    if (!target) {
+        await interaction.reply({
+            content: 'Please provide a valid member to close the appeal.',
+            ephemeral: interaction instanceof ButtonInteraction,
         });
-        await writeModLog(target.user, acceptReason, member.user, 'unban');
-        await respondOnAppealClose(
-            logEmbed.setTitle('Appeal accepted').setColor('#e5ffe5')
-        );
-    };
+        return;
+    }
 
-    const reject = async (): Promise<void> => {
-        await target
-            .send(
-                `Your appeal is rejected.${reason ? `\nReason: ${reason}` : ''}`
-            )
-            .catch(suppressCannotDmUser);
-
-        await guild.members.ban(target, {
-            reason: `Appeal rejected.\n${reason || ''}`.trim(),
+    if (target.id === member.id) {
+        await interaction.reply({
+            content: 'You cannot close your own appeal.',
+            ephemeral: interaction instanceof ButtonInteraction,
         });
-        await respondOnAppealClose(
-            logEmbed.setTitle('Appeal rejected').setColor('#ff3434')
-        );
-    };
+        return;
+    }
 
-    const falsebanned = async (): Promise<void> => {
-        const falsebannedReason =
-            `Appealed accepted in appeal server, member is not guilty. ${
-                reason ?? ''
-            }`.trim();
-        await communityDiscord.members.unban(target, falsebannedReason);
-        await writeModLog(target.user, falsebannedReason, member.user, 'unban');
-        await target
-            .send(
-                `Your appeal is accepted, you are found to be clean, you may now return to this main server. ${communityDiscordInvitePermaLink}`
-            )
-            .catch(suppressCannotDmUser);
-
-        await guild.members.kick(
-            target,
-            `Member is not guilty, appeal closed. ${reason ?? ''}`.trim()
-        );
-        await respondOnAppealClose(
-            logEmbed.setTitle('Member is not guilty').setColor('#e5ffe5')
-        );
-    };
+    if (!member.permissions.has('BAN_MEMBERS')) {
+        await interaction.reply({
+            content:
+                'You do not have sufficient permission to execute this command.',
+            ephemeral: interaction instanceof ButtonInteraction,
+        });
+        return;
+    }
 
     const executorRole = member.roles.highest;
     const targetRole = target.roles.highest;
@@ -203,7 +241,7 @@ export default async function closeAppeal(
         return;
     }
 
-    await archiveAppeal(guild, channel);
+    let closeResponse;
 
     switch (
         interaction instanceof ButtonInteraction
@@ -213,20 +251,22 @@ export default async function closeAppeal(
         case 'accept':
         case 'appeal-accept':
         case 'Accept Appeal':
-            await accept();
+            closeResponse = await accept(target, member.user, reason);
             break;
         case 'reject':
         case 'appeal-reject':
         case 'Reject Appeal':
-            await reject();
+            closeResponse = await reject(target, member.user, reason);
             break;
         case 'falsebanned':
         case 'appeal-falsebanned':
         case 'Not Guilty':
-            await falsebanned();
+            closeResponse = await falsebanned(target, member.user, reason);
             break;
         default:
     }
+    if (closeResponse) await interaction.reply({ embeds: [closeResponse] });
+    await archiveAppeal(channel);
 }
 
 export const commandData: ApplicationCommandData[] = [

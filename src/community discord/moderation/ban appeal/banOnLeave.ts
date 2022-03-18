@@ -1,18 +1,19 @@
 import { appealServerChannelId } from 'config/channelIds';
 import { appealServerRoleIds } from 'config/roleId';
-import {
-    CategoryChannel,
-    GuildMember,
-    MessageEmbed,
-    PartialGuildMember,
-} from 'discord.js';
+import { CategoryChannel, GuildMember, PartialGuildMember } from 'discord.js';
+import { archiveAppeal, reject } from './closeAppeal';
 
 export default async function banOnLeave(
     member: GuildMember | PartialGuildMember
 ): Promise<void> {
-    const { guild, roles, user, client } = member;
+    const {
+        guild,
+        roles,
+        user,
+        client: { user: clientUser },
+    } = member;
 
-    if (!user) return;
+    if (!user || !clientUser) return;
 
     const auditLogsBans = await guild.fetchAuditLogs({
         limit: 3,
@@ -30,28 +31,11 @@ export default async function banOnLeave(
     )
         return;
 
-    await member.ban({
-        reason: 'Appeal rejected. Member Left.',
-    });
-    const appealLog = new MessageEmbed()
-        .setAuthor({
-            name: member.user.tag,
-            iconURL: member.displayAvatarURL({ dynamic: true }),
-        })
-        .setTimestamp()
-        .setDescription('Member Left.')
-        .addField(
-            'Appeal closed by',
-            `${client.user?.username ?? ''}\n${client.user}`.trim()
-        )
-        .setTitle('Appeal rejected')
-        .setColor('#ff3434');
-
-    const logChannel = guild.channels.cache.get(appealServerChannelId.log);
-
-    if (logChannel?.isText()) {
-        await logChannel.send({ embeds: [appealLog] });
-    }
+    const responseEmbed = await reject(
+        member,
+        clientUser,
+        'Appeal rejected. Member left the server.'
+    );
 
     const appealCat = guild.channels.cache.get(
         appealServerChannelId['Appeal Room']
@@ -78,7 +62,8 @@ export default async function banOnLeave(
             );
         }
         if (appealRoom?.isText()) {
-            await appealRoom.send({ embeds: [appealLog] });
+            await appealRoom.send({ embeds: [responseEmbed] });
+            await archiveAppeal(appealRoom);
         }
     }
 }
