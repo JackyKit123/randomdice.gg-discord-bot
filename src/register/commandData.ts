@@ -78,10 +78,10 @@ export default async function registerSlashCommands(
         battlefield(cacheData['wiki/battlefield']),
         cardcalc,
         deck,
-        dice(cacheData.dice),
+        dice(),
         ping,
         drawUntil(),
-        guide(cacheData.decks_guide),
+        guide(),
         help,
         news,
         randomDeck,
@@ -177,8 +177,7 @@ export const getAscendingNumberArray = (
     }));
 
 export const mapChoices = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: ({ name: string } & Record<string, any>)[]
+    data: { name: string }[]
 ): {
     name: string;
     value: string;

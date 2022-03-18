@@ -1,15 +1,16 @@
 import {
     ApplicationCommandDataResolvable,
+    AutocompleteInteraction,
     CommandInteraction,
     WebhookEditMessageOptions,
 } from 'discord.js';
-
 import cache, { Dice } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { getAscendingNumberArray, mapChoices } from 'register/commandData';
+import { getAscendingNumberArray } from 'register/commandData';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
+import getSuggestions from './util/getSuggestions';
 
 export default async function dice(
     interaction: CommandInteraction
@@ -214,9 +215,14 @@ export default async function dice(
     );
 }
 
-export const commandData = (
-    diceList: Dice[]
-): ApplicationCommandDataResolvable => ({
+export async function diceNameSuggestion(
+    interaction: AutocompleteInteraction
+): Promise<void> {
+    const dieName = interaction.options.getString('die', true).toLowerCase();
+    await interaction.respond(getSuggestions(cache.dice, dieName));
+}
+
+export const commandData = (): ApplicationCommandDataResolvable => ({
     name: 'dice',
     description: 'get the information about a die',
     options: [
@@ -225,7 +231,7 @@ export const commandData = (
             name: 'die',
             description: 'the name of the die',
             required: true,
-            choices: mapChoices(diceList),
+            autocomplete: true,
         },
         {
             type: 'INTEGER',

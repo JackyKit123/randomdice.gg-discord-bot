@@ -4,10 +4,10 @@ import { logError } from 'util/logMessage';
 import ping from 'commands/ping';
 import { register, unregister } from 'commands/register';
 import postNow from 'commands/postNow';
-import dice from 'commands/dice';
+import dice, { diceNameSuggestion } from 'commands/dice';
 import drawUntil from 'commands/drawUntil';
 import battlefield from 'commands/battlefield';
-import guide from 'commands/guide';
+import guide, { guideNameSuggestion } from 'commands/guide';
 import deck from 'commands/deck';
 import boss from 'commands/boss';
 import news from 'commands/news';
@@ -104,7 +104,6 @@ export default async function interactionCreate(
                     case 'unregister':
                         await unregister(interaction);
                         break;
-                    case 'postnow':
                     case 'post-now':
                         await postNow(interaction);
                         break;
@@ -129,7 +128,6 @@ export default async function interactionCreate(
                     case 'cardcalc':
                         await cardcalc(interaction);
                         break;
-                    case 'drawuntil':
                     case 'draw-until':
                         await drawUntil(interaction);
                         break;
@@ -156,6 +154,17 @@ export default async function interactionCreate(
                     case 'yes-no-button-✅':
                     case 'yes-no-button-❌':
                         await onYesNoButtonClick(interaction);
+                        break;
+                    default:
+                }
+            }
+            if (interaction.isAutocomplete()) {
+                switch (interaction.commandName) {
+                    case 'dice':
+                        await diceNameSuggestion(interaction);
+                        break;
+                    case 'guide':
+                        await guideNameSuggestion(interaction);
                         break;
                     default:
                 }

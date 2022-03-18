@@ -1,5 +1,6 @@
 import {
     ApplicationCommandData,
+    AutocompleteInteraction,
     CommandInteraction,
     MessageActionRow,
     MessageButton,
@@ -8,10 +9,10 @@ import {
 import cache, { DeckGuide } from 'util/cache';
 import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
-import { mapChoices } from 'register/commandData';
 import { randomDiceWebsiteUrl } from 'config/url';
 import bestMatchFollowUp from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
+import getSuggestions from './util/getSuggestions';
 
 export const getGuideData = (
     target?: DeckGuide
@@ -142,7 +143,14 @@ export default async function deckGuide(
     );
 }
 
-export const commandData = (guides: DeckGuide[]): ApplicationCommandData => ({
+export async function guideNameSuggestion(
+    interaction: AutocompleteInteraction
+): Promise<void> {
+    const deckName = interaction.options.getString('deck-name', true);
+    await interaction.respond(getSuggestions(cache.decks_guide, deckName));
+}
+
+export const commandData = (): ApplicationCommandData => ({
     name: 'guide',
     description: 'get the guide for a deck',
     options: [
@@ -152,7 +160,7 @@ export const commandData = (guides: DeckGuide[]): ApplicationCommandData => ({
             description:
                 'the name of the deck, use /guide list to see all deck guides',
             required: true,
-            choices: mapChoices(guides),
+            autocomplete: true,
         },
     ],
 });

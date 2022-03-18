@@ -4,6 +4,7 @@ import {
     CommandInteraction,
     GuildMember,
     Message,
+    Role,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 
@@ -49,12 +50,15 @@ const getCritRoleId = (member: GuildMember, crit: number): string => {
 const setRole = async (
     roleList: string[],
     member: GuildMember,
-    assignRoleId: string
+    assignRole: Role | string
 ): Promise<void[]> =>
     Promise.all(
         roleList.map(async roleId => {
-            if (roleId === assignRoleId) {
-                await member.roles.add(assignRoleId);
+            if (
+                roleId ===
+                (typeof assignRole === 'string' ? assignRole : assignRole.id)
+            ) {
+                await member.roles.add(assignRole);
             } else if (member.roles.cache.has(roleId)) {
                 await member.roles.remove(roleId);
             }
@@ -71,19 +75,17 @@ export async function myClass(interaction: CommandInteraction): Promise<void> {
     if (!interaction.inCachedGuild()) return;
     const { member, options } = interaction;
 
-    const classArg = options.getString('class', true);
-    const newRoleId = getClassRoleId(classArg);
-    if (!newRoleId) {
+    const roleArg = options.getRole('class', true);
+
+    if (!classRoleIds.includes(roleArg.id)) {
         await interaction.reply(
-            `${classArg} is not a valid class. Possible classes are: ${classRoles
-                .map(([roleName]) => `\`${roleName}\``)
-                .join(' ')}`
+            `${roleArg} is not a valid class role. You can only select from one of the valid class roles.`
         );
         return;
     }
 
-    if (member.roles.cache.has(newRoleId)) {
-        await interaction.reply(`You already have <@&${newRoleId}> role`);
+    if (member.roles.cache.has(roleArg.id)) {
+        await interaction.reply(`You already have the ${roleArg} role`);
         return;
     }
 
@@ -97,10 +99,10 @@ export async function myClass(interaction: CommandInteraction): Promise<void> {
     }
 
     const hasAnyOppositeRole = hasAnyRole(critRoleIds, member);
-    await setRole(classRoleIds, member, newRoleId);
+    await setRole(classRoleIds, member, roleArg);
 
     await interaction.reply(
-        `Updated your class role to be <@&${newRoleId}>${
+        `Updated your class role to be ${roleArg}${
             !hasAnyOppositeRole
                 ? `, you can also update your crit role by using \`/mycrit\``
                 : '.'
@@ -112,11 +114,17 @@ export async function myCrit(interaction: CommandInteraction): Promise<void> {
     if (!interaction.inCachedGuild()) return;
     const { member, options } = interaction;
 
-    const critArg = options.getInteger('crit', true);
-    const newRoleId = getCritRoleId(member, critArg);
+    const roleArg = options.getRole('crit', true);
 
-    if (member.roles.cache.has(newRoleId)) {
-        await interaction.reply(`You already have <@&${newRoleId}> role`);
+    if (!critRoleIds.includes(roleArg.id)) {
+        await interaction.reply(
+            `${roleArg} is not a valid crit role. You can only select from one of the valid crit roles.`
+        );
+        return;
+    }
+
+    if (member.roles.cache.has(roleArg.id)) {
+        await interaction.reply(`You already have ${roleArg} role`);
         return;
     }
 
@@ -130,10 +138,10 @@ export async function myCrit(interaction: CommandInteraction): Promise<void> {
     }
 
     const hasAnyOppositeRole = hasAnyRole(classRoleIds, member);
-    await setRole(critRoleIds, member, newRoleId);
+    await setRole(critRoleIds, member, roleArg);
 
     await interaction.reply(
-        `Updated your crit role to be <@&${newRoleId}>${
+        `Updated your crit role to be ${roleArg}${
             !hasAnyOppositeRole
                 ? `, you can also update your class role by using \`/myclass\``
                 : '.'
@@ -227,8 +235,8 @@ export const commandData: ApplicationCommandData[] = [
         options: [
             {
                 name: 'class',
-                description: 'Class name',
-                type: 3,
+                description: 'Class role',
+                type: 'ROLE',
                 required: true,
             },
         ],
@@ -239,10 +247,9 @@ export const commandData: ApplicationCommandData[] = [
         options: [
             {
                 name: 'crit',
-                description: 'Crit percentage',
-                type: 4,
+                description: 'Crit role',
+                type: 'ROLE',
                 required: true,
-                minValue: 111,
             },
         ],
     },

@@ -275,7 +275,7 @@ export default async function postNow(
                 default: 60 * 1000,
                 donator: 10 * 1000,
             },
-            'postnow'
+            'post-now'
         )
     ) {
         return;
@@ -331,7 +331,7 @@ export const commandData: ApplicationCommandDataResolvable = {
     description: 'Posts the latest news or guide to the registered channels',
     options: [
         {
-            type: 3,
+            type: 'STRING',
             name: 'type',
             description: 'The type of post to post, either `guide` or `news`',
             required: true,
