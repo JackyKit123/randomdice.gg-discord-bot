@@ -12,7 +12,7 @@ export default async function voteReward(
     const { author, channel, embeds, guild } = message;
 
     if (
-        isDSLbot(author) ||
+        !isDSLbot(author) ||
         channel.id !== channelIds['thank-you-supporters'] ||
         !guild
     )
