@@ -1,3 +1,4 @@
+import channelIds from 'config/channelIds';
 import { ApplicationCommandData, CommandInteraction } from 'discord.js';
 import cooldown from 'util/cooldown';
 import commandCost from './commandCost';
@@ -6,7 +7,7 @@ export default async function imitate(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { options, channel, guild, commandName } = interaction;
+    const { options, channel, guild, commandName, user } = interaction;
 
     const text = options.getString('content', true);
 
@@ -33,11 +34,16 @@ export default async function imitate(
             channel: channel.id,
         });
     }
+    const logChannel = guild.channels.cache.get(channelIds['message-log']);
 
     await interaction.reply({
         content: `I have sent your message as your favorite idol.`,
         ephemeral: true,
     });
+
+    if (logChannel?.isText()) {
+        await logChannel.send(`${user} used /${commandName}\n> ${text}`);
+    }
 
     await webhook.send({
         content: text,
