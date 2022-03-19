@@ -30,6 +30,10 @@ export default async function help(
                     )
                     .join('\n'),
             }))
+        )
+        .addField(
+            'Privacy Information',
+            'When you are using this bot, you are subjected to have your message content logged only in the mod log channel the Community Discord solely for moderation purposes.\nIf you do not wish to be logged, you may remove the READ_MESSAGE permission from the bot. The bot functions normally under application commands (slash commands).\nIf you are using this bot in a private message, you are not subject to this logging.'
         );
     const communityHelpMessage = getBrandingEmbed()
         .setTitle('Community Server Specific Commands')
@@ -44,6 +48,10 @@ export default async function help(
                     )
                     .join('\n'),
             }))
+        )
+        .addField(
+            'Privacy Information',
+            'Since you are using this bot in the Community Discord, you are subjected to have your message content logged as mentioned above, and members of the Community Discord cannot opt-out of this logging, you may choose to leave this server if you have privacy concern.'
         );
     const devHelpMessage = getBrandingEmbed()
         .setTitle('Developer Commands')
@@ -60,22 +68,24 @@ export default async function help(
             }))
         );
 
+    await interaction.reply({
+        embeds: [helpMessage],
+        ephemeral: true,
+    });
     if (isCommunityDiscord(guild)) {
-        await interaction.reply({
+        await interaction.followUp({
             content:
-                'Since you are request this `/help` in the community discord. There are two sets of commands for this bot, one is for the generic random dice commands. While the others are a the list of commands specific towards the community discord only.',
-            embeds: [helpMessage, communityHelpMessage],
+                'Since you are request this `/help` in the community discord. Here is a the list of commands specific towards the community discord only.',
+            embeds: [communityHelpMessage],
             ephemeral: true,
         });
     } else if (isDevTestDiscord(guild)) {
-        await interaction.reply({
+        await interaction.followUp({
             content:
-                'Since you are request this `/help` in the development discord. There are two sets of commands for this bot, one is for the generic random dice commands. While the others are a the list of commands specific towards the bot developers only.',
+                'Since you are request this `/help` in the development discord. Here is a the list of commands specific towards the bot developers only.',
             embeds: [helpMessage, devHelpMessage],
             ephemeral: true,
         });
-    } else {
-        await interaction.reply({ embeds: [helpMessage], ephemeral: true });
     }
 }
 
