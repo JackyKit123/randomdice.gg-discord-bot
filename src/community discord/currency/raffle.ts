@@ -306,11 +306,24 @@ export async function confirmJoinRaffleButton(
         member,
     } = interaction;
 
-    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
+    const ref = database.ref('discord_bot/community/raffle');
+    const entries = cache['discord_bot/community/raffle'];
+    const currentEntries = Object.entries(entries.tickets ?? {});
 
-    const currEntry = Number(
-        content.match(/You are entering the raffle with `(\d+)` entries/)?.[1]
-    );
+    const [, id, currEntryArg] =
+        content.match(
+            /<@!?(\d{18})> You are entering the raffle with `(\d+|max)` entries/
+        ) ?? [];
+    const currEntry =
+        currEntryArg === 'max' ? entries.maxEntries : Number(currEntryArg);
+
+    if (id !== member.id) {
+        await interaction.reply({
+            content: 'This button is not for you',
+            ephemeral: true,
+        });
+        return;
+    }
 
     if (!currEntry) {
         await interaction.reply(
@@ -321,9 +334,7 @@ export async function confirmJoinRaffleButton(
 
     const balance = await getBalance(interaction);
     if (balance === null) return;
-    const ref = database.ref('discord_bot/community/raffle');
-    const entries = cache['discord_bot/community/raffle'];
-    const currentEntries = Object.entries(entries.tickets ?? {});
+
     const prevEntry =
         currentEntries.filter(([, uid]) => uid === member.id)?.length || 0;
 

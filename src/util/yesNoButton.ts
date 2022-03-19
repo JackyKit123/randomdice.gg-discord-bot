@@ -16,9 +16,7 @@ export async function checkIfUserIsInteractionInitiator(
     } = interaction;
 
     if (reply?.user.id !== member.id) {
-        await interaction.reply(
-            'This button is not for you, please use the command to join the raffle'
-        );
+        await interaction.reply('This button is not for you.');
         return false;
     }
     return true;
