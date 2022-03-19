@@ -361,6 +361,10 @@ export default async function profile(
     if (!interaction.inCachedGuild()) return;
     const { channel, options, member } = interaction;
 
+    const target = options.getMember('user') ?? member;
+    const balance = await getBalance(interaction, false, target);
+    if (balance === null) return;
+
     if (
         (await cooldown(
             interaction,
@@ -373,11 +377,6 @@ export default async function profile(
         !channel
     )
         return;
-
-    const target = options.getMember('user') ?? member;
-
-    const balance = await getBalance(interaction, false, target);
-    if (balance === null) return;
 
     const memberProfile = cache['discord_bot/community/currency'][target.id];
     const sentMessage = await interaction.reply({

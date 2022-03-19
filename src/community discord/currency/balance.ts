@@ -84,11 +84,7 @@ export async function getBalance(
             .set(0);
         if (!silence && !(input instanceof Message)) {
             const messageOption = {
-                content: `${member}, Looks like you are the first time using server currency command, you have been granted **${coinDice} 10,000** as a starter reward. You can use ${
-                    input.isCommand() || input.isContextMenu()
-                        ? `\`${input.commandName}\` command`
-                        : 'the button'
-                } again.`,
+                content: `${member}, Looks like you are the first time using server currency command, you have been granted **${coinDice} 10,000** as a starter reward.`,
                 embeds: [getEmbed(target, target.id === member.id, bal)],
             };
             await database

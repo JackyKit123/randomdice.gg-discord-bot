@@ -23,6 +23,10 @@ export default async function prestige(
     if (!interaction.inCachedGuild()) return;
     const { client, member, guild } = interaction;
     const numberFormat = new Intl.NumberFormat();
+
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
+
     if (
         await cooldown(
             interaction,
@@ -34,9 +38,6 @@ export default async function prestige(
         )
     )
         return;
-
-    const balance = await getBalance(interaction);
-    if (balance === null) return;
 
     const prestigeLevel = getPrestigeLevel(member);
 

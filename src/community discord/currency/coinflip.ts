@@ -24,6 +24,9 @@ export default async function coinflip(
     const numberFormat = new Intl.NumberFormat();
     const { channel, member, user } = interaction;
 
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
+
     if (
         !channel ||
         (await cooldown(
@@ -37,8 +40,6 @@ export default async function coinflip(
     )
         return;
 
-    const balance = await getBalance(interaction);
-    if (balance === null) return;
     const gambleProfile =
         cache['discord_bot/community/currency'][member.id]?.gamble;
 

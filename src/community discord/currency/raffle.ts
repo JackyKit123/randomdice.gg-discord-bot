@@ -419,6 +419,9 @@ export default async function raffle(
         return;
     }
 
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
+
     if (
         await cooldown(interaction, {
             default: 10 * 1000,
@@ -427,9 +430,6 @@ export default async function raffle(
     ) {
         return;
     }
-
-    const balance = await getBalance(interaction);
-    if (balance === null) return;
 
     const entries = cache['discord_bot/community/raffle'];
     const subcommand = options.getSubcommand(true);
