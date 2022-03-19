@@ -104,6 +104,7 @@ async function Cooldown<
                             : randomDiceWebsiteUrl('/about/patreon'),
                     }),
             ],
+            ephemeral: true,
         });
         return true;
     }
