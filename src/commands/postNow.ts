@@ -312,18 +312,14 @@ export default async function postNow(
         });
     }
 
-    try {
-        if (type === 'guide') {
-            await postGuide(client, guild.members.cache.get(member.user.id));
-        }
-        if (type === 'news') {
-            await postNews(client, guild);
-        }
-    } catch {
-        // do nothing
-    } finally {
-        await interaction.editReply(`Finished Posting ${type}`);
+    if (type === 'guide') {
+        await postGuide(client, guild.members.cache.get(member.user.id));
     }
+    if (type === 'news') {
+        await postNews(client, guild);
+    }
+
+    await interaction.editReply(`Finished Posting ${type}`);
 }
 
 export const commandData: ApplicationCommandDataResolvable = {

@@ -18,7 +18,9 @@ import { coinDice } from 'config/emojiId';
 import channelIds from 'config/channelIds';
 import roleIds, { eventManagerRoleIds } from 'config/roleId';
 import checkPermission from 'community discord/util/checkPermissions';
-import yesNoButton from 'util/yesNoButton';
+import yesNoButton, {
+    checkIfUserIsInteractionInitiator,
+} from 'util/yesNoButton';
 import { getCommunityDiscord } from 'config/guild';
 import { getBalance } from './balance';
 
@@ -224,7 +226,6 @@ async function joinRaffle(
 
     const balance = await getBalance(interaction);
     if (balance === null) return;
-    const ref = database.ref('discord_bot/community/raffle');
     const entries = cache['discord_bot/community/raffle'];
     const currentEntries = Object.entries(entries.tickets ?? {});
     const raffleTimeLeft = entries.endTimestamp - Date.now();
@@ -292,66 +293,92 @@ async function joinRaffle(
         interaction,
         `${member} You are entering the raffle with \`${ticketAmountArg}\` entries, which will cost you ${coinDice} ${
             currEntry * entries.ticketCost
-        }, press yes if you wish to continue.`,
-        async button => {
-            entries.tickets = entries.tickets || {};
-            for (
-                let i = currentEntries.length;
-                i < currEntry + currentEntries.length;
-                i += 1
-            ) {
-                entries.tickets[i + 1] = member.id;
-            }
-            await ref.child('tickets').set(entries.tickets);
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/balance`)
-                .set(balance - currEntry * entries.ticketCost);
-            const gambleProfile =
-                cache['discord_bot/community/currency'][member.id]?.gamble;
-            await database
-                .ref(`discord_bot/community/currency/${member.id}/gamble/lose`)
-                .set(
-                    (gambleProfile?.lose || 0) + currEntry * entries.ticketCost
-                );
-
-            await button.reply({
-                content: `${member} You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
-                    currEntry * entries.ticketCost
-                )}**${
-                    prevEntry > 0
-                        ? `, you now have a total of ${
-                              currEntry + prevEntry
-                          } ticket(s)`
-                        : '.'
-                }\nTicket Numbers: ${Object.entries(entries.tickets ?? {})
-                    .filter(([, uid]) => uid === member.id)
-                    .map(([ticketNumber]) => `**${ticketNumber}**`)
-                    .join(', ')}`,
-                components: [],
-            });
-            if (!member.roles.cache.has(roleIds['Raffle Ping'])) {
-                await button.followUp({
-                    embeds: [
-                        new MessageEmbed()
-                            .setTitle('Tip!')
-                            .setColor('#32cd32')
-                            .setDescription(
-                                `It looks like you are missing the role <@&${roleIds['Raffle Ping']}>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can click ✅ to claim this role now.`
-                            ),
-                    ],
-                    components: [
-                        new MessageActionRow().addComponents([
-                            new MessageButton()
-                                .setEmoji('✅')
-                                .setStyle('SUCCESS')
-                                .setLabel('Get the role')
-                                .setCustomId('get-raffle-ping-role'),
-                        ]),
-                    ],
-                });
-            }
-        }
+        }, press yes if you wish to continue.`
     );
+}
+
+export async function confirmJoinRaffleButton(
+    interaction: ButtonInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const {
+        message: { content },
+        member,
+    } = interaction;
+
+    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
+
+    const currEntry = Number(
+        content.match(/You are entering the raffle with `(\d+)` entries/)?.[1]
+    );
+
+    if (!currEntry) {
+        await interaction.reply(
+            'This button is too old, please use the command to join the raffle'
+        );
+        return;
+    }
+
+    const balance = await getBalance(interaction);
+    if (balance === null) return;
+    const ref = database.ref('discord_bot/community/raffle');
+    const entries = cache['discord_bot/community/raffle'];
+    const currentEntries = Object.entries(entries.tickets ?? {});
+    const prevEntry =
+        currentEntries.filter(([, uid]) => uid === member.id)?.length || 0;
+
+    entries.tickets = entries.tickets || {};
+    for (
+        let i = currentEntries.length;
+        i < currEntry + currentEntries.length;
+        i += 1
+    ) {
+        entries.tickets[i + 1] = member.id;
+    }
+    await ref.child('tickets').set(entries.tickets);
+    await database
+        .ref(`discord_bot/community/currency/${member.id}/balance`)
+        .set(balance - currEntry * entries.ticketCost);
+    const gambleProfile =
+        cache['discord_bot/community/currency'][member.id]?.gamble;
+    await database
+        .ref(`discord_bot/community/currency/${member.id}/gamble/lose`)
+        .set((gambleProfile?.lose || 0) + currEntry * entries.ticketCost);
+
+    await interaction.reply({
+        content: `${member} You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
+            currEntry * entries.ticketCost
+        )}**${
+            prevEntry > 0
+                ? `, you now have a total of ${currEntry + prevEntry} ticket(s)`
+                : '.'
+        }\nTicket Numbers: ${Object.entries(entries.tickets ?? {})
+            .filter(([, uid]) => uid === member.id)
+            .map(([ticketNumber]) => `**${ticketNumber}**`)
+            .join(', ')}`,
+        components: [],
+    });
+    if (!member.roles.cache.has(roleIds['Raffle Ping'])) {
+        await interaction.followUp({
+            embeds: [
+                new MessageEmbed()
+                    .setTitle('Tip!')
+                    .setColor('#32cd32')
+                    .setDescription(
+                        `It looks like you are missing the role <@&${roleIds['Raffle Ping']}>, your can sign up for this role to get notified for the raffle updates when it ends or starts. You can click ✅ to claim this role now.`
+                    ),
+            ],
+            components: [
+                new MessageActionRow().addComponents([
+                    new MessageButton()
+                        .setEmoji('✅')
+                        .setStyle('SUCCESS')
+                        .setLabel('Get the role')
+                        .setCustomId('get-raffle-ping-role'),
+                ]),
+            ],
+        });
+    }
 }
 
 export async function joinRaffleButton(
@@ -403,7 +430,7 @@ export default async function raffle(
 
     const balance = await getBalance(interaction);
     if (balance === null) return;
-    const ref = database.ref('discord_bot/community/raffle');
+
     const entries = cache['discord_bot/community/raffle'];
     const subcommand = options.getSubcommand(true);
     const currentEntries = Object.entries(entries.tickets ?? {});
@@ -498,24 +525,26 @@ export default async function raffle(
                 return;
             await yesNoButton(
                 interaction,
-                '⚠️ WARNING ⚠️\n Are you sure you want to cancel the raffle, the action is irreversible.',
-                async button => {
-                    await ref.set({
-                        endTimestamp: 0,
-                        hostId: 0,
-                        maxEntries: 0,
-                        ticketCost: 0,
-                    });
-                    await button.reply({
-                        content: `${user} has cancelled the raffle.`,
-                        components: [],
-                    });
-                }
+                '⚠️ WARNING ⚠️\n Are you sure you want to cancel the raffle, the action is irreversible.'
             );
 
             break;
         default:
     }
+}
+
+export async function confirmCancelRaffleButton(
+    interaction: ButtonInteraction
+): Promise<void> {
+    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
+    const ref = database.ref('discord_bot/community/raffle');
+    await ref.set({
+        endTimestamp: 0,
+        hostId: 0,
+        maxEntries: 0,
+        ticketCost: 0,
+    });
+    await interaction.reply(`${interaction.user} has cancelled the raffle.`);
 }
 
 export async function addRafflePingRole(

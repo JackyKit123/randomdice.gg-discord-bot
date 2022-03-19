@@ -1,6 +1,7 @@
 import {
     ApplicationCommandData,
     AutocompleteInteraction,
+    ButtonInteraction,
     CommandInteraction,
     MessageActionRow,
     MessageButton,
@@ -10,7 +11,7 @@ import cache, { DeckGuide } from 'util/cache';
 import parseText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { randomDiceWebsiteUrl } from 'config/url';
-import bestMatchFollowUp from './util/bestMatchFollowUp';
+import bestMatchFollowUp, { updateSuggestions } from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 import getSuggestions from './util/getSuggestions';
 
@@ -138,9 +139,14 @@ export default async function deckGuide(
         interaction,
         guideName,
         guides,
-        ' is not a guide written.',
-        getGuideData
+        ' is not a guide written.'
     );
+}
+
+export async function guideSuggestionButton(
+    interaction: ButtonInteraction
+): Promise<void> {
+    await updateSuggestions(interaction, cache.decks_guide, getGuideData);
 }
 
 export async function guideNameSuggestion(

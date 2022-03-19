@@ -1,5 +1,6 @@
 import {
     ApplicationCommandDataResolvable,
+    ButtonInteraction,
     CommandInteraction,
     ReplyMessageOptions,
 } from 'discord.js';
@@ -7,8 +8,37 @@ import cache, { Battlefield } from 'util/cache';
 import parsedText from 'util/parseText';
 import cooldown from 'util/cooldown';
 import { getAscendingNumberArray, mapChoices } from 'register/commandData';
-import bestMatchFollowUp from './util/bestMatchFollowUp';
+import bestMatchFollowUp, { updateSuggestions } from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
+
+const getBattlefieldInfo = (
+    target?: Battlefield,
+    battlefieldLevel = 1
+): string | ReplyMessageOptions => {
+    if (!target) return 'No battlefield found.';
+
+    const desc = parsedText(target.desc);
+
+    return {
+        embeds: [
+            getBrandingEmbed(`/wiki/battlefield#${encodeURI(target.name)}`)
+                .setTitle(target.name)
+                .setImage(target.img)
+                .setDescription(desc)
+                .addField(
+                    target.buffName,
+                    `${
+                        Math.round(
+                            (target.buffValue +
+                                target.buffCupValue * (battlefieldLevel - 1)) *
+                                100
+                        ) / 100
+                    }${target.buffUnit}`
+                )
+                .addField('Obtained From', target.source),
+        ],
+    };
+};
 
 export default async function dice(
     interaction: CommandInteraction
@@ -27,39 +57,12 @@ export default async function dice(
     const battlefield = battlefieldList.find(
         ({ name }) => battlefieldName.toLowerCase() === name.toLowerCase()
     );
-
-    const getBattlefieldInfo = (
-        target?: Battlefield
-    ): string | ReplyMessageOptions => {
-        if (!target) return 'No battlefield found.';
-
-        const battlefieldLevel = options.getInteger('level') ?? 1;
-        const desc = parsedText(target.desc);
-
-        return {
-            embeds: [
-                getBrandingEmbed(`/wiki/battlefield#${encodeURI(target.name)}`)
-                    .setTitle(target.name)
-                    .setImage(target.img)
-                    .setDescription(desc)
-                    .addField(
-                        target.buffName,
-                        `${
-                            Math.round(
-                                (target.buffValue +
-                                    target.buffCupValue *
-                                        (battlefieldLevel - 1)) *
-                                    100
-                            ) / 100
-                        }${target.buffUnit}`
-                    )
-                    .addField('Obtained From', target.source),
-            ],
-        };
-    };
+    const battlefieldLevel = options.getInteger('level') ?? 1;
 
     if (battlefield) {
-        await interaction.reply(getBattlefieldInfo(battlefield));
+        await interaction.reply(
+            getBattlefieldInfo(battlefield, battlefieldLevel)
+        );
         return;
     }
 
@@ -67,7 +70,16 @@ export default async function dice(
         interaction,
         battlefieldName,
         battlefieldList,
-        ' is not a valid battlefield.',
+        ' is not a valid battlefield.'
+    );
+}
+
+export async function battlefieldSuggestionButton(
+    interaction: ButtonInteraction
+): Promise<void> {
+    await updateSuggestions(
+        interaction,
+        cache['wiki/battlefield'],
         getBattlefieldInfo
     );
 }

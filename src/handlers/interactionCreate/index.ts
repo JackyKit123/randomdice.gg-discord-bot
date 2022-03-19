@@ -2,14 +2,17 @@ import { Interaction } from 'discord.js';
 import { logError } from 'util/logMessage';
 
 import ping from 'commands/ping';
-import { register, unregister } from 'commands/register';
+import { postNowButton, register, unregister } from 'commands/register';
 import postNow from 'commands/postNow';
-import dice, { diceNameSuggestion } from 'commands/dice';
+import dice, { diceNameSuggestion, diceSuggestionButton } from 'commands/dice';
 import drawUntil from 'commands/drawUntil';
-import battlefield from 'commands/battlefield';
-import guide, { guideNameSuggestion } from 'commands/guide';
+import battlefield, { battlefieldSuggestionButton } from 'commands/battlefield';
+import guide, {
+    guideNameSuggestion,
+    guideSuggestionButton,
+} from 'commands/guide';
 import deck from 'commands/deck';
-import boss from 'commands/boss';
+import boss, { bossSuggestionButton } from 'commands/boss';
 import news from 'commands/news';
 import cardcalc from 'commands/cardcalc';
 import randomdeck from 'commands/randomdeck';
@@ -18,7 +21,11 @@ import sendLinks from 'commands/sendLinks';
 import sendContact from 'commands/sendContact';
 
 import snipe, { deleteSnipe } from 'community discord/snipe';
-import apply, { configApps, closeApplication } from 'community discord/apply';
+import apply, {
+    configApps,
+    closeApplication,
+    applyConfirmButtons,
+} from 'community discord/apply';
 import { report, closeReport } from 'community discord/report';
 import lock from 'community discord/lock';
 import timer from 'community discord/timer';
@@ -39,6 +46,8 @@ import leaderboard from 'community discord/currency/leaderboard';
 import prestige from 'community discord/currency/prestige';
 import raffle, {
     addRafflePingRole,
+    confirmCancelRaffleButton,
+    confirmJoinRaffleButton,
     joinRaffleButton,
 } from 'community discord/currency/raffle';
 import timed from 'community discord/currency/timed';
@@ -76,7 +85,7 @@ import {
     isDevTestDiscord,
 } from 'config/guild';
 import { isDev, isProd } from 'config/env';
-import { onYesNoButtonClick } from 'util/yesNoButton';
+import { onNoButtonClick } from 'util/yesNoButton';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -151,9 +160,20 @@ export default async function interactionCreate(
             }
             if (interaction.isButton()) {
                 switch (interaction.customId) {
-                    case 'yes-no-button-✅':
-                    case 'yes-no-button-❌':
-                        await onYesNoButtonClick(interaction);
+                    case 'yes-no-button-✅-dice':
+                        await diceSuggestionButton(interaction);
+                        break;
+                    case 'yes-no-button-✅-guide':
+                        await guideSuggestionButton(interaction);
+                        break;
+                    case 'yes-no-button-✅-battlefield':
+                        await battlefieldSuggestionButton(interaction);
+                        break;
+                    case 'yes-no-button-✅-boss':
+                        await bossSuggestionButton(interaction);
+                        break;
+                    case 'yes-no-button-✅-register':
+                        await postNowButton(interaction);
                         break;
                     default:
                 }
@@ -213,6 +233,13 @@ export default async function interactionCreate(
                             case 'application-cancel':
                                 await closeApplication(interaction);
                                 break;
+                            case 'yes-no-button-✅-application-add':
+                            case 'yes-no-button-✅-application-edit':
+                            case 'yes-no-button-✅-application-delete':
+                            case 'yes-no-button-✅-application-submit':
+                            case 'yes-no-button-✅-application-cancel':
+                                await applyConfirmButtons(interaction);
+                                break;
                             case 'delete-snipe':
                             case 'trash-snipe':
                                 await deleteSnipe(interaction);
@@ -239,6 +266,18 @@ export default async function interactionCreate(
                             case 'raffle-join-50':
                             case 'raffle-join-max':
                                 await joinRaffleButton(interaction);
+                                break;
+                            case 'yes-no-button-✅-raffle-join':
+                            case 'yes-no-button-✅-raffle-join-1':
+                            case 'yes-no-button-✅-raffle-join-5':
+                            case 'yes-no-button-✅-raffle-join-10':
+                            case 'yes-no-button-✅-raffle-join-20':
+                            case 'yes-no-button-✅-raffle-join-50':
+                            case 'yes-no-button-✅-raffle-join-max':
+                                await confirmJoinRaffleButton(interaction);
+                                break;
+                            case 'yes-no-button-✅-raffle-cancel':
+                                await confirmCancelRaffleButton(interaction);
                                 break;
                             case 'spy-log-ban':
                                 await spyLogBanHandler(interaction);
@@ -444,6 +483,10 @@ export default async function interactionCreate(
                     break;
                 default:
             }
+        }
+        if (interaction.isButton()) {
+            if (interaction.customId.startsWith('yes-no-button-'))
+                await onNoButtonClick(interaction);
         }
         await Promise.all(asyncPromisesCapturer);
     } catch (err) {

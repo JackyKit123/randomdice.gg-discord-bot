@@ -1,6 +1,7 @@
 import {
     ApplicationCommandData,
     BaseGuildTextChannel,
+    ButtonInteraction,
     ClientUser,
     CommandInteraction,
     NewsChannel,
@@ -80,9 +81,34 @@ export async function register(interaction: CommandInteraction): Promise<void> {
     ]);
     await yesNoButton(
         interaction,
-        `Registered Channel ${channel} to provide ${type}. Post ${type} in ${channel} now?`,
-        async button => postNow(button, type)
+        `Registered Channel ${channel} to provide ${type}. Post ${type} in ${channel} now?`
     );
+}
+
+export async function postNowButton(
+    interaction: ButtonInteraction
+): Promise<void> {
+    if (!interaction.inCachedGuild()) return;
+    const {
+        message: { interaction: reply, content },
+        user,
+    } = interaction;
+    if (user.id !== reply?.user.id) {
+        await interaction.reply(
+            'You cannot use this button because you did not initiate this command.'
+        );
+        return;
+    }
+    const type = content.match(
+        /^Registered Channel <#\d{18}> to provide (guide|news)\. Post <#\d{18}> in (?:guide|news) now?$/
+    )?.[1] as 'guide' | 'news';
+    if (!type) {
+        await interaction.reply(
+            'This button is too old to be used anymore. Please initiate a new command.'
+        );
+        return;
+    }
+    await postNow(interaction, type);
 }
 
 export async function unregister(

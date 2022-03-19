@@ -1,17 +1,18 @@
-import { CommandInteraction, WebhookEditMessageOptions } from 'discord.js';
+import {
+    ButtonInteraction,
+    CommandInteraction,
+    WebhookEditMessageOptions,
+} from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
-import yesNoButton from 'util/yesNoButton';
+import yesNoButton, {
+    checkIfUserIsInteractionInitiator,
+} from 'util/yesNoButton';
 
-export default async function bestMatchFollowUp<
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    TValue extends { name: string } & Record<string, any>
->(
+export default async function bestMatchFollowUp(
     interaction: CommandInteraction,
     originalValue: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listOfValues: TValue[],
-    invalidMessage: string,
-    followUp: (target?: TValue) => string | WebhookEditMessageOptions
+    listOfValues: { name: string }[],
+    invalidMessage: string
 ): Promise<void> {
     const { bestMatch } = stringSimilarity.findBestMatch(
         originalValue,
@@ -25,12 +26,28 @@ export default async function bestMatchFollowUp<
 
     await yesNoButton(
         interaction,
-        `${originalValue}${invalidMessage} Did you mean \`${bestMatch.target}\`?`,
-        async button => {
-            const newResponse = followUp(
-                listOfValues.find(value => value.name === bestMatch.target)
-            );
-            await button.reply(newResponse);
-        }
+        `${originalValue}${invalidMessage}. Did you mean \`${bestMatch.target}\`?`
     );
+}
+
+export async function updateSuggestions<TValue extends { name: string }>(
+    interaction: ButtonInteraction,
+    listOfValues: TValue[],
+    followUp: (target?: TValue) => string | WebhookEditMessageOptions
+): Promise<void> {
+    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
+
+    const suggestion = interaction.message.content.match(
+        /\. Did you mean `(.+)`\?$/
+    )?.[1];
+    if (!suggestion) {
+        await interaction.reply(
+            'This button is too old to be used anymore. Please initiate a new command.'
+        );
+        return;
+    }
+    const newResponse = followUp(
+        listOfValues.find(value => value.name === suggestion)
+    );
+    await interaction.reply(newResponse);
 }
