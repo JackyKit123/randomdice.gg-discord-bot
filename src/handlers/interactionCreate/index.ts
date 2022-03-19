@@ -90,16 +90,16 @@ import { onNoButtonClick } from 'util/yesNoButton';
 export default async function interactionCreate(
     interaction: Interaction
 ): Promise<void> {
-    const { guildId, channelId, client, guild } = interaction;
+    const { guildId, channel, client, guild } = interaction;
     const testChannelId = channelIds['jackykit-playground-v2'];
 
     try {
         const asyncPromisesCapturer: Promise<unknown>[] = [];
         if (
             (isDev && isDevTestDiscord(guild)) ||
-            (isDev && channelId === testChannelId) ||
+            (isDev && channel?.id === testChannelId) ||
             (isProd && !isDevTestDiscord(guild)) ||
-            (isProd && channelId !== testChannelId) ||
+            (isProd && channel?.id !== testChannelId) ||
             !interaction.inGuild()
         ) {
             if (interaction.isCommand()) {
@@ -216,8 +216,8 @@ export default async function interactionCreate(
                     break;
                 case communityDiscordId:
                     if (
-                        (isDev && channelId !== testChannelId) ||
-                        (isProd && channelId === testChannelId)
+                        (isDev && channel?.id !== testChannelId) ||
+                        (isProd && channel?.id === testChannelId)
                     )
                         return;
 
