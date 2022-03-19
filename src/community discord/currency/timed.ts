@@ -9,7 +9,6 @@ import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
 import { coinDice } from 'config/emojiId';
 import roleIds from 'config/roleId';
-import channelIds from 'config/channelIds';
 import { getBalance } from './balance';
 import isBotChannels from '../util/isBotChannels';
 
@@ -152,29 +151,18 @@ export default async function timed(
             .setFooter(null);
     } else {
         embed = embed.setDescription(
-            `${
-                isBotChannels(channel) ? 'Added' : 'Removed'
-            } ${coinDice} ${numberFormat.format(reward)} ${
-                isBotChannels(channel) ? 'to' : 'from'
-            } your balance${
-                !isBotChannels(channel)
-                    ? ` as a punishment because you are using this command in ${channel}`
-                    : ''
-            }!${
-                !isBotChannels(channel)
-                    ? `\n<#${channelIds['💫 | VIP Channels']}> <#${channelIds['🤖 | Bot Channels']}> exist for a reason to let you to spam your commands.`
-                    : ''
-            }`
+            `Added ${coinDice} ${numberFormat.format(reward)} to your balance!`
         );
     }
 
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
-        .set(balance + reward * (isBotChannels(channel) ? 1 : -1));
+        .set(balance + reward);
 
     const sentMessage = await interaction.reply({
         embeds: [embed],
         fetchReply: true,
+        ephemeral: !isBotChannels(channel),
     });
     if (mode === 'daily') {
         if (streak === 100) {

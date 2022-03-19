@@ -11,10 +11,9 @@ import {
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
 import { tier4RoleIds } from 'config/roleId';
-import channelIds from 'config/channelIds';
 import { coinDice } from 'config/emojiId';
+import isBotChannels from 'community discord/util/isBotChannels';
 import { getBalance } from './balance';
-import isBotChannels from '../util/isBotChannels';
 
 const memberDefaultCoinFlip = new Map<GuildMember, number>();
 
@@ -89,14 +88,7 @@ export default async function coinflip(
 
     const flip = Math.random() < 0.5 ? 'head' : 'tail';
     const won = (flip === 'head' && isHead) || (flip === 'tail' && isTail);
-    // eslint-disable-next-line no-nested-ternary
-    const gainMultiplier = won
-        ? isBotChannels(channel)
-            ? 1
-            : 0
-        : isBotChannels(channel)
-        ? -1
-        : -10;
+    const gainMultiplier = won ? 1 : -1;
     await database
         .ref(`discord_bot/community/currency/${member.id}/balance`)
         .set(balance + amount * gainMultiplier);
@@ -131,19 +123,7 @@ export default async function coinflip(
                 .setDescription(
                     `You ${
                         won ? 'won' : 'lost'
-                    } ${coinDice} ${numberFormat.format(amount)}${
-                        !isBotChannels(channel)
-                            ? `\nBut since you're using this command in ${channel}, you ${
-                                  won ? 'won' : 'lost'
-                              } ${coinDice} ${numberFormat.format(
-                                  Math.abs(gainMultiplier * amount)
-                              )} instead\n<#${
-                                  channelIds['💫 | VIP Channels']
-                              }> <#${
-                                  channelIds['🤖 | Bot Channels']
-                              }> exist for a reason to let you to spam your commands.`
-                            : ''
-                    }`
+                    } ${coinDice} ${numberFormat.format(amount)}`
                 )
                 .addField(
                     'Current Balance',
@@ -163,6 +143,7 @@ export default async function coinflip(
                 )
             ),
         ],
+        ephemeral: !isBotChannels(channel),
     });
 }
 

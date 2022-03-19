@@ -13,7 +13,6 @@ import * as math from 'mathjs';
 import { promisify } from 'util';
 import cooldown from 'util/cooldown';
 import cache, { Dice } from 'util/cache';
-import channelIds from 'config/channelIds';
 import {
     coinDice,
     nullDice,
@@ -234,7 +233,6 @@ export default async function drawDice(
     });
 
     outcome.reward = drawnDice.includes('jackpot') ? 10000 : outcome.reward;
-    outcome.reward *= isBotChannels(channel) ? 1 : -10;
     await database
         .ref(`discord_bot/community/currency/${member.user.id}/diceDrawn`)
         .set(diceDrawn);
@@ -262,36 +260,25 @@ export default async function drawDice(
 
     await interaction.reply({
         embeds: [embed],
+        ephemeral: !isBotChannels(channel),
     });
 
     await wait(1000);
     embed = embed
         .setDescription(
-            `You ${
-                isBotChannels(channel) ? 'earned' : 'lost'
-            } ${coinDice} ${numberFormat.format(Math.abs(outcome.reward))}`
+            `You earned ${coinDice} ${numberFormat.format(
+                Math.abs(outcome.reward)
+            )}`
         )
         .setColor(outcome.color);
     embed.fields = [
         {
             name: `Your ${drawnDice.length > 1 ? 'Draws are' : 'Draw is'}`,
-            value: isBotChannels(channel)
-                ? `${
-                      drawnDice.includes('jackpot')
-                          ? rickCoin.repeat(10)
-                          : (drawnDice as Dice[])
-                                .map(randomDraw => emoji[randomDraw.id])
-                                .join(' ')
-                  }`
-                : `${rickCoin.repeat(5)}**JACKPOT**${rickCoin.repeat(
-                      5
-                  )}\nYou lost ${coinDice} ${
-                      outcome.reward
-                  } instead since you are using this command in ${channel}\n<#${
-                      channelIds['💫 | VIP Channels']
-                  }> <#${
-                      channelIds['🤖 | Bot Channels']
-                  }> exist for a reason to let you to spam your commands.`,
+            value: drawnDice.includes('jackpot')
+                ? rickCoin.repeat(10)
+                : (drawnDice as Dice[])
+                      .map(randomDraw => emoji[randomDraw.id])
+                      .join(' '),
             inline: false,
         },
         ...(drawnDice.includes('jackpot')
@@ -314,17 +301,15 @@ export default async function drawDice(
 
     const messageOption = {
         embeds: [embed],
-        components: isBotChannels(channel)
-            ? [
-                  new MessageActionRow().addComponents([
-                      new MessageButton()
-                          .setCustomId('dd')
-                          .setEmoji(shuffleDiceLegendary)
-                          .setStyle('PRIMARY')
-                          .setLabel('Draw Again'),
-                  ]),
-              ]
-            : [],
+        components: [
+            new MessageActionRow().addComponents([
+                new MessageButton()
+                    .setCustomId('dd')
+                    .setEmoji(shuffleDiceLegendary)
+                    .setStyle('PRIMARY')
+                    .setLabel('Draw Again'),
+            ]),
+        ],
     };
 
     await interaction.editReply(messageOption);
