@@ -96,10 +96,10 @@ export default async function interactionCreate(
     try {
         const asyncPromisesCapturer: Promise<unknown>[] = [];
         if (
-            (isDev && isDevTestDiscord(guild)) ||
-            (isDev && channelId === testChannelId) ||
-            (isProd && !isDevTestDiscord(guild)) ||
-            (isProd && channelId !== testChannelId) ||
+            (isDev &&
+                (isDevTestDiscord(guild) || channelId === testChannelId)) ||
+            (isProd &&
+                !(isDevTestDiscord(guild) || channelId === testChannelId)) ||
             !interaction.inGuild()
         ) {
             if (interaction.isCommand()) {
