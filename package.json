@@ -5,7 +5,7 @@
     "main": "bot.ts",
     "scripts": {
         "dev": "NODE_ENV=development nodemon  --ext 'ts' --exec 'npm run lint && tsc --noEmit && ts-node --require=dotenv/config src/bot.ts --project tsconfig.json'",
-        "start": "ts-node --require=dotenv/config src/bot.ts --project tsconfig.json",
+        "start": "NODE_ENV=production ts-node --require=dotenv/config src/bot.ts --project tsconfig.json",
         "lint": "eslint src --ext .ts"
     },
     "engines": {
