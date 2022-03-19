@@ -34,6 +34,7 @@ export default async function messageCreate(message: Message): Promise<void> {
                 ...asyncPromisesCapturer,
                 voteReward(message),
                 announceLastToLeaveVC(message),
+                chatCoins(message),
             ];
         }
         if (
@@ -58,7 +59,6 @@ export default async function messageCreate(message: Message): Promise<void> {
                 autoReaction(message),
                 afkResponse(message),
                 cleverBot(message),
-                chatCoins(message),
             ];
         }
 

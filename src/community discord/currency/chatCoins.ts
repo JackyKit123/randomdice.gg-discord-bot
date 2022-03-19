@@ -1,17 +1,17 @@
 import channelIds from 'config/channelIds';
-import roleIds, {
+import {
     tier1RoleIds,
     tier2RoleIds,
     tier3RoleIds,
     tier4RoleIds,
     tier5RoleIds,
 } from 'config/roleId';
-import Discord from 'discord.js';
+import { GuildMember, GuildTextBasedChannel, Message } from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import { getBalance } from './balance';
 
-export function duplicatedRoleMulti(member: Discord.GuildMember): number {
+export function duplicatedRoleMulti(member: GuildMember): number {
     const duplicatedTierMulti = (
         tierRoles: string[],
         multiplier: number
@@ -35,55 +35,11 @@ export function duplicatedRoleMulti(member: Discord.GuildMember): number {
 
 const cooldown = new Map<string, boolean>();
 const weeklyCooldown = new Map<string, boolean>();
-export default async function chatCoins(
-    message: Discord.Message,
-    dd?: true
+async function giveChatReward(
+    member: GuildMember,
+    channel: GuildTextBasedChannel,
+    balance: number | null
 ): Promise<void> {
-    const { content, member, channel, author, client } = message;
-
-    if (
-        client.user &&
-        author.id === client.user.id &&
-        channel.id === channelIds.general &&
-        content ===
-            `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat.`
-    ) {
-        let generalMulti =
-            cache['discord_bot/community/currencyConfig'].multiplier.channels[
-                channelIds.general
-            ] || 0;
-        await database
-            .ref(
-                `discord_bot/community/currencyConfig/multiplier/channels/${channelIds.general}`
-            )
-            .set(generalMulti + 10);
-        setTimeout(async () => {
-            generalMulti =
-                cache['discord_bot/community/currencyConfig'].multiplier
-                    .channels[channelIds.general] || 0;
-            await database
-                .ref(
-                    `discord_bot/community/currencyConfig/multiplier/channels/${channelIds.general}`
-                )
-                .set(generalMulti - 10);
-        }, 60 * 60 * 1000);
-        await channel.send(
-            `For the next 60 minutes, ${channel} has extra \`x10\` multiplier!`
-        );
-        return;
-    }
-
-    if (
-        channel.type === 'DM' ||
-        author.bot ||
-        !member ||
-        content.startsWith('!') ||
-        (/^dd/i.test(content) && !dd)
-    ) {
-        return;
-    }
-
-    const balance = await getBalance(message, true);
     if (
         balance === null ||
         !Object.keys(cache['discord_bot/community/currency']).length
@@ -122,4 +78,19 @@ export default async function chatCoins(
         () => weeklyCooldown.set(member.id, false),
         (channel.parentId === channelIds['🤖 | Bot Channels'] ? 30 : 10) * 1000
     );
+}
+
+export default async function chatCoins(message: Message): Promise<void> {
+    if (!message.inGuild()) return;
+    const { channel, member, author, client, interaction, guild } = message;
+
+    let target: GuildMember | undefined | null = member;
+    if (author.bot) {
+        if (!interaction || author.id !== client.user?.id) return;
+        target = guild.members.cache.get(interaction.user.id);
+    }
+
+    if (!target || target.user.bot) return;
+    const balance = await getBalance(message, true, target);
+    await giveChatReward(target, channel, balance);
 }

@@ -1,27 +1,46 @@
 import channelIds from 'config/channelIds';
 import { getCommunityDiscord } from 'config/guild';
 import roleIds from 'config/roleId';
-import Discord from 'discord.js';
+import Discord, { TextBasedChannel } from 'discord.js';
+import { database } from 'register/firebase';
+import cache from 'util/cache';
+
+async function updateMulti(channel: TextBasedChannel) {
+    let generalMulti =
+        cache['discord_bot/community/currencyConfig'].multiplier.channels[
+            channelIds.general
+        ] || 0;
+    await database
+        .ref(
+            `discord_bot/community/currencyConfig/multiplier/channels/${channelIds.general}`
+        )
+        .set(generalMulti + 10);
+    setTimeout(async () => {
+        generalMulti =
+            cache['discord_bot/community/currencyConfig'].multiplier.channels[
+                channelIds.general
+            ] || 0;
+        await database
+            .ref(
+                `discord_bot/community/currencyConfig/multiplier/channels/${channelIds.general}`
+            )
+            .set(generalMulti - 10);
+    }, 60 * 60 * 1000);
+    await channel.send(
+        `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat. For the next 60 minutes, ${channel} has extra \`x10\` multiplier!`
+    );
+}
 
 let timeout: NodeJS.Timeout;
 export default async function chatRevivePing(
     message: Discord.Message
 ): Promise<void> {
     const { channel } = message;
-    if (channel.id !== channelIds.general) {
-        return;
-    }
+    if (channel.id !== channelIds.general) return;
 
-    if (timeout) {
-        clearTimeout(timeout);
-    }
-    timeout = setTimeout(
-        async () =>
-            channel.send(
-                `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat.`
-            ),
-        1000 * 60 * 60
-    );
+    if (timeout) clearTimeout(timeout);
+
+    timeout = setTimeout(async () => updateMulti(channel), 1000 * 60 * 60);
 }
 
 export async function fetchGeneralOnBoot(
@@ -40,10 +59,7 @@ export async function fetchGeneralOnBoot(
         const tenMinutes = 1000 * 60 * 60;
         if (!timeout) {
             timeout = setTimeout(
-                async () =>
-                    general.send(
-                        `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat.`
-                    ),
+                async () => updateMulti(general),
                 tenMinutes - deadChatTimer
             );
         }
