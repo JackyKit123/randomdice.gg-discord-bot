@@ -17,7 +17,7 @@ import { noActiveRaffleResponse } from './util';
 
 const numberFormat = new Intl.NumberFormat();
 
-async function validDateJoinRaffle(
+async function validateJoinRaffle(
     interaction: CommandInteraction<'cached'> | ButtonInteraction<'cached'>,
     ticketAmountArg: string
 ): Promise<number | null> {
@@ -97,7 +97,7 @@ export default async function joinRaffle(
 ): Promise<void> {
     const { member } = interaction;
     const entries = cache['discord_bot/community/raffle'];
-    const memberEntry = await validDateJoinRaffle(interaction, ticketAmountArg);
+    const memberEntry = await validateJoinRaffle(interaction, ticketAmountArg);
 
     if (!memberEntry) return;
 
@@ -135,7 +135,7 @@ export async function confirmJoinRaffleButton(
         return;
     }
 
-    const currEntry = await validDateJoinRaffle(
+    const currEntry = await validateJoinRaffle(
         interaction,
         ticketAmountArg === 'max'
             ? entries.maxEntries.toString()
