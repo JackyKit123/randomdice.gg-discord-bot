@@ -24,7 +24,7 @@ import snipe, { deleteSnipe } from 'community discord/snipe';
 import apply, {
     configApps,
     closeApplication,
-    applyConfirmButtons,
+    applicationButtons,
 } from 'community discord/apply';
 import { report, closeReport } from 'community discord/report';
 import lock from 'community discord/lock';
@@ -239,7 +239,7 @@ export default async function interactionCreate(
                             case 'yes-no-button-✅-application-delete':
                             case 'yes-no-button-✅-application-submit':
                             case 'yes-no-button-✅-application-cancel':
-                                await applyConfirmButtons(interaction);
+                                await applicationButtons(interaction);
                                 break;
                             case 'delete-snipe':
                             case 'trash-snipe':

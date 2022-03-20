@@ -17,6 +17,7 @@ import cache, { CommunityDiscordApplication } from 'util/cache';
 import cooldown from 'util/cooldown';
 import notYourButtonResponse, {
     checkIfUserIsInteractionInitiator,
+    getMessageFromReference,
 } from 'util/notYourButtonResponse';
 import yesNoButton from 'util/yesNoButton';
 import checkPermission from './util/checkPermissions';
@@ -484,24 +485,60 @@ export async function configApps(
     }
 }
 
-export async function applyConfirmButtons(
-    interaction: ButtonInteraction
-): Promise<void> {
+async function applicationConfirmationButtons(
+    interaction: ButtonInteraction<'cached'>
+) {
     if (!interaction.inCachedGuild()) return;
+    const { customId, channel, guild, user } = interaction;
+
+    const message = await getMessageFromReference(interaction.message);
+
+    const applicationName = message?.embeds.find(embed =>
+        embed.title?.endsWith(' Application')
+    )?.title;
+
+    if (!applicationName || !channel || channel.isThread()) {
+        await interaction.reply({
+            content: 'Invalid Application Channel',
+            ephemeral: true,
+        });
+        return;
+    }
+
+    if (customId === 'yes-no-button-✅-application-submit') {
+        await channel.permissionOverwrites.edit(
+            guild.roles.everyone,
+            {
+                SEND_MESSAGES: false,
+            },
+            {
+                reason: 'Application Submit',
+            }
+        );
+        await interaction.reply('Application submitted!');
+        await interaction.followUp(`Locked down ${channel}`);
+        await channel.send(
+            `<@&${
+                roleIds.Admin
+            }>, ${user} has submitted the ${applicationName.toLowerCase()}.`
+        );
+    }
+
+    if (customId === 'yes-no-button-✅-application-cancel')
+        await channel.delete();
+}
+
+async function configApplicationConfirmButtons(
+    interaction: ButtonInteraction<'cached'>
+) {
     const {
         customId,
-        channel,
         guild,
-        user,
         message: { embeds },
     } = interaction;
 
     const ref = database.ref('discord_bot/community/applications');
     const existingApplications = cache['discord_bot/community/applications'];
-
-    const applicationName = embeds.find(embed =>
-        embed.title?.endsWith(' Application')
-    )?.title;
 
     const applicationConfigEmbed = embeds.find(embed =>
         /.+ Application/.test(embed.title ?? '')
@@ -509,44 +546,15 @@ export async function applyConfirmButtons(
     const position = applicationConfigEmbed?.title?.replace(/ Application/, '');
     const questions = applicationConfigEmbed?.fields.map(field => field.value);
 
+    if (!position || !questions) {
+        await interaction.reply('Invalid Message Origin.');
+        return;
+    }
+
+    await updateCommandOptions(guild);
+
     switch (customId) {
-        case 'yes-no-button-✅-application-submit':
-            if (!channel || channel.isThread() || !applicationName) {
-                await interaction.reply('Invalid application channel');
-                return;
-            }
-            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
-            await channel.permissionOverwrites.edit(
-                guild.roles.everyone,
-                {
-                    SEND_MESSAGES: false,
-                },
-                {
-                    reason: 'Application Submit',
-                }
-            );
-            await interaction.reply('Application submitted!');
-            await channel.send(`Locked down ${channel}`);
-            await channel.send(
-                `<@&${
-                    roleIds.Admin
-                }>, ${user} has submitted the ${applicationName.toLowerCase()}.`
-            );
-            break;
-        case 'yes-no-button-✅-application-cancel':
-            if (!channel || channel.isThread() || !applicationName) {
-                await interaction.reply('Invalid application channel');
-                return;
-            }
-            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
-            await channel.delete();
-            break;
         case 'yes-no-button-✅-application-add':
-            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
-            if (!position || !questions) {
-                await interaction.reply('Invalid Message Origin.');
-                return;
-            }
             await ref.set(
                 existingApplications.concat({
                     isOpen: true,
@@ -554,19 +562,11 @@ export async function applyConfirmButtons(
                     questions,
                 })
             );
-            await updateCommandOptions(guild);
-            await interaction.reply({
-                content: `Added ${position} application and it's opened for application.`,
-                embeds: [],
-                components: [],
-            });
+            await interaction.reply(
+                `Added ${position} application and it's opened for application.`
+            );
             break;
         case 'yes-no-button-✅-application-edit':
-            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
-            if (!position || !questions) {
-                await interaction.reply('Invalid Message Origin.');
-                return;
-            }
             await ref.set(
                 existingApplications.map(app => {
                     if (app.position.toLowerCase() === position.toLowerCase()) {
@@ -576,29 +576,34 @@ export async function applyConfirmButtons(
                     return app;
                 })
             );
-            await interaction.reply({
-                content: `Edited ${position} application.`,
-                embeds: [],
-                components: [],
-            });
+            await interaction.reply(`Edited ${position} application.`);
             break;
         case 'yes-no-button-✅-application-delete':
-            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
-            if (!position || !questions) {
-                await interaction.reply('Invalid Message Origin.');
-                return;
-            }
             await ref.set(
                 existingApplications.filter(
                     app => app.position.toLowerCase() !== position.toLowerCase()
                 )
             );
-            await updateCommandOptions(guild);
-            await interaction.reply({
-                content: `Removed ${position} application.`,
-                embeds: [],
-                components: [],
-            });
+            await interaction.reply(`Removed ${position} application.`);
+            break;
+        default:
+    }
+}
+
+export async function applicationButtons(
+    interaction: ButtonInteraction<'cached'>
+): Promise<void> {
+    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
+
+    switch (interaction.customId) {
+        case 'yes-no-button-✅-application-submit':
+        case 'yes-no-button-✅-application-cancel':
+            await applicationConfirmationButtons(interaction);
+            break;
+        case 'yes-no-button-✅-application-add':
+        case 'yes-no-button-✅-application-edit':
+        case 'yes-no-button-✅-application-delete':
+            await configApplicationConfirmButtons(interaction);
             break;
         default:
     }
