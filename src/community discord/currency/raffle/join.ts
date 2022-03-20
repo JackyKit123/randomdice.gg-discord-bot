@@ -136,7 +136,7 @@ export async function confirmJoinRaffleButton(
         embeds: [embed],
     } = message;
 
-    const [, , ticketAmountArg] =
+    const [, ticketAmountArg] =
         content.match(
             /<@!?\d{18}> You are entering the raffle with `(\d+|max)` entries/
         ) ?? [];
