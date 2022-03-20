@@ -75,10 +75,12 @@ async function afkHandler(
     Object.entries(cache['discord_bot/community/afk'] || {}).forEach(
         async ([uid, { afkMessage, timestamp }]) => {
             if (uid === member.id) {
-                await Promise.all([
-                    channel.send(
+                if (channel.permissionsFor(uid)?.has('SEND_MESSAGES')) {
+                    await channel.send(
                         `Welcome back ${member}, I have removed your afk.`
-                    ),
+                    );
+                }
+                await Promise.all([
                     database
                         .ref('discord_bot/community/afk')
                         .child(member.id)
