@@ -26,9 +26,10 @@ async function memberIsPrestigeX(
     const profile = cacheData['discord_bot/community/currency']?.[member.id];
 
     if (prestigeLevel !== 10 || profile?.prestige !== 10) {
-        await interaction.reply(
-            'Nuke is only available for users with Prestige X.'
-        );
+        await interaction.reply({
+            content: 'Nuke is only available for users with Prestige X.',
+            ephemeral: true,
+        });
         return false;
     }
     return true;
@@ -36,9 +37,10 @@ async function memberIsPrestigeX(
 
 async function checkExpired(interaction: ButtonInteraction<'cached'>) {
     if (Date.now() - interaction.message.createdTimestamp > 1000 * 60) {
-        await interaction.reply(
-            'This button has expired, please initiate a new one.'
-        );
+        await interaction.reply({
+            content: 'This button has expired, please initiate a new one.',
+            ephemeral: true,
+        });
         return true;
     }
     return false;
