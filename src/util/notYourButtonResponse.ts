@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { suppressUnknownMessage } from './suppressErrors';
 
-async function getMessageFromReference(
+export async function getMessageFromReference(
     message: Message
 ): Promise<Message | null> {
     const { reference, client } = message;

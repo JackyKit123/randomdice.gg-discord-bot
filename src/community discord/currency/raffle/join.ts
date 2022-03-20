@@ -10,7 +10,10 @@ import {
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
-import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
+import {
+    checkIfUserIsInteractionInitiator,
+    getMessageFromReference,
+} from 'util/notYourButtonResponse';
 import yesNoButton from 'util/yesNoButton';
 import { getBalance } from '../balance';
 import { noActiveRaffleResponse } from './util';
@@ -110,15 +113,24 @@ export default async function joinRaffle(
 }
 
 export async function confirmJoinRaffleButton(
-    interaction: ButtonInteraction
+    interaction: ButtonInteraction<'cached'>
 ): Promise<void> {
-    if (!interaction.inCachedGuild()) return;
-    const { member, message } = interaction;
+    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
+
+    const { member } = interaction;
 
     const ref = database.ref('discord_bot/community/raffle');
     const entries = cache['discord_bot/community/raffle'];
     const currentEntries = Object.entries(entries.tickets ?? {});
 
+    const message = await getMessageFromReference(interaction.message);
+
+    if (!message) {
+        await interaction.reply(
+            'Unable to find the message that initiated the raffle. Please try again.'
+        );
+        return;
+    }
     const {
         content,
         embeds: [embed],
@@ -128,8 +140,6 @@ export async function confirmJoinRaffleButton(
         content.match(
             /<@!?(\d{18})> You are entering the raffle with `(\d+|max)` entries/
         ) ?? [];
-
-    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
 
     const currEntry = await validateJoinRaffle(
         interaction,
