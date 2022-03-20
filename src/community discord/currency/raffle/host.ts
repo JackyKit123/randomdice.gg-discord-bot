@@ -26,9 +26,10 @@ async function start(
     author: User
 ): Promise<{ embeds: [MessageEmbed]; components: [MessageActionRow] }> {
     const ref = database.ref('discord_bot/community/raffle');
+    const endTimestamp = Date.now() + duration;
 
     await ref.set({
-        endTimestamp: Date.now() + duration,
+        endTimestamp,
         hostId: author.id,
         maxEntries,
         ticketCost,
@@ -75,7 +76,7 @@ async function start(
             )
             .addField('Hosted by', `${author}`)
             .setFooter({ text: 'Raffle ends at' })
-            .setTimestamp(Date.now() + duration),
+            .setTimestamp(endTimestamp),
     ];
     return { embeds, components };
 }
