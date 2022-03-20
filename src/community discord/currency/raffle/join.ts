@@ -117,27 +117,25 @@ export async function confirmJoinRaffleButton(
 ): Promise<void> {
     if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
 
-    const { member } = interaction;
+    const { member, message: yesNoButtonMessage } = interaction;
 
     const ref = database.ref('discord_bot/community/raffle');
     const entries = cache['discord_bot/community/raffle'];
     const currentEntries = Object.entries(entries.tickets ?? {});
 
-    const message = await getMessageFromReference(interaction.message);
+    const raffleHostMessage = await getMessageFromReference(
+        interaction.message
+    );
 
-    if (!message) {
+    if (!raffleHostMessage) {
         await interaction.reply(
             'Unable to find the message that initiated the raffle. Please try again.'
         );
         return;
     }
-    const {
-        content,
-        embeds: [embed],
-    } = message;
 
     const [, ticketAmountArg] =
-        content.match(
+        yesNoButtonMessage.content.match(
             /<@!?\d{18}> You are entering the raffle with `(\d+|max)` entries/
         ) ?? [];
 
@@ -146,7 +144,7 @@ export async function confirmJoinRaffleButton(
         ticketAmountArg === 'max' ? 'max' : ticketAmountArg
     );
 
-    if (embed.timestamp !== entries.endTimestamp) {
+    if (raffleHostMessage.embeds[0]?.timestamp !== entries.endTimestamp) {
         await interaction.reply({
             content: 'This raffle has ended, please join with the new one.',
             ephemeral: true,
