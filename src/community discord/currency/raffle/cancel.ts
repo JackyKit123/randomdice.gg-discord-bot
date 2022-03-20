@@ -3,9 +3,8 @@ import { eventManagerRoleIds } from 'config/roleId';
 import { ButtonInteraction, CommandInteraction } from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
-import yesNoButton, {
-    checkIfUserIsInteractionInitiator,
-} from 'util/yesNoButton';
+import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
+import yesNoButton from 'util/yesNoButton';
 import { noActiveRaffleResponse } from './util';
 
 export default async function cancelRaffle(

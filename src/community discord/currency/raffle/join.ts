@@ -10,8 +10,7 @@ import {
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
-import getMessageFromReference from 'util/getMessageFromReference';
-import notYourButtonResponse from 'util/notYourButtonResponse';
+import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
 import yesNoButton from 'util/yesNoButton';
 import { getBalance } from '../balance';
 import { noActiveRaffleResponse } from './util';
@@ -120,27 +119,17 @@ export async function confirmJoinRaffleButton(
     const entries = cache['discord_bot/community/raffle'];
     const currentEntries = Object.entries(entries.tickets ?? {});
 
-    const referencedMessage = await getMessageFromReference(
-        message,
-        interaction
-    );
-
-    if (!referencedMessage) return;
-
     const {
         content,
         embeds: [embed],
-    } = referencedMessage;
+    } = message;
 
-    const [, id, ticketAmountArg] =
+    const [, , ticketAmountArg] =
         content.match(
             /<@!?(\d{18})> You are entering the raffle with `(\d+|max)` entries/
         ) ?? [];
 
-    if (id !== member.id) {
-        await notYourButtonResponse(interaction);
-        return;
-    }
+    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
 
     const currEntry = await validateJoinRaffle(
         interaction,

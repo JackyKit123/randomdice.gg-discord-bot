@@ -20,7 +20,7 @@ import {
     shuffleDiceLegendary,
 } from 'config/emojiId';
 import { getPrestigeLevel } from 'community discord/util/checkPrestigeLevel';
-import notYourButtonResponse from 'util/notYourButtonResponse';
+import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
 import { getBalance } from './balance';
 import isBotChannels from '../util/isBotChannels';
 
@@ -137,10 +137,7 @@ export default async function drawDice(
                 })
                 .on('collect', async i => {
                     if (!i.customId.startsWith('dd-captcha-')) return;
-                    if (i.user.id !== member.user.id) {
-                        await notYourButtonResponse(i);
-                        return;
-                    }
+                    if (!(await checkIfUserIsInteractionInitiator(i))) return;
                     challengeState = memberChallengeState.get(member.user.id);
                     if (i.customId === `dd-captcha-${captcha}`) {
                         memberChallengeState.delete(member.user.id);

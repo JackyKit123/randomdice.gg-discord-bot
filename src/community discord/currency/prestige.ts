@@ -15,7 +15,7 @@ import {
     getPrestigeIcon,
     getPrestigeLevel,
 } from 'community discord/util/checkPrestigeLevel';
-import notYourButtonResponse from 'util/notYourButtonResponse';
+import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
 import { getBalance } from './balance';
 
 export default async function prestige(
@@ -137,10 +137,7 @@ export default async function prestige(
             time: 60 * 1000,
         })
         .on('collect', async i => {
-            if (i.user.id !== member.id) {
-                await notYourButtonResponse(i);
-                return;
-            }
+            if (!(await checkIfUserIsInteractionInitiator(i))) return;
             if (i.customId === 'prestige-me') {
                 await member.roles.add(
                     prestigeRoles[nextPrestigeLevel],

@@ -4,9 +4,8 @@ import {
     WebhookEditMessageOptions,
 } from 'discord.js';
 import * as stringSimilarity from 'string-similarity';
-import yesNoButton, {
-    checkIfUserIsInteractionInitiator,
-} from 'util/yesNoButton';
+import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
+import yesNoButton from 'util/yesNoButton';
 
 export default async function bestMatchFollowUp(
     interaction: CommandInteraction,

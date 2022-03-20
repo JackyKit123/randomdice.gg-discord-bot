@@ -15,10 +15,10 @@ import { argDependencies } from 'mathjs';
 import { database } from 'register/firebase';
 import cache, { CommunityDiscordApplication } from 'util/cache';
 import cooldown from 'util/cooldown';
-import notYourButtonResponse from 'util/notYourButtonResponse';
-import yesNoButton, {
+import notYourButtonResponse, {
     checkIfUserIsInteractionInitiator,
-} from 'util/yesNoButton';
+} from 'util/notYourButtonResponse';
+import yesNoButton from 'util/yesNoButton';
 import checkPermission from './util/checkPermissions';
 
 export const commandData = (
@@ -515,14 +515,7 @@ export async function applyConfirmButtons(
                 await interaction.reply('Invalid application channel');
                 return;
             }
-            if (
-                channel.permissionOverwrites.cache.find(
-                    overwrite => overwrite.type === 'member'
-                )?.id !== user.id
-            ) {
-                await notYourButtonResponse(interaction);
-                return;
-            }
+            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
             await channel.permissionOverwrites.edit(
                 guild.roles.everyone,
                 {
@@ -545,14 +538,7 @@ export async function applyConfirmButtons(
                 await interaction.reply('Invalid application channel');
                 return;
             }
-            if (
-                channel.permissionOverwrites.cache.find(
-                    overwrite => overwrite.type === 'member'
-                )?.id !== user.id
-            ) {
-                await notYourButtonResponse(interaction);
-                return;
-            }
+            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
             await channel.delete();
             break;
         case 'yes-no-button-✅-application-add':

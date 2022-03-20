@@ -49,7 +49,7 @@ import timed from 'community discord/currency/timed';
 import currency from 'community discord/currency/currency';
 import { spawnCoinbomb } from 'community discord/currency/coinbomb';
 import multiplier from 'community discord/currency/multiplier';
-import nuke from 'community discord/currency/nuke';
+import nuke, { confirmNukeButton } from 'community discord/currency/nuke';
 
 import bon from 'community discord/currency/fun commands/bon';
 import welcomerick from 'community discord/currency/fun commands/welcomerick';
@@ -286,6 +286,11 @@ export default async function interactionCreate(
                             case 'spy-log-ban':
                                 await spyLogBanHandler(interaction);
                                 break;
+                            case 'nuke-yes':
+                            case 'nuke-double-yes':
+                            case 'nuke-triple-yes':
+                                await confirmNukeButton(interaction);
+                                break;
                             default:
                         }
                     }
@@ -487,10 +492,10 @@ export default async function interactionCreate(
                     break;
                 default:
             }
-        }
-        if (interaction.isButton()) {
-            if (interaction.customId.startsWith('yes-no-button-'))
-                await onNoButtonClick(interaction);
+            if (interaction.isButton()) {
+                if (interaction.customId.startsWith('yes-no-button-'))
+                    await onNoButtonClick(interaction);
+            }
         }
         await Promise.all(asyncPromisesCapturer);
     } catch (err) {

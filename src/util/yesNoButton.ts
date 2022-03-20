@@ -5,36 +5,13 @@ import {
     MessageButton,
     ReplyMessageOptions,
 } from 'discord.js';
-import notYourButtonResponse from './notYourButtonResponse';
-
-export async function checkIfUserIsInteractionInitiator(
-    interaction: ButtonInteraction
-): Promise<boolean> {
-    if (!interaction.inCachedGuild()) return false;
-    const {
-        message: { content, interaction: reply },
-        member,
-        client: { user: clientUser },
-    } = interaction;
-
-    if (reply?.user.id === clientUser?.id) {
-        if (!content.startsWith(member.toString())) {
-            await notYourButtonResponse(interaction);
-            return false;
-        }
-    } else if (reply?.user.id !== member.id) {
-        await notYourButtonResponse(interaction);
-        return false;
-    }
-    return true;
-}
+import { checkIfUserIsInteractionInitiator } from './notYourButtonResponse';
 
 export async function onNoButtonClick(
-    interaction: ButtonInteraction
+    interaction: ButtonInteraction<'cached'>
 ): Promise<void> {
-    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
-    if (!interaction.inCachedGuild()) return;
-    await interaction.message.delete();
+    if (await checkIfUserIsInteractionInitiator(interaction))
+        await interaction.message.delete();
 }
 
 export default async function yesNoButton(
