@@ -41,9 +41,11 @@ export async function updateSuggestions<TValue extends { name: string }>(
         /\. Did you mean `(.+)`\?$/
     )?.[1];
     if (!suggestion) {
-        await interaction.reply(
-            'This button is too old to be used anymore. Please initiate a new command.'
-        );
+        await interaction.reply({
+            content:
+                'This button is too old to be used anymore. Please initiate a new command.',
+            ephemeral: true,
+        });
         return;
     }
     const newResponse = followUp(

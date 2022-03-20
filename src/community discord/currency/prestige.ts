@@ -15,6 +15,7 @@ import {
     getPrestigeIcon,
     getPrestigeLevel,
 } from 'community discord/util/checkPrestigeLevel';
+import notYourButtonResponse from 'util/notYourButtonResponse';
 import { getBalance } from './balance';
 
 export default async function prestige(
@@ -137,10 +138,7 @@ export default async function prestige(
         })
         .on('collect', async i => {
             if (i.user.id !== member.id) {
-                await i.reply({
-                    content: 'This button is not for you.',
-                    ephemeral: true,
-                });
+                await notYourButtonResponse(i);
                 return;
             }
             if (i.customId === 'prestige-me') {

@@ -15,6 +15,7 @@ import { argDependencies } from 'mathjs';
 import { database } from 'register/firebase';
 import cache, { CommunityDiscordApplication } from 'util/cache';
 import cooldown from 'util/cooldown';
+import notYourButtonResponse from 'util/notYourButtonResponse';
 import yesNoButton, {
     checkIfUserIsInteractionInitiator,
 } from 'util/yesNoButton';
@@ -297,11 +298,7 @@ export async function closeApplication(
     )?.id;
 
     if (!memberId || memberId !== user.id) {
-        await interaction.reply({
-            content:
-                'You are not allowed to use this button, you are not the author of this application.',
-            ephemeral: true,
-        });
+        await notYourButtonResponse(interaction);
         return;
     }
 
@@ -309,13 +306,13 @@ export async function closeApplication(
         case 'application-submit':
             await yesNoButton(
                 interaction,
-                'Please confirm again that you are ready to submit.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.'
+                `${user}, Please confirm again that you are ready to submit.\n⚠️ Warning, once you confirm submit, the channel will be locked down and admins will be pinged to review your application, you cannot send new messages here anymore.`
             );
             break;
         case 'application-cancel':
             await yesNoButton(
                 interaction,
-                'Please confirm again that you are cancelling application.\n⚠️ Warning, once you confirm cancel, the channel will be deleted, this action cannot be undone.'
+                `${user}, Please confirm again that you are cancelling application.\n⚠️ Warning, once you confirm cancel, the channel will be deleted, this action cannot be undone.`
             );
             break;
         default:
@@ -512,17 +509,18 @@ export async function applyConfirmButtons(
     const position = applicationConfigEmbed?.title?.replace(/ Application/, '');
     const questions = applicationConfigEmbed?.fields.map(field => field.value);
 
-    if (
-        !channel ||
-        channel.isThread() ||
-        !(await checkIfUserIsInteractionInitiator(interaction))
-    )
-        return;
-
     switch (customId) {
         case 'yes-no-button-✅-application-submit':
-            if (!applicationName) {
+            if (!channel || channel.isThread() || !applicationName) {
                 await interaction.reply('Invalid application channel');
+                return;
+            }
+            if (
+                channel.permissionOverwrites.cache.find(
+                    overwrite => overwrite.type === 'member'
+                )?.id !== user.id
+            ) {
+                await notYourButtonResponse(interaction);
                 return;
             }
             await channel.permissionOverwrites.edit(
@@ -543,13 +541,22 @@ export async function applyConfirmButtons(
             );
             break;
         case 'yes-no-button-✅-application-cancel':
-            if (!applicationName) {
+            if (!channel || channel.isThread() || !applicationName) {
                 await interaction.reply('Invalid application channel');
+                return;
+            }
+            if (
+                channel.permissionOverwrites.cache.find(
+                    overwrite => overwrite.type === 'member'
+                )?.id !== user.id
+            ) {
+                await notYourButtonResponse(interaction);
                 return;
             }
             await channel.delete();
             break;
         case 'yes-no-button-✅-application-add':
+            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
             if (!position || !questions) {
                 await interaction.reply('Invalid Message Origin.');
                 return;
@@ -569,6 +576,7 @@ export async function applyConfirmButtons(
             });
             break;
         case 'yes-no-button-✅-application-edit':
+            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
             if (!position || !questions) {
                 await interaction.reply('Invalid Message Origin.');
                 return;
@@ -589,6 +597,7 @@ export async function applyConfirmButtons(
             });
             break;
         case 'yes-no-button-✅-application-delete':
+            if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
             if (!position || !questions) {
                 await interaction.reply('Invalid Message Origin.');
                 return;

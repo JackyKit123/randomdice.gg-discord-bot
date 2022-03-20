@@ -50,9 +50,10 @@ export default async function coinflip(
     const isTail = !isHead;
 
     if (balance < 100) {
-        await interaction.reply(
-            `${user} You do not even have ${coinDice} 100 to bet on a coin flip.`
-        );
+        await interaction.reply({
+            content: `You do not even have ${coinDice} 100 to bet on a coin flip.`,
+            ephemeral: true,
+        });
         return;
     }
     const memberIsTier4 = member.roles.cache.hasAny(...tier4RoleIds);
@@ -64,8 +65,8 @@ export default async function coinflip(
         memberIsTier4 && amountArg === 'max' ? balance : Number(amountArg);
 
     if (!Number.isInteger(amount) || amount < 100 || amount > 10000) {
-        await interaction.reply(
-            `Coinflip amount must be an integer between 100 - 10000${
+        await interaction.reply({
+            content: `Coinflip amount must be an integer between 100 - 10000${
                 // eslint-disable-next-line no-nested-ternary
                 member.roles.cache.hasAny(...tier4RoleIds)
                     ? ' or `max`'
@@ -74,15 +75,17 @@ export default async function coinflip(
                           .map(id => `<@&${id}>`)
                           .join(' ')}`
                     : ''
-            }.`
-        );
+            }.`,
+            ephemeral: true,
+        });
         return;
     }
 
     if (amount > balance) {
-        await interaction.reply(
-            `${user} You cannot coinflip that much, you are not rich enough.`
-        );
+        await interaction.reply({
+            content: `You cannot coinflip that much, you are not rich enough.`,
+            ephemeral: true,
+        });
         return;
     }
     memberDefaultCoinFlip.set(member, amount);

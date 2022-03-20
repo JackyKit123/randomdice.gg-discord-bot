@@ -15,6 +15,7 @@ import roleIds, {
     tier3RoleIds,
 } from 'config/roleId';
 import cacheData from 'util/cache';
+import notYourButtonResponse from 'util/notYourButtonResponse';
 
 export default async function nuke(
     interaction: CommandInteraction | UserContextMenuInteraction
@@ -51,10 +52,7 @@ export default async function nuke(
         .createMessageComponentCollector()
         .on('collect', async i => {
             if (i.user.id !== member.id) {
-                await i.reply({
-                    content: 'This button is not for you.',
-                    ephemeral: true,
-                });
+                await notYourButtonResponse(i);
                 return;
             }
             if (i.customId !== 'nuke-yes') return;
@@ -77,10 +75,7 @@ export default async function nuke(
                 .createMessageComponentCollector()
                 .on('collect', async ii => {
                     if (ii.user.id !== member.id) {
-                        await ii.reply({
-                            content: 'This button is not for you.',
-                            ephemeral: true,
-                        });
+                        await notYourButtonResponse(ii);
                         return;
                     }
                     if (ii.customId !== 'nuke-double-yes') return;
@@ -101,10 +96,7 @@ export default async function nuke(
                         .createMessageComponentCollector()
                         .on('collect', async iii => {
                             if (iii.user.id !== member.id) {
-                                await iii.reply({
-                                    content: 'This button is not for you.',
-                                    ephemeral: true,
-                                });
+                                await notYourButtonResponse(iii);
                                 return;
                             }
                             await member.roles.remove([

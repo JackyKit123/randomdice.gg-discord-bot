@@ -22,6 +22,7 @@ import yesNoButton, {
     checkIfUserIsInteractionInitiator,
 } from 'util/yesNoButton';
 import { getCommunityDiscord } from 'config/guild';
+import notYourButtonResponse from 'util/notYourButtonResponse';
 import { getBalance } from './balance';
 
 const numberFormat = new Intl.NumberFormat();
@@ -302,7 +303,10 @@ export async function confirmJoinRaffleButton(
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
     const {
-        message: { content },
+        message: {
+            content,
+            embeds: [embed],
+        },
         member,
     } = interaction;
 
@@ -318,17 +322,24 @@ export async function confirmJoinRaffleButton(
         currEntryArg === 'max' ? entries.maxEntries : Number(currEntryArg);
 
     if (id !== member.id) {
+        await notYourButtonResponse(interaction);
+        return;
+    }
+
+    if (embed.timestamp !== entries.endTimestamp) {
         await interaction.reply({
-            content: 'This button is not for you',
+            content: 'This raffle has ended, please join with the new one.',
             ephemeral: true,
         });
         return;
     }
 
     if (!currEntry) {
-        await interaction.reply(
-            'This button is too old, please use the command to join the raffle'
-        );
+        await interaction.reply({
+            content:
+                'This button is too old, please use the command to join the raffle',
+            ephemeral: true,
+        });
         return;
     }
 
