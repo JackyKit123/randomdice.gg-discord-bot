@@ -10,6 +10,7 @@ import {
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import getMessageFromReference from 'util/getMessageFromReference';
 import notYourButtonResponse from 'util/notYourButtonResponse';
 import yesNoButton from 'util/yesNoButton';
 import { getBalance } from '../balance';
@@ -113,17 +114,23 @@ export async function confirmJoinRaffleButton(
     interaction: ButtonInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const {
-        message: {
-            content,
-            embeds: [embed],
-        },
-        member,
-    } = interaction;
+    const { member, message } = interaction;
 
     const ref = database.ref('discord_bot/community/raffle');
     const entries = cache['discord_bot/community/raffle'];
     const currentEntries = Object.entries(entries.tickets ?? {});
+
+    const referencedMessage = await getMessageFromReference(
+        message,
+        interaction
+    );
+
+    if (!referencedMessage) return;
+
+    const {
+        content,
+        embeds: [embed],
+    } = referencedMessage;
 
     const [, id, ticketAmountArg] =
         content.match(
