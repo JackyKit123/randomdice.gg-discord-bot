@@ -9,7 +9,6 @@ import {
     MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { checkIfUserIsInteractionInitiator } from 'util/yesNoButton';
 import checkPermission from './util/checkPermissions';
 
 export default async function lfg(
@@ -83,7 +82,19 @@ export default async function lfg(
 }
 
 export async function pingLfg(interaction: ButtonInteraction): Promise<void> {
-    if (await checkIfUserIsInteractionInitiator(interaction)) {
+    if (
+        await cooldown(
+            interaction,
+            {
+                default: 600 * 1000,
+                donator: 600 * 1000,
+            },
+            `ping-lfg-${interaction.message.author.id}`
+        )
+    ) {
+        return;
+    }
+    if (interaction.user.id === interaction.message.author.id) {
         await interaction.reply({
             content: 'You cannot ping yourself',
             ephemeral: true,
