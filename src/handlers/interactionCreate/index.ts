@@ -44,12 +44,7 @@ import profile, { profileButtons } from 'community discord/currency/profile';
 import coinflip from 'community discord/currency/coinflip';
 import leaderboard from 'community discord/currency/leaderboard';
 import prestige from 'community discord/currency/prestige';
-import raffle, {
-    addRafflePingRole,
-    confirmCancelRaffleButton,
-    confirmJoinRaffleButton,
-    joinRaffleButton,
-} from 'community discord/currency/raffle';
+import raffle, { addRafflePingRole } from 'community discord/currency/raffle';
 import timed from 'community discord/currency/timed';
 import currency from 'community discord/currency/currency';
 import { spawnCoinbomb } from 'community discord/currency/coinbomb';
@@ -86,6 +81,11 @@ import {
 } from 'config/guild';
 import { isDev, isProd } from 'config/env';
 import { onNoButtonClick } from 'util/yesNoButton';
+import {
+    confirmJoinRaffleButton,
+    joinRaffleButton,
+} from 'community discord/currency/raffle/join';
+import { confirmCancelRaffleButton } from 'community discord/currency/raffle/cancel';
 
 export default async function interactionCreate(
     interaction: Interaction
