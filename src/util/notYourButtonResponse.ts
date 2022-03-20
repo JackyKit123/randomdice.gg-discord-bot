@@ -49,24 +49,26 @@ export async function checkIfUserIsInteractionInitiator(
         return user.id === interaction.message.author.id;
     }
 
-    const { message, member } = interaction;
-    let { interaction: from } = message;
+    const isInitiator = ({
+        content,
+        author,
+        interaction: from,
+    }: Message): boolean =>
+        from?.user.id === user.id ||
+        (new RegExp(`^<@!?${user.id}>`).test(content) &&
+            author.id === clientUser.id);
+
+    const { message } = interaction;
+    if (isInitiator(message)) return true;
 
     let referencedMessage = await getMessageFromReference(message);
 
     while (referencedMessage) {
-        ({ interaction: from } = referencedMessage);
-        if (from?.user.id === clientUser.id) {
-            // eslint-disable-next-line no-await-in-loop
-            referencedMessage = await getMessageFromReference(
-                referencedMessage
-            );
-        }
-        break;
+        if (isInitiator(referencedMessage)) return true;
+        // eslint-disable-next-line no-await-in-loop
+        referencedMessage = await getMessageFromReference(referencedMessage);
     }
-    if (from?.user.id !== member.id) {
-        if (!interaction.replied) await notYourButtonResponse(interaction);
-        return false;
-    }
-    return true;
+
+    await notYourButtonResponse(interaction);
+    return false;
 }
