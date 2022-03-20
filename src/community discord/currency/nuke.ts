@@ -17,10 +17,9 @@ import roleIds, {
 import cacheData from 'util/cache';
 import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
 
-export default async function nuke(
-    interaction: CommandInteraction<'cached'>
-): Promise<void> {
-    if (!interaction.inCachedGuild()) return;
+async function memberIsPrestigeX(
+    interaction: ButtonInteraction<'cached'> | CommandInteraction<'cached'>
+) {
     const { member } = interaction;
 
     const prestigeLevel = getPrestigeLevel(member);
@@ -30,8 +29,25 @@ export default async function nuke(
         await interaction.reply(
             'Nuke is only available for users with Prestige X.'
         );
-        return;
+        return false;
     }
+    return true;
+}
+
+async function checkExpired(interaction: ButtonInteraction<'cached'>) {
+    if (Date.now() - interaction.message.createdTimestamp > 1000 * 60) {
+        await interaction.reply(
+            'This button has expired, please initiate a new one.'
+        );
+        return true;
+    }
+    return false;
+}
+
+export default async function nuke(
+    interaction: CommandInteraction<'cached'>
+): Promise<void> {
+    if (!(await memberIsPrestigeX(interaction))) return;
 
     await interaction.reply({
         content: `${'⚠️'.repeat(
@@ -137,7 +153,12 @@ export async function nukeFinalConfirmation(
 export async function confirmNukeButton(
     interaction: ButtonInteraction<'cached'>
 ): Promise<void> {
-    if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
+    if (
+        !(await checkIfUserIsInteractionInitiator(interaction)) ||
+        !(await memberIsPrestigeX(interaction)) ||
+        (await checkExpired(interaction))
+    )
+        return;
 
     switch (interaction.customId) {
         case 'nuke-yes':
