@@ -86,6 +86,7 @@ import {
     joinRaffleButton,
 } from 'community discord/currency/raffle/join';
 import { confirmCancelRaffleButton } from 'community discord/currency/raffle/cancel';
+import { suppressUnknownInteraction } from 'util/suppressErrors';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -500,20 +501,24 @@ export default async function interactionCreate(
                 interaction.isContextMenu()
             ) {
                 if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp(
-                        `Oops, something went wrong:\n${
-                            (err as Error).message ?? err
-                        }`
-                    );
+                    await interaction
+                        .followUp(
+                            `Oops, something went wrong:\n${
+                                (err as Error).message ?? err
+                            }`
+                        )
+                        .catch(suppressUnknownInteraction);
                 } else {
-                    await interaction.reply(
-                        `Oops, something went wrong:\n${
-                            (err as Error).message ?? err
-                        }`
-                    );
+                    await interaction
+                        .reply(
+                            `Oops, something went wrong:\n${
+                                (err as Error).message ?? err
+                            }`
+                        )
+                        .catch(suppressUnknownInteraction);
                 }
             }
-        } finally {
+        } catch {
             await logError(client, err, 'interaction#Create', interaction);
         }
     }

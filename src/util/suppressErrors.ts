@@ -25,6 +25,11 @@ export const suppressUnknownMessage = (error: DiscordAPIError): null => {
     return null;
 };
 
+export const suppressUnknownInteraction = (error: DiscordAPIError): null => {
+    if (error.code !== Constants.APIErrors.UNKNOWN_INTERACTION) throw error;
+    return null;
+};
+
 export const suppressReactionBlocked = (error: DiscordAPIError): null => {
     if (error.code !== Constants.APIErrors.REACTION_BLOCKED) throw error;
     return null;
