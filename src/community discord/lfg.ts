@@ -2,10 +2,14 @@ import channelIds from 'config/channelIds';
 import roleIds, { tier2RoleIds } from 'config/roleId';
 import {
     ApplicationCommandData,
+    ButtonInteraction,
     CommandInteraction,
+    MessageActionRow,
+    MessageButton,
     MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
+import { checkIfUserIsInteractionInitiator } from 'util/yesNoButton';
 import checkPermission from './util/checkPermissions';
 
 export default async function lfg(
@@ -31,6 +35,7 @@ export default async function lfg(
 
     if (
         channel.id !== channelIds['jackykit-playground-v3'] &&
+        channel.id !== channelIds['jackykit-playground-v2'] &&
         channel.id !== channelIds['look-for-games']
     ) {
         await interaction.reply(
@@ -49,13 +54,11 @@ export default async function lfg(
     let embed = new MessageEmbed()
         .setAuthor({
             name: member.user.tag,
-            iconURL: member.displayAvatarURL({ dynamic: true }),
         })
+        .setTitle('Looking for Game!')
+        .setThumbnail(member.displayAvatarURL({ dynamic: true }))
         .setColor(member.displayHexColor)
-        .addField('Ping / DM', member.toString())
-        .setTitle(
-            `${member.displayName} is looking for a Random Dice partner!`
-        );
+        .setDescription(`${member} is looking for a Random Dice partner!`);
 
     if (msg) {
         embed = embed.addField('Message', msg);
@@ -66,9 +69,49 @@ export default async function lfg(
     await channel.send({
         content: `<@&${roleIds['Looking for Games Ping']}>`,
         embeds: [embed],
+        components: [
+            new MessageActionRow().addComponents(
+                new MessageButton()
+                    .setCustomId('ping-lfg')
+                    .setStyle('PRIMARY')
+                    .setLabel(`Click Here to ping ${member.displayName}!`)
+            ),
+        ],
     });
 
     await interaction.deleteReply();
+}
+
+export async function pingLfg(interaction: ButtonInteraction): Promise<void> {
+    if (await checkIfUserIsInteractionInitiator(interaction)) {
+        await interaction.reply({
+            content: 'You cannot ping yourself',
+            ephemeral: true,
+        });
+    }
+    if (!interaction.inCachedGuild()) return;
+    const {
+        guild,
+        message: {
+            embeds: [embed],
+        },
+    } = interaction;
+
+    const user = guild.members.cache.get(
+        embed.description?.match(/^<@!?(\d{18})>/)?.[1] ?? ''
+    );
+    if (!user) {
+        await interaction.reply(
+            'This button is too old, please initiate a new command'
+        );
+        return;
+    }
+    await interaction.reply({
+        content: `${user}, ${interaction.user} wants to play with you!`,
+        allowedMentions: {
+            users: [user.id],
+        },
+    });
 }
 
 export const commandData: ApplicationCommandData = {

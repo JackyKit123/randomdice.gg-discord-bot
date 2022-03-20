@@ -29,7 +29,7 @@ import apply, {
 import { report, closeReport } from 'community discord/report';
 import lock from 'community discord/lock';
 import timer from 'community discord/timer';
-import lfg from 'community discord/lfg';
+import lfg, { pingLfg } from 'community discord/lfg';
 import gtn from 'community discord/gtn';
 import wordle from 'community discord/wordle';
 import eventPing from 'community discord/eventping';
@@ -258,6 +258,9 @@ export default async function interactionCreate(
                                 break;
                             case 'get-raffle-ping-role':
                                 await addRafflePingRole(interaction);
+                                break;
+                            case 'ping-lfg':
+                                await pingLfg(interaction);
                                 break;
                             case 'raffle-join-1':
                             case 'raffle-join-5':
