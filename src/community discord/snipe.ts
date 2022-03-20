@@ -14,6 +14,7 @@ import {
     User,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
+import { suppressUnknownMessage } from 'util/suppressErrors';
 import checkPermission from './util/checkPermissions';
 
 const snipeStore = {
@@ -256,7 +257,7 @@ export async function deleteSnipe(
                 });
                 return;
             }
-            await message.delete();
+            await message.delete().catch(suppressUnknownMessage);
             break;
         case 'trash-snipe':
             if (!userCanManageMessage && !userIsSnipedMessageAuthor) {
@@ -267,7 +268,7 @@ export async function deleteSnipe(
                 });
                 return;
             }
-            await message.delete();
+            await message.delete().catch(suppressUnknownMessage);
             snipeStore[snipedMessage.commandName].set(
                 channel.id,
                 snipeStore[snipedMessage.commandName]
