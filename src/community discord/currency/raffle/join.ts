@@ -138,14 +138,12 @@ export async function confirmJoinRaffleButton(
 
     const [, , ticketAmountArg] =
         content.match(
-            /<@!?(\d{18})> You are entering the raffle with `(\d+|max)` entries/
+            /<@!?\d{18}> You are entering the raffle with `(\d+|max)` entries/
         ) ?? [];
 
     const currEntry = await validateJoinRaffle(
         interaction,
-        ticketAmountArg === 'max'
-            ? entries.maxEntries.toString()
-            : ticketAmountArg
+        ticketAmountArg === 'max' ? 'max' : ticketAmountArg
     );
 
     if (embed.timestamp !== entries.endTimestamp) {
