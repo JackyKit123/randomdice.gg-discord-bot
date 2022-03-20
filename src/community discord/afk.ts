@@ -128,8 +128,15 @@ export async function removeAfkListener(
     arg: TextBasedChannel | MessageReaction | Interaction,
     user: User | PartialUser
 ): Promise<void> {
-    const channel = arg instanceof MessageReaction ? arg.message.channel : arg;
-    if (channel.type !== 'GUILD_TEXT') return;
+    let channel = null;
+    if (arg instanceof MessageReaction) {
+        channel = arg.message.channel;
+    } else if (arg instanceof Interaction) {
+        channel = arg.channel;
+    } else {
+        channel = arg;
+    }
+    if (channel?.type !== 'GUILD_TEXT') return;
     const { guild } = channel;
     const member = guild.members.cache.get(user.id);
     if (!member || !isCommunityDiscord(guild)) return;
