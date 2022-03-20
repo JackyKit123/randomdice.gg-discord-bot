@@ -77,7 +77,9 @@ async function afkHandler(
             if (uid === member.id) {
                 if (channel.permissionsFor(uid)?.has('SEND_MESSAGES')) {
                     await channel.send(
-                        `Welcome back ${member}, I have removed your afk.`
+                        `Welcome back ${member}, I have removed your afk. You have been gone for **${parseMsIntoReadableText(
+                            Date.now() - timestamp
+                        )}**`
                     );
                 }
                 await Promise.all([
