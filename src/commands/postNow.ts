@@ -32,23 +32,25 @@ async function getChannel(
     const { channels, user: clientUser } = client;
     if (!clientUser) return null;
 
+    const removeFromDatabaseRegistry = async () => {
+        await database
+            .ref('discord_bot/registry')
+            .child(guildId)
+            .child(type)
+            .set(null);
+        return null;
+    };
     const channelId = config[type];
 
-    if (!channelId) return null;
+    if (!channelId) return removeFromDatabaseRegistry();
 
     const channel = await channels
         .fetch(channelId)
         .catch(suppressUnknownChannel)
         .catch(suppressMissingAccess);
 
-    if (!(channel?.type === 'GUILD_TEXT' || channel?.type === 'GUILD_NEWS')) {
-        database
-            .ref('discord_bot/registry')
-            .child(guildId)
-            .child(type)
-            .set(null);
-        return null;
-    }
+    if (!(channel?.type === 'GUILD_TEXT' || channel?.type === 'GUILD_NEWS'))
+        return removeFromDatabaseRegistry();
 
     const channelPermission = channel.permissionsFor(clientUser);
     const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
@@ -76,12 +78,7 @@ async function getChannel(
                 `Attempted to send ${type} in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
             );
         }
-        await database
-            .ref('discord_bot/registry')
-            .child(channel.guild.id)
-            .child(type)
-            .set(null);
-        return null;
+        return removeFromDatabaseRegistry();
     }
     const fetched = (await channel.messages.fetch({ limit: 100 })).filter(
         message =>
