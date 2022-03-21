@@ -32,8 +32,12 @@ async function getChannel(
     const { channels, user: clientUser } = client;
     if (!clientUser) return null;
 
+    const channelId = config[type];
+
+    if (!channelId) return null;
+
     const channel = await channels
-        .fetch(config[type])
+        .fetch(channelId)
         .catch(suppressUnknownChannel)
         .catch(suppressMissingAccess);
 
@@ -75,7 +79,7 @@ async function getChannel(
         await database
             .ref('discord_bot/registry')
             .child(channel.guild.id)
-            .child('guide')
+            .child(type)
             .set(null);
         return null;
     }

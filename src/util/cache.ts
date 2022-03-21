@@ -75,8 +75,8 @@ export interface EmojiList {
 
 export interface Registry {
     [key: string]: {
-        guide: string;
-        news: string;
+        guide?: string;
+        news?: string;
     };
 }
 
