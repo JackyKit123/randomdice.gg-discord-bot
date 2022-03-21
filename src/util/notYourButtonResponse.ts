@@ -69,6 +69,6 @@ export async function checkIfUserIsInteractionInitiator(
         referencedMessage = await getMessageFromReference(referencedMessage);
     }
 
-    await notYourButtonResponse(interaction);
+    if (!interaction.replied) await notYourButtonResponse(interaction);
     return false;
 }
