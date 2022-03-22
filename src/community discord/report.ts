@@ -223,8 +223,8 @@ export async function report(
             }${
                 messageId && channel
                     ? `**Reported from:** ${channel} [Jump to context](${getMessageLink(
-                          messageId,
-                          channel
+                          channel,
+                          messageId
                       )})`
                     : ''
             }`

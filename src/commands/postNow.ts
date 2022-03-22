@@ -188,8 +188,8 @@ export async function postGuide(
                         .map((guide, i) => ({
                             name: `${guide.name} (${guide.type})`,
                             value: `[Click here to jump](${getMessageLink(
-                                messageIds[i].id,
-                                channel
+                                channel,
+                                messageIds[i].id
                             )})`,
                         }))
                 );
@@ -219,9 +219,9 @@ export async function postGuide(
                             updateListener?.event === 'added' ||
                                 updateListener?.event === 'updated'
                                 ? `Navigate to the update guide by [clicking here](${getMessageLink(
+                                      channel,
                                       messageIds.find(id => id.isUpdated)?.id ||
-                                          statusMessage.id,
-                                      channel
+                                          statusMessage.id
                                   )}).`
                                 : `Navigate to the list of guides for quick navigation by [clicking here](${statusMessage.url}).`
                         )

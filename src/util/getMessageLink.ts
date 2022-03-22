@@ -1,10 +1,14 @@
-import { TextBasedChannel } from 'discord.js';
+import { GuildMember, TextBasedChannel, User } from 'discord.js';
 
 export default function getMessageLink(
-    messageId: string,
-    channel: TextBasedChannel
+    input: TextBasedChannel | GuildMember | User,
+    messageId = ''
 ): string {
-    return `https://discordapp.com/channels/${
-        channel.type === 'DM' ? '@me' : channel.guild.id
-    }/${channel.id}/${messageId}`;
+    return `https://discordapp.com${
+        input instanceof User ||
+        input instanceof GuildMember ||
+        input.type === 'DM'
+            ? '/users'
+            : `/channels/${input.guild.id}`
+    }/${input.id}/${messageId}`;
 }

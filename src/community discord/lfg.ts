@@ -9,15 +9,17 @@ import {
     MessageEmbed,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
+import getMessageLink from 'util/getMessageLink';
 import checkPermission from './util/checkPermissions';
 
 export default async function lfg(
     interaction: CommandInteraction
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
-    const { member, channel } = interaction;
+    const { member, channel, options } = interaction;
 
-    const msg = interaction.options.getString('message');
+    const msg = options.getString('message');
+    const preference = options.getString('preference') ?? 'both';
 
     if (!channel) return;
 
@@ -65,17 +67,34 @@ export default async function lfg(
 
     await interaction.deferReply();
 
+    const pingButton = new MessageButton()
+        .setCustomId('ping-lfg')
+        .setStyle('PRIMARY')
+        .setLabel(`Click Here to ping ${member.displayName}!`);
+
+    const dmButton = new MessageButton()
+        .setStyle('LINK')
+        .setLabel(`Click Here to DM ${member.displayName}!`)
+        .setURL(getMessageLink(member));
+
+    let buttons = new MessageActionRow();
+    switch (preference) {
+        case 'ping':
+            buttons = buttons.addComponents(pingButton);
+            break;
+        case 'dm':
+            buttons = buttons.addComponents(dmButton);
+            break;
+        case 'both':
+            buttons = buttons.addComponents(pingButton, dmButton);
+            break;
+        default:
+    }
+
     await channel.send({
         content: `<@&${roleIds['Looking for Games Ping']}>`,
         embeds: [embed],
-        components: [
-            new MessageActionRow().addComponents(
-                new MessageButton()
-                    .setCustomId('ping-lfg')
-                    .setStyle('PRIMARY')
-                    .setLabel(`Click Here to ping ${member.displayName}!`)
-            ),
-        ],
+        components: [buttons],
     });
 
     await interaction.deleteReply();
@@ -133,6 +152,25 @@ export const commandData: ApplicationCommandData = {
             name: 'message',
             description: 'Message to send with the ping',
             type: 3,
+        },
+        {
+            name: 'preference',
+            description: 'Ping or DM',
+            type: 'STRING',
+            choices: [
+                {
+                    name: 'Both',
+                    value: 'both',
+                },
+                {
+                    name: 'Preferred to be pinged',
+                    value: 'ping',
+                },
+                {
+                    name: 'Preferred to be DM',
+                    value: 'dm',
+                },
+            ],
         },
     ],
 };
