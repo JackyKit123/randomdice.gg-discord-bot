@@ -47,7 +47,7 @@ import prestige from 'community discord/currency/prestige';
 import raffle, { addRafflePingRole } from 'community discord/currency/raffle';
 import timed from 'community discord/currency/timed';
 import currency from 'community discord/currency/currency';
-import { spawnCoinbomb } from 'community discord/currency/coinbomb';
+import { claimCoinbomb, coinbomb } from 'community discord/currency/coinbomb';
 import multiplier from 'community discord/currency/multiplier';
 import nuke, { confirmNukeButton } from 'community discord/currency/nuke';
 
@@ -69,7 +69,7 @@ import version from 'dev-commands/version';
 import closeAppeal from 'community discord/moderation/ban appeal/closeAppeal';
 
 import channelIds from 'config/channelIds';
-import { nullDice } from 'config/emojiId';
+import { goldenPickaxe, nullDice, pickaxe } from 'config/emojiId';
 import { spyLogBanHandler } from 'community discord/spy';
 import moderation from 'community discord/moderation';
 import modlog from 'community discord/moderation/modlog';
@@ -291,6 +291,10 @@ export default async function interactionCreate(
                             case 'nuke-triple-yes':
                                 await confirmNukeButton(interaction);
                                 break;
+                            case pickaxe:
+                            case goldenPickaxe:
+                                await claimCoinbomb(interaction);
+                                break;
                             default:
                         }
                     }
@@ -386,7 +390,7 @@ export default async function interactionCreate(
                                 await currency(interaction);
                                 break;
                             case 'coinbomb':
-                                await spawnCoinbomb(interaction);
+                                await coinbomb(interaction);
                                 break;
                             case 'multiplier':
                                 await multiplier(interaction);
@@ -417,7 +421,6 @@ export default async function interactionCreate(
                                 await unShush(interaction);
                                 break;
                             case 'rickbomb':
-                            case 'rickcoin':
                                 await rickbomb(interaction);
                                 break;
                             case 'nuke':

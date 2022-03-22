@@ -1,7 +1,7 @@
 import { Client } from 'discord.js';
 import { fixClownNicknamesOnReboot } from 'community discord/currency/fun commands/clown';
 import { fetchGeneralOnBoot } from 'community discord/chatrevivePing';
-import { pickCoinsInit } from 'community discord/currency/coinbomb';
+import { autoSpawnCoinbomb } from 'community discord/currency/coinbomb';
 import { weeklyAutoReset } from 'community discord/currency/leaderboard';
 import { setRaffleTimerOnBoot } from 'community discord/currency/raffle';
 import infoVC from 'community discord/infoVC';
@@ -35,7 +35,7 @@ export default async function ready(client: Client<true>): Promise<void> {
         await Promise.all([
             registerSlashCommands(client),
             setRaffleTimerOnBoot(client),
-            pickCoinsInit(client),
+            autoSpawnCoinbomb(client),
             weeklyAutoReset(client),
             registerTimer(client),
             infoVC(client),

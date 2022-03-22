@@ -18,6 +18,8 @@ import { logError } from 'util/logMessage';
 import channelIds from 'config/channelIds';
 import { isCommunityDiscord, isDevTestDiscord } from 'config/guild';
 import { isDev, isProd } from 'config/env';
+import { claimCoinbomb } from 'community discord/currency/coinbomb';
+import { rickBombOnCollect } from 'community discord/currency/fun commands/rickbomb';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { content, channel, guild, author, client } = message;
@@ -39,6 +41,7 @@ export default async function messageCreate(message: Message): Promise<void> {
         }
         if (
             !author.bot &&
+            message.inGuild() &&
             isCommunityDiscord(guild) &&
             !(
                 (isProd &&
@@ -59,6 +62,8 @@ export default async function messageCreate(message: Message): Promise<void> {
                 autoReaction(message),
                 afkResponse(message),
                 cleverBot(message),
+                claimCoinbomb(message),
+                rickBombOnCollect(message),
             ];
         }
 

@@ -6,6 +6,7 @@ import {
     GuildMember,
     Interaction,
     Message,
+    MessageComponentInteraction,
     MessageEmbed,
     UserContextMenuInteraction,
 } from 'discord.js';
@@ -49,6 +50,7 @@ export async function getBalance(
         | Message
         | ButtonInteraction
         | CommandInteraction
+        | MessageComponentInteraction
         | UserContextMenuInteraction,
     silence = false,
     optionalTarget?: GuildMember | null
