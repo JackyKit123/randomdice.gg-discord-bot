@@ -144,7 +144,11 @@ export async function confirmJoinRaffleButton(
         ticketAmountArg === 'max' ? 'max' : ticketAmountArg
     );
 
-    if (raffleHostMessage.embeds[0]?.timestamp !== entries.endTimestamp) {
+    if (
+        !raffleHostMessage.embeds.some(
+            ({ timestamp }) => timestamp === entries.endTimestamp
+        )
+    ) {
         await interaction.reply({
             content: 'This raffle has ended, please join with the new one.',
             ephemeral: true,
