@@ -160,7 +160,7 @@ export default async function spawnCoinbomb(
                                 goldenPickaxeUser === member
                                     ? goldenPickaxe
                                     : pickaxe
-                            } up ${coinDice} ${formatCoinText(memberReward)}`
+                            } up ${formatCoinText(memberReward)}`
                     )
                     .join('\n');
             break;
