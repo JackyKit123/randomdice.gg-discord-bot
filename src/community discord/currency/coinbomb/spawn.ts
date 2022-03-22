@@ -61,6 +61,10 @@ async function spawnNext(channel: GuildTextBasedChannel) {
         },
         max: 20,
     });
+    while (activeCoinbombInChannel.has(channel)) {
+        // eslint-disable-next-line no-await-in-loop
+        await wait(100);
+    }
     // eslint-disable-next-line no-use-before-define
     await spawnCoinbomb(channel);
 }
