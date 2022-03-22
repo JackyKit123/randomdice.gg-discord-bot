@@ -67,8 +67,8 @@ async function tickTimer(
                     embeds: [embed.setDescription(newText)],
                 });
             } catch (err) {
-                try {
-                    await message.edit({
+                const response = await message
+                    .edit({
                         embeds: [
                             embed
                                 .setDescription(newText)
@@ -80,10 +80,15 @@ async function tickTimer(
                                     text: 'This timer has stopped ticking.',
                                 }),
                         ],
-                    });
-                } catch {
-                    throw err;
+                    })
+                    .catch(suppressUnknownMessage);
+                if (!response) {
+                    await message.reply(
+                        `Oops, Something went wrong. ${(err as Error).message}`
+                    );
                 }
+                killTimerFromDB(key);
+                throw err;
             }
             await wait(Math.min(5000, endTime - now));
             await tick();
@@ -95,7 +100,7 @@ async function tickTimer(
             const timerReact = reactions.cache.find(
                 reaction => reaction.emoji.toString() === timeDice
             );
-            const userList = (await timerReact?.users.fetch())
+            const userList = timerReact?.users.cache
                 ?.filter(user => !user.bot && user.id !== hostId)
                 .map(user => user.toString())
                 .join(' ');
@@ -139,6 +144,7 @@ async function tickTimer(
             }
         }
     };
+
     await tick();
 }
 
@@ -259,15 +265,9 @@ export default async function timerCommand(
 
 export async function registerTimer(client: Client): Promise<void> {
     const data = cache['discord_bot/community/timer'];
-    Object.entries(data || {}).forEach(async ([key, timer]) => {
-        try {
-            const guild = client.guilds.cache.get(timer.guildId);
-            if (!guild) {
-                killTimerFromDB(key);
-                return;
-            }
-
-            const channel = guild.channels.cache.get(timer.channelId);
+    await Promise.all(
+        Object.entries(data || {}).map(async ([key, timer]) => {
+            const channel = client.channels.cache.get(timer.channelId);
             if (!channel?.isText()) {
                 killTimerFromDB(key);
                 return;
@@ -280,10 +280,8 @@ export async function registerTimer(client: Client): Promise<void> {
             }
 
             await tickTimer(message, timer.hostId, timer.endTime, key);
-        } catch (err) {
-            killTimerFromDB(key);
-        }
-    });
+        })
+    );
 }
 
 export const commandData: ApplicationCommandData = {
