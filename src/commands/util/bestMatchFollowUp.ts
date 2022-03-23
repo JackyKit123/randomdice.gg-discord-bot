@@ -32,7 +32,7 @@ export default async function bestMatchFollowUp(
 export async function updateSuggestions<TValue extends { name: string }>(
     interaction: ButtonInteraction,
     listOfValues: TValue[],
-    followUp: (target?: TValue) => string | WebhookEditMessageOptions
+    followUp: (target: TValue) => string | WebhookEditMessageOptions
 ): Promise<void> {
     if (!(await checkIfUserIsInteractionInitiator(interaction))) return;
 
@@ -48,7 +48,7 @@ export async function updateSuggestions<TValue extends { name: string }>(
         return;
     }
     const newResponse = followUp(
-        listOfValues.find(value => value.name === suggestion)
+        listOfValues.find(value => value.name === suggestion) as TValue
     );
     await interaction.reply(newResponse);
 }

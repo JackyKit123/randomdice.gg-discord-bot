@@ -27,11 +27,10 @@ const getMinClass = (target: Dice): number => {
 };
 
 const getDiceInfo = (
-    target?: Dice,
+    target: Dice,
     dieClassArg: number | null = 1,
     dieLevelArg: number | null = 1
 ): string | WebhookEditMessageOptions => {
-    if (!target) return 'No dice found.';
     const minClass = getMinClass(target);
     const dieClass = dieClassArg ?? minClass;
     const dieLevel = dieLevelArg ?? 1;

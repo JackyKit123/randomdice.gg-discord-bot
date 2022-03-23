@@ -16,7 +16,8 @@ import getBrandingEmbed from './util/getBrandingEmbed';
 import getSuggestions from './util/getSuggestions';
 
 export const getGuideData = (
-    target?: DeckGuide
+    target: DeckGuide,
+    ignoreOverLength = false
 ):
     | { embeds: MessageEmbed[] }
     | string
@@ -31,7 +32,7 @@ export const getGuideData = (
 
     const paragraphs = parseText(guide);
 
-    if (paragraphs.length >= 5000) {
+    if (paragraphs.length >= 5000 && !ignoreOverLength) {
         return {
             content: `This guide is too long to be displayed within Discord, please view it on the website here.`,
             components: [

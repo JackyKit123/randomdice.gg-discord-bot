@@ -104,7 +104,8 @@ export async function postGuide(
             guides.filter(guide => guide.type === type && !guide.archived)
         )
         .flatMap(
-            guide => (getGuideData(guide) as { embeds: MessageEmbed[] }).embeds
+            guide =>
+                (getGuideData(guide, true) as { embeds: MessageEmbed[] }).embeds
         );
     await Promise.all(
         Object.entries(registeredGuilds).map(async ([guildId, config]) => {

@@ -12,33 +12,27 @@ import bestMatchFollowUp, { updateSuggestions } from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
 const getBattlefieldInfo = (
-    target?: Battlefield,
+    target: Battlefield,
     battlefieldLevel = 1
-): string | ReplyMessageOptions => {
-    if (!target) return 'No battlefield found.';
-
-    const desc = parsedText(target.desc);
-
-    return {
-        embeds: [
-            getBrandingEmbed(`/wiki/battlefield#${encodeURI(target.name)}`)
-                .setTitle(target.name)
-                .setImage(target.img)
-                .setDescription(desc)
-                .addField(
-                    target.buffName,
-                    `${
-                        Math.round(
-                            (target.buffValue +
-                                target.buffCupValue * (battlefieldLevel - 1)) *
-                                100
-                        ) / 100
-                    }${target.buffUnit}`
-                )
-                .addField('Obtained From', target.source),
-        ],
-    };
-};
+): string | ReplyMessageOptions => ({
+    embeds: [
+        getBrandingEmbed(`/wiki/battlefield#${encodeURI(target.name)}`)
+            .setTitle(target.name)
+            .setImage(target.img)
+            .setDescription(parsedText(target.desc))
+            .addField(
+                target.buffName,
+                `${
+                    Math.round(
+                        (target.buffValue +
+                            target.buffCupValue * (battlefieldLevel - 1)) *
+                            100
+                    ) / 100
+                }${target.buffUnit}`
+            )
+            .addField('Obtained From', target.source),
+    ],
+});
 
 export default async function dice(
     interaction: CommandInteraction

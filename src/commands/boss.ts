@@ -11,25 +11,22 @@ import { mapChoices } from 'register/commandData';
 import bestMatchFollowUp, { updateSuggestions } from './util/bestMatchFollowUp';
 import getBrandingEmbed from './util/getBrandingEmbed';
 
-const getBossInfo = (target?: Boss): string | ReplyMessageOptions => {
-    if (!target) return 'No boss found.';
-    const embedFields = parsedText(target.desc)
-        .split('\n')
-        .filter(p => p !== '')
-        .map((desc, i) => ({
-            name: i === 0 ? 'Boss Mechanic' : '‎',
-            value: desc,
-        }));
-
-    return {
-        embeds: [
-            getBrandingEmbed(`/wiki/boss_mechanics#${encodeURI(target.name)}`)
-                .setTitle(target.name)
-                .setThumbnail(target.img)
-                .addFields(embedFields),
-        ],
-    };
-};
+const getBossInfo = (target: Boss): string | ReplyMessageOptions => ({
+    embeds: [
+        getBrandingEmbed(`/wiki/boss_mechanics#${encodeURI(target.name)}`)
+            .setTitle(target.name)
+            .setThumbnail(target.img)
+            .addFields(
+                parsedText(target.desc)
+                    .split('\n')
+                    .filter(p => p !== '')
+                    .map((desc, i) => ({
+                        name: i === 0 ? 'Boss Mechanic' : '‎',
+                        value: desc,
+                    }))
+            ),
+    ],
+});
 
 export default async function boss(
     interaction: CommandInteraction
