@@ -87,6 +87,7 @@ export default async function timed(
                         )}\` cooldown.`
                     ),
             ],
+            ephemeral: !isBotChannels(channel),
         });
         return;
     }
