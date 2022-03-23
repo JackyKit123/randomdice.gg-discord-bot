@@ -124,10 +124,9 @@ export async function logError(
         | PartialMessage
         | MessageReaction
         | PartialMessageReaction
-        | Client
         | Typing
 ): Promise<Message | ReturnType<WebhookClient['send']>> {
-    let embed = getEmbed('warning', error);
+    let embed = getEmbed('warning', error).setAuthor({ name: origin });
     let user: User | PartialUser | null = null;
     let guild: Guild | null = null;
     let channel: AnyChannel | null = null;
@@ -156,9 +155,6 @@ export async function logError(
         guild = object.message.guild;
         channel = object.message.channel;
         embed = embed.addField('In Reaction', object.emoji.toString());
-    }
-    if (object instanceof Client) {
-        embed = embed.addField('In Client', '"Client"');
     }
     if (object instanceof Typing) {
         guild = object.guild;
