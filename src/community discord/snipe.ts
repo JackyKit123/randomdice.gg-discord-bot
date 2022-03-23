@@ -6,6 +6,7 @@ import {
     BufferResolvable,
     ButtonInteraction,
     CommandInteraction,
+    GuildTextBasedChannel,
     Message,
     MessageActionRow,
     MessageButton,
@@ -19,7 +20,7 @@ import checkPermission from './util/checkPermissions';
 
 const snipeStore = {
     snipe: new Map<
-        string,
+        GuildTextBasedChannel,
         {
             message: Message;
             attachments: {
@@ -29,7 +30,7 @@ const snipeStore = {
         }[]
     >(),
     editsnipe: new Map<
-        string,
+        GuildTextBasedChannel,
         {
             message: Message;
             attachments: {
@@ -59,6 +60,7 @@ export async function snipeListener(
         // eslint-disable-next-line no-param-reassign
         message = await message.fetch();
     }
+    if (!message.inGuild()) return;
 
     const { guild, channel, author } = message;
 
@@ -82,14 +84,14 @@ export async function snipeListener(
                 });
             })
         );
-        snipeStore.snipe.set(channel.id, [
+        snipeStore.snipe.set(channel, [
             { message, attachments },
-            ...(snipeStore.snipe.get(channel.id) || []),
+            ...(snipeStore.snipe.get(channel) || []),
         ]);
     } else {
-        snipeStore.editsnipe.set(channel.id, [
+        snipeStore.editsnipe.set(channel, [
             { message, attachments: [] },
-            ...(snipeStore.editsnipe.get(channel.id) || []),
+            ...(snipeStore.editsnipe.get(channel) || []),
         ]);
     }
 }
@@ -135,7 +137,7 @@ export default async function snipe(
         return;
     }
 
-    const snipedList = snipeStore[commandName].get(channel.id);
+    const snipedList = snipeStore[commandName].get(channel);
 
     if (!snipedList?.length) {
         await interaction.reply("There's nothing to snipe here");
@@ -228,28 +230,20 @@ export async function deleteSnipe(
 
     const snipedMessage = sentSnipedMessage.get(interaction.message.id);
 
-    if (!snipedMessage) {
+    const userIsSnipedMessageAuthor =
+        member.id === snipedMessage?.snipedMember.id;
+    const userIsInteractionTrigger = member.id === message.interaction?.user.id;
+
+    if (!snipedMessage && !userCanManageMessage && !userIsInteractionTrigger) {
         await interaction.reply(
-            `This message is too old to be deleted with buttons, please ${
-                userCanManageMessage
-                    ? 'delete it manually.'
-                    : 'contact a moderator if you need to delete this message.'
-            }`
+            'This message is too old to be deleted with buttons, please contact a moderator if you need to delete this message.'
         );
         return;
     }
 
-    const userIsSnipedMessageAuthor =
-        member.id === snipedMessage.snipedMember.id;
-    const userIsInteractionTrigger = member.id === message.author.id;
-
     switch (interaction.customId) {
         case 'delete-snipe':
-            if (
-                !userCanManageMessage &&
-                !userIsSnipedMessageAuthor &&
-                !userIsInteractionTrigger
-            ) {
+            if (!userIsSnipedMessageAuthor && !userIsInteractionTrigger) {
                 await interaction.reply({
                     content:
                         'You do not have permission to delete this message.',
@@ -260,7 +254,7 @@ export async function deleteSnipe(
             await message.delete().catch(suppressUnknownMessage);
             break;
         case 'trash-snipe':
-            if (!userCanManageMessage && !userIsSnipedMessageAuthor) {
+            if (!userIsSnipedMessageAuthor) {
                 await interaction.reply({
                     content:
                         'You do not have permission to clear this message from snipe list.',
@@ -270,9 +264,9 @@ export async function deleteSnipe(
             }
             await message.delete().catch(suppressUnknownMessage);
             snipeStore[snipedMessage.commandName].set(
-                channel.id,
+                channel,
                 snipeStore[snipedMessage.commandName]
-                    .get(channel.id)
+                    .get(channel)
                     ?.filter(
                         ({ message: snipedStoreMessage }) =>
                             snipedStoreMessage.id !== message.id
