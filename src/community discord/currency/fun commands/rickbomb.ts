@@ -120,18 +120,17 @@ export default async function rickBomb(
         rickRolled: new Set(),
     });
     await wait(20 * 1000);
-    activeCoinbombInChannel.delete(channel);
-    rickBombInChannels.delete(channel);
 
     const result = rickBombInChannels.get(channel);
-    if (!result) return;
-    if (result.rickRolled.size) {
+    if (result?.rickRolled.size) {
         await coinbombMessage
             .edit(endMessage([...result.rickRolled]))
             .catch(suppressUnknownMessage);
     } else {
         await coinbombMessage.delete();
     }
+    activeCoinbombInChannel.delete(channel);
+    rickBombInChannels.delete(channel);
 }
 
 export async function rickBombOnCollect(message: Message<true>): Promise<void> {
