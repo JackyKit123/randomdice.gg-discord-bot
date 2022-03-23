@@ -213,7 +213,7 @@ export async function postGuide(
                                           ? 'archived'
                                           : updateListener.event
                                   }.`
-                                : `Last Updated: \`.gg postnow guide\` is executed. Manual requested refresh.`
+                                : `Last Updated: \`/postnow guide\` is executed. Manual requested refresh.`
                         )
                         .setDescription(
                             updateListener?.event === 'added' ||
