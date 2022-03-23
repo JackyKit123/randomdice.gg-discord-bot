@@ -81,27 +81,20 @@ export async function cleanUp(channel: GuildTextBasedChannel): Promise<void> {
         recursive,
     } = activeCoinbomb;
 
+    activeCoinbombInChannel.delete(channel);
+
     if (rewarded.size === 0) {
         await coinbombMessage.reply(
             `🙁 Looks like no one has claimed the batch of ${coinDice} ${reward} this time.`
         );
-    } else {
-        await coinbombMessage.edit({
-            content: endMessage(rewarded, goldenPick),
-        });
     }
 
-    if (coinbombMessage.components.length) {
-        await wait(1500);
-        await coinbombMessage.edit({
-            content: !rewarded.size
-                ? coinbombMessage.content
-                : endMessage(rewarded, goldenPick),
-            components: [],
-        });
-    }
-
-    activeCoinbombInChannel.delete(channel);
+    await coinbombMessage.edit({
+        content: !rewarded.size
+            ? coinbombMessage.content
+            : endMessage(rewarded, goldenPick),
+        components: [],
+    });
 
     if (recursive) await spawnNext(channel);
 }
