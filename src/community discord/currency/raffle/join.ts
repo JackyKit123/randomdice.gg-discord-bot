@@ -127,10 +127,16 @@ export async function confirmJoinRaffleButton(
         interaction.message
     );
 
-    if (!raffleHostMessage) {
-        await interaction.reply(
-            'Unable to find the message that initiated the raffle. Please try again.'
-        );
+    if (
+        raffleHostMessage &&
+        !raffleHostMessage.embeds.some(
+            ({ timestamp }) => timestamp === entries.endTimestamp
+        )
+    ) {
+        await interaction.reply({
+            content: 'This raffle has ended, please join with the new one.',
+            ephemeral: true,
+        });
         return;
     }
 
@@ -143,18 +149,6 @@ export async function confirmJoinRaffleButton(
         interaction,
         ticketAmountArg === 'max' ? 'max' : ticketAmountArg
     );
-
-    if (
-        !raffleHostMessage.embeds.some(
-            ({ timestamp }) => timestamp === entries.endTimestamp
-        )
-    ) {
-        await interaction.reply({
-            content: 'This raffle has ended, please join with the new one.',
-            ephemeral: true,
-        });
-        return;
-    }
 
     if (!currEntry) return;
 
