@@ -39,7 +39,8 @@ async function validateJoinRaffle(
 
     const raffleHostMessage =
         interaction.isButton() &&
-        (await getMessageFromReference(interaction.message));
+        ((await getMessageFromReference(interaction.message)) ??
+            interaction.message);
 
     if (
         raffleHostMessage &&
