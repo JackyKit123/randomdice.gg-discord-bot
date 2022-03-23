@@ -21,11 +21,12 @@ import sendLinks from 'commands/sendLinks';
 import sendContact from 'commands/sendContact';
 
 import snipe, { deleteSnipe } from 'community discord/snipe';
-import apply, {
-    configApps,
+import {
+    apply,
+    application,
     closeApplication,
     applicationButtons,
-} from 'community discord/apply';
+} from 'community discord/staff application';
 import { report, closeReport } from 'community discord/report';
 import lock from 'community discord/lock';
 import timer from 'community discord/timer';
@@ -305,7 +306,7 @@ export default async function interactionCreate(
                                 await snipe(interaction);
                                 break;
                             case 'application':
-                                await configApps(interaction);
+                                await application(interaction);
                                 break;
                             case 'apply':
                                 await apply(interaction);

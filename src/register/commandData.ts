@@ -18,7 +18,7 @@ import { commandData as links } from 'commands/sendLinks';
 import { commandData as report } from 'community discord/report';
 import { commandData as snipe } from 'community discord/snipe';
 import { commandData as lock } from 'community discord/lock';
-import { commandData as apply } from 'community discord/apply';
+import { commandData as apply } from 'community discord/staff application';
 import { commandData as timer } from 'community discord/timer';
 import { commandData as lfg } from 'community discord/lfg';
 import { commandData as gtn } from 'community discord/gtn';
