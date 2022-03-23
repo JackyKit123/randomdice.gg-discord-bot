@@ -63,9 +63,10 @@ async function tickTimer(
         if (now <= endTime) {
             const newText = parseTimeText(endTime - now);
             try {
-                await message.edit({
-                    embeds: [embed.setDescription(newText)],
-                });
+                if (newText !== embed.description)
+                    await message.edit({
+                        embeds: [embed.setDescription(newText)],
+                    });
             } catch (err) {
                 const response = await message
                     .edit({
