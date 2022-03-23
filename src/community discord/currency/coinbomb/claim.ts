@@ -16,7 +16,7 @@ export default async function claimCoinbomb(
     const activeCoinbomb = activeCoinbombInChannel.get(channel);
     if (!activeCoinbomb || activeCoinbomb === 'rick') {
         if (input instanceof MessageComponentInteraction) {
-            await message.edit({
+            await input.update({
                 content: message.content,
                 components: [],
             });
