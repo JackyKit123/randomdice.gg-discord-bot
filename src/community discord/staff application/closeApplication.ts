@@ -1,6 +1,6 @@
 import { isCommunityDiscord } from 'config/guild';
 import roleIds from 'config/roleId';
-import { ButtonInteraction, Permissions } from 'discord.js';
+import { ButtonInteraction, ClientUser, MessageActionRow } from 'discord.js';
 import notYourButtonResponse, {
     getMessageFromReference,
 } from 'util/notYourButtonResponse';
@@ -15,7 +15,6 @@ export default async function closeApplication(
         guild,
         client: { user: clientUser },
         user,
-        member,
         customId,
     } = interaction;
 
@@ -43,19 +42,6 @@ export default async function closeApplication(
 
     if (!memberId || memberId !== user.id) {
         await notYourButtonResponse(interaction);
-        return;
-    }
-
-    if (
-        channel
-            .permissionsFor(member)
-            .missing(new Permissions().add('SEND_MESSAGES'))
-    ) {
-        await interaction.reply({
-            content:
-                'This application is already closed, you cannot close it again.',
-            ephemeral: true,
-        });
         return;
     }
 
@@ -136,6 +122,16 @@ export async function applicationConfirmationButtons(
                 roleIds.Admin
             }>, ${user} has submitted the ${applicationName.toLowerCase()}.`
         );
+        const initMessage = (await channel.messages.fetch()).last();
+        if (initMessage?.author instanceof ClientUser) {
+            const components = initMessage.components[0]?.components.map(
+                component => component.setDisabled(true)
+            );
+            await initMessage.edit({
+                embeds: initMessage.embeds,
+                components: [new MessageActionRow().setComponents(components)],
+            });
+        }
     }
 
     if (customId === 'yes-no-button-✅-application-cancel')
