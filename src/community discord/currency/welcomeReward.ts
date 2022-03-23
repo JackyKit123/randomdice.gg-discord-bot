@@ -33,9 +33,11 @@ export default async function welcomeReward(
             saidWelcome.push(id);
             const balance = await getBalance(collected, true);
             if (balance === null) return;
+            // the first person to welcome gets 250 and then it decreases by 50 until it hits the floor of 100
+            const reward = Math.max(100, 250 - 50 * (saidWelcome.length - 1));
             await database
                 .ref(`discord_bot/community/currency/${id}/balance`)
-                .set(balance + 100);
+                .set(balance + reward);
             await collected.react(coinDice);
         });
 }
