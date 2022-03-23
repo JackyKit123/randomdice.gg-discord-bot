@@ -16,6 +16,7 @@ import roleIds, {
 } from 'config/roleId';
 import cacheData from 'util/cache';
 import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
+import wait from 'util/wait';
 
 async function memberIsPrestigeX(
     interaction: ButtonInteraction<'cached'> | CommandInteraction<'cached'>
@@ -35,9 +36,24 @@ async function memberIsPrestigeX(
     return true;
 }
 
+function getDisabledButtonMessage(message: {
+    content: string;
+    components: MessageActionRow[];
+}) {
+    return {
+        content: message.content,
+        components: [
+            new MessageActionRow().addComponents([
+                message.components[0]?.components[0]?.setDisabled(true),
+            ]),
+        ],
+    };
+}
+
 async function checkExpired(interaction: ButtonInteraction<'cached'>) {
     if (Date.now() - interaction.message.createdTimestamp > 1000 * 60) {
-        await interaction.reply({
+        await interaction.update(getDisabledButtonMessage(interaction.message));
+        await interaction.followUp({
             content: 'This button has expired, please initiate a new one.',
             ephemeral: true,
         });
@@ -46,64 +62,39 @@ async function checkExpired(interaction: ButtonInteraction<'cached'>) {
     return false;
 }
 
+async function nukeConfirmation(
+    interaction: CommandInteraction | ButtonInteraction,
+    content: string,
+    button: MessageButton
+) {
+    const messageOption = {
+        content,
+        components: [new MessageActionRow().setComponents([button])],
+    };
+    await interaction.reply(messageOption);
+    await wait(60 * 1000);
+    await interaction.editReply(getDisabledButtonMessage(messageOption));
+}
+
 export default async function nuke(
     interaction: CommandInteraction<'cached'>
 ): Promise<void> {
     if (!(await memberIsPrestigeX(interaction))) return;
 
-    await interaction.reply({
-        content: `${'⚠️'.repeat(
+    await nukeConfirmation(
+        interaction,
+        `${'⚠️'.repeat(
             12
         )}\n**Nuke is a permanent action.\nIt resets all your progress, record, your coins, everything. You will lose all your prestige roles and begin fresh.\nThis is only for the braves ~~and no lives~~.** Are you sure you want to nuke?`,
-        components: [
-            new MessageActionRow().addComponents([
-                new MessageButton()
-                    .setLabel('Yes')
-                    .setStyle('SUCCESS')
-                    .setCustomId('nuke-yes')
-                    .setEmoji('✅'),
-            ]),
-        ],
-    });
+        new MessageButton()
+            .setLabel('Yes')
+            .setStyle('SUCCESS')
+            .setCustomId('nuke-yes')
+            .setEmoji('✅')
+    );
 }
 
-export async function nukeConfirmOnce(
-    interaction: ButtonInteraction<'cached'>
-): Promise<void> {
-    await interaction.reply({
-        content: `${alert.repeat(12)}\n${
-            interaction.member
-        } Are you really sure? Press the red button again to confirm.`,
-        components: [
-            new MessageActionRow().addComponents([
-                new MessageButton()
-                    .setLabel('Affirmative')
-                    .setStyle('DANGER')
-                    .setCustomId('nuke-double-yes')
-                    .setEmoji('⭕'),
-            ]),
-        ],
-    });
-}
-
-export async function nukeConfirmTwice(
-    interaction: ButtonInteraction<'cached'>
-): Promise<void> {
-    await interaction.reply({
-        content: `*Final Press*\n*Purge the existence*`,
-        components: [
-            new MessageActionRow().addComponents([
-                new MessageButton()
-                    .setLabel('THE NUKE BUTTON')
-                    .setStyle('DANGER')
-                    .setCustomId('nuke-triple-yes')
-                    .setEmoji(nukeEmoji),
-            ]),
-        ],
-    });
-}
-
-export async function nukeFinalConfirmation(
+export async function nukeConfirmed(
     interaction: ButtonInteraction<'cached'>
 ): Promise<void> {
     const { member, guild } = interaction;
@@ -162,15 +153,37 @@ export async function confirmNukeButton(
     )
         return;
 
+    await interaction.message.edit(
+        getDisabledButtonMessage(interaction.message)
+    );
+
     switch (interaction.customId) {
         case 'nuke-yes':
-            await nukeConfirmOnce(interaction);
+            await nukeConfirmation(
+                interaction,
+                `${alert.repeat(12)}\n${
+                    interaction.member
+                } Are you really sure? Press the red button again to confirm.`,
+                new MessageButton()
+                    .setLabel('Affirmative')
+                    .setStyle('DANGER')
+                    .setCustomId('nuke-double-yes')
+                    .setEmoji('⭕')
+            );
             break;
         case 'nuke-double-yes':
-            await nukeConfirmTwice(interaction);
+            await nukeConfirmation(
+                interaction,
+                `*Final Press*\n*Purge the existence*`,
+                new MessageButton()
+                    .setLabel('THE NUKE BUTTON')
+                    .setStyle('DANGER')
+                    .setCustomId('nuke-triple-yes')
+                    .setEmoji(nukeEmoji)
+            );
             break;
         case 'nuke-triple-yes':
-            await nukeFinalConfirmation(interaction);
+            await nukeConfirmed(interaction);
             break;
         default:
     }
