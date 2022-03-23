@@ -41,7 +41,7 @@ export default async function sendLinks(
                     interaction.client.user as ClientUser
                 ).toString()} to your own server.\nhttps://discord.com/oauth2/authorize?client_id=${
                     client.user?.id
-                }&permissions=355393&scope=bot`
+                }&permissions=355393&scope=bot%20applications.commands`
             );
             break;
         case 'support':
