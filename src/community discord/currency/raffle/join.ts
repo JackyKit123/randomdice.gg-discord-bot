@@ -10,6 +10,7 @@ import {
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import cooldown from 'util/cooldown';
+import disableButtons from 'util/disabledButtons';
 import {
     checkIfUserIsInteractionInitiator,
     getMessageFromReference,
@@ -33,6 +34,24 @@ async function validateJoinRaffle(
 
     if (raffleTimeLeft < 0) {
         await noActiveRaffleResponse(interaction);
+        return null;
+    }
+
+    const raffleHostMessage =
+        interaction.isButton() &&
+        (await getMessageFromReference(interaction.message));
+
+    if (
+        raffleHostMessage &&
+        !raffleHostMessage.embeds.some(
+            ({ timestamp }) => timestamp === entries.endTimestamp
+        )
+    ) {
+        await interaction.reply({
+            content: 'This raffle has ended, please join with the new one.',
+            ephemeral: true,
+        });
+        await raffleHostMessage.edit(disableButtons(raffleHostMessage));
         return null;
     }
 
@@ -122,23 +141,6 @@ export async function confirmJoinRaffleButton(
     const ref = database.ref('discord_bot/community/raffle');
     const entries = cache['discord_bot/community/raffle'];
     const currentEntries = Object.entries(entries.tickets ?? {});
-
-    const raffleHostMessage = await getMessageFromReference(
-        interaction.message
-    );
-
-    if (
-        raffleHostMessage &&
-        !raffleHostMessage.embeds.some(
-            ({ timestamp }) => timestamp === entries.endTimestamp
-        )
-    ) {
-        await interaction.reply({
-            content: 'This raffle has ended, please join with the new one.',
-            ephemeral: true,
-        });
-        return;
-    }
 
     const [, ticketAmountArg] =
         yesNoButtonMessage.content.match(
