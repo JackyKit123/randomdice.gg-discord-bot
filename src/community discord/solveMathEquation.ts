@@ -1,20 +1,21 @@
-import Discord from 'discord.js';
-import * as math from 'mathjs';
+import { Message } from 'discord.js';
+import { evaluate, format } from 'mathjs';
 
 export default async function solveMathEquation(
-    message: Discord.Message
+    message: Message
 ): Promise<void> {
-    const { content, channel } = message;
+    const { content } = message;
     if (!content || /^(".+"|'.+'|[\d\w]+|#.*|\d+:|:\d+)$/.test(content)) return;
     try {
-        const evaluated = math.evaluate(content);
-        const formatted = math.format(evaluated, 14);
-        await channel.send({
+        const evaluated = evaluate(content);
+        const formatted = format(evaluated, 14);
+        await message.reply({
             content: formatted,
             allowedMentions: {
                 parse: [],
                 users: [],
                 roles: [],
+                repliedUser: false,
             },
         });
     } catch {
