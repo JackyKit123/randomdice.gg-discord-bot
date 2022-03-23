@@ -43,6 +43,10 @@ Include the following environment variables in a .env
 
 Execute eslint, prettier and ts-node to start a development sever.
 
+### `npm run dev:register-slash-commands`
+
+Register Discord application commands, only in development, to prevent spamming api requests
+
 ## Deployment
 
 ### `npm start`

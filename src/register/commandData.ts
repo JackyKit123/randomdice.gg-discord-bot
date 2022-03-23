@@ -73,6 +73,10 @@ import setCommandPermissions from './commandPermissions';
 export default async function registerSlashCommands(
     client: Client
 ): Promise<void> {
+    // Register commands only in development environment
+    // prevent registering commands every time the bot is restarted
+    if (!process.env.REGISTER_SLASH_COMMANDS) return;
+
     const baseCommands: ApplicationCommandDataResolvable[] = [
         boss(cacheData['wiki/boss']),
         battlefield(cacheData['wiki/battlefield']),

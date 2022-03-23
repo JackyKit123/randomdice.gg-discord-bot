@@ -5,6 +5,7 @@
     "main": "bot.ts",
     "scripts": {
         "dev": "NODE_ENV=development nodemon  --ext 'ts' --exec 'npm run lint && tsc --noEmit && ts-node --require=dotenv/config src/bot.ts --project tsconfig.json'",
+        "dev:register-slash-commands": "cross-env REGISTER_SLASH_COMMANDS=1 NODE_ENV=development nodemon  --ext 'ts' --exec 'npm run lint && tsc --noEmit && ts-node --require=dotenv/config src/bot.ts --project tsconfig.json'",
         "start": "NODE_ENV=production ts-node --require=dotenv/config src/bot.ts --project tsconfig.json",
         "lint": "eslint src --ext .ts"
     },
@@ -22,6 +23,7 @@
         "@types/textversionjs": "^1.1.0",
         "axios": "^0.21.1",
         "color-parser": "^0.1.0",
+        "cross-env": "^7.0.3",
         "discord.js": "^13.6.0",
         "dotenv": "^8.2.0",
         "firebase-admin": "^10.0.2",
