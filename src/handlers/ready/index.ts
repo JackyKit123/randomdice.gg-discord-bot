@@ -41,6 +41,6 @@ export default async function ready(client: Client<true>): Promise<void> {
             serverClock(client),
         ]);
     } catch (err) {
-        await logError(client, err, 'client#ready', client);
+        await logError(client, err, 'client#ready');
     }
 }
