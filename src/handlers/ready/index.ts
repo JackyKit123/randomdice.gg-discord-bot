@@ -4,7 +4,7 @@ import { fetchGeneralOnBoot } from 'community discord/chatrevivePing';
 import { autoSpawnCoinbomb } from 'community discord/currency/coinbomb';
 import { weeklyAutoReset } from 'community discord/currency/leaderboard';
 import { setRaffleTimerOnBoot } from 'community discord/currency/raffle';
-import infoVC from 'community discord/infoVC';
+import serverClock from 'community discord/serverClock';
 import { registerTimer } from 'community discord/timer';
 import logMessage, { logError } from 'util/logMessage';
 import { fetchDatabase } from 'util/cache';
@@ -38,7 +38,7 @@ export default async function ready(client: Client<true>): Promise<void> {
             autoSpawnCoinbomb(client),
             weeklyAutoReset(client),
             registerTimer(client),
-            infoVC(client),
+            serverClock(client),
         ]);
     } catch (err) {
         await logError(client, err, 'client#ready', client);
