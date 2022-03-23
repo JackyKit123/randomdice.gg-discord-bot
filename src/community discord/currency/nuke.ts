@@ -17,6 +17,7 @@ import roleIds, {
 import cacheData from 'util/cache';
 import { checkIfUserIsInteractionInitiator } from 'util/notYourButtonResponse';
 import wait from 'util/wait';
+import disableButtons from 'util/disabledButtons';
 
 async function memberIsPrestigeX(
     interaction: ButtonInteraction<'cached'> | CommandInteraction<'cached'>
@@ -36,23 +37,9 @@ async function memberIsPrestigeX(
     return true;
 }
 
-function getDisabledButtonMessage(message: {
-    content: string;
-    components: MessageActionRow[];
-}) {
-    return {
-        content: message.content,
-        components: [
-            new MessageActionRow().addComponents([
-                message.components[0]?.components[0]?.setDisabled(true),
-            ]),
-        ],
-    };
-}
-
 async function checkExpired(interaction: ButtonInteraction<'cached'>) {
     if (Date.now() - interaction.message.createdTimestamp > 1000 * 60) {
-        await interaction.update(getDisabledButtonMessage(interaction.message));
+        await interaction.update(disableButtons(interaction.message));
         await interaction.followUp({
             content: 'This button has expired, please initiate a new one.',
             ephemeral: true,
@@ -73,7 +60,7 @@ async function nukeConfirmation(
     };
     await interaction.reply(messageOption);
     await wait(60 * 1000);
-    await interaction.editReply(getDisabledButtonMessage(messageOption));
+    await interaction.editReply(disableButtons(messageOption));
 }
 
 export default async function nuke(
@@ -153,9 +140,7 @@ export async function confirmNukeButton(
     )
         return;
 
-    await interaction.message.edit(
-        getDisabledButtonMessage(interaction.message)
-    );
+    await interaction.message.edit(disableButtons(interaction.message));
 
     switch (interaction.customId) {
         case 'nuke-yes':

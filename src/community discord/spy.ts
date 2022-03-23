@@ -13,6 +13,7 @@ import {
     suppressUnknownMessage,
 } from 'util/suppressErrors';
 import { getCommunityDiscord, isHackDiscord } from 'config/guild';
+import disableButtons from 'util/disabledButtons';
 import { ban } from './moderation';
 import { writeModLog } from './moderation/modlog';
 
@@ -108,7 +109,7 @@ export default async function spy(message: Message): Promise<void> {
 }
 
 async function cleanUpMessage(message: Message, id: string): Promise<void> {
-    const { embeds, author, client } = message;
+    const { embeds, author, client, components } = message;
     if (!embeds[0] || !client.user || author.id !== client.user.id) return;
     const embed = embeds[0];
     const { fields } = embed;
@@ -127,7 +128,7 @@ async function cleanUpMessage(message: Message, id: string): Promise<void> {
         );
         embed.color = 0;
         embed.fields[1].value = '✔️';
-        await message.edit({ embeds: [embed], components: [] });
+        await message.edit(disableButtons({ embeds: [embed], components }));
     }
 }
 

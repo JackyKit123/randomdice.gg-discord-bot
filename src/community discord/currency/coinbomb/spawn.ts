@@ -6,6 +6,7 @@ import {
     GuildTextBasedChannel,
     User,
 } from 'discord.js';
+import disableButtons from 'util/disabledButtons';
 import wait from 'util/wait';
 import { activeCoinbombInChannel } from '.';
 import {
@@ -89,12 +90,14 @@ export async function cleanUp(channel: GuildTextBasedChannel): Promise<void> {
         );
     }
 
-    await coinbombMessage.edit({
+    const disabledButtons = disableButtons({
         content: !rewarded.size
             ? coinbombMessage.content
             : endMessage(rewarded, goldenPick),
-        components: [],
+        components: coinbombMessage.components,
     });
+
+    await coinbombMessage.edit(disabledButtons);
 
     if (recursive) await spawnNext(channel);
 }

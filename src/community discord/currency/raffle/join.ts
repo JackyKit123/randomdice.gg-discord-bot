@@ -176,8 +176,8 @@ export async function confirmJoinRaffleButton(
         .ref(`discord_bot/community/currency/${member.id}/gamble/lose`)
         .set((gambleProfile?.lose || 0) + currEntry * entries.ticketCost);
 
-    await interaction.reply({
-        content: `${member} You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
+    await interaction.reply(
+        `${member} You have entered the raffle with ${currEntry} ticket(s), costing you ${coinDice} **${numberFormat.format(
             currEntry * entries.ticketCost
         )}**${
             prevEntry > 0
@@ -186,9 +186,8 @@ export async function confirmJoinRaffleButton(
         }\nTicket Numbers: ${Object.entries(entries.tickets ?? {})
             .filter(([, uid]) => uid === member.id)
             .map(([ticketNumber]) => `**${ticketNumber}**`)
-            .join(', ')}`,
-        components: [],
-    });
+            .join(', ')}`
+    );
     if (!member.roles.cache.has(roleIds['Raffle Ping'])) {
         await interaction.followUp({
             embeds: [

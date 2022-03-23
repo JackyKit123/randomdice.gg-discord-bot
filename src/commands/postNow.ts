@@ -287,11 +287,9 @@ export default async function postNow(
             .get(member.user.id)
             ?.permissions.has('MANAGE_MESSAGES')
     ) {
-        await interaction.reply({
-            content:
-                'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`',
-            components: [],
-        });
+        await interaction.reply(
+            'you lack permission to execute this command, required permission: `MANAGE_MESSAGES`'
+        );
         return;
     }
 
@@ -307,10 +305,7 @@ export default async function postNow(
             components: [],
         });
     } else {
-        await interaction.reply({
-            content: `Now posting ${type}...`,
-            components: [],
-        });
+        await interaction.reply(`Now posting ${type}...`);
     }
 
     if (type === 'guide') {
