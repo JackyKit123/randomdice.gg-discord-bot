@@ -46,7 +46,8 @@ async function validateJoinRaffle(
         raffleHostMessage &&
         !raffleHostMessage.embeds.some(
             ({ timestamp }) => timestamp === entries.endTimestamp
-        )
+        ) &&
+        raffleHostMessage.interaction?.user.id !== member.id
     ) {
         await interaction.reply({
             content: 'This raffle has ended, please join with the new one.',
