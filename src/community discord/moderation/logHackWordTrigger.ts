@@ -32,8 +32,9 @@ export async function hackDiscussionLogging(
         !isBanned &&
         !!(await guild.members.fetch(author).catch(suppressUnknownMember));
     if (!hackLog?.isText()) return;
-    const sensitiveWords =
-        /\b(hack\w*)\b|\b(buy\w*)\b|\b(sell\w*)\b|\b(boost\w*)\b|\b(account\w*)\b|\b(price\w*)\b|\b(carry\w*)\b|\b(carried)\b|\b(c(?:lass)? ?15)\b/gi;
+    const sensitiveWords = isHackDiscord(guild)
+        ? /\b(hack\w*)\b|\b(buy\w*)\b|\b(sell\w*)\b|\b(boost\w*)\b|\b(account\w*)\b|\b(price\w*)\b|\b(carry\w*)\b|\b(carried)\b|\b(c(?:lass)? ?15)\b/gi
+        : /\b(hack\w*)\b|\b(boost\w*)\b|\b(account\w*)\b|\b(price\w*)\b|\b(c(?:lass)? ?15)\b/gi;
     const triggered = Array.from(content.matchAll(sensitiveWords));
     if (!triggered.length && !isHackDiscord(guild)) return;
     const [sliced1, sliced2] = [content.slice(0, 1024), content.slice(1024)];
