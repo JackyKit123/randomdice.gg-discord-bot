@@ -29,10 +29,10 @@ export default async function inkPen(
     }
 
     if (
-        !(await cooldown(interaction, {
+        await cooldown(interaction, {
             default: 5 * 60 * 1000,
             donator: 5 * 60 * 1000,
-        }))
+        })
     )
         return;
 
