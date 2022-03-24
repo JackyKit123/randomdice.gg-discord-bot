@@ -27,6 +27,7 @@ export default async function ready(client: Client<true>): Promise<void> {
         await Promise.all([
             purgeRolesOnReboot(client, '🤡'),
             purgeRolesOnReboot(client, 'rick'),
+            purgeRolesOnReboot(client, 'Inked'),
             fixClownNicknamesOnReboot(client),
             fetchGeneralOnBoot(client),
             fetchDatabase(),
