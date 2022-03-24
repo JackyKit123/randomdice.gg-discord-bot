@@ -26,7 +26,7 @@ export async function hackDiscussionLogging(
     const hackLog = communityDiscord?.channels.cache.get(
         channelIds['hack-discussion-log']
     );
-    if (!communityDiscord || !hackLog) return;
+    if (!communityDiscord || !hackLog || channel === hackLog) return;
     const isBanned = communityDiscord.bans.cache.has(author.id);
     const isCommunityDiscordMember =
         !isBanned &&
@@ -83,17 +83,19 @@ export async function hackDiscussionLogging(
         );
     }
     await hackLog.send({
-        content: triggered.length
-            ? `${
-                  isBanned
-                      ? ''
-                      : moderatorRoleIds.map(id => `<@&${id}>`).join(' ')
-              } Sensitive keyword${
-                  Array.from(triggered).length > 1 ? 's' : ''
-              } triggered: ${Array.from(triggered)
-                  .map(match => `**${match[0]}**`)
-                  .join(' ')}`
-            : undefined,
+        content:
+            (triggered.length &&
+                isHackDiscord(guild) &&
+                `${
+                    isBanned
+                        ? ''
+                        : moderatorRoleIds.map(id => `<@&${id}>`).join(' ')
+                } Sensitive keyword${
+                    Array.from(triggered).length > 1 ? 's' : ''
+                } triggered: ${Array.from(triggered)
+                    .map(match => `**${match[0]}**`)
+                    .join(' ')}`) ||
+            undefined,
         embeds: [embed],
         components: [
             new MessageActionRow().addComponents([
