@@ -27,16 +27,14 @@ export default async function messageCreate(message: Message): Promise<void> {
     let asyncPromisesCapturer: Promise<void>[] = [];
 
     try {
-        if (isProd) {
-            if (message.inGuild()) {
-                asyncPromisesCapturer = [
-                    ...asyncPromisesCapturer,
-                    hackDiscussionLogging(message),
-                ];
-            }
+        if (message.inGuild() && isProd && !author.bot) {
+            asyncPromisesCapturer = [
+                ...asyncPromisesCapturer,
+                hackDiscussionLogging(message),
+            ];
         }
 
-        if (isCommunityDiscord(guild) && isProd) {
+        if (isCommunityDiscord(guild)) {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
                 voteReward(message),
@@ -44,6 +42,7 @@ export default async function messageCreate(message: Message): Promise<void> {
                 chatCoins(message),
             ];
         }
+
         if (
             !author.bot &&
             message.inGuild() &&
