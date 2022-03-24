@@ -1,5 +1,6 @@
 import roleIds from 'config/roleId';
 import { ApplicationCommandData, CommandInteraction } from 'discord.js';
+import cooldown from 'util/cooldown';
 import wait from 'util/wait';
 
 function parseColorIntIntoRgb(color: number) {
@@ -10,7 +11,6 @@ function parseColorIntIntoRgb(color: number) {
     return { r, g, b };
 }
 
-const inked = new Set();
 export default async function inkPen(
     interaction: CommandInteraction<'cached'>
 ): Promise<void> {
@@ -28,12 +28,13 @@ export default async function inkPen(
         return;
     }
 
-    if (inked.has(target.id)) {
-        await interaction.reply(
-            'This user is already inked. Wait for their ink to fade before inking them again.'
-        );
+    if (
+        !(await cooldown(interaction, {
+            default: 5 * 60 * 1000,
+            donator: 5 * 60 * 1000,
+        }))
+    )
         return;
-    }
 
     const { r, g, b } = parseColorIntIntoRgb(target.displayColor || 16777215);
 
@@ -42,7 +43,6 @@ export default async function inkPen(
         return hex.length === 1 ? `0${hex}` : hex;
     };
 
-    inked.add(target);
     await inkedRole.setColor(
         `#${darkenColor(r, 4)}${darkenColor(g, 4)}${darkenColor(b, 4)}`
     );
@@ -66,7 +66,6 @@ export default async function inkPen(
 
     await wait(1000 * 60);
     await target.roles.remove(inkedRole);
-    inked.delete(target);
 }
 
 export const commandData: ApplicationCommandData = {
