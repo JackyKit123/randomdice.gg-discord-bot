@@ -11,6 +11,9 @@ export default async function afkResponse(
     const afkMembersMentioned = mentions.members.filter(
         m => !!cache['discord_bot/community/afk'][m.id]
     );
+
+    if (!afkMembersMentioned.size) return;
+
     const embeds = afkMembersMentioned.map(m => {
         const { afkMessage, timestamp } =
             cache['discord_bot/community/afk'][m.id];
