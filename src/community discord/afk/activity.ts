@@ -36,7 +36,8 @@ async function removeAfk(member: GuildMember, channel: GuildTextBasedChannel) {
         );
     }
     await database.ref('discord_bot/community/afk').child(member.id).set(null);
-    await member.setNickname(member.displayName.replace(/^\[AFK\] ?/, ''));
+    if (member.manageable)
+        await member.setNickname(member.displayName.replace(/^\[AFK\] ?/, ''));
 }
 
 export default async function afkListener(

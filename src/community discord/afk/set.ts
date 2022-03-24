@@ -22,7 +22,7 @@ export async function setAfk(
     if (nickname.length > 32 - 7) {
         nickname = `${nickname.slice(0, 32 - 7)}…`;
     }
-    await member.setNickname(nickname);
+    if (member.manageable) await member.setNickname(nickname);
     await wait(30 * 1000);
     await database.ref('discord_bot/community/afk').child(member.id).set({
         afkMessage,
