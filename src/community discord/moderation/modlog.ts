@@ -324,11 +324,12 @@ export async function getModdingEntryFromAuditLog<
         type,
         limit: 1,
     });
-    if (!clientUser) return null;
+
     const entry = auditLogs.entries.find(
         ({ target, executor, createdTimestamp }) =>
-            target?.id === user.id &&
-            executor?.id !== clientUser.id &&
+            target === user &&
+            !!clientUser &&
+            executor !== clientUser &&
             Date.now() - createdTimestamp < 1000 * 60
     );
 
