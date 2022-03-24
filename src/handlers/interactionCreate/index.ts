@@ -54,7 +54,7 @@ import nuke, { confirmNukeButton } from 'community discord/currency/nuke';
 
 import bon from 'community discord/currency/fun commands/bon';
 import welcomerick from 'community discord/currency/fun commands/welcomerick';
-import afk, { removeAfkListener } from 'community discord/afk';
+import { afk, afkActivityListener } from 'community discord/afk';
 import bedtime from 'community discord/currency/fun commands/bedtime';
 import imitate from 'community discord/currency/fun commands/imitate';
 import clown from 'community discord/currency/fun commands/clown';
@@ -225,7 +225,7 @@ export default async function interactionCreate(
                         return;
 
                     asyncPromisesCapturer.push(
-                        removeAfkListener(interaction, interaction.user)
+                        afkActivityListener(interaction, interaction.user)
                     );
                     if (interaction.isButton()) {
                         switch (interaction.customId) {

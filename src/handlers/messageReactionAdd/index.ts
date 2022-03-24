@@ -4,7 +4,7 @@ import {
     PartialUser,
     User,
 } from 'discord.js';
-import { removeAfkListener } from 'community discord/afk';
+import { afkActivityListener } from 'community discord/afk';
 import { logError } from 'util/logMessage';
 import { isCommunityDiscord } from 'config/guild';
 import { isProd } from 'config/env';
@@ -20,7 +20,7 @@ export default async function messageReactionAdd(
 
     try {
         if (!user.bot && isCommunityDiscord(guild) && isProd) {
-            await removeAfkListener(nonPartialReaction, user);
+            await afkActivityListener(nonPartialReaction, user);
         }
     } catch (err) {
         await logError(client, err, 'client#messageReactionAdd', reaction);
