@@ -25,9 +25,7 @@ export default async function ready(client: Client<true>): Promise<void> {
         // eslint-disable-next-line no-console
         console.log(bootMessage);
         await Promise.all([
-            purgeRolesOnReboot(client, '🤡'),
-            purgeRolesOnReboot(client, 'rick'),
-            purgeRolesOnReboot(client, 'Inked'),
+            purgeRolesOnReboot(client, '🤡', 'rick', 'Inked'),
             fixClownNicknamesOnReboot(client),
             fetchGeneralOnBoot(client),
             fetchDatabase(),

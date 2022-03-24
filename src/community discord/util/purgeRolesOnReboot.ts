@@ -4,7 +4,7 @@ import { Client } from 'discord.js';
 
 export default async function purgeRolesOnReboot(
     client: Client,
-    roleId: keyof typeof roleIds
+    ...roles: (keyof typeof roleIds)[]
 ): Promise<void> {
     const guild = getCommunityDiscord(client);
     if (!client.user || !guild) return;
@@ -22,9 +22,8 @@ export default async function purgeRolesOnReboot(
             )
             .map(async ({ target }) => {
                 if (!target) return;
-                const member = await guild.members.fetch(target.id);
-                if (member.roles.cache.has(roleId))
-                    await member.roles.remove(roleId);
+                const member = await guild.members.fetch(target);
+                await member.roles.remove(roles.map(roleId => roleIds[roleId]));
             })
     );
 }
