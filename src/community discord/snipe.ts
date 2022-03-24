@@ -42,7 +42,7 @@ const snipeStore = {
 };
 
 const sentSnipedMessage = new Map<
-    string,
+    Message,
     {
         snipedMember: User;
         commandName: 'snipe' | 'editsnipe';
@@ -209,7 +209,7 @@ export default async function snipe(
         ],
     });
 
-    sentSnipedMessage.set(sentSnipe.id, {
+    sentSnipedMessage.set(sentSnipe, {
         snipedMember: snipedMessage.author,
         commandName,
     });
@@ -220,7 +220,7 @@ export async function deleteSnipe(
 ): Promise<void> {
     if (!interaction.inCachedGuild()) return;
 
-    const { channel, member, message } = interaction;
+    const { channel, member, message, user, customId } = interaction;
 
     if (!channel) return;
 
@@ -228,11 +228,10 @@ export async function deleteSnipe(
         ?.permissionsIn(channel)
         .has('MANAGE_MESSAGES');
 
-    const snipedMessage = sentSnipedMessage.get(interaction.message.id);
+    const snipedMessage = sentSnipedMessage.get(message);
 
-    const userIsSnipedMessageAuthor =
-        member.id === snipedMessage?.snipedMember.id;
-    const userIsInteractionTrigger = member.id === message.interaction?.user.id;
+    const userIsSnipedMessageAuthor = user === snipedMessage?.snipedMember;
+    const userIsInteractionTrigger = user === message.interaction?.user;
 
     if (!snipedMessage && !userCanManageMessage && !userIsInteractionTrigger) {
         await interaction.reply(
@@ -241,9 +240,13 @@ export async function deleteSnipe(
         return;
     }
 
-    switch (interaction.customId) {
+    switch (customId) {
         case 'delete-snipe':
-            if (!userIsSnipedMessageAuthor && !userIsInteractionTrigger) {
+            if (
+                !userIsSnipedMessageAuthor &&
+                !userIsInteractionTrigger &&
+                !userCanManageMessage
+            ) {
                 await interaction.reply({
                     content:
                         'You do not have permission to delete this message.',
@@ -254,7 +257,7 @@ export async function deleteSnipe(
             await message.delete().catch(suppressUnknownMessage);
             break;
         case 'trash-snipe':
-            if (!userIsSnipedMessageAuthor) {
+            if (!userIsSnipedMessageAuthor && !userCanManageMessage) {
                 await interaction.reply({
                     content:
                         'You do not have permission to clear this message from snipe list.',
@@ -263,6 +266,7 @@ export async function deleteSnipe(
                 return;
             }
             await message.delete().catch(suppressUnknownMessage);
+            if (!snipedMessage) return;
             snipeStore[snipedMessage.commandName].set(
                 channel,
                 snipeStore[snipedMessage.commandName]
