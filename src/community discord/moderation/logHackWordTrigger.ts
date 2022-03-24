@@ -33,7 +33,7 @@ export async function hackDiscussionLogging(
         !!(await guild.members.fetch(author).catch(suppressUnknownMember));
     if (!hackLog?.isText()) return;
     const sensitiveWords =
-        /\b(hack\w*)|(buy\w*)|(sell\w*)|(boost\w*)|(account\w*)|(price\w*)|(carry\w*)|(carried)|(c(?:lass)? ?15)|(\$)\b/gi;
+        /\b(hack\w*)\b|\b(buy\w*)\b|\b(sell\w*)\b|\b(boost\w*)\b|\b(account\w*)\b|\b(price\w*)\b|\b(carry\w*)\b|\b(carried)\b|\b(c(?:lass)? ?15)\b/gi;
     const triggered = Array.from(content.matchAll(sensitiveWords));
     if (!triggered.length && !isHackDiscord(guild)) return;
     const [sliced1, sliced2] = [content.slice(0, 1024), content.slice(1024)];
