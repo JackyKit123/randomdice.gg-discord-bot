@@ -1,3 +1,4 @@
+import { setTimer } from 'community discord/timer';
 import checkPermission from 'community discord/util/checkPermissions';
 import { moderatorRoleIds } from 'config/roleId';
 import { banAppealDiscordInvitePermaLink } from 'config/url';
@@ -10,262 +11,210 @@ import {
 } from 'discord.js';
 import { ModLog } from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
-import { suppressCannotDmUser } from 'util/suppressErrors';
+import { suppressCannotDmUser, suppressUnknownBan } from 'util/suppressErrors';
 import { sendBanMessage } from './banMessage';
 import { writeModLog } from './modlog';
-import { hackban, hackwarn } from './quickMod';
+import Reasons from './reasons.json';
 
-export const warn = async (
-    target: User,
-    reason: string | null,
-    moderator: GuildMember
-): Promise<void> => {
-    await target
-        .send(
-            `You have been warned by ${moderator} in ${
-                moderator.guild.name
-            }.\nReason: ${reason ?? 'Not provided'}.`
-        )
-        .catch(suppressCannotDmUser);
-};
+const actionNameToPastParticiple = (actionName: string) =>
+    // eslint-disable-next-line no-nested-ternary
+    actionName.includes('ban')
+        ? `${actionName}ned`
+        : actionName.includes('mute')
+        ? `${actionName}d`
+        : `${actionName}ed`;
 
-const kick = async (
-    target: User,
-    reason: string | null,
-    moderator: GuildMember
-) => {
-    const { guild } = moderator;
-    await target
-        .send(
-            `You have been kicked in ${guild.name}.\nReason: ${
-                reason ?? 'Not provided'
-            }.`
-        )
-        .catch(suppressCannotDmUser);
-    await guild.members.kick(target, reason ?? undefined);
-};
-
-export const ban = async (
-    target: User,
-    reason: string | null,
+export async function dmOffender(
+    offender: User | GuildMember,
     moderator: GuildMember,
-    deleteMessageDays: number | null
-): Promise<void> => {
-    const { guild, user } = moderator;
-    await target
-        .send(
-            `You have been banned in ${guild.name}.\nReason: ${
-                reason ?? 'Not provided'
-            }.\nFeel free to appeal here ${banAppealDiscordInvitePermaLink} if you found this ban to be unjustified.`
-        )
-        .catch(suppressCannotDmUser);
-    await guild.members.ban(target, {
-        reason: reason ?? undefined,
-        days: deleteMessageDays || undefined,
-    });
-    await sendBanMessage(guild, target, reason, user);
-};
-
-const unban = async (
-    target: User,
+    action: ModLog['action'],
     reason: string | null,
-    moderator: GuildMember
-) => {
-    await moderator.guild.members.unban(target, reason ?? undefined);
-};
+    muteDuration?: number
+): Promise<void> {
+    let dmReason = `You have been ${actionNameToPastParticiple(
+        action
+    )} by ${moderator} in ${moderator.guild.name}.${
+        reason ? `\nReason: ${reason}` : ''
+    }`;
 
-const unmute = async (
-    target: GuildMember,
-    reason: string | null,
-    moderator: GuildMember
-) => {
-    await target.timeout(
-        null,
-        `${target} unmuted by ${moderator} for ${reason}`
-    );
-};
+    if (action === 'ban')
+        dmReason += `\nFeel free to appeal here ${banAppealDiscordInvitePermaLink} if you found this ban to be unjustified.`;
 
-const mute = async (
-    target: GuildMember,
-    reason: string | null,
-    moderator: GuildMember,
-    duration: number | null
-) => {
-    // eslint-disable-next-line no-param-reassign
-    duration = duration ?? 604800000;
-    const durationText = duration;
-    parseMsIntoReadableText(duration);
-
-    await target
-        .send(
-            `You have been muted  by ${moderator} in ${
-                target.guild
-            } for ${durationText}.\nReason: ${reason ?? 'Not provided'}.`
-        )
-        .catch(suppressCannotDmUser);
-    await target.timeout(
-        duration,
-        `${target} muted by ${moderator} for ${reason ?? undefined}`
-    );
-};
+    if (action === 'mute' && muteDuration) {
+        dmReason += `\nYour mute last for ${parseMsIntoReadableText(
+            muteDuration,
+            true
+        )}`;
+    }
+    await offender.send(dmReason).catch(suppressCannotDmUser);
+}
 
 export default async function moderation(
-    interaction: CommandInteraction
+    interaction: CommandInteraction<'cached'>
 ): Promise<void> {
-    if (
-        !interaction.inCachedGuild() ||
-        !(await checkPermission(interaction, ...moderatorRoleIds))
-    )
-        return;
+    if (!(await checkPermission(interaction, ...moderatorRoleIds))) return;
     const {
-        member,
+        member: moderator,
         options,
-        commandName,
-        guild,
         channel,
+        guild,
         client: { user: clientUser },
     } = interaction;
+    const { members, ownerId, bans } = guild;
+    const action = interaction.commandName as ModLog['action'];
     let reason = options.getString('reason');
-    const target = options.getUser('member', true);
-    const targetMember = guild.members.cache.get(target.id);
+    reason = (reason && Reasons[reason as keyof typeof Reasons]) || reason;
+    const offender = options.getUser('member', true);
+    const offenderMember = members.cache.get(offender.id);
     const durationArg = options.getString('duration');
     const deleteMessageDay = options.getInteger('delete-message-days');
+    const actioned = actionNameToPastParticiple(action);
 
-    if (!(await checkPermission(interaction, ...moderatorRoleIds))) return;
-
-    if (target.id === member.id) {
-        await interaction.reply(`You cannot ${commandName} yourself.`);
+    if (offender.id === moderator.id) {
+        await interaction.reply(`You cannot ${action} yourself.`);
         return;
     }
 
     if (
-        member.id !== guild.ownerId &&
-        ((targetMember &&
-            targetMember.roles.highest.position >=
-                member.roles.highest.position) ||
-            target.id === guild.ownerId ||
-            target.id === clientUser?.id)
+        moderator.id !== ownerId &&
+        ((offenderMember &&
+            offenderMember.roles.highest.position >=
+                moderator.roles.highest.position) ||
+            offender.id === ownerId ||
+            offender === clientUser)
     ) {
         await interaction.reply(
-            `You do not have enough permission to ${commandName} ${target}.`
+            `You do not have enough permission to ${action} ${offender}.`
         );
         return;
     }
 
     if (
-        targetMember &&
-        (guild.members.cache.get(clientUser?.id ?? '')?.roles.highest
-            .position ?? 0) <= targetMember.roles.highest.position
+        offenderMember &&
+        (members.cache.get(clientUser?.id ?? '')?.roles.highest.position ??
+            0) <= offenderMember.roles.highest.position
     ) {
         await interaction.reply(
-            `I do not have enough permission to ${commandName} ${target}.`
+            `I do not have enough permission to ${action} ${offender}.`
         );
         return;
     }
 
-    if (commandName === 'unban' && !guild.bans.cache.get(target.id)) {
-        await interaction.reply(`${target} is not banned in this server.`);
-        return;
-    }
+    const offenderIsBan = await bans.fetch(offender).catch(suppressUnknownBan);
+    let duration: number | null = 1000 * 60 * 60 * 24 * 7;
 
-    if (
-        (commandName.includes('mute') ||
-            commandName.includes('warn') ||
-            commandName.includes('kick')) &&
-        !targetMember
-    ) {
-        await interaction.reply(`${target} is not in this server.`);
-        return;
-    }
-
-    if (commandName === 'hackwarn') {
-        reason =
-            'As per the Discord Terms of Service and 111% Terms of Service we do not allow our members to be in any servers related to the discussion of hacking tools or products, please leave those servers within the 24 hours or you will be banned from our server. Thank you for your cooperation';
-    }
-    if (commandName === 'hackban') {
-        reason = 'Random Dice hack discord related activity';
-    }
-
-    await writeModLog(
-        target,
-        reason,
-        member.user,
-        commandName.replace('hack', '') as ModLog['action']
-    );
-
-    let duration: number | null = null;
-    if (durationArg) {
-        duration = parseStringIntoMs(durationArg);
-        if (duration === null) {
-            interaction.reply({
-                content: 'Invalid duration. Please use a valid duration.',
-                ephemeral: true,
-            });
-            return;
-        }
-    }
-
-    switch (commandName) {
+    switch (action) {
+        case 'mute':
+            if (durationArg) {
+                duration = parseStringIntoMs(durationArg);
+                if (
+                    duration === null ||
+                    duration <= 0 ||
+                    duration > 1000 * 60 * 60 * 24 * 7
+                ) {
+                    interaction.reply({
+                        content:
+                            'Invalid duration. Please provide a duration up to 1 week.',
+                        ephemeral: true,
+                    });
+                    return;
+                }
+            }
+        // fallthrough
         case 'warn':
-            await warn(target, reason, member);
-            break;
         case 'kick':
-            await kick(target, reason, member);
+        case 'unmute':
+            if (!offenderMember) {
+                await interaction.reply(
+                    `${offender} is not a member of the server.`
+                );
+                return;
+            }
             break;
         case 'ban':
-            await ban(target, reason, member, deleteMessageDay);
+            if (offenderIsBan) {
+                await interaction.reply(
+                    `${offender} is already banned from this server.`
+                );
+                return;
+            }
             break;
         case 'unban':
-            await unban(target, reason, member);
+            if (!offenderIsBan) {
+                await interaction.reply(
+                    `${offender} is not banned from this server.`
+                );
+                return;
+            }
             break;
-        case 'mute':
-            await mute(targetMember as GuildMember, reason, member, duration);
-            break;
-        case 'unmute':
-            await unmute(targetMember as GuildMember, reason, member);
-            break;
-        case 'hackwarn':
-            await hackwarn(targetMember as GuildMember, member, channel);
-            break;
-        case 'hackban':
-            await hackban(target, member);
-            break;
+
         default:
     }
 
+    const auditLogReason = `${actioned} by ${moderator.user.tag}${
+        reason ? ` Reason: ${reason}` : ''
+    }`;
+
+    await dmOffender(offender, moderator, action, reason, duration);
+
+    await writeModLog(offender, reason, moderator.user, action, duration);
+
+    switch (action) {
+        case 'kick':
+            await members.kick(offender, auditLogReason);
+            break;
+        case 'ban':
+            await members.ban(offender, {
+                days:
+                    deleteMessageDay || reason === Reasons['Scam Links']
+                        ? 7
+                        : 0,
+                reason: auditLogReason,
+            });
+            await sendBanMessage(guild, offender, reason, moderator.user);
+            break;
+        case 'unban':
+            await members.unban(offender, auditLogReason);
+            break;
+        case 'mute':
+            await offenderMember?.timeout(duration, auditLogReason);
+            break;
+        case 'unmute':
+            await offenderMember?.timeout(null, auditLogReason);
+            break;
+        default:
+    }
     await interaction.reply(
-        `${target} has been ${commandName}${
-            // eslint-disable-next-line no-nested-ternary
-            commandName.includes('ban')
-                ? 'ne'
-                : commandName.includes('mute')
-                ? ''
-                : 'e'
-        }d.`
+        `${offender} has been ${actioned} ${(reason && `for ${reason}`) || ''}.`
     );
+    if (reason === Reasons['Warn to Leave Hack Servers'] && channel) {
+        await setTimer(
+            channel,
+            moderator,
+            `Ban ${offenderMember?.displayName ?? 'this member'} in 24 hours.`,
+            1000 * 60 * 60 * 24
+        );
+    }
 }
 
 const getCommonOptions = (
-    commandName: string
+    commandName: string,
+    reasonIsAutoComplete = false
 ): ApplicationCommandOptionData[] => [
     {
         name: 'member',
-        description: `The member to be ${commandName}${
-            // eslint-disable-next-line no-nested-ternary
-            commandName.includes('ban')
-                ? 'ne'
-                : commandName.includes('mute')
-                ? ''
-                : 'e'
-        }d.`,
+        description: `The member to be ${actionNameToPastParticiple(
+            commandName
+        )}.`,
         type: 'USER',
         required: true,
     },
     {
         name: 'reason',
-        description: `The reason for ${commandName}ing the member.`,
+        description: `The reason to ${commandName} the member.`,
         type: 'STRING',
         required: false,
+        autocomplete: reasonIsAutoComplete,
     },
 ];
 
@@ -274,20 +223,20 @@ export const commandData: ApplicationCommandData[] = [
         name: 'warn',
         defaultPermission: false,
         description: 'Warn a member.',
-        options: getCommonOptions('warn'),
+        options: getCommonOptions('warn', true),
     },
     {
         name: 'kick',
         defaultPermission: false,
         description: 'Kick a member.',
-        options: getCommonOptions('kick'),
+        options: getCommonOptions('kick', true),
     },
     {
         name: 'ban',
         defaultPermission: false,
         description: 'Ban a member.',
         options: [
-            ...getCommonOptions('ban'),
+            ...getCommonOptions('ban', true),
             {
                 name: 'delete-message-days',
                 description:
@@ -308,7 +257,7 @@ export const commandData: ApplicationCommandData[] = [
         defaultPermission: false,
         description: 'Mute a member.',
         options: [
-            ...getCommonOptions('mute'),
+            ...getCommonOptions('mute', true),
             {
                 name: 'duration',
                 description:
@@ -324,3 +273,5 @@ export const commandData: ApplicationCommandData[] = [
         options: getCommonOptions('unmute'),
     },
 ];
+
+export { hackDiscussionLogging, hackLogBanHandler } from './logHackWordTrigger';

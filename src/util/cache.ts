@@ -218,6 +218,7 @@ export interface ModLog {
     action: 'warn' | 'mute' | 'unmute' | 'ban' | 'unban' | 'kick';
     timestamp: number;
     reason: string | null;
+    muteDuration: number | null;
 }
 
 interface CacheObject {

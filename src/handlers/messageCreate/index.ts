@@ -12,7 +12,7 @@ import { autoReaction } from 'community discord/myEmoji';
 import oneMinute from 'community discord/oneMinute';
 import { autoClassCritRole } from 'community discord/rdRole';
 import solveMathEquation from 'community discord/solveMathEquation';
-import spy from 'community discord/spy';
+import { hackDiscussionLogging } from 'community discord/moderation';
 import voteAutoResponder from 'community discord/voteAutoResponder';
 import { logError } from 'util/logMessage';
 import channelIds from 'config/channelIds';
@@ -28,7 +28,12 @@ export default async function messageCreate(message: Message): Promise<void> {
 
     try {
         if (isProd) {
-            asyncPromisesCapturer = [...asyncPromisesCapturer, spy(message)];
+            if (message.inGuild()) {
+                asyncPromisesCapturer = [
+                    ...asyncPromisesCapturer,
+                    hackDiscussionLogging(message),
+                ];
+            }
         }
 
         if (isCommunityDiscord(guild) && isProd) {

@@ -59,7 +59,6 @@ import { commandData as version } from 'dev-commands/version';
 
 import { commandData as moderation } from 'community discord/moderation';
 import { commandData as modlog } from 'community discord/moderation/modlog';
-import { commandData as quickMod } from 'community discord/moderation/quickMod';
 import { commandData as closeAppeal } from 'community discord/moderation/ban appeal/closeAppeal';
 
 import cacheData from 'util/cache';
@@ -131,7 +130,6 @@ export default async function registerSlashCommands(
         nuke,
         ...moderation,
         ...modlog,
-        ...quickMod,
     ];
 
     const devCommands: ApplicationCommandDataResolvable[] = [

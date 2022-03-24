@@ -71,8 +71,7 @@ import closeAppeal from 'community discord/moderation/ban appeal/closeAppeal';
 
 import channelIds from 'config/channelIds';
 import { goldenPickaxe, nullDice, pickaxe } from 'config/emojiId';
-import { spyLogBanHandler } from 'community discord/spy';
-import moderation from 'community discord/moderation';
+import moderation, { hackLogBanHandler } from 'community discord/moderation';
 import modlog from 'community discord/moderation/modlog';
 import {
     banAppealDiscordId,
@@ -88,6 +87,7 @@ import {
 } from 'community discord/currency/raffle/join';
 import { confirmCancelRaffleButton } from 'community discord/currency/raffle/cancel';
 import { suppressUnknownInteraction } from 'util/suppressErrors';
+import modActionReasonAutoComplete from 'community discord/moderation/autoComplete';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -284,8 +284,8 @@ export default async function interactionCreate(
                             case 'yes-no-button-✅-raffle-cancel':
                                 await confirmCancelRaffleButton(interaction);
                                 break;
-                            case 'spy-log-ban':
-                                await spyLogBanHandler(interaction);
+                            case 'hack-log-ban':
+                                await hackLogBanHandler(interaction);
                                 break;
                             case 'nuke-yes':
                             case 'nuke-double-yes':
@@ -458,6 +458,18 @@ export default async function interactionCreate(
                         switch (interaction.commandName) {
                             case 'Report this message':
                                 await report(interaction);
+                                break;
+                            default:
+                        }
+                    }
+                    if (interaction.isAutocomplete()) {
+                        switch (interaction.commandName) {
+                            case 'ban':
+                            case 'kick':
+                            case 'warn':
+                            case 'mute':
+                            case 'modlog':
+                                await modActionReasonAutoComplete(interaction);
                                 break;
                             default:
                         }

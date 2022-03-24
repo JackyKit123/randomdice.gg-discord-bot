@@ -18,10 +18,12 @@ import {
 import { database } from 'register/firebase';
 import cacheData, { ModLog } from 'util/cache';
 import getPaginationComponents from 'util/paginationButtons';
+import parseMsIntoReadableText from 'util/parseMS';
 import {
     suppressUnknownMember,
     suppressUnknownUser,
 } from 'util/suppressErrors';
+import Reasons from './reasons.json';
 
 function capitalize(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -89,7 +91,8 @@ async function editModLogEntryReason(
     interaction: CommandInteraction
 ): Promise<void> {
     const existingEntry = await getExistingModLogEntry(interaction);
-    const reason = interaction.options.getString('reason', true);
+    let reason = interaction.options.getString('reason', true);
+    reason = (reason && Reasons[reason as keyof typeof Reasons]) || reason;
     if (!existingEntry?.modlog) return;
     const edited = { ...existingEntry.modlog, reason };
     await database
@@ -180,12 +183,26 @@ export default async function modlog(
                   .addFields(
                       cases
                           .slice(i * 5, i * 5 + 5)
-                          .map(({ case: id, action, reason, moderator }) => ({
-                              name: `${action.toUpperCase()} | Case #${id}`,
-                              value: `Moderator: <@${moderator}>\n${
-                                  reason ?? 'No reason provided'
-                              }`,
-                          }))
+                          .map(
+                              ({
+                                  case: id,
+                                  action,
+                                  reason,
+                                  moderator,
+                                  muteDuration,
+                              }) => ({
+                                  name: `${action.toUpperCase()} | Case #${id}`,
+                                  value: `Moderator: <@${moderator}>\n${
+                                      reason ?? 'No reason provided'
+                                  }${
+                                      (muteDuration &&
+                                          `\n**Mute Duration:** ${parseMsIntoReadableText(
+                                              muteDuration
+                                          )}`) ||
+                                      ''
+                                  }`,
+                              })
+                          )
                   )
           )
         : [
@@ -216,7 +233,8 @@ export async function writeModLog(
     target: User,
     reason: string | null,
     moderator: User,
-    action: ModLog['action']
+    action: ModLog['action'],
+    muteDuration?: number
 ): Promise<void> {
     const logChannel = getCommunityDiscord(moderator.client).channels.cache.get(
         channelIds['public-mod-log']
@@ -234,6 +252,7 @@ export async function writeModLog(
         action,
         timestamp: Date.now(),
         reason,
+        muteDuration,
     };
 
     await database.ref(`discord_bot/community/modlog`).set([...cases, newCase]);
@@ -262,17 +281,22 @@ export async function writeModLog(
             default:
                 color = '#ffffff';
         }
+        let embed = new MessageEmbed()
+            .setTitle(action.toUpperCase())
+            .setAuthor({ name: `Case ${newCase.case}` })
+            .setDescription(reason ?? 'No reason provided.')
+            .addField('Offender', `${target.tag} ${target}`)
+            .setColor(color)
+            .setTimestamp(newCase.timestamp);
+
+        if (action === 'mute' && muteDuration)
+            embed = embed.addField(
+                'Mute Duration',
+                parseMsIntoReadableText(muteDuration, true)
+            );
+        embed = embed.addField('Moderator', `${moderator.tag} ${moderator}`);
         await logChannel.send({
-            embeds: [
-                new MessageEmbed()
-                    .setTitle(action.toUpperCase())
-                    .setAuthor({ name: `Case ${newCase.case}` })
-                    .setDescription(reason ?? 'No reason provided.')
-                    .addField('Moderator', `${moderator.tag} ${moderator}`)
-                    .addField('Offender', `${target.tag} ${target}`)
-                    .setColor(color)
-                    .setTimestamp(newCase.timestamp),
-            ],
+            embeds: [embed],
         });
     }
 }
@@ -454,6 +478,7 @@ export const commandData: ApplicationCommandData[] = [
                         description: 'The new reason for the entry.',
                         type: 'STRING',
                         required: true,
+                        autocomplete: true,
                     },
                 ],
             },
