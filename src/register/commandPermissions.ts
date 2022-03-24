@@ -3,6 +3,7 @@ import roleId, {
     eventManagerRoleIds,
     moderatorRoleIds,
 } from 'config/roleId';
+import { inkyId, jackykitId } from 'config/users';
 import {
     ApplicationCommand,
     ApplicationCommandPermissions,
@@ -99,6 +100,22 @@ export default async function setCommandPermissions(
                 case 'reject':
                 case 'falsebanned':
                     await command.permissions.set(appealServerStaffPermissions);
+                    break;
+                case 'ink-pen':
+                    await command.permissions.set({
+                        permissions: [
+                            {
+                                type: 'USER',
+                                permission: true,
+                                id: jackykitId,
+                            },
+                            {
+                                type: 'USER',
+                                permission: true,
+                                id: inkyId,
+                            },
+                        ],
+                    });
                     break;
                 default:
             }

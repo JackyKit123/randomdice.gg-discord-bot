@@ -88,6 +88,7 @@ import {
 import { confirmCancelRaffleButton } from 'community discord/currency/raffle/cancel';
 import { suppressUnknownInteraction } from 'util/suppressErrors';
 import modActionReasonAutoComplete from 'community discord/moderation/autoComplete';
+import inkPen from 'community discord/currency/fun commands/inkPen';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -426,6 +427,9 @@ export default async function interactionCreate(
                                 break;
                             case 'nuke':
                                 await nuke(interaction);
+                                break;
+                            case 'ink-pen':
+                                await inkPen(interaction);
                                 break;
                             case 'warn':
                             case 'mute':

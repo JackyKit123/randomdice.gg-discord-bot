@@ -9,6 +9,7 @@ const roleIds = {
     'Trial Event Manager': '805772165394858015',
     Giveaways: '815313811133169714',
     'Website Staff': '804303208372633651',
+    Inked: '956412227706048612',
     '🤡': '845530033695096853',
     'Server Artist': '804945286606749696',
     'Tournament Champion': '822644724615086080',

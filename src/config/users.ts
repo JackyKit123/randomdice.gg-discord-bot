@@ -2,6 +2,7 @@ import { GuildMember, PartialGuildMember, PartialUser, User } from 'discord.js';
 
 export const jackykitId = '195174308052467712';
 export const wadeId = '262292101780209671';
+export const inkyId = '740362488083644466';
 export const kebId = '521801175285366785';
 export const durgId = '244257879203250176';
 export const DSLbotId = '479688142908162059';

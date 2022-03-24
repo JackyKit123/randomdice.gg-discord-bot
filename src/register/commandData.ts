@@ -50,6 +50,7 @@ import { commandData as clown } from 'community discord/currency/fun commands/cl
 import { commandData as shush } from 'community discord/currency/fun commands/shush';
 import { commandData as rickbomb } from 'community discord/currency/fun commands/rickbomb';
 import { commandData as bedtime } from 'community discord/currency/fun commands/bedtime';
+import { commandData as inkPen } from 'community discord/currency/fun commands/inkPen';
 
 import { commandData as reboot } from 'dev-commands/reboot';
 import { commandData as setEmoji } from 'dev-commands/setEmoji';
@@ -130,6 +131,7 @@ export default async function registerSlashCommands(
         nuke,
         ...moderation,
         ...modlog,
+        inkPen,
     ];
 
     const devCommands: ApplicationCommandDataResolvable[] = [
