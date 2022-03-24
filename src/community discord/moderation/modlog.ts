@@ -234,7 +234,7 @@ export async function writeModLog(
     reason: string | null,
     moderator: User,
     action: ModLog['action'],
-    muteDuration?: number
+    muteDuration: number | null = null
 ): Promise<void> {
     const logChannel = getCommunityDiscord(moderator.client).channels.cache.get(
         channelIds['public-mod-log']
