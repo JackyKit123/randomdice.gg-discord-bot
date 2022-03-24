@@ -11,6 +11,7 @@ function parseColorIntIntoRgb(color: number) {
     return { r, g, b };
 }
 
+let inked = false;
 export default async function inkPen(
     interaction: CommandInteraction<'cached'>
 ): Promise<void> {
@@ -36,6 +37,13 @@ export default async function inkPen(
     )
         return;
 
+    if (inked) {
+        await interaction.reply(
+            'The ink sac is refilling, please wait a few minutes and try again.'
+        );
+        return;
+    }
+
     const { r, g, b } = parseColorIntIntoRgb(target.displayColor || 16777215);
 
     const darkenColor = (color: number, amount: number) => {
@@ -48,6 +56,7 @@ export default async function inkPen(
     );
     await target.roles.add(inkedRole);
     await interaction.reply(`${target} has been inked!`);
+    inked = true;
 
     await wait(1000 * 60);
     await inkedRole.setColor(
@@ -66,6 +75,7 @@ export default async function inkPen(
 
     await wait(1000 * 60);
     await target.roles.remove(inkedRole);
+    inked = false;
 }
 
 export const commandData: ApplicationCommandData = {
