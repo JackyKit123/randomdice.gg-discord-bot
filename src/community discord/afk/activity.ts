@@ -12,17 +12,17 @@ import {
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
+import wait from 'util/wait';
 import { setAfk } from './set';
 
 const lastSeen = new Map<GuildMember, number>();
 async function autoSetAfk(member: GuildMember) {
     if (!member.roles.cache.hasAny(...tier2RoleIds)) return;
+    lastSeen.set(member, Date.now());
+    await wait(1000 * 60 * 15);
     const memberLastSeen = lastSeen.get(member) ?? Date.now();
-
     if (Date.now() - memberLastSeen > 1000 * 60 * 15) {
         await setAfk(member, memberLastSeen, 'Auto Detected AFK');
-    } else {
-        lastSeen.set(member, memberLastSeen);
     }
 }
 

@@ -17,7 +17,7 @@ export default async function afkResponse(
     const embeds = afkMembersMentioned.map(m => {
         const { afkMessage, timestamp } =
             cache['discord_bot/community/afk'][m.id];
-        return getAfkEmbed(m, timestamp, afkMessage);
+        return getAfkEmbed(m, afkMessage, timestamp);
     });
     await message.reply({
         content: `${[...afkMembersMentioned.values()].join(' ')} ${

@@ -50,7 +50,7 @@ export default async function afk(
 
     await interaction.reply({
         content: 'Toggled on AFK for you',
-        embeds: [getAfkEmbed(member, createdTimestamp, afkMessage)],
+        embeds: [getAfkEmbed(member, afkMessage)],
     });
     await setAfk(member, createdTimestamp, afkMessage);
 }

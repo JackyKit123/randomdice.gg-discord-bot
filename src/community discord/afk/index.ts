@@ -7,20 +7,29 @@ export { default as afkActivityListener } from './activity';
 
 export const getAfkEmbed = (
     member: GuildMember,
-    timestamp: number,
-    afkMessage: string
+    afkMessage: string,
+    timestamp?: number
 ): MessageEmbed =>
     new MessageEmbed()
         .setTitle(`${member.displayName} is AFK`)
         .setDescription(afkMessage)
         .setColor(member.displayColor)
-        .addField(
-            'Gone for',
-            parseMsIntoReadableText(Date.now() - timestamp, true)
-        )
         .setThumbnail(member.displayAvatarURL({ dynamic: true }))
         .setFooter({ text: 'AFK since' })
-        .setTimestamp(timestamp);
+        .setTimestamp(timestamp)
+        .setFields(
+            timestamp
+                ? [
+                      {
+                          name: 'Gone for',
+                          value: parseMsIntoReadableText(
+                              Date.now() - timestamp,
+                              true
+                          ),
+                      },
+                  ]
+                : []
+        );
 
 export const commandData: ApplicationCommandData = {
     name: 'afk',
