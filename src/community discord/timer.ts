@@ -274,7 +274,9 @@ export async function registerTimer(client: Client): Promise<void> {
                 return;
             }
 
-            const message = await channel.messages.fetch(timer.messageId);
+            const message = await channel.messages
+                .fetch(timer.messageId)
+                .catch(suppressUnknownMessage);
             if (!message) {
                 killTimerFromDB(key);
                 return;
