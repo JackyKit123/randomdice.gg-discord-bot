@@ -15,14 +15,14 @@ import parseMsIntoReadableText from 'util/parseMS';
 import wait from 'util/wait';
 import { setAfk } from './set';
 
-const lastSeen = new Map<GuildMember, number>();
+const membersLastSeen = new Map<GuildMember, number>();
 async function autoSetAfk(member: GuildMember) {
     if (!member.roles.cache.hasAny(...tier2RoleIds)) return;
-    lastSeen.set(member, Date.now());
+    const lastActionTimestamp = Date.now();
+    membersLastSeen.set(member, lastActionTimestamp);
     await wait(1000 * 60 * 15);
-    const memberLastSeen = lastSeen.get(member) ?? Date.now();
-    if (Date.now() - memberLastSeen > 1000 * 60 * 15) {
-        await setAfk(member, memberLastSeen, 'Auto Detected AFK');
+    if (membersLastSeen.get(member) === lastActionTimestamp) {
+        await setAfk(member, lastActionTimestamp, 'Auto Detected AFK');
     }
 }
 
