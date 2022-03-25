@@ -24,13 +24,7 @@ export default async function afkResponse(
         return getAfkEmbed(m, afkMessage, timestamp);
     });
     const sentMessage = await message.reply({
-        content: `${[...afkMembersMentioned.values()].join(' ')} ${
-            afkMembersMentioned.size > 1 ? 'are' : 'is'
-        } afk.`,
         embeds,
-        allowedMentions: {
-            users: [],
-        },
     });
     await wait(1000 * 10);
     await sentMessage.delete().catch(suppressUnknownMessage);
