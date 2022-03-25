@@ -11,11 +11,13 @@ export const getAfkEmbed = (
     timestamp?: number
 ): MessageEmbed =>
     new MessageEmbed()
-        .setTitle(`${member.displayName.replace(/^\[AFK\] ?/, '')} is AFK`)
+        .setAuthor({
+            iconURL: member.displayAvatarURL({ dynamic: true }),
+            name: `${member.displayName.replace(/^\[AFK\] ?/, '')} is AFK`,
+        })
         .setDescription(afkMessage)
         .setColor(member.displayColor)
-        .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-        .setFooter(timestamp ? { text: 'AFK since' } : null)
+        .setFooter({ text: `AFK since${!timestamp ? ' • Just Now' : ''}` })
         .setTimestamp(timestamp ?? null)
         .setFields(
             timestamp

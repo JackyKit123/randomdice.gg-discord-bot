@@ -23,7 +23,7 @@ export default async function afkResponse(
     });
     const sentMessage = await message.reply({
         content: `${[...afkMembersMentioned.values()].join(' ')} ${
-            afkMembersMentioned.size >= 1 ? 'are' : 'is'
+            afkMembersMentioned.size > 1 ? 'are' : 'is'
         } afk.`,
         embeds,
         allowedMentions: {
