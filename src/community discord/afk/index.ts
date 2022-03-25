@@ -15,8 +15,8 @@ export const getAfkEmbed = (
         .setDescription(afkMessage)
         .setColor(member.displayColor)
         .setThumbnail(member.displayAvatarURL({ dynamic: true }))
-        .setFooter({ text: 'AFK since' })
-        .setTimestamp(timestamp)
+        .setFooter(timestamp ? { text: 'AFK since' } : null)
+        .setTimestamp(timestamp ?? null)
         .setFields(
             timestamp
                 ? [

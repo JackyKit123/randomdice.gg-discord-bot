@@ -1,5 +1,7 @@
 import { Message } from 'discord.js';
 import cache from 'util/cache';
+import { suppressUnknownMessage } from 'util/suppressErrors';
+import wait from 'util/wait';
 import { getAfkEmbed } from '.';
 
 export default async function afkResponse(
@@ -19,7 +21,7 @@ export default async function afkResponse(
             cache['discord_bot/community/afk'][m.id];
         return getAfkEmbed(m, afkMessage, timestamp);
     });
-    await message.reply({
+    const sentMessage = await message.reply({
         content: `${[...afkMembersMentioned.values()].join(' ')} ${
             afkMembersMentioned.size >= 1 ? 'are' : 'is'
         } afk.`,
@@ -28,4 +30,6 @@ export default async function afkResponse(
             users: [],
         },
     });
+    await wait(1000 * 10);
+    await sentMessage.delete().catch(suppressUnknownMessage);
 }
