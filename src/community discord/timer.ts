@@ -19,16 +19,8 @@ import banOnTimerEnds from './moderation/ban appeal/banOnTimerEnds';
 
 const wait = promisify(setTimeout);
 
-async function killTimerFromDB(timerKey: string): Promise<void> {
-    try {
-        await database
-            .ref('discord_bot/community/timer')
-            .child(timerKey)
-            .set(null);
-    } catch (err) {
-        // silent
-    }
-}
+const killTimerFromDB = async (timerKey: string) =>
+    database.ref('discord_bot/community/timer').child(timerKey).set(null);
 
 function parseTimeText(time: number): string {
     return `__${parseMsIntoReadableText(time, true)
@@ -63,10 +55,14 @@ async function tickTimer(
         if (now <= endTime) {
             const newText = parseTimeText(endTime - now);
             try {
-                if (newText !== embed.description)
-                    await message.edit({
-                        embeds: [embed.setDescription(newText)],
-                    });
+                if (newText !== embed.description) {
+                    const editedTimer = await message
+                        .edit({
+                            embeds: [embed.setDescription(newText)],
+                        })
+                        .catch(suppressUnknownMessage);
+                    if (!editedTimer) killTimerFromDB(key);
+                }
             } catch (err) {
                 const response = await message
                     .edit({
@@ -84,9 +80,13 @@ async function tickTimer(
                     })
                     .catch(suppressUnknownMessage);
                 if (!response) {
-                    await message.reply(
-                        `Oops, Something went wrong. ${(err as Error).message}`
-                    );
+                    await message
+                        .reply(
+                            `Oops, Something went wrong. ${
+                                (err as Error).message
+                            }`
+                        )
+                        .catch(suppressUnknownMessage);
                 }
                 killTimerFromDB(key);
                 throw err;
