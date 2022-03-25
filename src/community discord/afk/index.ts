@@ -11,7 +11,7 @@ export const getAfkEmbed = (
     timestamp?: number
 ): MessageEmbed =>
     new MessageEmbed()
-        .setTitle(`${member.displayName} is AFK`)
+        .setTitle(`${member.displayName.replace(/^\[AFK\] ?/, '')} is AFK`)
         .setDescription(afkMessage)
         .setColor(member.displayColor)
         .setThumbnail(member.displayAvatarURL({ dynamic: true }))
