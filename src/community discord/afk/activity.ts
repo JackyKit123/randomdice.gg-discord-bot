@@ -12,6 +12,7 @@ import {
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 import parseMsIntoReadableText from 'util/parseMS';
+import { suppressUnknownMessage } from 'util/suppressErrors';
 import wait from 'util/wait';
 import { setAfk } from './set';
 
@@ -27,17 +28,16 @@ async function autoSetAfk(member: GuildMember) {
 }
 
 async function removeAfk(member: GuildMember, channel: GuildTextBasedChannel) {
-    if (channel.permissionsFor(member)?.has('SEND_MESSAGES')) {
-        await channel.send(
-            `Welcome back ${member}, I have removed your afk. We have missed you for **${parseMsIntoReadableText(
-                Date.now() -
-                    cache['discord_bot/community/afk'][member.id].timestamp
-            )}**`
-        );
-    }
     await database.ref('discord_bot/community/afk').child(member.id).set(null);
+    const sentMessage = await channel.send(
+        `Welcome back ${member}, I have removed your afk. We have missed you for **${parseMsIntoReadableText(
+            Date.now() - cache['discord_bot/community/afk'][member.id].timestamp
+        )}**`
+    );
     if (member.manageable)
         await member.setNickname(member.displayName.replace(/^\[AFK\] ?/, ''));
+    await wait(1000 * 5);
+    await sentMessage.delete().catch(suppressUnknownMessage);
 }
 
 export default async function afkListener(
