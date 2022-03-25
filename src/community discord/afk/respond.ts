@@ -7,11 +7,13 @@ import { getAfkEmbed } from '.';
 export default async function afkResponse(
     message: Message<true>
 ): Promise<void> {
-    const { member, mentions } = message;
+    const { member, mentions, channel } = message;
     if (!member || !mentions.members?.size) return;
 
     const afkMembersMentioned = mentions.members.filter(
-        m => !!cache['discord_bot/community/afk'][m.id]
+        m =>
+            !!cache['discord_bot/community/afk'][m.id] &&
+            member.permissionsIn(channel).has('VIEW_CHANNEL')
     );
 
     if (!afkMembersMentioned.size) return;
