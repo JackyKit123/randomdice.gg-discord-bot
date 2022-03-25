@@ -1,7 +1,7 @@
 import roleIds from 'config/roleId';
 import { ApplicationCommandData, Client, CommandInteraction } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { clown as clownEmoji } from 'config/emojiId';
+import { clown as clownEmoji, coinDice } from 'config/emojiId';
 import { getCommunityDiscord } from 'config/guild';
 import { isJackykit } from 'config/users';
 import wait from 'util/wait';
@@ -22,15 +22,11 @@ export default async function clown(
     ) {
         return;
     }
-    if (
-        !(await commandCost(
-            interaction,
-            Math.round(Math.random() * 3500 - 1500)
-        ))
-    ) {
-        await interaction.followUp(
-            "Usually that's the case, but today I am gonna allow you to use it.<a:clowndance:845532985787940894>"
-        );
+    const randomCost = Math.round(Math.random() * 3500 - 1500);
+    let responseText = '';
+    if (!(await commandCost(interaction, randomCost))) {
+        responseText = `You need at least ${coinDice} ${randomCost} to use \`/clown\`\nUsually that's the case, but today I am gonna allow you to use it.<a:clowndance:845532985787940894>`;
+        await interaction.editReply(responseText);
     }
     let target = options.getMember('member', true);
 
@@ -41,46 +37,38 @@ export default async function clown(
         return;
     }
 
-    const response = await (interaction.replied
-        ? interaction.followUp(
-              'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
+    const response = await (responseText
+        ? interaction.editReply(
+              `${responseText}\n\nhttps://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif`
           )
-        : interaction.reply({
-              content:
-                  'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif',
-              fetchReply: true,
-          }));
+        : interaction.reply(
+              'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
+          ));
     await wait(4700);
 
     let clownedABot = false;
+    responseText = `${target} got clowned by ${member}.${clownEmoji}`;
     if (target.id === member.id) {
-        await response.edit(
-            `${member}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`
-        );
+        responseText = `${member}, you have a weird interest, but yes you can be a clown yourself, now entertain us.`;
     } else if (isJackykit(member)) {
-        await response.edit(`${target} got clowned by ${member}.${clownEmoji}`);
+        responseText = `${target} got clowned by ${member}.${clownEmoji}`;
     } else if (target.roles.cache.has(roleIds['🤡'])) {
-        await response.edit(
-            `${target} has already been clowned. Why are you so desperate? I guess you are the real clown then.`
-        );
+        responseText = `${target} has already been clowned. Why are you so desperate? I guess you are the real clown then.`;
         target = member;
     } else if (target.user.bot) {
-        await response.edit(
-            `What's wrong in your mind to clown a bot? Good Try tho, you clown.`
-        );
+        responseText = `What's wrong in your mind to clown a bot? Good Try tho, you clown.`;
         clownedABot = true;
         target = member;
     } else if (
         isJackykit(target) ||
         (target.id !== member.id && Math.random() < 0.6)
     ) {
-        await response.edit(
-            `${member} is trying clown ${target}. **BUT IT BACKFIRED, ${member} is now a clown LOL!!!**`
-        );
+        responseText = `${member} is trying clown ${target}. **BUT IT BACKFIRED, ${member} is now a clown LOL!!!**`;
         target = member;
-    } else {
-        await response.edit(`${target} got clowned by ${member}.${clownEmoji}`);
     }
+    await ((response && response.edit(responseText)) ||
+        interaction.editReply(responseText));
+
     const originalName = target.displayName;
     const howClown =
         clownedABot || isJackykit(member) ? 10 : Math.ceil(Math.random() * 10);
@@ -88,18 +76,12 @@ export default async function clown(
     await target.roles.add(roleIds['🤡']);
     if (target.manageable) await target.setNickname('🤡'.repeat(howClown));
 
-    await interaction.followUp({
-        content: `${target} ${
-            clownedABot
-                ? 'tried to clown a bot. 100%'
-                : `is a ${howClown * 10}%`
-        } clown!${clownEmoji}`,
-        allowedMentions: {
-            users: [],
-            roles: [],
-            parse: [],
-        },
-    });
+    responseText = `${responseText}\n\n${target} ${
+        clownedABot ? 'tried to clown a bot. 100%' : `is a ${howClown * 10}%`
+    } clown!${clownEmoji}`;
+
+    await ((response && response.edit(responseText)) ||
+        interaction.editReply(responseText));
     await wait(1000 * 60 * 5);
 
     await target.roles.remove(roleIds['🤡']);
