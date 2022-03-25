@@ -225,7 +225,7 @@ export default async function interactionCreate(
                         return;
 
                     asyncPromisesCapturer.push(
-                        afkActivityListener(interaction, interaction.user)
+                        afkActivityListener(interaction)
                     );
                     if (interaction.isButton()) {
                         switch (interaction.customId) {

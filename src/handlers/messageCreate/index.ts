@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 import eightBall from 'community discord/8ball';
-import { afkResponse } from 'community discord/afk';
+import { afkActivityListener, afkResponse } from 'community discord/afk';
 import chatRevivePing from 'community discord/chatrevivePing';
 import validateCrewAds from 'community discord/checkCrewAds';
 import cleverBot from 'community discord/cleverbot';
@@ -68,6 +68,7 @@ export default async function messageCreate(message: Message): Promise<void> {
                 cleverBot(message),
                 claimCoinbomb(message),
                 rickBombOnCollect(message),
+                afkActivityListener(message),
             ];
         }
 

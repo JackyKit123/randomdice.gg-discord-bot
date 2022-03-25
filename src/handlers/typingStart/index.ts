@@ -4,10 +4,10 @@ import { Typing } from 'discord.js';
 import { isProd } from 'config/env';
 
 export default async function typingStart(typing: Typing): Promise<void> {
-    const { user, channel, client } = typing;
+    const { user, client } = typing;
     try {
         if (!user.bot && isProd) {
-            await afkActivityListener(channel, user);
+            await afkActivityListener(typing);
         }
     } catch (err) {
         await logError(client, err, 'client#typingStart', typing);

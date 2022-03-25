@@ -4,9 +4,10 @@ import {
     GuildMember,
     GuildTextBasedChannel,
     Interaction,
+    Message,
     MessageReaction,
     PartialUser,
-    TextBasedChannel,
+    Typing,
     User,
 } from 'discord.js';
 import { database } from 'register/firebase';
@@ -40,19 +41,28 @@ async function removeAfk(member: GuildMember, channel: GuildTextBasedChannel) {
     await sentMessage.delete().catch(suppressUnknownMessage);
 }
 
-export default async function afkListener(
-    arg: TextBasedChannel | MessageReaction | Interaction,
-    user: User | PartialUser
+async function afkListener(arg: Typing | Interaction | Message): Promise<void>;
+async function afkListener(
+    arg: MessageReaction,
+    userArg: User | PartialUser
+): Promise<void>;
+async function afkListener(
+    arg: Typing | MessageReaction | Interaction | Message,
+    userArg: User | PartialUser | void
 ): Promise<void> {
-    let channel: TextBasedChannel | null = null;
-    if (arg instanceof MessageReaction) {
-        channel = arg.message.channel;
-    } else if (arg instanceof Interaction) {
-        channel = arg.channel;
-    } else {
-        channel = arg;
+    const channel =
+        arg instanceof MessageReaction ? arg.message.channel : arg.channel;
+
+    let user: User | PartialUser | void;
+    if (arg instanceof Typing || arg instanceof Interaction) {
+        user = arg.user;
+    } else if (arg instanceof Message) {
+        user = arg.author;
+    } else if (arg instanceof MessageReaction) {
+        user = userArg;
     }
-    if (!channel || channel?.type === 'DM') return;
+
+    if (!channel || channel?.type === 'DM' || !user) return;
     const { guild } = channel;
     const member = guild.members.cache.get(user.id);
     if (!member || !isCommunityDiscord(guild)) return;
@@ -67,3 +77,4 @@ export default async function afkListener(
         await autoSetAfk(member);
     }
 }
+export default afkListener;
