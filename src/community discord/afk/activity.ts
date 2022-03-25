@@ -65,7 +65,14 @@ async function afkListener(
     if (!channel || channel?.type === 'DM' || !user) return;
     const { guild } = channel;
     const member = guild.members.cache.get(user.id);
-    if (!member || !isCommunityDiscord(guild)) return;
+    if (
+        !member ||
+        !isCommunityDiscord(guild) ||
+        (arg instanceof Interaction &&
+            arg.isCommand() &&
+            arg.commandName === 'afk')
+    )
+        return;
 
     if (
         Object.keys(cache['discord_bot/community/afk']).some(
