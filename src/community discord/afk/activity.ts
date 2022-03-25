@@ -28,12 +28,12 @@ async function autoSetAfk(member: GuildMember) {
 }
 
 async function removeAfk(member: GuildMember, channel: GuildTextBasedChannel) {
-    await database.ref('discord_bot/community/afk').child(member.id).set(null);
     const sentMessage = await channel.send(
         `Welcome back ${member}, I have removed your afk. We have missed you for **${parseMsIntoReadableText(
             Date.now() - cache['discord_bot/community/afk'][member.id].timestamp
         )}**`
     );
+    await database.ref('discord_bot/community/afk').child(member.id).set(null);
     if (member.manageable)
         await member.setNickname(member.displayName.replace(/^\[AFK\] ?/, ''));
     await wait(1000 * 5);
