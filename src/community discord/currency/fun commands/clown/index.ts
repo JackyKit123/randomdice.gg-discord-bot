@@ -5,7 +5,8 @@ import { clown as clownEmoji, coinDice } from 'config/emojiId';
 import { getCommunityDiscord } from 'config/guild';
 import { isJackykit } from 'config/users';
 import wait from 'util/wait';
-import commandCost from './commandCost';
+import path from 'path';
+import commandCost from '../commandCost';
 
 export default async function clown(
     interaction: CommandInteraction
@@ -37,13 +38,21 @@ export default async function clown(
         return;
     }
 
+    const files = [
+        {
+            attachment: path.join(__dirname, './clown.gif'),
+            name: 'clown.gif',
+        },
+    ];
     const response = await (responseText
-        ? interaction.editReply(
-              `${responseText}\n\nhttps://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif`
-          )
-        : interaction.reply(
-              'https://media.tenor.com/images/87126cc81f03e22938d296cc5a60b2d2/tenor.gif'
-          ));
+        ? interaction.editReply({
+              content: responseText,
+              files,
+          })
+        : interaction.reply({
+              fetchReply: true,
+              files,
+          }));
     await wait(4700);
 
     let clownedABot = false;
@@ -66,8 +75,6 @@ export default async function clown(
         responseText = `${member} is trying clown ${target}. **BUT IT BACKFIRED, ${member} is now a clown LOL!!!**`;
         target = member;
     }
-    await ((response && response.edit(responseText)) ||
-        interaction.editReply(responseText));
 
     const originalName = target.displayName;
     const howClown =
@@ -80,8 +87,15 @@ export default async function clown(
         clownedABot ? 'tried to clown a bot. 100%' : `is a ${howClown * 10}%`
     } clown!${clownEmoji}`;
 
-    await ((response && response.edit(responseText)) ||
-        interaction.editReply(responseText));
+    await ((response &&
+        response.edit({
+            content: responseText,
+            files: [],
+        })) ||
+        interaction.editReply({
+            content: responseText,
+            files: [],
+        }));
     await wait(1000 * 60 * 5);
 
     await target.roles.remove(roleIds['🤡']);
