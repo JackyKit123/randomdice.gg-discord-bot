@@ -61,7 +61,10 @@ async function tickTimer(
                             embeds: [embed.setDescription(newText)],
                         })
                         .catch(suppressUnknownMessage);
-                    if (!editedTimer) killTimerFromDB(key);
+                    if (!editedTimer) {
+                        killTimerFromDB(key);
+                        return;
+                    }
                 }
             } catch (err) {
                 const response = await message
