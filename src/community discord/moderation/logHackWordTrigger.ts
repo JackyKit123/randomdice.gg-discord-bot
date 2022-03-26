@@ -6,9 +6,10 @@ import {
     MessageEmbed,
 } from 'discord.js';
 import channelIds from 'config/channelIds';
-import { moderatorRoleIds } from 'config/roleId';
+import roleIds, { moderatorRoleIds } from 'config/roleId';
 import { banHammer } from 'config/emojiId';
 import {
+    suppressUnknownBan,
     suppressUnknownMember,
     suppressUnknownMessage,
 } from 'util/suppressErrors';
@@ -26,8 +27,18 @@ export async function hackDiscussionLogging(
     const hackLog = communityDiscord?.channels.cache.get(
         channelIds['hack-discussion-log']
     );
-    if (!communityDiscord || !hackLog || channel === hackLog) return;
-    const isBanned = communityDiscord.bans.cache.has(author.id);
+    if (
+        !communityDiscord ||
+        !hackLog ||
+        channel === hackLog ||
+        communityDiscord.members.cache
+            .get(author.id)
+            ?.roles.cache.hasAny(roleIds.Admin, ...moderatorRoleIds)
+    )
+        return;
+    const isBanned = !!(await communityDiscord.bans
+        .fetch(author)
+        .catch(suppressUnknownBan));
     const isCommunityDiscordMember =
         !isBanned &&
         !!(await guild.members.fetch(author).catch(suppressUnknownMember));
