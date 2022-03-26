@@ -98,9 +98,12 @@ async function tickTimer(
             await tick();
         } else {
             killTimerFromDB(key);
-            await message.edit({
-                embeds: [embed.setDescription('**Timer Ended**')],
-            });
+            const originalMessage = await message
+                .edit({
+                    embeds: [embed.setDescription('**Timer Ended**')],
+                })
+                .catch(suppressUnknownMessage);
+            if (!originalMessage) return;
             const timerReact = reactions.cache.find(
                 reaction => reaction.emoji.toString() === timeDice
             );
@@ -130,14 +133,9 @@ async function tickTimer(
                     ),
                 ],
             };
-            const originalMessage = await channel.messages
-                .fetch(id)
-                .catch(suppressUnknownMessage);
-            if (originalMessage) {
-                await originalMessage.reply(messageOption);
-            } else {
-                await channel.send(messageOption);
-            }
+
+            await originalMessage.reply(messageOption);
+
             if (
                 embed.title ===
                     'You have 24 hours to respond to this appeal ticket or you will be banned' &&
