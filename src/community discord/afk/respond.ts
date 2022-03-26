@@ -13,7 +13,8 @@ export default async function afkResponse(
     const afkMembersMentioned = mentions.members.filter(
         target =>
             !!cache['discord_bot/community/afk'][target.id] &&
-            target.permissionsIn(channel).has('VIEW_CHANNEL')
+            target.permissionsIn(channel).has('VIEW_CHANNEL') &&
+            member !== target
     );
 
     if (!afkMembersMentioned.size) return;
