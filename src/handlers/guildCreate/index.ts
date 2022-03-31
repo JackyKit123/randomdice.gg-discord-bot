@@ -10,6 +10,6 @@ export default async function guildCreate(guild: Guild): Promise<void> {
             await logBotInvite(guild);
         }
     } catch (error) {
-        await logError(client, error, 'client#guildBanRemove', guild);
+        await logError(client, error, 'client#guildCreate', guild);
     }
 }

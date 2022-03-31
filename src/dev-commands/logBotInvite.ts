@@ -8,7 +8,10 @@ export default async function logBotInvite(guild: Guild): Promise<void> {
     const filter = (channel: GuildBasedChannel) =>
         channel.isText() &&
         !channel.isThread() &&
-        !!channel.permissionsFor(client.user ?? '')?.has('SEND_MESSAGES');
+        !!channel.guild.members.cache
+            .get(client.user?.id ?? '')
+            ?.permissionsIn(channel)
+            .has('SEND_MESSAGES');
     const msgChannel =
         systemChannel ||
         channels.cache
