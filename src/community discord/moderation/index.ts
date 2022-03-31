@@ -29,7 +29,7 @@ export async function dmOffender(
     moderator: GuildMember,
     action: ModLog['action'],
     reason: string | null,
-    muteDuration?: number
+    muteDuration: number | null
 ): Promise<void> {
     let dmReason = `You have been ${actionNameToPastParticiple(
         action
@@ -100,25 +100,29 @@ export default async function moderation(
         return;
     }
 
-    const offenderIsBan = await bans.fetch(offender).catch(suppressUnknownBan);
-    let duration: number | null = 1000 * 60 * 60 * 24 * 7;
+    const offenderIsBanned = await bans
+        .fetch(offender)
+        .catch(suppressUnknownBan);
+    let duration: number | null = null;
 
     switch (action) {
         case 'mute':
-            if (durationArg) {
-                duration = parseStringIntoMs(durationArg);
-                if (
-                    duration === null ||
-                    duration <= 0 ||
-                    duration > 1000 * 60 * 60 * 24 * 7
-                ) {
-                    interaction.reply({
-                        content:
-                            'Invalid duration. Please provide a duration up to 1 week.',
-                        ephemeral: true,
-                    });
-                    return;
-                }
+            if (!durationArg) {
+                duration = 1000 * 60 * 60 * 24 * 7;
+                break;
+            }
+            duration = parseStringIntoMs(durationArg);
+            if (
+                duration === null ||
+                duration <= 0 ||
+                duration > 1000 * 60 * 60 * 24 * 7
+            ) {
+                interaction.reply({
+                    content:
+                        'Invalid duration. Please provide a duration up to 1 week.',
+                    ephemeral: true,
+                });
+                return;
             }
         // fallthrough
         case 'warn':
@@ -132,7 +136,7 @@ export default async function moderation(
             }
             break;
         case 'ban':
-            if (offenderIsBan) {
+            if (offenderIsBanned) {
                 await interaction.reply(
                     `${offender} is already banned from this server.`
                 );
@@ -140,7 +144,7 @@ export default async function moderation(
             }
             break;
         case 'unban':
-            if (!offenderIsBan) {
+            if (!offenderIsBanned) {
                 await interaction.reply(
                     `${offender} is not banned from this server.`
                 );

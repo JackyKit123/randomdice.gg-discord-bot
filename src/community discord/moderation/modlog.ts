@@ -114,23 +114,8 @@ async function editModLogEntryReason(
     );
 }
 
-export default async function modlog(
-    interaction: CommandInteraction
-): Promise<void> {
-    if (!interaction.inCachedGuild()) return;
+async function inspectModLog(interaction: CommandInteraction<'cached'>) {
     const { user, options, member, guild } = interaction;
-    const subCommand = options.getSubcommand();
-    switch (subCommand) {
-        case 'remove':
-            await deleteModLogEntry(interaction);
-            return;
-        case 'edit-reason':
-            await editModLogEntryReason(interaction);
-            return;
-        case 'inspect':
-            break;
-        default:
-    }
     const target = options.getUser('member', true);
     const targetMember = await guild.members
         .fetch(target.id)
@@ -227,6 +212,23 @@ export default async function modlog(
         fetchReply: true,
     });
     collectorHandler(sentMessage, user, embeds);
+}
+
+export default async function modlog(
+    interaction: CommandInteraction<'cached'>
+): Promise<void> {
+    switch (interaction.options.getSubcommand(true)) {
+        case 'remove':
+            await deleteModLogEntry(interaction);
+            break;
+        case 'edit-reason':
+            await editModLogEntryReason(interaction);
+            break;
+        case 'inspect':
+            await inspectModLog(interaction);
+            break;
+        default:
+    }
 }
 
 export async function writeModLog(
