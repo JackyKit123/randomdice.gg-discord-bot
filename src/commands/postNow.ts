@@ -249,7 +249,7 @@ export async function postNews(client: Client, guild?: Guild): Promise<void> {
         Object.entries(registeredGuilds).map(async ([guildId, config]) => {
             if (guild && guild.id !== guildId) return;
 
-            const channel = await getChannel(client, config, 'guide', guildId);
+            const channel = await getChannel(client, config, 'news', guildId);
             if (!channel) return;
 
             await channel.send({ embeds: [embed] });
