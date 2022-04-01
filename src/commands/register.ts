@@ -100,7 +100,7 @@ export async function postNowButton(
         return;
     }
     const type = content.match(
-        /^Registered Channel <#\d{18}> to provide (guide|news)\. Post <#\d{18}> in (?:guide|news) now?$/
+        /^Registered Channel <#\d{18}> to provide (guide|news)\. Post (?:guide|news) in <#\d{18}> now\?$/
     )?.[1] as 'guide' | 'news';
     if (!type) {
         await interaction.reply(
