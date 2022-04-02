@@ -5,6 +5,8 @@ import {
     ButtonInteraction,
     CommandInteraction,
     GuildBan,
+    GuildMember,
+    Message,
     MessageActionRow,
     MessageButton,
     MessageEmbed,
@@ -224,6 +226,68 @@ export async function banLogButtons(
             embeds,
             components,
         })
+    );
+}
+
+export async function warnOnBannedMemberJoin(
+    member: GuildMember
+): Promise<void> {
+    const {
+        guild,
+        client: { guilds, user: clientUser },
+    } = member;
+    const hacklog = cacheData['discord_bot/registry'][guild.id]?.hacklog;
+    if (!hacklog || !clientUser) return;
+
+    await Promise.all(
+        Object.entries(cacheData['discord_bot/registry']).map(
+            async ([guildId, registry]) => {
+                if (!registry.hacklog || guildId === guild.id) return;
+                const registeredGuild = guilds.cache.get(guildId);
+                const channel = guilds.cache
+                    .get(guildId)
+                    ?.channels.cache.get(registry.hacklog);
+                if (
+                    !registeredGuild ||
+                    !channel?.isText() ||
+                    !channel.permissionsFor(clientUser)?.has('SEND_MESSAGES')
+                ) {
+                    await database
+                        .ref('discord_bot/registry')
+                        .child(guild.id)
+                        .child('hacklog')
+                        .set(null);
+                    return;
+                }
+                const messages =
+                    channel.messages.cache.size >= 100
+                        ? channel.messages.cache
+                        : await channel.messages.fetch({ limit: 100 });
+
+                const appearedLogs = new Set(
+                    messages.reduce(
+                        (appearedLogMessage: Message[], message) => {
+                            if (
+                                message.embeds[0]?.footer?.text.match(
+                                    /^User ID: (\d{18})$/
+                                )?.[1] === member.id
+                            ) {
+                                return [...appearedLogMessage, message];
+                            }
+                            return appearedLogMessage;
+                        }
+                    )
+                ).values();
+
+                await Promise.all(
+                    [...appearedLogs].map(async message =>
+                        message.reply(
+                            `${member} who just joined has appeared in a ban log.`
+                        )
+                    )
+                );
+            }
+        )
     );
 }
 

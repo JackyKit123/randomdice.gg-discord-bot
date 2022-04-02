@@ -4,6 +4,7 @@ import { logError } from 'util/logMessage';
 import { GuildMember } from 'discord.js';
 import { banAppealDiscordId, communityDiscordId } from 'config/guild';
 import { isProd } from 'config/env';
+import { warnOnBannedMemberJoin } from 'community discord/moderation/hackbanLog';
 
 export default async function guildMemberAdd(
     member: GuildMember
@@ -20,6 +21,7 @@ export default async function guildMemberAdd(
                     await createAppealChanel(member);
                     break;
                 default:
+                    await warnOnBannedMemberJoin(member);
             }
         }
     } catch (err) {
