@@ -16,23 +16,31 @@ export default async function ready(client: Client<true>): Promise<void> {
     client.user.setActivity('/help', {
         type: 'PLAYING',
     });
-    const bootMessage = `Timestamp: ${new Date().toTimeString()}, bot is booted on ${
-        process.env.NODE_ENV
-    }`;
+    const log = async (message: string) => {
+        // eslint-disable-next-line no-console
+        console.log(message);
+        await logMessage(client, 'info', message);
+    };
+
     try {
         databaseListener(client);
-        await logMessage(client, 'info', bootMessage);
-        // eslint-disable-next-line no-console
-        console.log(bootMessage);
+        await log(
+            `Timestamp: ${new Date().toTimeString()}, bot is booting on ${
+                process.env.NODE_ENV
+            }`
+        );
         await Promise.all([
+            fetchDatabase(),
             purgeRolesOnReboot(client, '🤡', 'rick', 'Inked'),
             fixClownNicknamesOnReboot(client),
-            fetchGeneralOnBoot(client),
-            fetchDatabase(),
         ]);
+        await log(
+            'Database is ready\nCleaned up previous roles and nicknames\nBot is fully up and running\nStarting Recursive functions: chat revive ping, auto raffle, auto spawn coinbomb, timers, server clock'
+        );
         // call these after database ready
         await Promise.all([
-            registerSlashCommands(client),
+            await registerSlashCommands(client),
+            fetchGeneralOnBoot(client),
             setRaffleTimerOnBoot(client),
             autoSpawnCoinbomb(client),
             weeklyAutoReset(client),

@@ -26,7 +26,7 @@ import getBrandingEmbed from './util/getBrandingEmbed';
 async function getChannel(
     client: Client,
     config: Registry['key'],
-    type: keyof Registry['key'],
+    type: 'news' | 'guide',
     guildId: string
 ) {
     const { channels, user: clientUser } = client;
