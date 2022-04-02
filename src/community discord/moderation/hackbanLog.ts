@@ -11,6 +11,7 @@ import {
 } from 'discord.js';
 import { database } from 'register/firebase';
 import cacheData from 'util/cache';
+import disableButtons from 'util/disabledButtons';
 import { suppressUnknownBan, suppressUnknownUser } from 'util/suppressErrors';
 import { dmOffender } from '.';
 import { writeModLog } from './modlog';
@@ -161,17 +162,17 @@ export async function banLogButtons(
         member: moderator,
         customId,
         client: { user: clientUser },
-        message: {
-            embeds: [embed],
-        },
+        message,
     } = interaction;
     const { members, client } = guild;
+    const { embeds, components } = message;
     if (!clientUser) return;
     const isBan = customId === 'hackban-log-ban';
     const isWarn = customId === 'hackban-log-warn';
     const action = ((isBan && 'ban') || (isWarn && 'warn')) as 'ban' | 'warn';
 
-    const offenderId = embed?.footer?.text.match(/^User ID: (\d{18})$/)?.[1];
+    const offenderId =
+        embeds[0]?.footer?.text.match(/^User ID: (\d{18})$/)?.[1];
     if (!offenderId) {
         await interaction.reply({
             content:
@@ -217,6 +218,13 @@ export async function banLogButtons(
     );
 
     if (isWarn) await startHackWarnTimer(moderator, offenderMember, channel);
+
+    message.edit(
+        disableButtons({
+            embeds,
+            components,
+        })
+    );
 }
 
 export const commandData: ApplicationCommandData = {
