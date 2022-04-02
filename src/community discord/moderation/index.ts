@@ -1,53 +1,21 @@
 import checkPermission from 'community discord/util/checkPermissions';
 import { moderatorRoleIds } from 'config/roleId';
-import { banAppealDiscordInvitePermaLink } from 'config/url';
 import {
     ApplicationCommandData,
     ApplicationCommandOptionData,
     CommandInteraction,
-    GuildMember,
-    User,
 } from 'discord.js';
 import { ModLog } from 'util/cache';
-import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
-import { suppressCannotDmUser } from 'util/suppressErrors';
+import { parseStringIntoMs } from 'util/parseMS';
 import { sendBanMessage } from './banMessage';
 import { writeModLog } from './modlog';
 import Reasons from './reasons.json';
-import { checkModActionValidity, startHackWarnTimer } from './util';
-
-const actionNameToPastParticiple = (actionName: string) =>
-    // eslint-disable-next-line no-nested-ternary
-    actionName.includes('ban')
-        ? `${actionName}ned`
-        : actionName.includes('mute')
-        ? `${actionName}d`
-        : `${actionName}ed`;
-
-export async function dmOffender(
-    offender: User | GuildMember,
-    moderator: GuildMember,
-    action: ModLog['action'],
-    reason: string | null,
-    muteDuration: number | null
-): Promise<void> {
-    let dmReason = `You have been ${actionNameToPastParticiple(
-        action
-    )} by ${moderator} in ${moderator.guild.name}.${
-        reason ? `\nReason: ${reason}` : ''
-    }`;
-
-    if (action === 'ban')
-        dmReason += `\nFeel free to appeal here ${banAppealDiscordInvitePermaLink} if you found this ban to be unjustified.`;
-
-    if (action === 'mute' && muteDuration) {
-        dmReason += `\nYour mute last for ${parseMsIntoReadableText(
-            muteDuration,
-            true
-        )}`;
-    }
-    await offender.send(dmReason).catch(suppressCannotDmUser);
-}
+import {
+    actionNameToPastParticiple,
+    checkModActionValidity,
+    dmOffender,
+    startHackWarnTimer,
+} from './util';
 
 export default async function moderation(
     interaction: CommandInteraction<'cached'>

@@ -1,13 +1,16 @@
 import { setTimer } from 'community discord/timer';
+import { isCommunityDiscord } from 'config/guild';
+import { banAppealDiscordInvitePermaLink } from 'config/url';
 import {
     ButtonInteraction,
     CommandInteraction,
     GuildMember,
     GuildTextBasedChannel,
+    User,
 } from 'discord.js';
 import { ModLog } from 'util/cache';
-import { parseStringIntoMs } from 'util/parseMS';
-import { suppressUnknownBan } from 'util/suppressErrors';
+import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
+import { suppressCannotDmUser, suppressUnknownBan } from 'util/suppressErrors';
 
 export const checkModActionValidity = async (
     interaction: ButtonInteraction<'cached'> | CommandInteraction<'cached'>,
@@ -131,6 +134,39 @@ export const checkModActionValidity = async (
 
     return true;
 };
+
+export const actionNameToPastParticiple = (actionName: string): string =>
+    // eslint-disable-next-line no-nested-ternary
+    actionName.includes('ban')
+        ? `${actionName}ned`
+        : actionName.includes('mute')
+        ? `${actionName}d`
+        : `${actionName}ed`;
+
+export async function dmOffender(
+    offender: User | GuildMember,
+    moderator: GuildMember,
+    action: ModLog['action'],
+    reason: string | null,
+    muteDuration: number | null
+): Promise<void> {
+    let dmReason = `You have been ${actionNameToPastParticiple(
+        action
+    )} by ${moderator} in ${moderator.guild.name}.${
+        reason ? `\nReason: ${reason}` : ''
+    }`;
+
+    if (action === 'ban' && isCommunityDiscord(moderator.guild))
+        dmReason += `\nFeel free to appeal here ${banAppealDiscordInvitePermaLink} if you found this ban to be unjustified.`;
+
+    if (action === 'mute' && muteDuration) {
+        dmReason += `\nYour mute last for ${parseMsIntoReadableText(
+            muteDuration,
+            true
+        )}`;
+    }
+    await offender.send(dmReason).catch(suppressCannotDmUser);
+}
 
 export const startHackWarnTimer = async (
     moderator: GuildMember,

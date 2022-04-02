@@ -15,10 +15,9 @@ import { database } from 'register/firebase';
 import cacheData from 'util/cache';
 import disableButtons from 'util/disabledButtons';
 import { suppressUnknownBan, suppressUnknownUser } from 'util/suppressErrors';
-import { dmOffender } from '.';
 import { writeModLog } from './modlog';
 import Reasons from './reasons.json';
-import { checkModActionValidity, startHackWarnTimer } from './util';
+import { checkModActionValidity, startHackWarnTimer, dmOffender } from './util';
 
 export async function participate(
     interaction: CommandInteraction<'cached'>
