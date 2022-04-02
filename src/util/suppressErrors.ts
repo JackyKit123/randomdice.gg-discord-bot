@@ -44,3 +44,8 @@ export const suppressMissingAccess = (error: DiscordAPIError): null => {
     if (error.code !== Constants.APIErrors.MISSING_ACCESS) throw error;
     return null;
 };
+
+export const suppressMissingPermission = (error: DiscordAPIError): null => {
+    if (error.code !== Constants.APIErrors.MISSING_PERMISSIONS) throw error;
+    return null;
+};

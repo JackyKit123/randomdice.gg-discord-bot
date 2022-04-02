@@ -14,7 +14,11 @@ import {
 import { database } from 'register/firebase';
 import cacheData from 'util/cache';
 import disableButtons from 'util/disabledButtons';
-import { suppressUnknownBan, suppressUnknownUser } from 'util/suppressErrors';
+import {
+    suppressMissingPermission,
+    suppressUnknownBan,
+    suppressUnknownUser,
+} from 'util/suppressErrors';
 import { writeModLog } from './modlog';
 import Reasons from './reasons.json';
 import { checkModActionValidity, startHackWarnTimer, dmOffender } from './util';
@@ -101,9 +105,9 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
             async ([guildId, registry]) => {
                 if (!registry.hacklog || guildId === guild.id) return;
                 const registeredGuild = guilds.cache.get(guildId);
-                const channel = guilds.cache
-                    .get(guildId)
-                    ?.channels.cache.get(registry.hacklog);
+                const channel = registeredGuild?.channels.cache.get(
+                    registry.hacklog
+                );
                 if (
                     !registeredGuild ||
                     !channel?.isText() ||
@@ -118,7 +122,8 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
                 }
                 const offenderIsBanned = await registeredGuild.bans
                     .fetch(ban.user)
-                    .catch(suppressUnknownBan);
+                    .catch(suppressUnknownBan)
+                    .catch(suppressMissingPermission);
                 const embed = new MessageEmbed()
                     .setAuthor({
                         name: `Ban in ${guild.name}`,
@@ -264,25 +269,21 @@ export async function warnOnBannedMemberJoin(
                         ? channel.messages.cache
                         : await channel.messages.fetch({ limit: 100 });
 
-                const appearedLogs = new Set(
-                    messages.reduce(
-                        (appearedLogMessage: Message[], message) => {
-                            if (
-                                message.embeds[0]?.footer?.text.match(
-                                    /^User ID: (\d{18})$/
-                                )?.[1] === member.id
-                            ) {
-                                return [...appearedLogMessage, message];
-                            }
-                            return appearedLogMessage;
-                        }
-                    )
-                ).values();
+                const memberAppearedInLog = new Map<GuildMember, Message>();
+                messages.forEach(message => {
+                    if (
+                        message.embeds[0]?.footer?.text.match(
+                            /^User ID: (\d{18})$/
+                        )?.[1] === member.id
+                    ) {
+                        memberAppearedInLog.set(member, message);
+                    }
+                });
 
                 await Promise.all(
-                    [...appearedLogs].map(async message =>
+                    [...memberAppearedInLog].map(async ([m, message]) =>
                         message.reply(
-                            `${member} who just joined has appeared in a ban log.`
+                            `${m} who just joined has appeared in a ban log.`
                         )
                     )
                 );
