@@ -77,6 +77,7 @@ export interface Registry {
     [key: string]: {
         guide?: string;
         news?: string;
+        hacklog?: string;
     };
 }
 

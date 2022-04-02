@@ -1,4 +1,3 @@
-import { setTimer } from 'community discord/timer';
 import checkPermission from 'community discord/util/checkPermissions';
 import { moderatorRoleIds } from 'config/roleId';
 import { banAppealDiscordInvitePermaLink } from 'config/url';
@@ -11,10 +10,11 @@ import {
 } from 'discord.js';
 import { ModLog } from 'util/cache';
 import parseMsIntoReadableText, { parseStringIntoMs } from 'util/parseMS';
-import { suppressCannotDmUser, suppressUnknownBan } from 'util/suppressErrors';
+import { suppressCannotDmUser } from 'util/suppressErrors';
 import { sendBanMessage } from './banMessage';
 import { writeModLog } from './modlog';
 import Reasons from './reasons.json';
+import { checkModActionValidity, startHackWarnTimer } from './util';
 
 const actionNameToPastParticiple = (actionName: string) =>
     // eslint-disable-next-line no-nested-ternary
@@ -53,14 +53,8 @@ export default async function moderation(
     interaction: CommandInteraction<'cached'>
 ): Promise<void> {
     if (!(await checkPermission(interaction, ...moderatorRoleIds))) return;
-    const {
-        member: moderator,
-        options,
-        channel,
-        guild,
-        client: { user: clientUser },
-    } = interaction;
-    const { members, ownerId, bans } = guild;
+    const { member: moderator, options, channel, guild } = interaction;
+    const { members } = guild;
     const action = interaction.commandName as ModLog['action'];
     let reason = options.getString('reason');
     reason = (reason && Reasons[reason as keyof typeof Reasons]) || reason;
@@ -70,97 +64,27 @@ export default async function moderation(
     const deleteMessageDay = options.getInteger('delete-message-days');
     const actioned = actionNameToPastParticiple(action);
 
-    if (offender.id === moderator.id) {
-        await interaction.reply(`You cannot ${action} yourself.`);
-        return;
-    }
-
     if (
-        moderator.id !== ownerId &&
-        ((offenderMember &&
-            offenderMember.roles.highest.position >=
-                moderator.roles.highest.position) ||
-            offender.id === ownerId ||
-            offender === clientUser)
-    ) {
-        await interaction.reply(
-            `You do not have enough permission to ${action} ${offender}.`
-        );
+        !(await checkModActionValidity(
+            interaction,
+            offender.id,
+            action,
+            durationArg
+        ))
+    )
         return;
-    }
-
-    if (
-        offenderMember &&
-        (members.cache.get(clientUser?.id ?? '')?.roles.highest.position ??
-            0) <= offenderMember.roles.highest.position
-    ) {
-        await interaction.reply(
-            `I do not have enough permission to ${action} ${offender}.`
-        );
-        return;
-    }
-
-    const offenderIsBanned = await bans
-        .fetch(offender)
-        .catch(suppressUnknownBan);
-    let duration: number | null = null;
-
-    switch (action) {
-        case 'mute':
-            if (!durationArg) {
-                duration = 1000 * 60 * 60 * 24 * 7;
-                break;
-            }
-            duration = parseStringIntoMs(durationArg);
-            if (
-                duration === null ||
-                duration <= 0 ||
-                duration > 1000 * 60 * 60 * 24 * 7
-            ) {
-                interaction.reply({
-                    content:
-                        'Invalid duration. Please provide a duration up to 1 week.',
-                    ephemeral: true,
-                });
-                return;
-            }
-        // fallthrough
-        case 'warn':
-        case 'kick':
-        case 'unmute':
-            if (!offenderMember) {
-                await interaction.reply(
-                    `${offender} is not a member of the server.`
-                );
-                return;
-            }
-            break;
-        case 'ban':
-            if (offenderIsBanned) {
-                await interaction.reply(
-                    `${offender} is already banned from this server.`
-                );
-                return;
-            }
-            break;
-        case 'unban':
-            if (!offenderIsBanned) {
-                await interaction.reply(
-                    `${offender} is not banned from this server.`
-                );
-                return;
-            }
-            break;
-
-        default:
-    }
 
     const auditLogReason = `${actioned} by ${moderator.user.tag}${
         reason ? ` Reason: ${reason}` : ''
     }`;
 
-    await dmOffender(offender, moderator, action, reason, duration);
+    const duration =
+        action === 'mute'
+            ? (durationArg && parseStringIntoMs(durationArg)) ||
+              1000 * 60 * 60 * 24 * 7
+            : null;
 
+    await dmOffender(offender, moderator, action, reason, duration);
     await writeModLog(offender, reason, moderator.user, action, duration);
 
     switch (action) {
@@ -191,13 +115,8 @@ export default async function moderation(
     await interaction.reply(
         `${offender} has been ${actioned} ${(reason && `for ${reason}`) || ''}.`
     );
-    if (reason === Reasons['Warn to Leave Hack Servers'] && channel) {
-        await setTimer(
-            channel,
-            moderator,
-            `Ban ${offenderMember?.displayName ?? 'this member'} in 24 hours.`,
-            1000 * 60 * 60 * 24
-        );
+    if (reason === Reasons['Warn to Leave Hack Servers']) {
+        await startHackWarnTimer(moderator, offenderMember, channel);
     }
 }
 

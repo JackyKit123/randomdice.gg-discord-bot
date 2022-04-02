@@ -89,6 +89,10 @@ import { confirmCancelRaffleButton } from 'community discord/currency/raffle/can
 import { suppressUnknownInteraction } from 'util/suppressErrors';
 import modActionReasonAutoComplete from 'community discord/moderation/autoComplete';
 import inkPen from 'community discord/currency/fun commands/inkPen';
+import {
+    banLogButtons,
+    participate,
+} from 'community discord/moderation/hackbanLog';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -109,15 +113,6 @@ export default async function interactionCreate(
                 switch (interaction.commandName) {
                     case 'ping':
                         await ping(interaction);
-                        break;
-                    case 'register':
-                        await register(interaction);
-                        break;
-                    case 'unregister':
-                        await unregister(interaction);
-                        break;
-                    case 'post-now':
-                        await postNow(interaction);
                         break;
                     case 'dice':
                         await dice(interaction);
@@ -159,6 +154,23 @@ export default async function interactionCreate(
                         await sendContact(interaction);
                         break;
                     default:
+                        if (interaction.inCachedGuild()) {
+                            switch (interaction.commandName) {
+                                case 'hackban-log':
+                                    await participate(interaction);
+                                    break;
+                                case 'register':
+                                    await register(interaction);
+                                    break;
+                                case 'unregister':
+                                    await unregister(interaction);
+                                    break;
+                                case 'post-now':
+                                    await postNow(interaction);
+                                    break;
+                                default:
+                            }
+                        }
                 }
             }
             if (interaction.isButton()) {
@@ -177,6 +189,11 @@ export default async function interactionCreate(
                         break;
                     case 'yes-no-button-✅-register':
                         await postNowButton(interaction);
+                        break;
+                    case 'hackban-log-warn':
+                    case 'hackban-log-ban':
+                        if (interaction.inCachedGuild())
+                            await banLogButtons(interaction);
                         break;
                     default:
                 }
