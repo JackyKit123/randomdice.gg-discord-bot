@@ -98,7 +98,7 @@ async function validateJoinRaffle(
                 entries.maxEntries
             } ticket(s). You can only join with ${
                 entries.maxEntries - prevEntry
-            } more ticket(s). Use \`!raffle info\` to review your entries.`
+            } more ticket(s). Use \`/raffle info\` to review your entries.`
         );
         return null;
     }
