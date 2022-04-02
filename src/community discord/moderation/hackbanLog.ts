@@ -13,6 +13,7 @@ import {
 } from 'discord.js';
 import { database } from 'register/firebase';
 import cacheData from 'util/cache';
+import checkSendMessagePermission from 'util/checkSendMessagePermission';
 import disableButtons from 'util/disabledButtons';
 import {
     suppressMissingPermission,
@@ -60,9 +61,9 @@ export async function participate(
             );
             return;
         }
-        if (!channel.permissionsFor(clientUser)?.has('SEND_MESSAGES')) {
+        if (!checkSendMessagePermission(channel)) {
             await interaction.reply(
-                'I lack permission to send messages in this channel, please give me permission to send messages in that channel and try again.'
+                'I lack permission to that channel, please give me permission to view channel and send messages in that channel and try again.'
             );
             return;
         }
@@ -108,11 +109,7 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
                 const channel = registeredGuild?.channels.cache.get(
                     registry.hacklog
                 );
-                if (
-                    !registeredGuild ||
-                    !channel?.isText() ||
-                    !channel.permissionsFor(clientUser)?.has('SEND_MESSAGES')
-                ) {
+                if (!registeredGuild || !checkSendMessagePermission(channel)) {
                     await database
                         .ref('discord_bot/registry')
                         .child(guild.id)
@@ -248,15 +245,11 @@ export async function warnOnBannedMemberJoin(
         Object.entries(cacheData['discord_bot/registry']).map(
             async ([guildId, registry]) => {
                 if (!registry.hacklog || guildId === guild.id) return;
-                const registeredGuild = guilds.cache.get(guildId);
+
                 const channel = guilds.cache
                     .get(guildId)
                     ?.channels.cache.get(registry.hacklog);
-                if (
-                    !registeredGuild ||
-                    !channel?.isText() ||
-                    !channel.permissionsFor(clientUser)?.has('SEND_MESSAGES')
-                ) {
+                if (!checkSendMessagePermission(channel)) {
                     await database
                         .ref('discord_bot/registry')
                         .child(guild.id)

@@ -10,7 +10,6 @@ import {
 import firebase from 'firebase-admin';
 import { database } from 'register/firebase';
 import cache, { Registry } from 'util/cache';
-import logMessage from 'util/logMessage';
 import cooldown from 'util/cooldown';
 import {
     suppressMissingAccess,
@@ -19,6 +18,7 @@ import {
 } from 'util/suppressErrors';
 import { getTimeDiceEmoji } from 'config/emojiId';
 import getMessageLink from 'util/getMessageLink';
+import checkSendMessagePermission from 'util/checkSendMessagePermission';
 import { getNewsInfo } from './news';
 import { getGuideData } from './guide';
 import getBrandingEmbed from './util/getBrandingEmbed';
@@ -49,35 +49,7 @@ async function getChannel(
         .catch(suppressUnknownChannel)
         .catch(suppressMissingAccess);
 
-    if (!(channel?.type === 'GUILD_TEXT' || channel?.type === 'GUILD_NEWS'))
-        return removeFromDatabaseRegistry();
-
-    const channelPermission = channel.permissionsFor(clientUser);
-    const cantViewChannel = !channelPermission?.has('VIEW_CHANNEL');
-    const cantSendMessage = !channelPermission?.has('SEND_MESSAGES');
-    const cantDeleteMessage = !channelPermission?.has('MANAGE_MESSAGES');
-    if (cantViewChannel || cantSendMessage || cantDeleteMessage) {
-        if (cantViewChannel) {
-            await logMessage(
-                client,
-                'info',
-                `Attempted to send ${type} in channel ${channel.name} at ${channel.guild.name} but missing permission \`VIEW_CHANNEL\`.`
-            );
-        }
-        if (cantSendMessage) {
-            await logMessage(
-                client,
-                'info',
-                `Attempted to send ${type} in channel ${channel.name} at ${channel.guild.name} but missing permission \`SEND_MESSAGES\`.`
-            );
-        }
-        if (cantDeleteMessage) {
-            await logMessage(
-                client,
-                'info',
-                `Attempted to send ${type} in channel ${channel.name} at ${channel.guild.name} but missing permission \`MANAGE_MESSAGES\`.`
-            );
-        }
+    if (!checkSendMessagePermission(channel) || channel.type === 'DM') {
         return removeFromDatabaseRegistry();
     }
     const fetched = (await channel.messages.fetch({ limit: 100 })).filter(
