@@ -185,7 +185,8 @@ export async function banLogButtons(
 
     const offenderMember = members.cache.get(offenderId);
 
-    if (await checkModActionValidity(interaction, offenderId, action)) return;
+    if (!(await checkModActionValidity(interaction, offenderId, action)))
+        return;
 
     const reason = ((isBan && Reasons['Member in Hack Servers']) ||
         (isWarn && Reasons['Warn to Leave Hack Servers'])) as string;
