@@ -4,6 +4,7 @@ import { Client, Message } from 'discord.js';
 import { suppressUnknownMessage } from 'util/suppressErrors';
 import { writeModLog } from './modlog';
 import Reasons from './reasons.json';
+import { dmOffender } from './util';
 
 export async function fetchCommunityDiscordInviteUrls(
     client: Client<true>
@@ -56,4 +57,12 @@ export default async function discordInviteLinkSpamAutoMod(
         twoHours,
         `Automatic Mute, Reason: ${Reasons['Unauthorized Advertising']}`
     );
+    if (guild.me)
+        await dmOffender(
+            member,
+            guild.me,
+            'mute',
+            Reasons['Unauthorized Advertising'],
+            twoHours
+        );
 }
