@@ -4,6 +4,7 @@ import {
     ApplicationCommandData,
     ButtonInteraction,
     CommandInteraction,
+    Constants,
     GuildBan,
     GuildMember,
     Message,
@@ -15,6 +16,7 @@ import { database } from 'register/firebase';
 import cacheData from 'util/cache';
 import checkSendMessagePermission from 'util/checkSendMessagePermission';
 import disableButtons from 'util/disabledButtons';
+import logMessage from 'util/logMessage';
 import {
     suppressMissingPermission,
     suppressUnknownBan,
@@ -67,6 +69,12 @@ export async function participate(
             );
             return;
         }
+        if (!guild.me?.permissions.has('VIEW_AUDIT_LOG')) {
+            await interaction.reply(
+                'I lack permission to view the audit log, please give me permission to view audit log and try again.'
+            );
+            return;
+        }
     }
 
     await database
@@ -91,13 +99,31 @@ export async function participate(
 }
 
 export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
-    const {
-        guild,
-        client: { guilds, user: clientUser },
-        user,
-    } = ban;
+    const { guild, client, user } = ban;
+    const { guilds, user: clientUser } = client;
     const hacklog = cacheData['discord_bot/registry'][guild.id]?.hacklog;
-    const { reason } = await ban.fetch();
+    if (!hacklog) return;
+    const banObject = await ban.fetch().catch(err => {
+        if (err.code === Constants.APIErrors.MISSING_ACCESS) {
+            return 'Missing Access' as const;
+        }
+        throw err;
+    });
+
+    if (banObject === 'Missing Access') {
+        await logMessage(
+            client,
+            'info',
+            `Missing Access on ban fetch in ${guild.name}, removing hacklog participation`
+        );
+        await database
+            .ref('discord_bot/registry')
+            .child(guild.id)
+            .child('hacklog')
+            .set(null);
+        return;
+    }
+    const { reason } = banObject;
     if (!hacklog || !reason?.toLowerCase().includes('hack') || !clientUser)
         return;
 
@@ -110,6 +136,11 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
                     registry.hacklog
                 );
                 if (!registeredGuild || !checkSendMessagePermission(channel)) {
+                    await logMessage(
+                        client,
+                        'info',
+                        `Missing Access on send log in ${guild.name}, removing hacklog participation`
+                    );
                     await database
                         .ref('discord_bot/registry')
                         .child(guild.id)
