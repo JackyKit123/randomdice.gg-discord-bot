@@ -1,17 +1,17 @@
 import { communityDiscordInvitePermaLink } from 'config/url';
-import { Guild, GuildBasedChannel } from 'discord.js';
+import { Guild, GuildBasedChannel, GuildTextBasedChannel } from 'discord.js';
 import logMessage from 'util/logMessage';
 import { createInvite } from './fetchInvites';
 
 export default async function logBotInvite(guild: Guild): Promise<void> {
-    const { client, systemChannel, channels, name } = guild;
-    const filter = (channel: GuildBasedChannel) =>
+    const { client, systemChannel, channels, name, me: bot } = guild;
+    const filter = (
+        channel: GuildBasedChannel
+    ): channel is GuildTextBasedChannel =>
         channel.isText() &&
         !channel.isThread() &&
-        !!channel.guild.members.cache
-            .get(client.user?.id ?? '')
-            ?.permissionsIn(channel)
-            .has('SEND_MESSAGES');
+        !!bot?.permissionsIn(channel).has('SEND_MESSAGES') &&
+        bot.permissionsIn(channel).has('VIEW_CHANNEL');
     const msgChannel =
         systemChannel ||
         channels.cache
@@ -29,9 +29,7 @@ export default async function logBotInvite(guild: Guild): Promise<void> {
 
     await logMessage(client, 'info', invite);
 
-    if (msgChannel?.isText()) {
-        await msgChannel.send(
-            `Thank you for the invitation, you may do \` /help\` to view a list of commands. You may also join the community discord here at ${communityDiscordInvitePermaLink}`
-        );
-    }
+    await msgChannel?.send(
+        `Thank you for the invitation, you may do \` /help\` to view a list of commands. You may also join the community discord here at ${communityDiscordInvitePermaLink}`
+    );
 }
