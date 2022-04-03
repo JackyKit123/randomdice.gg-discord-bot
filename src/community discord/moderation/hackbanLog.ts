@@ -156,12 +156,12 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
                     .setDescription(
                         `${user.tag} has been banned from ${guild.name}`
                     )
-                    .addField('ID', user.id)
+                    .addField(
+                        'Moderator',
+                        executor ? `${executor.tag} ${executor}` : 'Unknown'
+                    )
                     .addField('Ban Reason', reason)
-                    .setFooter({
-                        text: `Banned by: ${executor?.tag ?? 'Unknown'}`,
-                        iconURL: executor?.displayAvatarURL({ dynamic: true }),
-                    })
+                    .setFooter({ text: `User ID: ${user.id}` })
                     .setTimestamp();
                 const component = new MessageActionRow().setComponents([
                     new MessageButton()
