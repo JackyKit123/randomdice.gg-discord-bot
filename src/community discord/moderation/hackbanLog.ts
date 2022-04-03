@@ -97,9 +97,9 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
         user,
     } = ban;
     const hacklog = cacheData['discord_bot/registry'][guild.id]?.hacklog;
+    if (!hacklog) return;
     const { reason } = await ban.fetch();
-    if (!hacklog || !reason?.toLowerCase().includes('hack') || !clientUser)
-        return;
+    if (!reason?.toLowerCase().includes('hack') || !clientUser) return;
 
     await Promise.all(
         Object.entries(cacheData['discord_bot/registry']).map(
