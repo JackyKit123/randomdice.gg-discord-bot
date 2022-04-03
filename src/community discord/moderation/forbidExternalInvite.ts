@@ -23,7 +23,7 @@ export default async function discordInviteLinkSpamAutoMod(
         client: { user: clientUser },
     } = message;
     const regexMatches = content.matchAll(
-        /\b(?:https?:\/\/)?discord(?:(?:app)?\.com\/invite|\.gg)\/(?<code>[\w\d\S]+)\b/g
+        /\b(?:https?:\/\/)?(?:\S+\.)?discord(?:(?:app)?\.com\/invite|\.gg)\/(?<code>[\w\d\S]{8,25})\b/g
     );
     const matchesArray = Array.from(regexMatches);
     if (!matchesArray.length) return;
