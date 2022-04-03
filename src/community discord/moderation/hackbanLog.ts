@@ -67,6 +67,12 @@ export async function participate(
             );
             return;
         }
+        if (!guild.me?.permissions.has('VIEW_AUDIT_LOG')) {
+            await interaction.reply(
+                'I lack permission to view the audit log, please give me permission to view audit log and try again.'
+            );
+            return;
+        }
     }
 
     await database
@@ -98,7 +104,25 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
     } = ban;
     const hacklog = cacheData['discord_bot/registry'][guild.id]?.hacklog;
     if (!hacklog) return;
-    const { reason } = await ban.fetch();
+    if (!guild.me?.permissions.has('VIEW_AUDIT_LOG')) {
+        await database
+            .ref('discord_bot/registry')
+            .child(guild.id)
+            .child('hacklog')
+            .set(null);
+        return;
+    }
+    const entry = (
+        await guild.fetchAuditLogs({
+            type: 'MEMBER_BAN_ADD',
+            limit: 3,
+        })
+    ).entries.find(
+        ({ target, createdTimestamp }) =>
+            target === user && Date.now() - createdTimestamp < 60 * 1000
+    );
+    if (!entry) return;
+    const { reason, executor } = entry;
     if (!reason?.toLowerCase().includes('hack') || !clientUser) return;
 
     await Promise.all(
@@ -132,8 +156,12 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
                     .setDescription(
                         `${user.tag} has been banned from ${guild.name}`
                     )
+                    .addField('ID', user.id)
                     .addField('Ban Reason', reason)
-                    .setFooter({ text: `User ID: ${user.id}` })
+                    .setFooter({
+                        text: `Banned by: ${executor?.tag ?? 'Unknown'}`,
+                        iconURL: executor?.displayAvatarURL({ dynamic: true }),
+                    })
                     .setTimestamp();
                 const component = new MessageActionRow().setComponents([
                     new MessageButton()
