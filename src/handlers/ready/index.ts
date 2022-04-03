@@ -11,6 +11,7 @@ import { fetchDatabase } from 'util/cache';
 import databaseListener from 'commands/databaseListener';
 import purgeRolesOnReboot from 'community discord/util/purgeRolesOnReboot';
 import registerSlashCommands from 'register/commandData';
+import { fetchCommunityDiscordInviteUrls } from 'community discord/moderation/forbidExternalInvite';
 
 export default async function ready(client: Client<true>): Promise<void> {
     client.user.setActivity('/help', {
@@ -33,6 +34,7 @@ export default async function ready(client: Client<true>): Promise<void> {
             fetchDatabase(),
             purgeRolesOnReboot(client, '🤡', 'rick', 'Inked'),
             fixClownNicknamesOnReboot(client),
+            fetchCommunityDiscordInviteUrls(client),
         ]);
         await log(
             'Database is ready\nCleaned up previous roles and nicknames\nBot is fully up and running\nStarting Recursive functions: chat revive ping, auto raffle, auto spawn coinbomb, timers, server clock'
