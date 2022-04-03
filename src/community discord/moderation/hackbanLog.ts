@@ -103,7 +103,7 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
         user,
     } = ban;
     const hacklog = cacheData['discord_bot/registry'][guild.id]?.hacklog;
-    if (!hacklog) return;
+    if (!hacklog || !clientUser) return;
     if (!guild.me?.permissions.has('VIEW_AUDIT_LOG')) {
         await database
             .ref('discord_bot/registry')
@@ -118,12 +118,14 @@ export async function broadcastBanLogOnBan(ban: GuildBan): Promise<void> {
             limit: 3,
         })
     ).entries.find(
-        ({ target, createdTimestamp }) =>
-            target === user && Date.now() - createdTimestamp < 60 * 1000
+        ({ target, createdTimestamp, executor }) =>
+            (executor !== clientUser || isCommunityDiscord(guild)) &&
+            target === user &&
+            Date.now() - createdTimestamp < 60 * 1000
     );
     if (!entry) return;
     const { reason, executor } = entry;
-    if (!reason?.toLowerCase().includes('hack') || !clientUser) return;
+    if (!reason?.toLowerCase().includes('hack')) return;
 
     await Promise.all(
         Object.entries(cacheData['discord_bot/registry']).map(
