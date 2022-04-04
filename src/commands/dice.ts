@@ -66,6 +66,13 @@ const getDiceInfo = (
                 target.pupEff2 * (dieLevel - 1)) *
                 100
         ) / 100;
+     const eff3 =
+        Math.round(
+            (target.eff3 +
+                target.cupEff3 * (dieClass - minClass) +
+                target.pupEff3 * (dieLevel - 1)) *
+                100
+        ) / 100;
 
     return {
         embeds: [
@@ -109,6 +116,15 @@ const getDiceInfo = (
                               {
                                   name: target.nameEff2,
                                   value: eff2 + target.unitEff2,
+                                  inline: true,
+                              },
+                          ]),
+                    ...(!target.nameEff3 || target.nameEff3 === '-'
+                        ? []
+                        : [
+                              {
+                                  name: target.nameEff3,
+                                  value: eff3 + target.unitEff3,
                                   inline: true,
                               },
                           ]),
