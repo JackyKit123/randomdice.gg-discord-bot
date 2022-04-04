@@ -38,7 +38,7 @@ export async function broadcastHackBan(
                 .setLabel('Ban')
                 .setStyle('DANGER')
                 .setEmoji(banHammer)
-                .setDisabled(offenderIsBanned !== true),
+                .setDisabled(offenderIsBanned === true),
         ]);
 
     await Promise.all(
