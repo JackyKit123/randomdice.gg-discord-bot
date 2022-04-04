@@ -4,7 +4,7 @@ import { GuildBan } from 'discord.js';
 import { writeModLogOnGenericBan } from 'community discord/moderation/modlog';
 import { communityDiscordId } from 'config/guild';
 import { isProd } from 'config/env';
-import { broadcastBanLogOnBan } from 'community discord/moderation/hackbanLog';
+import { broadcastBanLogOnBan } from 'community discord/moderation/hack ban log sharing/broadcast';
 
 export default async function guildBanAdd(ban: GuildBan): Promise<void> {
     const { guild, client } = ban;

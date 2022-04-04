@@ -8,6 +8,7 @@ import {
 import { ModLog } from 'util/cache';
 import { parseStringIntoMs } from 'util/parseMS';
 import { sendBanMessage } from './banMessage';
+import { broadcastHackBan } from './hack ban log sharing/broadcast';
 import { writeModLog } from './modlog';
 import Reasons from './reasons.json';
 import {
@@ -83,8 +84,11 @@ export default async function moderation(
     await interaction.reply(
         `${offender} has been ${actioned} ${(reason && `for ${reason}`) || ''}.`
     );
-    if (reason === Reasons['Warn to Leave Hack Servers']) {
+    if (action === 'warn' && reason === Reasons['Warn to Leave Hack Servers']) {
         await startHackWarnTimer(moderator, offenderMember, channel);
+    }
+    if (action === 'ban' && reason === Reasons['Member in Hack Servers']) {
+        await broadcastHackBan(guild, offender, moderator.user, reason);
     }
 }
 

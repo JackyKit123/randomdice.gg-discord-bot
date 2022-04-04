@@ -91,8 +91,8 @@ import modActionReasonAutoComplete from 'community discord/moderation/autoComple
 import inkPen from 'community discord/currency/fun commands/inkPen';
 import {
     banLogButtons,
-    participate,
-} from 'community discord/moderation/hackbanLog';
+    hackbanLogConfig,
+} from 'community discord/moderation/hack ban log sharing';
 
 export default async function interactionCreate(
     interaction: Interaction
@@ -157,7 +157,7 @@ export default async function interactionCreate(
                         if (interaction.inCachedGuild()) {
                             switch (interaction.commandName) {
                                 case 'hackban-log':
-                                    await participate(interaction);
+                                    await hackbanLogConfig(interaction);
                                     break;
                                 case 'register':
                                     await register(interaction);
