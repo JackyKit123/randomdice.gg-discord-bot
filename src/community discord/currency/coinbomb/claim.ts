@@ -2,6 +2,7 @@ import { coinDice, goldenPickaxe, pickaxe } from 'config/emojiId';
 import { GuildMember, Message, MessageComponentInteraction } from 'discord.js';
 import { database } from 'register/firebase';
 import disableButtons from 'util/disabledButtons';
+import { suppressReactionBlocked } from 'util/suppressErrors';
 import { activeCoinbombInChannel } from '.';
 import { getBalance } from '../balance';
 import { cleanUp } from './spawn';
@@ -115,7 +116,7 @@ export default async function claimCoinbomb(
                 });
             break;
         case 'small':
-            await message.react(coinDice);
+            await message.react(coinDice).catch(suppressReactionBlocked);
             break;
         case 'medium':
         case 'large':

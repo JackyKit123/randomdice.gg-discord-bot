@@ -10,6 +10,7 @@ import cooldown from 'util/cooldown';
 import channelIds from 'config/channelIds';
 import { rickCoin } from 'config/emojiId';
 import roleIds from 'config/roleId';
+import { suppressReactionBlocked } from 'util/suppressErrors';
 import commandCost from './commandCost';
 
 const wait = promisify(setTimeout);
@@ -80,7 +81,7 @@ export default async function welcomerick(
             const id = collected.member?.id;
             if (!id || saidWelcome.includes(id)) return;
             saidWelcome.push(id);
-            await collected.react(rickCoin);
+            await collected.react(rickCoin).catch(suppressReactionBlocked);
             await collected.member.roles.add(roleIds.rick);
             await wait(1000 * 60 * 5);
             await collected.member.roles.remove(roleIds.rick);

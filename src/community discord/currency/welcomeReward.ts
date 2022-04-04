@@ -2,6 +2,7 @@ import channelIds from 'config/channelIds';
 import { coinDice } from 'config/emojiId';
 import { GuildMember, Message } from 'discord.js';
 import { database } from 'register/firebase';
+import { suppressReactionBlocked } from 'util/suppressErrors';
 import { getBalance } from './balance';
 
 const rapidSuccessJoin = new Map<GuildMember, number>();
@@ -38,6 +39,6 @@ export default async function welcomeReward(
             await database
                 .ref(`discord_bot/community/currency/${id}/balance`)
                 .set(balance + reward);
-            await collected.react(coinDice);
+            await collected.react(coinDice).catch(suppressReactionBlocked);
         });
 }

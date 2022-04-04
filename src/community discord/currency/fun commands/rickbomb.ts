@@ -8,7 +8,10 @@ import {
     GuildMember,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
-import { suppressUnknownMessage } from 'util/suppressErrors';
+import {
+    suppressReactionBlocked,
+    suppressUnknownMessage,
+} from 'util/suppressErrors';
 import wait from 'util/wait';
 import { activeCoinbombInChannel } from '../coinbomb';
 import {
@@ -146,7 +149,7 @@ export async function rickBombOnCollect(message: Message<true>): Promise<void> {
     )
         return;
     await Promise.all([
-        message.react(rickCoin),
+        message.react(rickCoin).catch(suppressReactionBlocked),
         member.roles.add(roleIds.rick),
     ]);
     activeRickBomb.rickRolled.add(member);
