@@ -24,9 +24,6 @@ export default async function banLogButtons(
     const { members, client } = guild;
     const { content, embeds, components } = message;
     if (!clientUser) return;
-    const isBan = customId === 'hackban-log-ban';
-    const isWarn = customId === 'hackban-log-warn';
-    const action = ((isBan && 'ban') || (isWarn && 'warn')) as 'ban' | 'warn';
 
     const offenderId =
         embeds[0]?.footer?.text.match(/^User ID: (\d{18})$/)?.[1];
@@ -38,14 +35,6 @@ export default async function banLogButtons(
         });
         return;
     }
-
-    const offenderMember = members.cache.get(offenderId);
-
-    if (!(await checkModActionValidity(interaction, offenderId, action)))
-        return;
-
-    const reason = ((isBan && Reasons['Member in Hack Servers']) ||
-        (isWarn && Reasons['Warn to Leave Hack Servers'])) as string;
 
     const offender = await client.users
         .fetch(offenderId)
@@ -60,22 +49,40 @@ export default async function banLogButtons(
         return;
     }
 
-    await dmOffender(offender, moderator, action, reason, null);
+    const offenderMember = members.cache.get(offenderId);
 
-    if (isCommunityDiscord(guild)) {
-        await writeModLog(offender, reason, moderator.user, action, null);
+    let reason: string;
+    let interactionReply: string;
+    let action: 'ban' | 'warn';
+    switch (customId) {
+        case 'hackban-log-ban':
+            reason = Reasons['Member in Hack Servers'];
+            interactionReply = `${offender} has been banned for ${reason}`;
+            action = 'ban';
+            break;
+        case 'hackban-log-warn':
+            reason = Reasons['Warn to Leave Hack Servers'];
+            interactionReply = `${offender} has been warned for ${reason}`;
+            action = 'warn';
+            break;
+        default:
+            return;
     }
 
-    if (isBan)
+    if (!(await checkModActionValidity(interaction, offenderId, action)))
+        return;
+
+    await dmOffender(offender, moderator, action, reason, null);
+
+    if (isCommunityDiscord(guild))
+        await writeModLog(offender, reason, moderator.user, action, null);
+
+    if (action === 'ban')
         await members.ban(offenderId, {
             reason,
         });
 
-    await interaction.reply(
-        `${offender} has been ${(isBan && 'banned') || (isWarn && 'warned')}.`
-    );
-
-    if (isWarn) await startHackWarnTimer(moderator, offenderMember, channel);
+    await interaction.reply(interactionReply);
 
     await message.edit(
         disableButtons({
@@ -84,4 +91,7 @@ export default async function banLogButtons(
             components,
         })
     );
+
+    if (action === 'warn')
+        await startHackWarnTimer(moderator, offenderMember, channel);
 }
