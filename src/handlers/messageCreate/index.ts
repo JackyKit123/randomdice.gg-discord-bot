@@ -16,7 +16,7 @@ import { hackDiscussionLogging } from 'community discord/moderation';
 import voteAutoResponder from 'community discord/voteAutoResponder';
 import { logError } from 'util/logMessage';
 import channelIds from 'config/channelIds';
-import { isCommunityDiscord, isDevTestDiscord } from 'config/guild';
+import { isCommunityDiscord } from 'config/guild';
 import { isDev, isProd } from 'config/env';
 import { claimCoinbomb } from 'community discord/currency/coinbomb';
 import { rickBombOnCollect } from 'community discord/currency/fun commands/rickbomb';
@@ -24,8 +24,8 @@ import discordInviteLinkSpamAutoMod from 'community discord/moderation/forbidExt
 import welcomeReward from 'community discord/currency/welcomeReward';
 
 export default async function messageCreate(message: Message): Promise<void> {
-    const { content, channel, guild, author, client } = message;
-    const [suffix, command] = content.split(' ');
+    const { channel, guild, author, client } = message;
+
     let asyncPromisesCapturer: Promise<void>[] = [];
 
     try {
@@ -76,40 +76,6 @@ export default async function messageCreate(message: Message): Promise<void> {
             ];
         }
 
-        if (
-            suffix === '.gg' &&
-            !author.bot &&
-            ((isDev && isDevTestDiscord(guild)) ||
-                (isProd && !isDevTestDiscord(guild))) &&
-            (!command ||
-                [
-                    'ping',
-                    'register',
-                    'unregister',
-                    'postnow',
-                    'post-now',
-                    'dice',
-                    'guide',
-                    'deck',
-                    'boss',
-                    'battlefield',
-                    'news',
-                    'cardcalc',
-                    'drawuntil',
-                    'draw-until',
-                    'randomdeck',
-                    'help',
-                    'website',
-                    'app',
-                    'invite',
-                    'support',
-                    'contact',
-                ].includes(command.toLowerCase()))
-        ) {
-            await message.reply(
-                '`.gg` suffix commands has been phased out. The new features has been replaced with slash `/` commands. The commands will remain the same but the prefix will be `/` instead of `.gg`. You will also need to have `USE_APPLICATION_COMMANDS` permission to be able to use the commands, if you lack permissions, you will need to ask the server admin to enable the permission. Type `/help` to see the list of commands.'
-            );
-        }
         await Promise.all(asyncPromisesCapturer);
     } catch (err) {
         try {
