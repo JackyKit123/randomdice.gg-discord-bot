@@ -1,5 +1,5 @@
 import createAppealChanel from 'community discord/moderation/ban appeal/createAppealChannel';
-import welcomeReward from 'community discord/currency/welcomeReward';
+import { toggleOnWelcomeReward } from 'community discord/currency/welcomeReward';
 import { logError } from 'util/logMessage';
 import { GuildMember } from 'discord.js';
 import { banAppealDiscordId, communityDiscordId } from 'config/guild';
@@ -15,7 +15,7 @@ export default async function guildMemberAdd(
         if (isProd) {
             switch (guild.id) {
                 case communityDiscordId:
-                    await welcomeReward(member);
+                    await toggleOnWelcomeReward(member);
                     break;
                 case banAppealDiscordId:
                     await createAppealChanel(member);

@@ -5,6 +5,7 @@ import { GuildMember, PartialGuildMember } from 'discord.js';
 import { writeModLogOnGenericKick } from 'community discord/moderation/modlog';
 import { banAppealDiscordId, communityDiscordId } from 'config/guild';
 import { isProd } from 'config/env';
+import { welcomeRewardSpamProtection } from 'community discord/currency/welcomeReward';
 
 export default async function guildMemberRemove(
     member: GuildMember | PartialGuildMember
@@ -18,6 +19,7 @@ export default async function guildMemberRemove(
                     await Promise.all([
                         deleteCustomRoleOnGuildLeave(member),
                         writeModLogOnGenericKick(member),
+                        welcomeRewardSpamProtection(member),
                     ]);
                     break;
                 case banAppealDiscordId:

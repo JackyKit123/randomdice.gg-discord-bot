@@ -21,6 +21,7 @@ import { isDev, isProd } from 'config/env';
 import { claimCoinbomb } from 'community discord/currency/coinbomb';
 import { rickBombOnCollect } from 'community discord/currency/fun commands/rickbomb';
 import discordInviteLinkSpamAutoMod from 'community discord/moderation/forbidExternalInvite';
+import welcomeReward from 'community discord/currency/welcomeReward';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { content, channel, guild, author, client } = message;
@@ -56,6 +57,7 @@ export default async function messageCreate(message: Message): Promise<void> {
         ) {
             asyncPromisesCapturer = [
                 ...asyncPromisesCapturer,
+                welcomeReward(message),
                 discordInviteLinkSpamAutoMod(message),
                 autoClassCritRole(message),
                 solveMathEquation(message),
