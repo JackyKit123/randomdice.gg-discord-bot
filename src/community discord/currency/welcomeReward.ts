@@ -29,8 +29,9 @@ export async function welcomeRewardSpamProtection(
 export default async function welcomeReward(
     message: Message<true>
 ): Promise<void> {
-    const { channel, author } = message;
+    const { channel, author, content } = message;
     if (
+        !content.toLowerCase().includes('welcome') ||
         channel.id !== channelIds.general ||
         !saidWelcomes.length ||
         saidWelcomes.every(set => {
