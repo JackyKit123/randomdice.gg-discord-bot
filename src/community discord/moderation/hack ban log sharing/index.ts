@@ -68,7 +68,8 @@ export async function hackbanLogConfig(
     }
 }
 
-export { default as hackbanButton } from './hackbanButton';
+export { default as broadcastBanLogOnBan } from './broadcast';
+export { default as banLogButtons } from './hackbanButton';
 export { default as warnOnBannedMemberJoin } from './bannedUserJoinedWarning';
 
 export const commandData: ApplicationCommandData = {
