@@ -24,7 +24,7 @@ export async function broadcastHackBan(
 
     const getComponents = (
         offenderIsMember: boolean,
-        offenderIsBanned: boolean
+        offenderIsBanned: boolean | 'Unknown'
     ) =>
         new MessageActionRow().setComponents([
             new MessageButton()
@@ -32,28 +32,40 @@ export async function broadcastHackBan(
                 .setLabel('Warn')
                 .setStyle('PRIMARY')
                 .setEmoji('⚠️')
-                .setDisabled(offenderIsBanned || !offenderIsMember),
+                .setDisabled(!offenderIsMember),
             new MessageButton()
                 .setCustomId('hackban-log-ban')
                 .setLabel('Ban')
                 .setStyle('DANGER')
                 .setEmoji(banHammer)
-                .setDisabled(offenderIsBanned),
+                .setDisabled(offenderIsBanned !== true),
         ]);
 
     await Promise.all(
         [...registeredChannels.values()].map(async channel => {
-            if (channel.guild === guild) return;
-            const registeredGuild = channel.guild;
-            const offenderIsBanned = await registeredGuild.bans
-                .fetch(offender)
-                .catch(suppressUnknownBan)
-                .catch(suppressMissingPermission);
+            const {
+                guild: { members, me, bans, id },
+            } = channel;
+            if (id === guild.id) return;
+
             const offenderIsMemberOfGuild =
-                registeredGuild.members.cache.has(offender.id) ||
-                !(await registeredGuild.members
-                    .fetch(offender.id)
-                    .catch(suppressUnknownMember));
+                members.cache.has(offender.id) ||
+                !!(await members.fetch(offender).catch(suppressUnknownMember));
+
+            let offenderIsBanned: 'Unknown' | boolean;
+            if (offenderIsMemberOfGuild) {
+                offenderIsBanned = false;
+            } else if (me?.permissions.has('BAN_MEMBERS')) {
+                offenderIsBanned =
+                    bans.cache.has(offender.id) ||
+                    !!(await bans
+                        .fetch(offender)
+                        .catch(suppressUnknownBan)
+                        .catch(suppressMissingPermission));
+            } else {
+                offenderIsBanned = 'Unknown';
+            }
+
             const embed = new MessageEmbed()
                 .setAuthor({
                     name: `Ban in ${guild.name}`,
@@ -71,6 +83,15 @@ export async function broadcastHackBan(
                     offenderIsMemberOfGuild ? '✅' : '❌'
                 )
                 .addField(
+                    'Offender is Banned in This Server',
+                    // eslint-disable-next-line no-nested-ternary
+                    offenderIsBanned === 'Unknown' && !offenderIsMemberOfGuild
+                        ? 'Unknown ❔ I need `BAN_MEMBERS` Permission to check if the user is banned'
+                        : offenderIsBanned === true
+                        ? '✅'
+                        : '❌'
+                )
+                .addField(
                     'Moderator',
                     moderator ? `${moderator.tag} ${moderator}` : 'Unknown'
                 )
@@ -81,7 +102,7 @@ export async function broadcastHackBan(
                 content: `${offender} has been banned from ${guild.name}`,
                 embeds: [embed],
                 components: [
-                    getComponents(offenderIsMemberOfGuild, !!offenderIsBanned),
+                    getComponents(offenderIsMemberOfGuild, offenderIsBanned),
                 ],
             });
         })
