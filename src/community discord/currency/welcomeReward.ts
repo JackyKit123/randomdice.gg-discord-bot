@@ -30,6 +30,7 @@ export default async function welcomeReward(
     message: Message<true>
 ): Promise<void> {
     const { channel, author } = message;
+    if (!content.toLowerCase().includes('welcome') return;
     if (
         channel.id !== channelIds.general ||
         !saidWelcomes.length ||
