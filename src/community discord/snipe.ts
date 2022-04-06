@@ -3,48 +3,29 @@ import { isCommunityDiscord } from 'config/guild';
 import { tier2RoleIds, tier3RoleIds } from 'config/roleId';
 import {
     ApplicationCommandData,
-    BufferResolvable,
     ButtonInteraction,
     CommandInteraction,
+    FileOptions,
     GuildTextBasedChannel,
     Message,
     MessageActionRow,
     MessageButton,
     MessageEmbed,
     PartialMessage,
-    User,
 } from 'discord.js';
 import cooldown from 'util/cooldown';
 import { suppressUnknownMessage } from 'util/suppressErrors';
 import checkPermission from './util/checkPermissions';
 
 const snipeStore = {
-    snipe: new Map<
-        GuildTextBasedChannel,
-        {
-            message: Message;
-            attachments: {
-                attachment: BufferResolvable;
-                name?: string;
-            }[];
-        }[]
-    >(),
-    editsnipe: new Map<
-        GuildTextBasedChannel,
-        {
-            message: Message;
-            attachments: {
-                attachment: BufferResolvable;
-                name?: string;
-            }[];
-        }[]
-    >(),
+    snipe: new Map<GuildTextBasedChannel, Map<Message, FileOptions[]>>(),
+    editsnipe: new Map<GuildTextBasedChannel, Map<Message, FileOptions[]>>(),
 };
 
 const sentSnipedMessage = new Map<
     Message,
     {
-        snipedMember: User;
+        snipedMessage: Message;
         commandName: 'snipe' | 'editsnipe';
     }
 >();
@@ -68,10 +49,7 @@ export async function snipeListener(
         return;
     }
 
-    const attachments: {
-        attachment: BufferResolvable;
-        name?: string;
-    }[] = [];
+    const attachments: FileOptions[] = [];
     if (type === 'delete') {
         await Promise.all(
             message.attachments.map(async attachment => {
@@ -84,15 +62,21 @@ export async function snipeListener(
                 });
             })
         );
-        snipeStore.snipe.set(channel, [
-            { message, attachments },
-            ...(snipeStore.snipe.get(channel) || []),
-        ]);
+        snipeStore.snipe.set(
+            channel,
+            (snipeStore.snipe.get(channel) || new Map()).set(
+                message,
+                attachments
+            )
+        );
     } else {
-        snipeStore.editsnipe.set(channel, [
-            { message, attachments: [] },
-            ...(snipeStore.editsnipe.get(channel) || []),
-        ]);
+        snipeStore.editsnipe.set(
+            channel,
+            (snipeStore.editsnipe.get(channel) || new Map()).set(
+                message,
+                attachments
+            )
+        );
     }
 }
 
@@ -137,18 +121,16 @@ export default async function snipe(
         return;
     }
 
-    const snipedList = snipeStore[commandName].get(channel);
+    const snipedList = [...(snipeStore[commandName].get(channel) ?? [])];
 
     if (!snipedList?.length) {
         await interaction.reply("There's nothing to snipe here");
         return;
     }
     const snipeIndexTooBig = typeof snipedList[snipeIndex] === 'undefined';
-    const sniped = snipeIndexTooBig ? snipedList[0] : snipedList[snipeIndex];
-    const [snipedMessage, snipedAttachments] = [
-        sniped.message,
-        sniped.attachments,
-    ];
+    const [snipedMessage, snipedAttachments] = snipeIndexTooBig
+        ? snipedList[0]
+        : snipedList[snipeIndex];
 
     let embed = new MessageEmbed()
         .setAuthor({
@@ -210,7 +192,7 @@ export default async function snipe(
     });
 
     sentSnipedMessage.set(sentSnipe, {
-        snipedMember: snipedMessage.author,
+        snipedMessage,
         commandName,
     });
 }
@@ -228,15 +210,16 @@ export async function deleteSnipe(
         ?.permissionsIn(channel)
         .has('MANAGE_MESSAGES');
 
-    const snipedMessage = sentSnipedMessage.get(message);
-
-    const userIsSnipedMessageAuthor = user === snipedMessage?.snipedMember;
+    const sniped = sentSnipedMessage.get(message);
+    const userIsSnipedMessageAuthor = user === sniped?.snipedMessage.author;
     const userIsInteractionTrigger = user === message.interaction?.user;
 
-    if (!snipedMessage && !userCanManageMessage && !userIsInteractionTrigger) {
-        await interaction.reply(
-            'This message is too old to be deleted with buttons, please contact a moderator if you need to delete this message.'
-        );
+    if (!sniped && !userCanManageMessage && !userIsInteractionTrigger) {
+        await interaction.reply({
+            content:
+                'This message is too old to be deleted with buttons, please contact a moderator if you need to delete this message.',
+            ephemeral: true,
+        });
         return;
     }
 
@@ -256,7 +239,7 @@ export async function deleteSnipe(
             }
             await message.delete().catch(suppressUnknownMessage);
             break;
-        case 'trash-snipe':
+        case 'trash-snipe': {
             if (!userIsSnipedMessageAuthor && !userCanManageMessage) {
                 await interaction.reply({
                     content:
@@ -266,20 +249,17 @@ export async function deleteSnipe(
                 return;
             }
             await message.delete().catch(suppressUnknownMessage);
-            if (!snipedMessage) return;
-            snipeStore[snipedMessage.commandName].set(
-                channel,
-                snipeStore[snipedMessage.commandName]
-                    .get(channel)
-                    ?.filter(
-                        ({ message: snipedStoreMessage }) =>
-                            snipedStoreMessage.id !== message.id
-                    ) ?? []
-            );
+            if (!sniped) return;
+            const channelSnipeStore =
+                snipeStore[sniped.commandName].get(channel);
+            if (!channelSnipeStore) return;
+            channelSnipeStore.delete(sniped.snipedMessage);
+            snipeStore[sniped.commandName].set(channel, channelSnipeStore);
             await channel.send(
                 `${member}, sniped message removed from snipe list.`
             );
             break;
+        }
         default:
     }
 }
