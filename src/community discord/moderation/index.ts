@@ -87,7 +87,7 @@ export default async function moderation(
     if (action === 'warn' && reason === Reasons['Warn to Leave Hack Servers']) {
         await startHackWarnTimer(moderator, offenderMember, channel);
     }
-    if (action === 'ban' && reason === Reasons['Member in Hack Servers']) {
+    if (action === 'ban' && reason?.toLowerCase().includes('hack')) {
         await broadcastHackBan(guild, offender, moderator.user, reason);
     }
 }
