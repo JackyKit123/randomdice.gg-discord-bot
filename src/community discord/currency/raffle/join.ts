@@ -69,7 +69,7 @@ async function validateJoinRaffle(
     if (/max/i.test(ticketAmountArg)) {
         if (prevEntry === entries.maxEntries) {
             await interaction.reply(
-                `${member} You have already entered with max entries (${entries.maxEntries} tickets). Use \`!raffle info\` to review your entries.`
+                `${member} You have already entered with max entries (${entries.maxEntries} tickets). Use \`/raffle info\` to review your entries.`
             );
             return null;
         }
