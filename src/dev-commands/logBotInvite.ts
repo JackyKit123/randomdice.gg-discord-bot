@@ -5,19 +5,20 @@ import { createInvite } from './fetchInvites';
 
 export default async function logBotInvite(guild: Guild): Promise<void> {
     const { client, systemChannel, channels, name, me: bot } = guild;
-    const filter = (
-        channel: GuildBasedChannel
-    ): channel is GuildTextBasedChannel =>
-        channel.isText() &&
-        !channel.isThread() &&
-        !!bot?.permissionsIn(channel).has('SEND_MESSAGES') &&
-        bot.permissionsIn(channel).has('VIEW_CHANNEL');
+
+    const channelsWithPermissions = channels.cache.filter(
+        (channel: GuildBasedChannel): channel is GuildTextBasedChannel =>
+            channel.isText() &&
+            !channel.isThread() &&
+            !!bot?.permissionsIn(channel).has('SEND_MESSAGES') &&
+            bot.permissionsIn(channel).has('VIEW_CHANNEL')
+    );
     const msgChannel =
-        systemChannel ||
-        channels.cache
-            .filter(filter)
-            ?.find(channel => !!channel.name?.match(/(general|welcome)/i)) ||
-        channels.cache.filter(filter).first();
+        channelsWithPermissions.find(channel => channel === systemChannel) ||
+        channelsWithPermissions.find(({ name: channelName }) =>
+            ['general', 'welcome'].includes(channelName.toLowerCase())
+        ) ||
+        channelsWithPermissions.first();
 
     await logMessage(
         client,
