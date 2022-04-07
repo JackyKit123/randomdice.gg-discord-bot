@@ -2,6 +2,7 @@ import {
     ApplicationCommandData,
     Client,
     CommandInteraction,
+    GuildMember,
     MessageEmbed,
 } from 'discord.js';
 import { database } from 'register/firebase';
@@ -82,8 +83,9 @@ async function resetWeekly(client: Client): Promise<void> {
         return;
     }
 
-    const { weeklyWinners: prevWeeklyTop5 } =
-        cache['discord_bot/community/currencyConfig'];
+    const prevWeeklyTop5Ids = new Set(
+        cache['discord_bot/community/currencyConfig'].weeklyWinners
+    );
     const currencyList = cache['discord_bot/community/currency'];
 
     const sortedWeekly = sortLeaderboard(currencyList, 'weekly');
@@ -108,23 +110,20 @@ async function resetWeekly(client: Client): Promise<void> {
                 .addFields(sortedWeekly.slice(0, 5)),
         ],
     });
-    const findUniques = new Map<string, true>();
+    const findUniques = new Set<GuildMember>();
+    guild.roles.cache
+        .get(roleIds['Weekly Top 5'])
+        ?.members.forEach(member => prevWeeklyTop5Ids.add(member.id));
     await Promise.all(
-        prevWeeklyTop5
-            .concat(
-                guild.roles.cache
-                    .get(roleIds['Weekly Top 5'] ?? '')
-                    ?.members.map(m => m.id) || []
-            )
-            .map(async uid => {
-                const m = await guild.members
-                    .fetch(uid)
-                    .catch(suppressUnknownMember);
-                if (m?.roles.cache.has(roleIds['Weekly Top 5'])) {
-                    await m.roles.remove(roleIds['Weekly Top 5']);
-                    findUniques.set(m.id, true);
-                }
-            })
+        [...prevWeeklyTop5Ids].map(async uid => {
+            const member =
+                guild.members.cache.get(uid) ??
+                (await guild.members.fetch(uid).catch(suppressUnknownMember));
+            if (member?.roles.cache.has(roleIds['Weekly Top 5'])) {
+                await member.roles.remove(roleIds['Weekly Top 5']);
+                findUniques.add(member);
+            }
+        })
     );
     await channel.send({
         content: `Remove <@&${roleIds['Weekly Top 5']}> from ${findUniques.size} members`,
@@ -159,7 +158,7 @@ async function resetWeekly(client: Client): Promise<void> {
         .set(weeklyList);
     // remove customRoles if no tier2 perks
     await Promise.all(
-        prevWeeklyTop5.map(async uid => {
+        [...prevWeeklyTop5Ids].map(async uid => {
             const m = guild.members.cache.get(uid);
             if (m && !m.roles.cache.hasAny(...tier2RoleIds)) {
                 await deleteCustomRole(
