@@ -561,6 +561,8 @@ export default async function interactionCreate(
                 }
             }
         } catch {
+            // ignore
+        } finally {
             await logError(client, err, 'interaction#Create', interaction);
         }
     }

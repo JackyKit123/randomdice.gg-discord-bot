@@ -20,7 +20,7 @@ export const checkModActionValidity = async (
 ): Promise<boolean> => {
     const {
         member: moderator,
-        guild: { ownerId, members, bans },
+        guild: { ownerId, members, bans, me: bot },
         client: { user: clientUser },
     } = interaction;
     const offenderMember = members.cache.get(offenderId);
@@ -38,7 +38,7 @@ export const checkModActionValidity = async (
 
     if (
         (action === 'ban' || action === 'unban') &&
-        !members.cache.get(clientUser.id)?.permissions.has('BAN_MEMBERS')
+        !bot?.permissions.has('BAN_MEMBERS')
     ) {
         await interaction.reply({
             content:
