@@ -1,7 +1,8 @@
 import { isCommunityDiscord } from 'config/guild';
-import { ButtonInteraction } from 'discord.js';
+import { ButtonInteraction, MessageActionRow, MessageButton } from 'discord.js';
 import disableButtons from 'util/disabledButtons';
 import { suppressUnknownUser } from 'util/suppressErrors';
+import { banHammer } from 'config/emojiId';
 import { writeModLog } from '../modlog';
 import {
     checkModActionValidity,
@@ -9,6 +10,32 @@ import {
     startHackWarnTimer,
 } from '../util';
 import Reasons from '../reasons.json';
+
+export const getHackBanLogButtonsComponent = (
+    offenderIsMember: boolean,
+    offenderIsBanned: boolean | 'Unknown'
+): [MessageActionRow] => [
+    new MessageActionRow().setComponents([
+        new MessageButton()
+            .setCustomId('hackban-log-warn')
+            .setLabel('Warn')
+            .setStyle('PRIMARY')
+            .setEmoji('⚠️')
+            .setDisabled(!offenderIsMember),
+        new MessageButton()
+            .setCustomId('hackban-log-ban')
+            .setLabel('Ban')
+            .setStyle('DANGER')
+            .setEmoji(banHammer)
+            .setDisabled(offenderIsBanned === true),
+        new MessageButton()
+            .setCustomId('hackban-log-no-action')
+            .setLabel('No Action Needed')
+            .setStyle('SECONDARY')
+            .setEmoji('🆗')
+            .setDisabled(offenderIsBanned === false),
+    ]),
+];
 
 export default async function banLogButtons(
     interaction: ButtonInteraction<'cached'>
@@ -54,6 +81,11 @@ export default async function banLogButtons(
     let reason: string;
     let interactionReply: string;
     let action: 'ban' | 'warn';
+    const messageWithButtonsDisabled = disableButtons({
+        content,
+        embeds,
+        components,
+    });
     switch (customId) {
         case 'hackban-log-ban':
             reason = Reasons['Member in Hack Servers'];
@@ -65,6 +97,9 @@ export default async function banLogButtons(
             interactionReply = `${offender} has been warned for ${reason}`;
             action = 'warn';
             break;
+        case 'hackban-log-no-action':
+            await interaction.update(messageWithButtonsDisabled);
+            return;
         default:
             return;
     }
@@ -84,13 +119,7 @@ export default async function banLogButtons(
 
     await interaction.reply(interactionReply);
 
-    await message.edit(
-        disableButtons({
-            content,
-            embeds,
-            components,
-        })
-    );
+    await message.edit(messageWithButtonsDisabled);
 
     if (action === 'warn')
         await startHackWarnTimer(moderator, offenderMember, channel);

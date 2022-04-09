@@ -1,18 +1,11 @@
-import { banHammer } from 'config/emojiId';
-import {
-    Guild,
-    GuildBan,
-    MessageActionRow,
-    MessageButton,
-    MessageEmbed,
-    User,
-} from 'discord.js';
+import { Guild, GuildBan, MessageEmbed, User } from 'discord.js';
 import {
     suppressMissingPermission,
     suppressUnknownBan,
     suppressUnknownMember,
 } from 'util/suppressErrors';
 import { getRegisteredChannels } from '.';
+import { getHackBanLogButtonsComponent } from './hackbanButton';
 
 export async function broadcastHackBan(
     guild: Guild,
@@ -21,25 +14,6 @@ export async function broadcastHackBan(
     reason: string
 ): Promise<void> {
     const registeredChannels = await getRegisteredChannels(offender.client);
-
-    const getComponents = (
-        offenderIsMember: boolean,
-        offenderIsBanned: boolean | 'Unknown'
-    ) =>
-        new MessageActionRow().setComponents([
-            new MessageButton()
-                .setCustomId('hackban-log-warn')
-                .setLabel('Warn')
-                .setStyle('PRIMARY')
-                .setEmoji('⚠️')
-                .setDisabled(!offenderIsMember),
-            new MessageButton()
-                .setCustomId('hackban-log-ban')
-                .setLabel('Ban')
-                .setStyle('DANGER')
-                .setEmoji(banHammer)
-                .setDisabled(offenderIsBanned === true),
-        ]);
 
     await Promise.all(
         [...registeredChannels.values()].map(async channel => {
@@ -101,9 +75,10 @@ export async function broadcastHackBan(
             await channel.send({
                 content: `${offender} has been banned from ${guild.name}`,
                 embeds: [embed],
-                components: [
-                    getComponents(offenderIsMemberOfGuild, offenderIsBanned),
-                ],
+                components: getHackBanLogButtonsComponent(
+                    offenderIsMemberOfGuild,
+                    offenderIsBanned
+                ),
             });
         })
     );

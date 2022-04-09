@@ -192,6 +192,7 @@ export default async function interactionCreate(
                         break;
                     case 'hackban-log-warn':
                     case 'hackban-log-ban':
+                    case 'hackban-log-no-action':
                         if (interaction.inCachedGuild())
                             await banLogButtons(interaction);
                         break;
