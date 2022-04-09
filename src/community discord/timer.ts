@@ -107,7 +107,7 @@ async function tickTimer(
             const timerReact = reactions.cache.find(
                 reaction => reaction.emoji.toString() === timeDice
             );
-            const userList = timerReact?.users.cache
+            const userList = (await timerReact?.users.fetch())
                 ?.filter(user => !user.bot && user.id !== hostId)
                 .map(user => user.toString())
                 .join(' ');
