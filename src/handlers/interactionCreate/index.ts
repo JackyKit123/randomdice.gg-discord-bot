@@ -43,7 +43,9 @@ import drawDice from 'community discord/currency/drawDice';
 import balance from 'community discord/currency/balance';
 import profile, { profileButtons } from 'community discord/currency/profile';
 import coinflip from 'community discord/currency/coinflip';
-import leaderboard from 'community discord/currency/leaderboard';
+import leaderboard, {
+    resetWeeklyTop5,
+} from 'community discord/currency/leaderboard';
 import prestige from 'community discord/currency/prestige';
 import raffle, { addRafflePingRole } from 'community discord/currency/raffle';
 import timed from 'community discord/currency/timed';
@@ -384,6 +386,9 @@ export default async function interactionCreate(
                                 break;
                             case 'leaderboard':
                                 await leaderboard(interaction);
+                                break;
+                            case 'leaderboard-reset':
+                                await resetWeeklyTop5(interaction);
                                 break;
                             case 'prestige':
                                 await prestige(interaction);

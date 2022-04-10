@@ -2,7 +2,7 @@ import { Client } from 'discord.js';
 import { fixClownNicknamesOnReboot } from 'community discord/currency/fun commands/clown';
 import { fetchGeneralOnBoot } from 'community discord/chatrevivePing';
 import { autoSpawnCoinbomb } from 'community discord/currency/coinbomb';
-import { weeklyAutoReset } from 'community discord/currency/leaderboard';
+import { resetWeeklyTop5 } from 'community discord/currency/leaderboard';
 import { setRaffleTimerOnBoot } from 'community discord/currency/raffle';
 import serverClock from 'community discord/serverClock';
 import { registerTimer } from 'community discord/timer';
@@ -45,7 +45,7 @@ export default async function ready(client: Client<true>): Promise<void> {
             fetchGeneralOnBoot(client),
             setRaffleTimerOnBoot(client),
             autoSpawnCoinbomb(client),
-            weeklyAutoReset(client),
+            resetWeeklyTop5(client),
             registerTimer(client),
             serverClock(client),
         ]);
