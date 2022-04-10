@@ -51,7 +51,7 @@ export async function resetWeeklyTop5(
         return;
     }
 
-    const weeklyTop5Ids = new Set(
+    const prevWeeklyTop5Ids = new Set(
         cache['discord_bot/community/currencyConfig'].weeklyWinners
     );
     const currencyList = cache['discord_bot/community/currency'];
@@ -84,54 +84,48 @@ export async function resetWeeklyTop5(
 
     guild.roles.cache
         .get(roleIds['Weekly Top 5'])
-        ?.members.forEach(member => weeklyTop5Ids.add(member.id));
+        ?.members.forEach(member => prevWeeklyTop5Ids.add(member.id));
 
     await Promise.all(
-        [...weeklyTop5Ids].map(async uid => {
+        [...prevWeeklyTop5Ids].map(async uid => {
             const member =
                 guild.members.cache.get(uid) ??
                 (await guild.members.fetch(uid).catch(suppressUnknownMember));
             if (member?.roles.cache.has(roleIds['Weekly Top 5'])) {
-                // await member.roles.remove(roleIds['Weekly Top 5']);
+                await member.roles.remove(roleIds['Weekly Top 5']);
             } else {
-                weeklyTop5Ids.delete(uid);
+                prevWeeklyTop5Ids.delete(uid);
             }
         })
     );
-    await channel.send({
-        content: `Remove <@&${roleIds['Weekly Top 5']}> from ${weeklyTop5Ids.size} members`,
-        allowedMentions: {
-            roles: [],
-        },
-    });
-    weeklyTop5Ids.clear();
-    await Promise.all(
-        Object.keys(sortedWeekly)
-            .slice(0, 5)
-            .map(async uid => {
-                weeklyTop5Ids.add(uid);
-                const m = await guild.members
-                    .fetch(uid)
-                    .catch(suppressUnknownMember);
-                if (!m) return;
+    await channel.send(
+        `Removed <@&${roleIds['Weekly Top 5']}> from ${[...prevWeeklyTop5Ids]
+            .map(uid => `<@${uid}>`)
+            .join(' ')}`
+    );
 
-                await m.roles.add(roleIds['Weekly Top 5']);
-                await channel.send({
-                    content: `Added <@&${roleIds['Weekly Top 5']}> to ${m}`,
-                    allowedMentions: {
-                        roles: [],
-                        users: [uid],
-                    },
-                });
-            })
+    const newWeeklyTop5Ids = Object.keys(sortedWeekly).slice(0, 5);
+    await channel.send(
+        `Added <@&${roleIds['Weekly Top 5']}> to ${(
+            await Promise.all(
+                newWeeklyTop5Ids.map(
+                    async uid =>
+                        (
+                            await guild.members
+                                .fetch(uid)
+                                .catch(suppressUnknownMember)
+                        )?.roles.add(roleIds['Weekly Top 5']) ?? ''
+                )
+            )
+        ).join(' ')}`
     );
 
     await database
         .ref('/discord_bot/community/currencyConfig/weeklyWinners')
-        .set([...weeklyTop5Ids]);
+        .set(newWeeklyTop5Ids);
     // remove customRoles if no tier2 perks
     await Promise.all(
-        [...weeklyTop5Ids].map(async uid => {
+        [...prevWeeklyTop5Ids].map(async uid => {
             const m = guild.members.cache.get(uid);
             if (m && !m.roles.cache.hasAny(...tier2RoleIds)) {
                 await deleteCustomRole(
