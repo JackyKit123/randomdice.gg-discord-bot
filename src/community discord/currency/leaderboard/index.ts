@@ -133,7 +133,7 @@ export default async function leaderboard(
     collectorHandler(sentMessage, member.user, embeds);
 }
 
-export { default as resetWeeklyTop5 } from './weeklyTop5';
+export * from './weeklyTop5';
 
 export const commandData: ApplicationCommandData[] = [
     {

@@ -5,7 +5,12 @@ import { getCoinDiceEmoji } from 'config/emojiId';
 import { getCommunityDiscord } from 'config/guild';
 import roleIds, { tier2RoleIds } from 'config/roleId';
 import { communityDiscordInvitePermaLink } from 'config/url';
-import { Client, CommandInteraction, MessageEmbed } from 'discord.js';
+import {
+    Client,
+    CommandInteraction,
+    GuildMember,
+    MessageEmbed,
+} from 'discord.js';
 import moment from 'moment';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
@@ -14,7 +19,7 @@ import { suppressUnknownMember } from 'util/suppressErrors';
 import wait from 'util/wait';
 import { sortLeaderboard } from '.';
 
-export default async function resetWeeklyTop5(
+export async function resetWeeklyTop5(
     input: Client<true> | CommandInteraction<'cached'>
 ): Promise<void> {
     if (
@@ -140,5 +145,22 @@ export default async function resetWeeklyTop5(
 
     if (input instanceof CommandInteraction) {
         await input.reply('Weekly leaderboard has been reset.');
+    }
+}
+
+export async function validateMemberWeeklyTop5RoleStatus(
+    member: GuildMember
+): Promise<void> {
+    const weeklyTop5Ids =
+        cache['discord_bot/community/currencyConfig'].weeklyWinners;
+    const memberIsInWeeklyTop5 = weeklyTop5Ids.includes(member.id);
+    const memberHasWeeklyTop5Role = member.roles.cache.has(
+        roleIds['Weekly Top 5']
+    );
+
+    if (memberIsInWeeklyTop5 && !memberHasWeeklyTop5Role) {
+        await member.roles.add(roleIds['Weekly Top 5']);
+    } else if (!memberIsInWeeklyTop5 && memberHasWeeklyTop5Role) {
+        await member.roles.remove(roleIds['Weekly Top 5']);
     }
 }

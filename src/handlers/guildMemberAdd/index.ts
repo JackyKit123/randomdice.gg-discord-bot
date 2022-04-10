@@ -5,6 +5,7 @@ import { GuildMember } from 'discord.js';
 import { banAppealDiscordId, communityDiscordId } from 'config/guild';
 import { isProd } from 'config/env';
 import { warnOnBannedMemberJoin } from 'community discord/moderation/hack ban log sharing';
+import { validateMemberWeeklyTop5RoleStatus } from 'community discord/currency/leaderboard';
 
 export default async function guildMemberAdd(
     member: GuildMember
@@ -15,7 +16,11 @@ export default async function guildMemberAdd(
         if (isProd) {
             switch (guild.id) {
                 case communityDiscordId:
-                    await toggleOnWelcomeReward(member);
+                    await Promise.all([
+                        toggleOnWelcomeReward(member),
+                        warnOnBannedMemberJoin(member),
+                        validateMemberWeeklyTop5RoleStatus(member),
+                    ]);
                     break;
                 case banAppealDiscordId:
                     await createAppealChanel(member);
