@@ -33,7 +33,7 @@ export const getHackBanLogButtonsComponent = (
             .setLabel('No Action Needed')
             .setStyle('SECONDARY')
             .setEmoji('🆗')
-            .setDisabled(offenderIsBanned === false),
+            .setDisabled(offenderIsBanned === true),
     ]),
 ];
 
