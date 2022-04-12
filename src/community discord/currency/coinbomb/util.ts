@@ -78,7 +78,7 @@ export async function getActiveChattingMemberCount(
     const chatters = new Set<User>();
 
     fetchedMessage
-        .filter(({ author }) => !author.bot)
+        .filter(({ author, partial }) => !partial && !author.bot)
         .last(10)
         .forEach(({ author }) => chatters.add(author));
     fetchedMessage.forEach(({ createdTimestamp, author }) => {

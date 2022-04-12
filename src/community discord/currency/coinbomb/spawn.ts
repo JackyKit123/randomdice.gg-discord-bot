@@ -48,8 +48,9 @@ const getReward = (multiplier: number) =>
 async function spawnNext(channel: GuildTextBasedChannel) {
     const messageTimeout = new Set<User>();
     await channel.awaitMessages({
-        filter: ({ author }) => {
+        filter: ({ author, partial }) => {
             if (
+                !partial ||
                 activeCoinbombInChannel.get(channel) ||
                 messageTimeout.has(author) ||
                 author.bot
