@@ -181,7 +181,8 @@ export default async function drawDice(
     }
     const emoji = cache['discord_bot/emoji'];
     let { dice } = cache;
-    let { diceDrawn } = cache['discord_bot/community/currency'][member.user.id];
+    const diceDrawn =
+        cache['discord_bot/community/currency'][member.user.id].diceDrawn ?? {};
     const outcome: {
         reward: number;
         color: `#${string}`;
@@ -191,7 +192,6 @@ export default async function drawDice(
         color: '#999999',
         tier: 'Common',
     };
-    diceDrawn = diceDrawn ?? {};
     const prestige = getPrestigeLevel(member) || 1;
     const drawnDice = new Array(prestige).fill('').map(() => {
         const tierRng = Math.floor(Math.random() * 100);
@@ -223,10 +223,7 @@ export default async function drawDice(
         const randomDraw =
             tierToDraw[Math.floor(tierToDraw.length * Math.random())];
         dice = dice.filter(die => die.id !== randomDraw.id);
-        if (diceDrawn) {
-            diceDrawn[randomDraw.id] =
-                Number(diceDrawn?.[randomDraw.id] || 0) + 1;
-        }
+        diceDrawn[randomDraw.id] = Number(diceDrawn?.[randomDraw.id] || 0) + 1;
         return randomDraw;
     });
 
