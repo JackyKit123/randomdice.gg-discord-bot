@@ -153,7 +153,7 @@ export default async function prestige(
                     .ref(
                         `discord_bot/community/currency/${member.id}/diceDrawn`
                     )
-                    .set(0);
+                    .set(null);
                 await i.reply(
                     `Congratulations on achieving **${
                         guild.roles.cache.get(prestigeRoles[nextPrestigeLevel])
