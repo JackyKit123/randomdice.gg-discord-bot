@@ -4,7 +4,7 @@ import { Client } from 'discord.js';
 import logMessage from 'util/logMessage';
 import { isDev } from 'config/env';
 import { getDevTestDiscord } from 'config/guild';
-import * as post from './postNow';
+import { postGuide, postNews } from './postNow';
 
 export default function databaseListener(client: Client<true>): void {
     const posting = {
@@ -15,9 +15,8 @@ export default function databaseListener(client: Client<true>): void {
         guide: true,
         news: true,
     };
-    const guild = getDevTestDiscord(client);
-    const member =
-        (isDev && guild?.members.cache.get(client.user.id)) || undefined;
+    const guild = (isDev && getDevTestDiscord(client)) || undefined;
+    const member = guild?.members.cache.get(client.user.id);
     const postGuideListener = async (
         snapshot: firebase.database.DataSnapshot,
         event: 'added' | 'updated' | 'removed'
@@ -25,7 +24,7 @@ export default function databaseListener(client: Client<true>): void {
         if (!posting.guide) {
             posting.guide = true;
             try {
-                await post.postGuide(client, member, {
+                await postGuide(client, member, {
                     snapshot,
                     event,
                 });
@@ -62,7 +61,7 @@ export default function databaseListener(client: Client<true>): void {
         if (!posting.news) {
             posting.news = true;
             try {
-                await post.postNews(client, guild);
+                await postNews(client, guild);
             } catch (err) {
                 await logMessage(
                     client,
