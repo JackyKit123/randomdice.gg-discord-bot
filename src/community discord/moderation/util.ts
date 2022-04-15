@@ -15,7 +15,7 @@ import { suppressCannotDmUser, suppressUnknownBan } from 'util/suppressErrors';
 export const checkModActionValidity = async (
     interaction: ButtonInteraction<'cached'> | CommandInteraction<'cached'>,
     offenderId: string,
-    action: ModLog['action'],
+    action?: ModLog['action'],
     muteDurationArg?: string | null
 ): Promise<boolean> => {
     const {

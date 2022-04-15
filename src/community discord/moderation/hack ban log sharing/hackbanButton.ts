@@ -86,6 +86,7 @@ export default async function banLogButtons(
         embeds,
         components,
     });
+
     switch (customId) {
         case 'hackban-log-ban':
             reason = Reasons['Member in Hack Servers'];
@@ -98,6 +99,14 @@ export default async function banLogButtons(
             action = 'warn';
             break;
         case 'hackban-log-no-action':
+            if (!moderator.permissions.has('BAN_MEMBERS')) {
+                await interaction.reply({
+                    content:
+                        'You do not have permission to execute this command',
+                    ephemeral: true,
+                });
+                return;
+            }
             await interaction.update(messageWithButtonsDisabled);
             return;
         default:
