@@ -18,7 +18,7 @@ export async function broadcastHackBan(
     await Promise.all(
         [...registeredChannels.values()].map(async channel => {
             const {
-                guild: { members, me, bans, id },
+                guild: { members, me: bot, bans, id },
             } = channel;
             if (id === guild.id) return;
 
@@ -29,15 +29,15 @@ export async function broadcastHackBan(
             let offenderIsBanned: 'Unknown' | boolean;
             if (offenderIsMemberOfGuild) {
                 offenderIsBanned = false;
-            } else if (me?.permissions.has('BAN_MEMBERS')) {
+            } else if (!bot?.permissions.has('BAN_MEMBERS')) {
+                offenderIsBanned = 'Unknown';
+            } else {
                 offenderIsBanned =
                     bans.cache.has(offender.id) ||
                     !!(await bans
                         .fetch(offender)
                         .catch(suppressUnknownBan)
                         .catch(suppressMissingPermission));
-            } else {
-                offenderIsBanned = 'Unknown';
             }
 
             const embed = new MessageEmbed()
@@ -58,12 +58,9 @@ export async function broadcastHackBan(
                 )
                 .addField(
                     'Offender is Banned in This Server',
-                    // eslint-disable-next-line no-nested-ternary
-                    offenderIsBanned === 'Unknown' && !offenderIsMemberOfGuild
+                    offenderIsBanned === 'Unknown'
                         ? 'Unknown ❔ I need `BAN_MEMBERS` Permission to check if the user is banned'
-                        : offenderIsBanned === true
-                        ? '✅'
-                        : '❌'
+                        : (offenderIsBanned && '✅') || '❌'
                 )
                 .addField(
                     'Moderator',
