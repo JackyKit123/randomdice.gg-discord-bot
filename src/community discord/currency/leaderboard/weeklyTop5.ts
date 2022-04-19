@@ -59,10 +59,6 @@ export async function resetWeeklyTop5(
     const sortedWeekly = sortLeaderboard('weekly', 'raw');
     const embedFields = sortLeaderboard('weekly', 'embed');
 
-    Object.keys(currencyList).forEach(id =>
-        database.ref(`discord_bot/community/currency/${id}/weeklyChat`).set(0)
-    );
-
     await channel.send({
         content: `<@&${roleIds['Weekly Top 5']}>`,
         embeds: [
@@ -78,10 +74,13 @@ export async function resetWeeklyTop5(
                         }) ?? undefined,
                     url: communityDiscordInvitePermaLink,
                 })
-                .addFields(embedFields),
+                .addFields(embedFields.slice(0, 5)),
         ],
     });
 
+    Object.keys(currencyList).forEach(id =>
+        database.ref(`discord_bot/community/currency/${id}/weeklyChat`).set(0)
+    );
     guild.roles.cache
         .get(roleIds['Weekly Top 5'])
         ?.members.forEach(member => prevWeeklyTop5Ids.add(member.id));
