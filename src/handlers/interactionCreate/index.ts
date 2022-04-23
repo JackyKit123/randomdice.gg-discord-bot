@@ -218,7 +218,7 @@ export default async function interactionCreate(
                 case devTestDiscordId:
                     if (interaction.isCommand()) {
                         switch (interaction.commandName) {
-                            case 'createinvites':
+                            case 'create-invites':
                                 await fetchInvites(interaction);
                                 break;
                             case 'setemoji':
