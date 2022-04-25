@@ -22,6 +22,7 @@ import { claimCoinbomb } from 'community discord/currency/coinbomb';
 import { rickBombOnCollect } from 'community discord/currency/fun commands/rickbomb';
 import discordInviteLinkSpamAutoMod from 'community discord/moderation/forbidExternalInvite';
 import welcomeReward from 'community discord/currency/welcomeReward';
+import serverSupportNotify from 'community discord/serverSupportNotify';
 
 export default async function messageCreate(message: Message): Promise<void> {
     const { channel, guild, author, client } = message;
@@ -73,6 +74,7 @@ export default async function messageCreate(message: Message): Promise<void> {
                 claimCoinbomb(message),
                 rickBombOnCollect(message),
                 afkActivityListener(message),
+                serverSupportNotify(message),
             ];
         }
 
