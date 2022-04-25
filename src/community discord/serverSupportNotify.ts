@@ -44,6 +44,6 @@ export default async function serverSupportNotify(
         supportChannelNature = `This channel is for questions or matters related to the community website **ONLY**. You can get help regarding the website content, website glitches or features, or questions about the ${clientUser}.`;
     }
     await message.reply(
-        `It looks like you looking for support here. Please note the following:\n\n>${supportChannelNature} \n> This channel is not for in-game questions. We are not the official developers of this game. We cannot assist you with your account, if you have questions about your account, please contact the game's official support via the in-game menu. If you have questions about the game settings, please ask your questions in ${channelIds['random-dice']} to get help from our community members.\n\nIf you misuse this channel, your questions will not be answered, subsequently you will be muted.`
+        `It looks like you looking for support here. Please note the following:\n\n> ${supportChannelNature} \n> This channel is not for in-game questions. We are not the official developers of this game. We cannot assist you with your account, if you have questions about your account, please contact the game's official support via the in-game menu. If you have questions about the game settings, please ask your questions in <#${channelIds['random-dice']}> to get help from our community members.\n\nIf you misuse this channel, your questions will not be answered, subsequently you will be muted.`
     );
 }
