@@ -25,7 +25,7 @@ export default async function serverSupportNotify(
         (messages.cache.size >= 100
             ? messages.cache
             : await messages.fetch()
-        ).some(({ author: a2 }) => a1 === a2) ||
+        ).filter(({ author: a2 }) => a1 === a2).size > 1 ||
         member?.roles.cache.hasAny(
             ...moderatorRoleIds,
             ...tier1RoleIds,
