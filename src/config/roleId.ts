@@ -8,7 +8,9 @@ const roleIds = {
     'Event Manager': '805000661133295616',
     'Trial Event Manager': '805772165394858015',
     Giveaways: '815313811133169714',
-    'Website Staff': '804303208372633651',
+    'randomdice.gg Website Manager': '804303208372633651',
+    'randomdice.gg Website Coder': '957141641058209792',
+    'randomdice.gg Bot Coder': '957147509996798012',
     Inked: '956412227706048612',
     '🤡': '845530033695096853',
     'Server Artist': '804945286606749696',
@@ -111,6 +113,12 @@ export const eventManagerRoleIds = [
 ];
 
 export const moderatorRoleIds = [roleIds.Moderator, roleIds['Trial Moderator']];
+
+export const websiteStaffRoleIds = [
+    roleIds['randomdice.gg Website Manager'],
+    roleIds['randomdice.gg Website Coder'],
+    roleIds['randomdice.gg Bot Coder'],
+];
 
 export const prestigeRoles: { [level: number]: string } = {
     1: roleIds['Prestige I'],

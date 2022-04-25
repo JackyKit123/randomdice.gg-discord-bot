@@ -3,6 +3,7 @@ import {
     eventManagerRoleIds,
     moderatorRoleIds,
     tier1RoleIds,
+    websiteStaffRoleIds,
 } from 'config/roleId';
 import { Message } from 'discord.js';
 
@@ -28,7 +29,8 @@ export default async function serverSupportNotify(
         member?.roles.cache.hasAny(
             ...moderatorRoleIds,
             ...tier1RoleIds,
-            ...eventManagerRoleIds
+            ...eventManagerRoleIds,
+            ...websiteStaffRoleIds
         )
     )
         return;
