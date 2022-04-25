@@ -11,17 +11,17 @@ export default async function serverSupportNotify(
     message: Message
 ): Promise<void> {
     const {
-        channel: { id, messages },
+        channel: { id: channelId, messages },
         author: a1,
         client: { user: clientUser },
         member,
     } = message;
 
     if (
-        [
+        ![
             channelIds['server-support'],
             channelIds['randomdice-gg-website-support'],
-        ].includes(id) ||
+        ].includes(channelId) ||
         (messages.cache.size >= 100
             ? messages.cache
             : await messages.fetch()
@@ -36,11 +36,11 @@ export default async function serverSupportNotify(
         return;
 
     let supportChannelNature = '';
-    if (id === channelIds['server-support']) {
+    if (channelId === channelIds['server-support']) {
         supportChannelNature =
             'This channel is for questions or matters related to the community discord **ONLY**. You can get help regarding your roles, navigating the servers, or questions about the bots.';
     }
-    if (id === channelIds['randomdice-gg-website-support']) {
+    if (channelId === channelIds['randomdice-gg-website-support']) {
         supportChannelNature = `This channel is for questions or matters related to the community website **ONLY**. You can get help regarding the website content, website glitches or features, or questions about the ${clientUser}.`;
     }
     await message.reply(
