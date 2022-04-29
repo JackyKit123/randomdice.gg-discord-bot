@@ -36,12 +36,16 @@ export async function hackDiscussionLogging(
             ?.roles.cache.hasAny(roleIds.Admin, ...moderatorRoleIds)
     )
         return;
-    const isBanned = !!(await communityDiscord.bans
-        .fetch(author)
-        .catch(suppressUnknownBan));
+    const isBanned = !!(
+        communityDiscord.bans.cache.has(author.id) ??
+        (await communityDiscord.bans.fetch(author).catch(suppressUnknownBan))
+    );
     const isCommunityDiscordMember =
         !isBanned &&
-        !!(await guild.members.fetch(author).catch(suppressUnknownMember));
+        !!(
+            guild.members.cache.get(author.id) ??
+            (await guild.members.fetch(author).catch(suppressUnknownMember))
+        );
     if (!hackLog?.isText()) return;
     const sensitiveWords = isHackDiscord(guild)
         ? /\b(hack\w*)\b|\b(buy\w*)\b|\b(sell\w*)\b|\b(boost\w*)\b|\b(account\w*)\b|\b(price\w*)\b|\b(carry\w*)\b|\b(carried)\b|\b(c(?:lass)? ?15)\b/gi
