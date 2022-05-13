@@ -37,13 +37,13 @@ export async function hackDiscussionLogging(
     )
         return;
     const isBanned = !!(
-        communityDiscord.bans.cache.has(author.id) ??
+        communityDiscord.bans.cache.has(author.id) ||
         (await communityDiscord.bans.fetch(author).catch(suppressUnknownBan))
     );
     const isCommunityDiscordMember =
         !isBanned &&
         !!(
-            guild.members.cache.get(author.id) ??
+            guild.members.cache.has(author.id) ||
             (await guild.members.fetch(author).catch(suppressUnknownMember))
         );
     if (!hackLog?.isText()) return;
