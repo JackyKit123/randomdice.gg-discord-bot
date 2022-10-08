@@ -1,11 +1,10 @@
 import channelIds from 'config/channelIds';
 import { getCommunityDiscord } from 'config/guild';
-import roleIds from 'config/roleId';
-import Discord, { TextBasedChannel } from 'discord.js';
+import Discord from 'discord.js';
 import { database } from 'register/firebase';
 import cache from 'util/cache';
 
-async function updateMulti(channel: TextBasedChannel) {
+async function updateMulti() {
     let generalMulti =
         cache['discord_bot/community/currencyConfig'].multiplier.channels[
             channelIds.general
@@ -26,9 +25,13 @@ async function updateMulti(channel: TextBasedChannel) {
             )
             .set(generalMulti - 10);
     }, 60 * 60 * 1000);
+    // this code was commented out because they do not want to ping chat revival anymore because it makes
+    // the server look even more dead ;^)
+    /*
     await channel.send(
         `<@&${roleIds['Chat Revive Ping']}> come and revive this dead chat. For the next 60 minutes, ${channel} has extra \`x10\` multiplier!`
     );
+    */
 }
 
 let timeout: NodeJS.Timeout;
@@ -40,7 +43,7 @@ export default async function chatRevivePing(
 
     if (timeout) clearTimeout(timeout);
 
-    timeout = setTimeout(async () => updateMulti(channel), 1000 * 60 * 60);
+    timeout = setTimeout(async () => updateMulti(), 1000 * 60 * 60);
 }
 
 export async function fetchGeneralOnBoot(
@@ -59,7 +62,7 @@ export async function fetchGeneralOnBoot(
         const tenMinutes = 1000 * 60 * 60;
         if (!timeout) {
             timeout = setTimeout(
-                async () => updateMulti(general),
+                async () => updateMulti(),
                 tenMinutes - deadChatTimer
             );
         }
